@@ -1,0 +1,15 @@
+{
+  "name": "ccsuite",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/gateway",
+    "packages/mobile"
+  ],
+  "scripts": {
+    "dev:gateway": "npm run dev -w packages/gateway",
+    "dev:mobile": "npm run start -w packages/mobile",
+    "build:gateway": "npm run build -w packages/gateway"
+  }
+}

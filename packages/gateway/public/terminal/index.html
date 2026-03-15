@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+  <title>Terminal</title>
+  <link rel="stylesheet" href="/terminal/lib/xterm.min.css">
+  <script src="/terminal/lib/xterm.min.js"></script>
+  <script src="/terminal/lib/addon-fit.min.js"></script>
+  <script src="/terminal/lib/addon-unicode11.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a1915;
+    }
+
+    #terminal {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal"></div>
+  <script>
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = params.get('sessionId');
+    var token = params.get('token');
+
+    var term = new Terminal({
+      allowProposedApi: true,
+      fontFamily: '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace',
+      fontSize: 14,
+      cursorBlink: true,
+      cursorStyle: 'block',
+      scrollback: 5000,
+      theme: {
+        background: '#1a1915',
+        foreground: '#e8e4dc',
+        cursor: '#d97757',
+        cursorAccent: '#1a1915',
+        selection: 'rgba(217, 119, 87, 0.25)'
+      }
+    });
+
+    var fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+
+    var unicode11 = new Unicode11Addon.Unicode11Addon();
+    term.loadAddon(unicode11);
+    term.unicode.activeVersion = '11';
+
+    term.open(document.getElementById('terminal'));
+    fitAddon.fit();
+
+    var ws = null;
+
+    function notifyRN(message) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify(message));
+      }
+    }
+
+    function connect() {
+      if (!token) {
+        notifyRN({ type: 'error', message: 'Missing token' });
+        term.writeln('Missing token');
+        return;
+      }
+
+      var wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      var wsParams = new URLSearchParams();
+      if (sessionId) wsParams.set('sessionId', sessionId);
+      if (token) wsParams.set('token', token);
+      var wsUrl = wsProtocol + '//' + window.location.host + '/ws/terminal?' + wsParams.toString();
+
+      try {
+        ws = new WebSocket(wsUrl);
+      } catch (e) {
+        term.writeln('WebSocket creation failed: ' + e.message);
+        notifyRN({ type: 'error', message: 'WebSocket creation failed: ' + e.message });
+        return;
+      }
+
+      ws.onopen = function() {
+        term.reset();
+        notifyRN({ type: 'connected' });
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      };
+
+      ws.onmessage = function(event) {
+        var message = JSON.parse(event.data);
+        if (message.type === 'output') {
+          term.write(message.data);
+          return;
+        }
+        if (message.type === 'sessionInfo') {
+          notifyRN({ type: 'sessionInfo', session: message.session });
+          return;
+        }
+        if (message.type === 'exit') {
+          notifyRN({ type: 'exit', code: message.code });
+          return;
+        }
+        if (message.type === 'error') {
+          notifyRN({ type: 'error', message: message.message });
+        }
+      };
+
+      ws.onclose = function(event) {
+        term.writeln('\r\n[Disconnected]');
+        notifyRN({ type: 'disconnected' });
+      };
+
+      ws.onerror = function() {
+        notifyRN({ type: 'error', message: 'WebSocket error' });
+      };
+    }
+
+    term.onData(function(data) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'input', data: data }));
+      }
+    });
+
+    window.addEventListener('resize', function() {
+      fitAddon.fit();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      }
+    });
+
+    function handleBridgeMessage(rawData) {
+      try {
+        var message = JSON.parse(rawData);
+        if (message.type === 'input') {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'input', data: message.data }));
+          }
+          return;
+        }
+        if (message.type === 'resize') {
+          term.resize(message.cols, message.rows);
+          fitAddon.fit();
+          return;
+        }
+        if (message.type === 'theme') {
+          term.options.theme = message.theme;
+        }
+      } catch (_error) {}
+    }
+
+    function isTrustedOrigin(origin) {
+      if (!origin || origin === 'null') return true;
+      return origin === window.location.origin;
+    }
+
+    window.addEventListener('message', function(event) {
+      if (!isTrustedOrigin(event.origin)) return;
+      handleBridgeMessage(event.data);
+    });
+
+    document.addEventListener('message', function(event) {
+      handleBridgeMessage(event.data);
+    });
+
+    if (document.readyState === 'complete') {
+      connect();
+    } else {
+      window.addEventListener('load', function() { connect(); });
+    }
+  </script>
+</body>
+</html>
