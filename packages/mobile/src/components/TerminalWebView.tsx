@@ -1,9 +1,10 @@
-import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import type { Server } from '@/src/types';
 import { useSettingsStore } from '@/src/stores/settings';
-import { terminalColors } from '@/src/theme/tokens';
+import { useTheme } from '@/src/theme';
+import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 
 export interface TerminalWebViewHandle {
   sendInput: (data: string) => void;
@@ -21,8 +22,20 @@ export const TerminalWebView = forwardRef<TerminalWebViewHandle, Props>(
   ({ server, sessionId, onStatusChange }, ref) => {
     const webViewRef = useRef<WebView>(null);
     const fontSize = useSettingsStore((state) => state.settings.fontSize);
-    const terminalTheme = 'dark';
+    const { dark } = useTheme();
+    const terminalTheme = dark ? 'dark' : 'light';
+    const bgColor = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
     const uri = `${getBaseUrl(server.url)}/embed/terminal?sessionId=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(server.token)}&fontSize=${encodeURIComponent(String(fontSize))}&theme=${encodeURIComponent(terminalTheme)}`;
+
+    const prevThemeRef = useRef(terminalTheme);
+    useEffect(() => {
+      if (prevThemeRef.current === terminalTheme) return;
+      prevThemeRef.current = terminalTheme;
+      const payload = JSON.stringify({ type: 'theme', theme: terminalTheme });
+      webViewRef.current?.injectJavaScript(
+        `handleBridgeMessage(${JSON.stringify(payload)}); true;`,
+      );
+    }, [terminalTheme]);
 
     const onMessage = useCallback(
       (event: WebViewMessageEvent) => {
@@ -70,7 +83,7 @@ export const TerminalWebView = forwardRef<TerminalWebViewHandle, Props>(
           console.warn('WebView HTTP error:', e.nativeEvent.statusCode);
           onStatusChange?.('error');
         }}
-        style={{ flex: 1, backgroundColor: terminalColors.bg }}
+        style={{ flex: 1, backgroundColor: bgColor }}
         javaScriptEnabled
         domStorageEnabled
         allowsInlineMediaPlayback

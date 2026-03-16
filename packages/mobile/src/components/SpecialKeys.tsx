@@ -1,20 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colorsDark, radii, spacing, typography } from '@/src/theme/tokens';
+import { useTheme } from '@/src/theme';
 
 interface Props {
   onKeyPress: (data: string) => void;
 }
 
 const ARROW_KEYS = [
-  { label: '←', data: '\x1b[D' },
-  { label: '↑', data: '\x1b[A' },
-  { label: '↓', data: '\x1b[B' },
-  { label: '→', data: '\x1b[C' },
+  { label: '\u2190', data: '\x1b[D' },
+  { label: '\u2191', data: '\x1b[A' },
+  { label: '\u2193', data: '\x1b[B' },
+  { label: '\u2192', data: '\x1b[C' },
 ] as const;
 
 const CTRL_KEYS = [
@@ -30,6 +30,75 @@ const CTRL_KEYS = [
 
 export function SpecialKeys({ onKeyPress }: Props) {
   const [isCtrl, setIsCtrl] = useState(false);
+  const { colors, radii, spacing, typography } = useTheme();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          gap: spacing.sm,
+          paddingHorizontal: spacing.lg,
+          paddingVertical: 10,
+          backgroundColor: colors.surface,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.border,
+        },
+        row: {
+          flexDirection: 'row',
+          gap: spacing.sm,
+          paddingRight: spacing.sm,
+        },
+        ctrlRow: {
+          gap: spacing.xs,
+        },
+        ctrlHint: {
+          ...typography.smallMedium,
+          color: colors.primary,
+          textTransform: 'uppercase',
+          letterSpacing: 0.6,
+        },
+        button: {
+          minWidth: 44,
+          height: 36,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: spacing.md,
+          borderRadius: radii.sm,
+          backgroundColor: colors.surfaceHover,
+        },
+        buttonActive: {
+          backgroundColor: colors.primary,
+        },
+        ctrlKeyButton: {
+          minWidth: 46,
+          backgroundColor: colors.primarySubtle,
+          borderWidth: 1,
+          borderColor: colors.primary,
+        },
+        pasteButton: {
+          minWidth: 70,
+          height: 36,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: spacing.xs,
+          paddingHorizontal: spacing.md,
+          borderRadius: radii.sm,
+          backgroundColor: colors.surfaceHover,
+        },
+        label: {
+          ...typography.captionMedium,
+          color: colors.textPrimary,
+        },
+        labelActive: {
+          color: colors.textInverse,
+        },
+        labelCtrl: {
+          color: colors.primary,
+        },
+      }),
+    [colors, radii, spacing, typography],
+  );
 
   const triggerHaptic = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -92,7 +161,7 @@ export function SpecialKeys({ onKeyPress }: Props) {
         ))}
 
         <TouchableOpacity activeOpacity={0.78} onPress={() => void handlePaste()} style={styles.pasteButton}>
-          <Ionicons color={colorsDark.textPrimary} name="clipboard-outline" size={16} />
+          <Ionicons color={colors.textPrimary} name="clipboard-outline" size={16} />
           <Text style={styles.label}>Paste</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -108,7 +177,7 @@ export function SpecialKeys({ onKeyPress }: Props) {
                 onPress={() => handleCtrlKeyPress(key.code)}
                 style={[styles.button, styles.ctrlKeyButton]}
               >
-                <Text style={[styles.label, styles.labelActive]}>{key.label}</Text>
+                <Text style={[styles.label, styles.labelCtrl]}>{key.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -117,64 +186,3 @@ export function SpecialKeys({ onKeyPress }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 10,
-    backgroundColor: colorsDark.surface,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colorsDark.border,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingRight: spacing.sm,
-  },
-  ctrlRow: {
-    gap: spacing.xs,
-  },
-  ctrlHint: {
-    ...typography.smallMedium,
-    color: colorsDark.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  button: {
-    minWidth: 44,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.sm,
-    backgroundColor: colorsDark.surfaceHover,
-  },
-  buttonActive: {
-    backgroundColor: colorsDark.primary,
-  },
-  ctrlKeyButton: {
-    minWidth: 46,
-    backgroundColor: colorsDark.primarySubtle,
-    borderWidth: 1,
-    borderColor: colorsDark.primary,
-  },
-  pasteButton: {
-    minWidth: 70,
-    height: 36,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.sm,
-    backgroundColor: colorsDark.surfaceHover,
-  },
-  label: {
-    ...typography.captionMedium,
-    color: colorsDark.textPrimary,
-  },
-  labelActive: {
-    color: colorsDark.textInverse,
-  },
-});

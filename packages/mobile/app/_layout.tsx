@@ -35,9 +35,9 @@ function AppContent() {
         <Stack.Screen
           name="terminal/[sessionId]"
           options={{
-            headerShown: true,
+            headerShown: false,
             title: 'Terminal',
-            presentation: 'fullScreenModal',
+            presentation: 'card',
           }}
         />
       </Stack>

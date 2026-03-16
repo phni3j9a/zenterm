@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
@@ -22,7 +22,7 @@ type LoadMode = 'initial' | 'refresh' | 'soft';
 export default function SessionsScreen() {
   const router = useRouter();
   const server = useServersStore((state) => state.getDefaultServer());
-  const { colors, radii, spacing, typography } = useTheme();
+  const { colors, dark, radii, shadows, spacing, typography } = useTheme();
 
   const [sessions, setSessions] = useState<TmuxSession[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,6 +36,158 @@ export default function SessionsScreen() {
   const [error, setError] = useState<string | null>(null);
   const sessionsCountRef = useRef(0);
   const requestIdRef = useRef(0);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: colors.bg,
+        },
+        skeletonContainer: {
+          flex: 1,
+          padding: spacing.lg,
+          gap: spacing.md,
+        },
+        listContent: {
+          flexGrow: 1,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.lg,
+          paddingBottom: spacing['4xl'],
+        },
+        centeredContent: {
+          justifyContent: 'center',
+        },
+        headerSection: {
+          marginBottom: spacing.lg,
+          gap: spacing.md,
+        },
+        heroCard: {
+          gap: spacing.lg,
+          ...(dark ? {} : shadows.md),
+        },
+        heroTopRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.md,
+        },
+        heroIcon: {
+          width: 52,
+          height: 52,
+          borderRadius: 26,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.primary,
+        },
+        heroCopy: {
+          gap: spacing.xs,
+        },
+        heroStatsRow: {
+          flexDirection: 'row',
+          gap: spacing.md,
+        },
+        heroStatCard: {
+          flex: 1,
+          padding: spacing.md,
+          borderRadius: radii.md,
+          backgroundColor: dark ? colors.surfaceHover : colors.primarySubtle,
+          borderWidth: 1,
+          borderColor: dark ? colors.border : colors.borderSubtle,
+          gap: spacing.xs,
+        },
+        addPrompt: {
+          gap: spacing.sm,
+        },
+        addPromptRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.md,
+        },
+        addPromptIcon: {
+          width: 44,
+          height: 44,
+          borderRadius: 22,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.primarySubtle,
+        },
+        formCard: {
+          gap: spacing.lg,
+        },
+        formHeader: {
+          gap: spacing.xs,
+        },
+        formActions: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+          gap: spacing.sm,
+        },
+        sessionCard: {
+          gap: spacing.md,
+          ...(dark ? {} : shadows.sm),
+        },
+        sessionHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.md,
+        },
+        sessionTitleWrap: {
+          flex: 1,
+        },
+        statusPill: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          alignSelf: 'flex-start',
+          gap: spacing.xs,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: 5,
+          borderRadius: radii.full,
+          backgroundColor: dark ? colors.surfaceHover : colors.bg,
+          borderWidth: 1,
+          borderColor: dark ? colors.border : colors.borderSubtle,
+        },
+        sessionCwd: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+        },
+        sessionDate: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.sm,
+        },
+        sessionFooter: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.md,
+        },
+        sessionHint: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
+          flex: 1,
+        },
+        renameForm: {
+          gap: spacing.md,
+          paddingTop: spacing.xs,
+        },
+        separator: {
+          height: spacing.md,
+        },
+        addPromptCopy: {
+          flex: 1,
+          gap: spacing.xs,
+        },
+      }),
+    [colors, dark, radii, shadows, spacing],
+  );
+
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, [styles.separator]);
 
   const isCurrentServer = useCallback((serverId: string) => useServersStore.getState().getDefaultServer()?.id === serverId, []);
 
@@ -323,8 +475,81 @@ export default function SessionsScreen() {
   const showSkeleton = loading && sessions.length === 0;
   const showErrorState = Boolean(error) && sessions.length === 0;
 
+  const header = (
+    <View style={styles.headerSection}>
+      <Card highlighted style={styles.heroCard}>
+        <View style={styles.heroTopRow}>
+          <View style={styles.heroIcon}>
+            <Ionicons color={colors.textInverse} name="terminal-outline" size={24} />
+          </View>
+          <Badge label={`${sessions.length} ACTIVE`} variant="primary" />
+        </View>
+
+        <View style={styles.heroCopy}>
+          <Text style={[typography.screenTitle, { color: colors.textPrimary }]}>あなたのワークスペースをすべてここから</Text>
+          <Text style={[typography.body, { color: colors.textSecondary }]}>
+            tmux セッションの確認、作成、ターミナル接続をまとめて管理できます。
+          </Text>
+        </View>
+
+        <View style={styles.heroStatsRow}>
+          <View style={styles.heroStatCard}>
+            <Text style={[typography.smallMedium, { color: colors.textMuted }]}>SESSIONS</Text>
+            <Text numberOfLines={1} style={[typography.bodyMedium, { color: colors.textPrimary }]}>
+              {sessions.length === 0 ? 'EMPTY' : `${sessions.length} sessions`}
+            </Text>
+          </View>
+          <View style={styles.heroStatCard}>
+            <Text style={[typography.smallMedium, { color: colors.textMuted }]}>SERVER</Text>
+            <Text numberOfLines={1} style={[typography.bodyMedium, { color: colors.textPrimary }]}>
+              {server?.name ?? '未設定'}
+            </Text>
+          </View>
+        </View>
+      </Card>
+
+      {showCreateForm ? (
+        <Card highlighted style={styles.formCard}>
+          <View style={styles.formHeader}>
+            <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッション</Text>
+            <Text style={[typography.caption, { color: colors.textSecondary }]}>
+              名前は空欄のままでも作成できます。必要ならあとでスワイプしてリネームできます。
+            </Text>
+          </View>
+
+          <Input
+            autoCapitalize="none"
+            label="セッション名"
+            onChangeText={setCreateName}
+            placeholder="例: 作業メモ / deploy / scratch"
+            value={createName}
+          />
+
+          <View style={styles.formActions}>
+            <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
+            <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
+          </View>
+        </Card>
+      ) : (
+        <Card onPress={openCreateForm} style={styles.addPrompt}>
+          <View style={styles.addPromptRow}>
+            <View style={styles.addPromptCopy}>
+              <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッションを作成</Text>
+              <Text style={[typography.caption, { color: colors.textSecondary }]}>
+                ターミナルを開いて作業を始めましょう。名前はあとで変更できます。
+              </Text>
+            </View>
+            <View style={styles.addPromptIcon}>
+              <Ionicons color={colors.primary} name="add-outline" size={22} />
+            </View>
+          </View>
+        </Card>
+      )}
+    </View>
+  );
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={styles.container}>
       <Stack.Screen
         options={{
           title: 'Sessions',
@@ -354,24 +579,16 @@ export default function SessionsScreen() {
           title="サーバーを設定してください"
         />
       ) : showSkeleton ? (
-        <View style={[styles.skeletonContainer, { padding: spacing.lg, gap: spacing.md }]}>
+        <View style={styles.skeletonContainer}>
           {Array.from({ length: 4 }).map((_, index) => (
             <SkeletonLoader key={index} height={72} radius={radii.lg} width="100%" />
           ))}
         </View>
       ) : (
         <FlatList
-          contentContainerStyle={[
-            styles.listContent,
-            {
-              paddingHorizontal: spacing.lg,
-              paddingTop: spacing.lg,
-              paddingBottom: spacing['4xl'],
-            },
-            sessions.length === 0 && !showCreateForm && styles.centeredContent,
-          ]}
+          contentContainerStyle={[styles.listContent, sessions.length === 0 && !showCreateForm && styles.centeredContent]}
           data={sessions}
-          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          ItemSeparatorComponent={renderSeparator}
           keyboardShouldPersistTaps="handled"
           keyExtractor={(item) => item.name}
           ListEmptyComponent={
@@ -391,33 +608,7 @@ export default function SessionsScreen() {
               />
             )
           }
-          ListHeaderComponent={
-            showCreateForm ? (
-              <View style={{ marginBottom: spacing.lg }}>
-                <Card highlighted style={styles.formCard}>
-                  <View style={styles.formHeader}>
-                    <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッション</Text>
-                    <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                      名前は空欄のままでも作成できます。必要ならあとでスワイプしてリネームできます。
-                    </Text>
-                  </View>
-
-                  <Input
-                    autoCapitalize="none"
-                    label="セッション名"
-                    onChangeText={setCreateName}
-                    placeholder="例: 作業メモ / deploy / scratch"
-                    value={createName}
-                  />
-
-                  <View style={styles.formActions}>
-                    <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
-                    <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
-                  </View>
-                </Card>
-              </View>
-            ) : null
-          }
+          ListHeaderComponent={header}
           refreshControl={
             <RefreshControl
               colors={[colors.primary]}
@@ -471,16 +662,34 @@ export default function SessionsScreen() {
                 >
                   <View style={styles.sessionHeader}>
                     <View style={styles.sessionTitleWrap}>
-                      <Text numberOfLines={1} style={[typography.bodyMedium, { color: colors.textPrimary }]}>
+                      <Text numberOfLines={1} style={[typography.heading, { color: colors.textPrimary }]}>
                         {isEditing && renameValue ? renameValue : item.displayName}
                       </Text>
                     </View>
-                    <Badge label={isEditing ? '編集中' : 'tmux'} variant={isEditing ? 'primary' : 'muted'} />
+                    <View style={styles.statusPill}>
+                      <Ionicons color={colors.success} name="radio-button-on-outline" size={14} />
+                      <Text style={[typography.smallMedium, { color: colors.success }]}>active</Text>
+                    </View>
                   </View>
 
-                  <View style={styles.sessionMeta}>
+                  <View style={styles.sessionCwd}>
+                    <Ionicons color={colors.textMuted} name="folder-outline" size={14} />
+                    <Text numberOfLines={1} style={[typography.mono, { color: colors.textSecondary }]}>
+                      {item.cwd}
+                    </Text>
+                  </View>
+
+                  <View style={styles.sessionDate}>
                     <Ionicons color={colors.textMuted} name="time-outline" size={14} />
                     <Text style={[typography.caption, { color: colors.textMuted }]}>作成 {formatDate(item.created)}</Text>
+                  </View>
+
+                  <View style={styles.sessionFooter}>
+                    <View style={styles.sessionHint}>
+                      <Ionicons color={colors.textMuted} name="open-outline" size={14} />
+                      <Text style={[typography.caption, { color: colors.textSecondary }]}>タップで接続</Text>
+                    </View>
+                    <Text style={[typography.small, { color: colors.textMuted }]}>スワイプで操作</Text>
                   </View>
 
                   {isEditing ? (
@@ -515,51 +724,3 @@ export default function SessionsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  skeletonContainer: {
-    flex: 1,
-  },
-  listContent: {
-    flexGrow: 1,
-  },
-  centeredContent: {
-    justifyContent: 'center',
-  },
-  formCard: {
-    gap: 16,
-  },
-  formHeader: {
-    gap: 6,
-  },
-  formActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  sessionCard: {
-    gap: 10,
-  },
-  sessionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  sessionTitleWrap: {
-    flex: 1,
-  },
-  sessionMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  renameForm: {
-    gap: 12,
-    paddingTop: 4,
-  },
-});

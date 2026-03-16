@@ -7,6 +7,8 @@ module.exports = {
   },
   testMatch: [
     '<rootDir>/src/theme/__tests__/**/*.test.ts?(x)',
+    '<rootDir>/src/components/__tests__/**/*.test.ts?(x)',
     '<rootDir>/src/components/ui/__tests__/**/*.test.ts?(x)',
+    '<rootDir>/app/**/__tests__/**/*.test.ts?(x)',
   ],
 };

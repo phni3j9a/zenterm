@@ -70,13 +70,26 @@ export const colorsDark = {
   skeletonHighlight: '#3A3630',
 } as const;
 
-// Terminal Colors (常にダーク)
-export const terminalColors = {
+// Terminal Colors — Light
+export const terminalColorsLight = {
+  bg: '#FDFCFA',
+  foreground: '#2C2A25',
+  cursor: '#D4713D',
+  cursorAccent: '#FDFCFA',
+  selection: 'rgba(212, 113, 61, 0.2)',
+} as const;
+
+// Terminal Colors — Dark
+export const terminalColorsDark = {
   bg: '#1A1915',
   foreground: '#E8E4DC',
   cursor: '#D97757',
-  selection: 'rgba(217, 119, 87, 0.3)',
+  cursorAccent: '#1A1915',
+  selection: 'rgba(217, 119, 87, 0.25)',
 } as const;
+
+// 後方互換: 既存の terminalColors は dark のエイリアス
+export const terminalColors = terminalColorsDark;
 
 export type ColorTokens = {
   [Key in keyof typeof colors]: string;
