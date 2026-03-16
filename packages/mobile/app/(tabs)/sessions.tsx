@@ -1,118 +1,344 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
-import { createSession, deleteSession, listSessions } from '@/src/api/client';
+import { createSession, deleteSession, listSessions, renameSession } from '@/src/api/client';
+import { Badge, Button, Card, EmptyState, Input, SkeletonLoader, SwipeableRow } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
+import { useTheme } from '@/src/theme';
 import type { TmuxSession } from '@/src/types';
-import Colors from '@/constants/Colors';
 
 const formatDate = (created: number) => {
   const timestamp = created < 1_000_000_000_000 ? created * 1000 : created;
   return new Date(timestamp).toLocaleString('ja-JP');
 };
 
+const getErrorMessage = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
+
+type LoadMode = 'initial' | 'refresh' | 'soft';
+
 export default function SessionsScreen() {
   const router = useRouter();
   const server = useServersStore((state) => state.getDefaultServer());
+  const { colors, radii, spacing, typography } = useTheme();
 
   const [sessions, setSessions] = useState<TmuxSession[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createName, setCreateName] = useState('');
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const sessionsCountRef = useRef(0);
+  const requestIdRef = useRef(0);
 
-  const loadSessions = useCallback(async () => {
-    if (!server) {
-      setSessions([]);
-      setError(null);
-      return;
-    }
+  const isCurrentServer = useCallback((serverId: string) => useServersStore.getState().getDefaultServer()?.id === serverId, []);
 
-    setLoading(true);
+  const resetCreateForm = useCallback(() => {
+    setShowCreateForm(false);
+    setCreateName('');
+  }, []);
+
+  const resetRenameForm = useCallback(() => {
+    setEditingSessionId(null);
+    setRenameValue('');
+  }, []);
+
+  useEffect(() => {
+    sessionsCountRef.current = sessions.length;
+  }, [sessions.length]);
+
+  useEffect(() => {
+    requestIdRef.current += 1;
+    setSessions([]);
+    setLoading(false);
+    setRefreshing(false);
+    setCreating(false);
+    setRenamingSessionId(null);
     setError(null);
-    try {
-      const data = await listSessions(server);
-      setSessions(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'セッション一覧を取得できませんでした。';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [server]);
+    sessionsCountRef.current = 0;
+    resetCreateForm();
+    resetRenameForm();
+  }, [server?.id, resetCreateForm, resetRenameForm]);
+
+  const loadSessions = useCallback(
+    async (mode: LoadMode = 'initial') => {
+      if (!server) {
+        requestIdRef.current += 1;
+        setSessions([]);
+        setLoading(false);
+        setRefreshing(false);
+        setError(null);
+        return;
+      }
+
+      const currentRequestId = ++requestIdRef.current;
+      const currentServer = server;
+
+      if (mode === 'initial') {
+        setLoading(true);
+      }
+
+      if (mode === 'refresh') {
+        setRefreshing(true);
+      }
+
+      try {
+        const data = await listSessions(currentServer);
+        if (requestIdRef.current !== currentRequestId || !isCurrentServer(currentServer.id)) {
+          return;
+        }
+        setSessions(data);
+        setError(null);
+      } catch (err) {
+        if (requestIdRef.current !== currentRequestId || !isCurrentServer(currentServer.id)) {
+          return;
+        }
+        const message = getErrorMessage(err, 'セッション一覧を取得できませんでした。');
+        setError(message);
+        Toast.show({
+          type: 'error',
+          text1: 'セッション取得失敗',
+          text2: message,
+        });
+      } finally {
+        if (requestIdRef.current !== currentRequestId || !isCurrentServer(currentServer.id)) {
+          return;
+        }
+
+        if (mode === 'initial') {
+          setLoading(false);
+        }
+
+        if (mode === 'refresh') {
+          setRefreshing(false);
+        }
+      }
+    },
+    [isCurrentServer, server],
+  );
 
   useFocusEffect(
     useCallback(() => {
-      void loadSessions();
+      const mode: LoadMode = sessionsCountRef.current === 0 ? 'initial' : 'soft';
+      void loadSessions(mode);
     }, [loadSessions]),
   );
 
-  const handleCreate = async () => {
+  const openCreateForm = useCallback(() => {
     if (!server || creating) {
       return;
     }
 
+    resetRenameForm();
+    setShowCreateForm(true);
+  }, [creating, resetRenameForm, server]);
+
+  const cancelCreate = useCallback(() => {
+    if (creating) {
+      return;
+    }
+
+    resetCreateForm();
+  }, [creating, resetCreateForm]);
+
+  const handleCreate = useCallback(async () => {
+    if (!server || creating) {
+      return;
+    }
+
+    const currentServer = server;
+    const nextName = createName.trim();
+
     setCreating(true);
-    setError(null);
     try {
-      const session = await createSession(server);
-      setSessions((current) => [session, ...current]);
+      const session = await createSession(currentServer, nextName || undefined);
+      if (!isCurrentServer(currentServer.id)) {
+        return;
+      }
+      setSessions((current) => [session, ...current.filter((item) => item.name !== session.name)]);
+      setError(null);
+      resetCreateForm();
       router.push({
         pathname: '/terminal/[sessionId]',
         params: { sessionId: session.displayName },
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'セッションを作成できませんでした。';
-      setError(message);
+      if (!isCurrentServer(currentServer.id)) {
+        return;
+      }
+      const message = getErrorMessage(err, 'セッションを作成できませんでした。');
+      Toast.show({
+        type: 'error',
+        text1: 'セッション作成失敗',
+        text2: message,
+      });
     } finally {
-      setCreating(false);
+      if (isCurrentServer(currentServer.id)) {
+        setCreating(false);
+      }
     }
-  };
+  }, [createName, creating, isCurrentServer, resetCreateForm, router, server]);
 
-  const confirmDelete = (session: TmuxSession) => {
-    if (!server) {
+  const handleCreateAction = useCallback(() => {
+    if (showCreateForm) {
+      void handleCreate();
       return;
     }
 
-    Alert.alert('セッション削除', `${session.displayName} を削除しますか。`, [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '削除',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            try {
-              await deleteSession(server, session.name);
-              setSessions((current) => current.filter((item) => item.name !== session.name));
-            } catch (err) {
-              const message = err instanceof Error ? err.message : 'セッションを削除できませんでした。';
-              setError(message);
-            }
-          })();
+    openCreateForm();
+  }, [handleCreate, openCreateForm, showCreateForm]);
+
+  const handleDelete = useCallback(
+    async (session: TmuxSession) => {
+      if (!server) {
+        return;
+      }
+
+      const currentServer = server;
+
+      try {
+        await deleteSession(currentServer, session.name);
+        if (!isCurrentServer(currentServer.id)) {
+          return;
+        }
+        setSessions((current) => current.filter((item) => item.name !== session.name));
+        setError(null);
+
+        if (editingSessionId === session.name) {
+          resetRenameForm();
+        }
+      } catch (err) {
+        if (!isCurrentServer(currentServer.id)) {
+          return;
+        }
+        const message = getErrorMessage(err, 'セッションを削除できませんでした。');
+        Toast.show({
+          type: 'error',
+          text1: 'セッション削除失敗',
+          text2: message,
+        });
+      }
+    },
+    [editingSessionId, isCurrentServer, resetRenameForm, server],
+  );
+
+  const confirmDelete = useCallback(
+    (session: TmuxSession) => {
+      Alert.alert('セッション削除', `${session.displayName} を削除しますか。`, [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '削除',
+          style: 'destructive',
+          onPress: () => {
+            void handleDelete(session);
+          },
         },
-      },
-    ]);
-  };
+      ]);
+    },
+    [handleDelete],
+  );
+
+  const startRename = useCallback(
+    (session: TmuxSession) => {
+      if (renamingSessionId) {
+        return;
+      }
+
+      resetCreateForm();
+      setEditingSessionId(session.name);
+      setRenameValue(session.displayName);
+    },
+    [renamingSessionId, resetCreateForm],
+  );
+
+  const cancelRename = useCallback(() => {
+    if (renamingSessionId) {
+      return;
+    }
+
+    resetRenameForm();
+  }, [renamingSessionId, resetRenameForm]);
+
+  const handleRename = useCallback(
+    async (session: TmuxSession) => {
+      if (!server || renamingSessionId === session.name) {
+        return;
+      }
+
+      const currentServer = server;
+      const nextName = renameValue.trim();
+
+      if (!nextName) {
+        Toast.show({
+          type: 'error',
+          text1: 'リネーム失敗',
+          text2: '名前を入力してください。',
+        });
+        return;
+      }
+
+      if (nextName === session.displayName) {
+        resetRenameForm();
+        return;
+      }
+
+      setRenamingSessionId(session.name);
+      try {
+        const updatedSession = await renameSession(currentServer, session.name, nextName);
+        if (!isCurrentServer(currentServer.id)) {
+          return;
+        }
+        setSessions((current) => current.map((item) => (item.name === session.name ? updatedSession : item)));
+        setError(null);
+        resetRenameForm();
+        Toast.show({
+          type: 'success',
+          text1: 'リネーム完了',
+        });
+      } catch (err) {
+        if (!isCurrentServer(currentServer.id)) {
+          return;
+        }
+        const message = getErrorMessage(err, 'セッションをリネームできませんでした。');
+        Toast.show({
+          type: 'error',
+          text1: 'リネーム失敗',
+          text2: message,
+        });
+      } finally {
+        if (isCurrentServer(currentServer.id)) {
+          setRenamingSessionId((current) => (current === session.name ? null : current));
+        }
+      }
+    },
+    [isCurrentServer, renameValue, renamingSessionId, resetRenameForm, server],
+  );
+
+  const showSkeleton = loading && sessions.length === 0;
+  const showErrorState = Boolean(error) && sessions.length === 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Stack.Screen
         options={{
           title: 'Sessions',
           headerRight: () => (
-            <Pressable disabled={!server || creating} hitSlop={8} onPress={() => void handleCreate()}>
+            <Pressable
+              accessibilityLabel="セッションを作成"
+              accessibilityRole="button"
+              disabled={!server || creating}
+              hitSlop={8}
+              onPress={openCreateForm}
+              style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
+            >
               <Ionicons
-                color={!server || creating ? Colors.dark.muted : Colors.dark.text}
+                color={!server || creating ? colors.textMuted : showCreateForm ? colors.primary : colors.textPrimary}
                 name="add"
                 size={22}
               />
@@ -122,51 +348,168 @@ export default function SessionsScreen() {
       />
 
       {!server ? (
-        <View style={styles.centered}>
-          <Text style={styles.emptyTitle}>サーバーを追加してください</Text>
-          <Text style={styles.emptyText}>Servers タブでデフォルトサーバーを設定すると使えます。</Text>
-        </View>
-      ) : loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={Colors.dark.tint} size="large" />
+        <EmptyState
+          description="Servers タブでデフォルトサーバーを設定すると使えます"
+          icon="server-outline"
+          title="サーバーを設定してください"
+        />
+      ) : showSkeleton ? (
+        <View style={[styles.skeletonContainer, { padding: spacing.lg, gap: spacing.md }]}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <SkeletonLoader key={index} height={72} radius={radii.lg} width="100%" />
+          ))}
         </View>
       ) : (
         <FlatList
+          contentContainerStyle={[
+            styles.listContent,
+            {
+              paddingHorizontal: spacing.lg,
+              paddingTop: spacing.lg,
+              paddingBottom: spacing['4xl'],
+            },
+            sessions.length === 0 && !showCreateForm && styles.centeredContent,
+          ]}
           data={sessions}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          keyboardShouldPersistTaps="handled"
           keyExtractor={(item) => item.name}
-          contentContainerStyle={sessions.length === 0 ? styles.emptyContent : styles.listContent}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              delayLongPress={300}
-              onPress={() =>
-                router.push({
-                  pathname: '/terminal/[sessionId]',
-                  params: { sessionId: item.displayName },
-                })
-              }
-              onLongPress={() => confirmDelete(item)}
-              style={styles.sessionCard}
-            >
-              <Text style={styles.sessionName}>{item.displayName}</Text>
-              <Text style={styles.sessionMeta}>{formatDate(item.created)}</Text>
-            </TouchableOpacity>
-          )}
+          ListEmptyComponent={
+            showErrorState ? (
+              <EmptyState
+                action={{ label: '再試行', onPress: () => void loadSessions('initial') }}
+                description={error ?? '時間をおいて再試行してください'}
+                icon="cloud-offline-outline"
+                title="セッションを取得できません"
+              />
+            ) : (
+              <EmptyState
+                action={{ label: 'セッションを作成', onPress: handleCreateAction }}
+                description="新しい tmux セッションを作成して開始しましょう"
+                icon="terminal-outline"
+                title="セッションがありません"
+              />
+            )
+          }
           ListHeaderComponent={
-            error ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorText}>{error}</Text>
+            showCreateForm ? (
+              <View style={{ marginBottom: spacing.lg }}>
+                <Card highlighted style={styles.formCard}>
+                  <View style={styles.formHeader}>
+                    <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッション</Text>
+                    <Text style={[typography.caption, { color: colors.textSecondary }]}>
+                      名前は空欄のままでも作成できます。必要ならあとでスワイプしてリネームできます。
+                    </Text>
+                  </View>
+
+                  <Input
+                    autoCapitalize="none"
+                    label="セッション名"
+                    onChangeText={setCreateName}
+                    placeholder="例: 作業メモ / deploy / scratch"
+                    value={createName}
+                  />
+
+                  <View style={styles.formActions}>
+                    <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
+                    <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
+                  </View>
+                </Card>
               </View>
             ) : null
           }
-          ListEmptyComponent={
-            <View style={styles.centered}>
-              <Text style={styles.emptyTitle}>セッションがありません</Text>
-              <Text style={styles.emptyText}>右上の + から新しい tmux セッションを作成してください。</Text>
-            </View>
+          refreshControl={
+            <RefreshControl
+              colors={[colors.primary]}
+              onRefresh={() => void loadSessions('refresh')}
+              refreshing={refreshing}
+              tintColor={colors.primary}
+            />
           }
-          refreshing={loading}
-          onRefresh={() => void loadSessions()}
+          renderItem={({ item }) => {
+            const isEditing = editingSessionId === item.name;
+            const isRenaming = renamingSessionId === item.name;
+            const sessionAccessibilityLabel = `${item.displayName} ${formatDate(item.created)}`;
+
+            return (
+              <SwipeableRow
+                leftAction={
+                  isEditing
+                    ? undefined
+                    : {
+                        icon: 'pencil-outline',
+                        color: colors.primary,
+                        label: 'セッションをリネーム',
+                        onPress: () => startRename(item),
+                      }
+                }
+                rightAction={
+                  isEditing
+                    ? undefined
+                    : {
+                        icon: 'trash-outline',
+                        color: colors.error,
+                        label: 'セッションを削除',
+                        onPress: () => confirmDelete(item),
+                      }
+                }
+              >
+                <Card
+                  accessibilityLabel={sessionAccessibilityLabel}
+                  highlighted={isEditing}
+                  onLongPress={isEditing ? undefined : () => confirmDelete(item)}
+                  onPress={
+                    isEditing
+                      ? undefined
+                      : () =>
+                          router.push({
+                            pathname: '/terminal/[sessionId]',
+                            params: { sessionId: item.displayName },
+                          })
+                  }
+                  style={styles.sessionCard}
+                >
+                  <View style={styles.sessionHeader}>
+                    <View style={styles.sessionTitleWrap}>
+                      <Text numberOfLines={1} style={[typography.bodyMedium, { color: colors.textPrimary }]}>
+                        {isEditing && renameValue ? renameValue : item.displayName}
+                      </Text>
+                    </View>
+                    <Badge label={isEditing ? '編集中' : 'tmux'} variant={isEditing ? 'primary' : 'muted'} />
+                  </View>
+
+                  <View style={styles.sessionMeta}>
+                    <Ionicons color={colors.textMuted} name="time-outline" size={14} />
+                    <Text style={[typography.caption, { color: colors.textMuted }]}>作成 {formatDate(item.created)}</Text>
+                  </View>
+
+                  {isEditing ? (
+                    <View style={styles.renameForm}>
+                      <Input
+                        autoCapitalize="none"
+                        label="表示名"
+                        onChangeText={setRenameValue}
+                        placeholder="新しい表示名を入力"
+                        value={renameValue}
+                      />
+
+                      <View style={styles.formActions}>
+                        <Button label="キャンセル" onPress={cancelRename} size="sm" variant="secondary" />
+                        <Button
+                          disabled={!renameValue.trim()}
+                          label="保存"
+                          loading={isRenaming}
+                          onPress={() => void handleRename(item)}
+                          size="sm"
+                        />
+                      </View>
+                    </View>
+                  ) : null}
+                </Card>
+              </SwipeableRow>
+            );
+          }}
+          showsVerticalScrollIndicator={false}
         />
       )}
     </View>
@@ -176,61 +519,47 @@ export default function SessionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
   },
-  centered: {
+  skeletonContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 8,
   },
   listContent: {
-    padding: 16,
-    gap: 12,
-  },
-  emptyContent: {
     flexGrow: 1,
-    padding: 16,
   },
-  sessionCard: {
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: Colors.dark.card,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
+  centeredContent: {
+    justifyContent: 'center',
+  },
+  formCard: {
+    gap: 16,
+  },
+  formHeader: {
     gap: 6,
   },
-  sessionName: {
-    color: Colors.dark.text,
-    fontSize: 17,
-    fontWeight: '700',
+  formActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  sessionCard: {
+    gap: 10,
+  },
+  sessionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  sessionTitleWrap: {
+    flex: 1,
   },
   sessionMeta: {
-    color: Colors.dark.muted,
-    fontSize: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  emptyTitle: {
-    color: Colors.dark.text,
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  emptyText: {
-    color: Colors.dark.muted,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  errorBanner: {
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: 'rgba(212, 93, 93, 0.16)',
-    borderWidth: 1,
-    borderColor: Colors.dark.danger,
-  },
-  errorText: {
-    color: '#f2b1b1',
-    fontSize: 14,
+  renameForm: {
+    gap: 12,
+    paddingTop: 4,
   },
 });

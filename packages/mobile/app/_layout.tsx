@@ -1,12 +1,15 @@
-import { DarkTheme, ThemeProvider, type Theme } from '@react-navigation/native';
+import { ThemeProvider } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
-import Colors from '@/constants/Colors';
 import { useServersStore } from '@/src/stores/servers';
+import { useSettingsStore } from '@/src/stores/settings';
+import { ToastConfig } from '@/src/components/ui';
+import { AppThemeProvider, useTheme } from '@/src/theme';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -14,45 +17,18 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
-const navigationTheme: Theme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: Colors.dark.tint,
-    background: Colors.dark.background,
-    card: Colors.dark.card,
-    text: Colors.dark.text,
-    border: Colors.dark.border,
-    notification: Colors.dark.tint,
-  },
-};
-
-export default function RootLayout() {
-  const load = useServersStore((state) => state.load);
-  const loaded = useServersStore((state) => state.loaded);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  if (!loaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar style="light" />
-        <ActivityIndicator color={Colors.dark.tint} size="large" />
-      </View>
-    );
-  }
+function AppContent() {
+  const { dark, colors, navigationTheme } = useTheme();
 
   return (
     <ThemeProvider value={navigationTheme}>
-      <StatusBar backgroundColor={Colors.dark.background} style="light" />
+      <StatusBar backgroundColor={colors.bg} style={dark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
-          contentStyle: { backgroundColor: Colors.dark.background },
-          headerStyle: { backgroundColor: Colors.dark.card },
-          headerTintColor: Colors.dark.text,
-          headerTitleStyle: { color: Colors.dark.text, fontWeight: '600' },
+          contentStyle: { backgroundColor: colors.bg },
+          headerStyle: { backgroundColor: dark ? colors.surface : colors.bg },
+          headerTintColor: colors.textPrimary,
+          headerTitleStyle: { color: colors.textPrimary, fontWeight: '600' },
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -69,11 +45,44 @@ export default function RootLayout() {
   );
 }
 
+export default function RootLayout() {
+  const loadServers = useServersStore((state) => state.load);
+  const serversLoaded = useServersStore((state) => state.loaded);
+  const loadSettings = useSettingsStore((state) => state.load);
+  const settingsLoaded = useSettingsStore((state) => state.loaded);
+  const loaded = serversLoaded && settingsLoaded;
+
+  useEffect(() => {
+    void Promise.all([loadServers(), loadSettings()]);
+  }, [loadServers, loadSettings]);
+
+  if (!loaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar style="light" />
+        <ActivityIndicator color="#D4713D" size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <GestureHandlerRootView style={styles.gestureRoot}>
+      <AppThemeProvider>
+        <AppContent />
+        <ToastConfig />
+      </AppThemeProvider>
+    </GestureHandlerRootView>
+  );
+}
+
 const styles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.dark.background,
+    backgroundColor: '#1A1915',
   },
 });

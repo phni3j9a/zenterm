@@ -2,6 +2,8 @@ import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import type { Server } from '@/src/types';
+import { useSettingsStore } from '@/src/stores/settings';
+import { terminalColors } from '@/src/theme/tokens';
 
 export interface TerminalWebViewHandle {
   sendInput: (data: string) => void;
@@ -10,7 +12,7 @@ export interface TerminalWebViewHandle {
 interface Props {
   server: Server;
   sessionId: string;
-  onStatusChange?: (status: 'connected' | 'disconnected' | 'error') => void;
+  onStatusChange?: (status: 'connected' | 'disconnected' | 'error' | 'reconnecting') => void;
 }
 
 const getBaseUrl = (url: string) => url.replace(/\/+$/, '');
@@ -18,13 +20,20 @@ const getBaseUrl = (url: string) => url.replace(/\/+$/, '');
 export const TerminalWebView = forwardRef<TerminalWebViewHandle, Props>(
   ({ server, sessionId, onStatusChange }, ref) => {
     const webViewRef = useRef<WebView>(null);
-    const uri = `${getBaseUrl(server.url)}/embed/terminal?sessionId=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(server.token)}`;
+    const fontSize = useSettingsStore((state) => state.settings.fontSize);
+    const terminalTheme = 'dark';
+    const uri = `${getBaseUrl(server.url)}/embed/terminal?sessionId=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(server.token)}&fontSize=${encodeURIComponent(String(fontSize))}&theme=${encodeURIComponent(terminalTheme)}`;
 
     const onMessage = useCallback(
       (event: WebViewMessageEvent) => {
         try {
           const msg = JSON.parse(event.nativeEvent.data);
-          if (msg.type === 'connected' || msg.type === 'disconnected' || msg.type === 'error') {
+          if (
+            msg.type === 'connected' ||
+            msg.type === 'disconnected' ||
+            msg.type === 'error' ||
+            msg.type === 'reconnecting'
+          ) {
             onStatusChange?.(msg.type);
           }
         } catch {
@@ -61,7 +70,7 @@ export const TerminalWebView = forwardRef<TerminalWebViewHandle, Props>(
           console.warn('WebView HTTP error:', e.nativeEvent.statusCode);
           onStatusChange?.('error');
         }}
-        style={{ flex: 1, backgroundColor: '#1a1915' }}
+        style={{ flex: 1, backgroundColor: terminalColors.bg }}
         javaScriptEnabled
         domStorageEnabled
         allowsInlineMediaPlayback

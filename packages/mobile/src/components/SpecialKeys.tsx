@@ -1,50 +1,180 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import Colors from '@/constants/Colors';
+import { colorsDark, radii, spacing, typography } from '@/src/theme/tokens';
 
 interface Props {
   onKeyPress: (data: string) => void;
 }
 
-const KEYS = [
-  { label: 'Esc', data: '\x1b' },
-  { label: 'Tab', data: '\t' },
-  { label: 'Ctrl+C', data: '\x03' },
-];
+const ARROW_KEYS = [
+  { label: '←', data: '\x1b[D' },
+  { label: '↑', data: '\x1b[A' },
+  { label: '↓', data: '\x1b[B' },
+  { label: '→', data: '\x1b[C' },
+] as const;
+
+const CTRL_KEYS = [
+  { label: 'C', code: '\x03' },
+  { label: 'D', code: '\x04' },
+  { label: 'Z', code: '\x1a' },
+  { label: 'L', code: '\x0c' },
+  { label: 'A', code: '\x01' },
+  { label: 'E', code: '\x05' },
+  { label: 'W', code: '\x17' },
+  { label: 'R', code: '\x12' },
+] as const;
 
 export function SpecialKeys({ onKeyPress }: Props) {
+  const [isCtrl, setIsCtrl] = useState(false);
+
+  const triggerHaptic = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleBaseKeyPress = (data: string) => {
+    triggerHaptic();
+    onKeyPress(data);
+  };
+
+  const handleCtrlToggle = () => {
+    triggerHaptic();
+    setIsCtrl((current) => !current);
+  };
+
+  const handleCtrlKeyPress = (data: string) => {
+    triggerHaptic();
+    onKeyPress(data);
+    setIsCtrl(false);
+  };
+
+  const handlePaste = async () => {
+    triggerHaptic();
+    const text = await Clipboard.getStringAsync();
+    if (!text) {
+      return;
+    }
+
+    onKeyPress(text);
+  };
+
   return (
     <View style={styles.container}>
-      {KEYS.map((key) => (
-        <TouchableOpacity key={key.label} style={styles.button} onPress={() => onKeyPress(key.data)}>
-          <Text style={styles.label}>{key.label}</Text>
+      <ScrollView horizontal contentContainerStyle={styles.row} showsHorizontalScrollIndicator={false}>
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b')} style={styles.button}>
+          <Text style={styles.label}>Esc</Text>
         </TouchableOpacity>
-      ))}
+
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\t')} style={styles.button}>
+          <Text style={styles.label}>Tab</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.78}
+          onPress={handleCtrlToggle}
+          style={[styles.button, isCtrl && styles.buttonActive]}
+        >
+          <Text style={[styles.label, isCtrl && styles.labelActive]}>Ctrl</Text>
+        </TouchableOpacity>
+
+        {ARROW_KEYS.map((key) => (
+          <TouchableOpacity
+            key={key.label}
+            activeOpacity={0.78}
+            onPress={() => handleBaseKeyPress(key.data)}
+            style={styles.button}
+          >
+            <Text style={styles.label}>{key.label}</Text>
+          </TouchableOpacity>
+        ))}
+
+        <TouchableOpacity activeOpacity={0.78} onPress={() => void handlePaste()} style={styles.pasteButton}>
+          <Ionicons color={colorsDark.textPrimary} name="clipboard-outline" size={16} />
+          <Text style={styles.label}>Paste</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {isCtrl ? (
+        <View style={styles.ctrlRow}>
+          <Text style={styles.ctrlHint}>Ctrl mode</Text>
+          <ScrollView horizontal contentContainerStyle={styles.row} showsHorizontalScrollIndicator={false}>
+            {CTRL_KEYS.map((key) => (
+              <TouchableOpacity
+                key={key.label}
+                activeOpacity={0.78}
+                onPress={() => handleCtrlKeyPress(key.code)}
+                style={[styles.button, styles.ctrlKeyButton]}
+              >
+                <Text style={[styles.label, styles.labelActive]}>{key.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: Colors.dark.card,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
+    backgroundColor: colorsDark.surface,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.dark.border,
+    borderTopColor: colorsDark.border,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingRight: spacing.sm,
+  },
+  ctrlRow: {
+    gap: spacing.xs,
+  },
+  ctrlHint: {
+    ...typography.smallMedium,
+    color: colorsDark.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   button: {
-    flex: 1,
+    minWidth: 44,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: Colors.dark.cardMuted,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.sm,
+    backgroundColor: colorsDark.surfaceHover,
+  },
+  buttonActive: {
+    backgroundColor: colorsDark.primary,
+  },
+  ctrlKeyButton: {
+    minWidth: 46,
+    backgroundColor: colorsDark.primarySubtle,
+    borderWidth: 1,
+    borderColor: colorsDark.primary,
+  },
+  pasteButton: {
+    minWidth: 70,
+    height: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.sm,
+    backgroundColor: colorsDark.surfaceHover,
   },
   label: {
-    color: Colors.dark.text,
-    fontSize: 14,
-    fontWeight: '600',
+    ...typography.captionMedium,
+    color: colorsDark.textPrimary,
+  },
+  labelActive: {
+    color: colorsDark.textInverse,
   },
 });

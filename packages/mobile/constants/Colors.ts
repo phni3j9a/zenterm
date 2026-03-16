@@ -1,28 +1,18 @@
-const palette = {
-  background: '#1a1915',
-  surface: '#24211d',
-  surfaceMuted: '#2f2b25',
-  text: '#e8e4dc',
-  muted: '#b7afa2',
-  tint: '#d97757',
-  border: '#4b443a',
-  danger: '#d45d5d',
-  success: '#8cb369',
-};
+import { colorsDark } from '@/src/theme/tokens';
 
 const scheme = {
-  text: palette.text,
-  background: palette.background,
-  tint: palette.tint,
-  icon: palette.muted,
-  tabIconDefault: palette.muted,
-  tabIconSelected: palette.tint,
-  card: palette.surface,
-  cardMuted: palette.surfaceMuted,
-  border: palette.border,
-  muted: palette.muted,
-  danger: palette.danger,
-  success: palette.success,
+  text: colorsDark.textPrimary,
+  background: colorsDark.bg,
+  tint: colorsDark.primary,
+  icon: colorsDark.textMuted,
+  tabIconDefault: colorsDark.textMuted,
+  tabIconSelected: colorsDark.primary,
+  card: colorsDark.surface,
+  cardMuted: colorsDark.surfaceHover,
+  border: colorsDark.border,
+  muted: colorsDark.textSecondary,
+  danger: colorsDark.error,
+  success: colorsDark.success,
 };
 
 const Colors = {

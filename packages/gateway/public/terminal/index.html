@@ -12,6 +12,14 @@
   <script src="/terminal/lib/addon-fit.min.js"></script>
   <script src="/terminal/lib/addon-unicode11.min.js"></script>
   <style>
+    :root {
+      --terminal-bg: #1a1915;
+      --terminal-fg: #e8e4dc;
+      --terminal-cursor: #d97757;
+      --terminal-cursor-accent: #1a1915;
+      --terminal-selection: rgba(217, 119, 87, 0.25);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -23,12 +31,14 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #1a1915;
+      background: var(--terminal-bg);
+      color: var(--terminal-fg);
     }
 
     #terminal {
       width: 100%;
       height: 100%;
+      background: var(--terminal-bg);
     }
   </style>
 </head>
@@ -38,21 +48,71 @@
     var params = new URLSearchParams(window.location.search);
     var sessionId = params.get('sessionId');
     var token = params.get('token');
-
-    var term = new Terminal({
-      allowProposedApi: true,
-      fontFamily: '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace',
-      fontSize: 14,
-      cursorBlink: true,
-      cursorStyle: 'block',
-      scrollback: 5000,
-      theme: {
+    var theme = params.get('theme') || 'dark';
+    var parsedFontSize = Number.parseInt(params.get('fontSize') || '14', 10);
+    var fontSize = Number.isFinite(parsedFontSize) ? parsedFontSize : 14;
+    var reconnectAttempt = 0;
+    var reconnectTimer = null;
+    var reconnectDelay = 1000;
+    var reconnectLimit = 20;
+    var maxReconnectDelay = 30000;
+    var manualReconnectAvailable = false;
+    var themes = {
+      dark: {
         background: '#1a1915',
         foreground: '#e8e4dc',
         cursor: '#d97757',
         cursorAccent: '#1a1915',
-        selection: 'rgba(217, 119, 87, 0.25)'
+        selection: 'rgba(217, 119, 87, 0.25)',
+      },
+      light: {
+        background: '#fdfcfa',
+        foreground: '#2c2a25',
+        cursor: '#d4713d',
+        cursorAccent: '#fdfcfa',
+        selection: 'rgba(212, 113, 61, 0.2)',
+      },
+    };
+    var activeTheme = theme === 'light' ? themes.light : themes.dark;
+
+    function syncThemeVariables(nextTheme) {
+      var rootStyle = document.documentElement.style;
+      rootStyle.setProperty('--terminal-bg', nextTheme.background);
+      rootStyle.setProperty('--terminal-fg', nextTheme.foreground);
+      rootStyle.setProperty('--terminal-cursor', nextTheme.cursor);
+      rootStyle.setProperty('--terminal-cursor-accent', nextTheme.cursorAccent);
+      rootStyle.setProperty('--terminal-selection', nextTheme.selection);
+      document.body.style.background = nextTheme.background;
+      document.body.style.color = nextTheme.foreground;
+    }
+
+    function resolveTheme(nextTheme) {
+      if (typeof nextTheme === 'string') {
+        return themes[nextTheme] || themes.dark;
       }
+
+      return nextTheme || themes.dark;
+    }
+
+    function applyTheme(nextTheme) {
+      activeTheme = resolveTheme(nextTheme);
+      syncThemeVariables(activeTheme);
+
+      if (term) {
+        term.options.theme = activeTheme;
+      }
+    }
+
+    syncThemeVariables(activeTheme);
+
+    var term = new Terminal({
+      allowProposedApi: true,
+      fontFamily: '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace',
+      fontSize: fontSize,
+      cursorBlink: true,
+      cursorStyle: 'block',
+      scrollback: 5000,
+      theme: activeTheme
     });
 
     var fitAddon = new FitAddon.FitAddon();
@@ -66,6 +126,7 @@
     fitAddon.fit();
 
     var ws = null;
+    var lastKnownSize = { cols: term.cols, rows: term.rows };
 
     function notifyRN(message) {
       if (window.ReactNativeWebView) {
@@ -73,31 +134,110 @@
       }
     }
 
-    function connect() {
-      if (!token) {
-        notifyRN({ type: 'error', message: 'Missing token' });
-        term.writeln('Missing token');
+    function clearReconnectTimer() {
+      if (reconnectTimer !== null) {
+        window.clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+    }
+
+    function updateKnownSize() {
+      lastKnownSize = { cols: term.cols, rows: term.rows };
+    }
+
+    function fitTerminal() {
+      fitAddon.fit();
+      updateKnownSize();
+    }
+
+    function sendResize() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
         return;
       }
 
+      ws.send(JSON.stringify({ type: 'resize', cols: lastKnownSize.cols, rows: lastKnownSize.rows }));
+    }
+
+    function writeStatusLine(title, detail) {
+      var lines = [''];
+      lines.push('> ' + title);
+      if (detail) {
+        lines.push('  ' + detail);
+      }
+      lines.push('');
+
+      term.write(lines.join('\r\n'));
+    }
+
+    function buildWsUrl() {
       var wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       var wsParams = new URLSearchParams();
       if (sessionId) wsParams.set('sessionId', sessionId);
       if (token) wsParams.set('token', token);
-      var wsUrl = wsProtocol + '//' + window.location.host + '/ws/terminal?' + wsParams.toString();
+      return wsProtocol + '//' + window.location.host + '/ws/terminal?' + wsParams.toString();
+    }
+
+    function scheduleReconnect() {
+      if (reconnectAttempt >= reconnectLimit) {
+        manualReconnectAvailable = true;
+        writeStatusLine('接続が切れました', '画面をタップすると再接続できます。');
+        notifyRN({ type: 'reconnectFailed' });
+        notifyRN({ type: 'disconnected' });
+        return;
+      }
+
+      reconnectAttempt += 1;
+      var attempt = reconnectAttempt;
+      var delay = reconnectDelay;
+      reconnectDelay = Math.min(reconnectDelay * 2, maxReconnectDelay);
+      manualReconnectAvailable = false;
+      writeStatusLine(
+        '再接続しています',
+        attempt + '/' + reconnectLimit + ' 回目を ' + (delay / 1000).toFixed(1) + ' 秒後に開始します。',
+      );
+      notifyRN({ type: 'reconnecting', attempt: attempt });
+      clearReconnectTimer();
+      reconnectTimer = window.setTimeout(function() {
+        connect();
+      }, delay);
+    }
+
+    function resetReconnectState() {
+      reconnectAttempt = 0;
+      reconnectDelay = 1000;
+      manualReconnectAvailable = false;
+      clearReconnectTimer();
+    }
+
+    function connect() {
+      clearReconnectTimer();
+
+      if (!token) {
+        notifyRN({ type: 'error', message: 'Missing token' });
+        writeStatusLine('認証トークンが見つかりません');
+        return;
+      }
+
+      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
 
       try {
-        ws = new WebSocket(wsUrl);
+        ws = new WebSocket(buildWsUrl());
       } catch (e) {
-        term.writeln('WebSocket creation failed: ' + e.message);
-        notifyRN({ type: 'error', message: 'WebSocket creation failed: ' + e.message });
+        var errorMessage = 'WebSocket creation failed: ' + e.message;
+        writeStatusLine('接続の準備に失敗しました', errorMessage);
+        notifyRN({ type: 'error', message: errorMessage });
+        scheduleReconnect();
         return;
       }
 
       ws.onopen = function() {
+        resetReconnectState();
         term.reset();
+        fitTerminal();
         notifyRN({ type: 'connected' });
-        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+        sendResize();
       };
 
       ws.onmessage = function(event) {
@@ -120,8 +260,15 @@
       };
 
       ws.onclose = function(event) {
-        term.writeln('\r\n[Disconnected]');
-        notifyRN({ type: 'disconnected' });
+        ws = null;
+
+        if (event.code === 1000 || event.code === 1008) {
+          writeStatusLine('接続を終了しました');
+          notifyRN({ type: 'disconnected' });
+          return;
+        }
+
+        scheduleReconnect();
       };
 
       ws.onerror = function() {
@@ -136,10 +283,8 @@
     });
 
     window.addEventListener('resize', function() {
-      fitAddon.fit();
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
-      }
+      fitTerminal();
+      sendResize();
     });
 
     function handleBridgeMessage(rawData) {
@@ -153,11 +298,12 @@
         }
         if (message.type === 'resize') {
           term.resize(message.cols, message.rows);
-          fitAddon.fit();
+          updateKnownSize();
+          sendResize();
           return;
         }
         if (message.type === 'theme') {
-          term.options.theme = message.theme;
+          applyTheme(message.theme);
         }
       } catch (_error) {}
     }
@@ -174,6 +320,15 @@
 
     document.addEventListener('message', function(event) {
       handleBridgeMessage(event.data);
+    });
+
+    document.getElementById('terminal').addEventListener('click', function() {
+      if (!manualReconnectAvailable) {
+        return;
+      }
+
+      resetReconnectState();
+      connect();
     });
 
     if (document.readyState === 'complete') {

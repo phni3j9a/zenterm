@@ -2,7 +2,7 @@ import fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import staticPlugin from '@fastify/static';
 import websocket from '@fastify/websocket';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ZodError } from 'zod';
 import bearerPlugin from './auth/bearer.js';
@@ -13,7 +13,8 @@ import sessionRoutes from './routes/sessions.js';
 import terminalRoutes from './routes/terminal.js';
 import { TmuxServiceError } from './services/tmux.js';
 
-const publicDir = fileURLToPath(new URL('../public', import.meta.url));
+const thisDir = fileURLToPath(new URL('.', import.meta.url));
+const publicDir = resolve(thisDir, '..', 'public');
 
 function redactTokenFromUrl(url: string): string {
   return url.replace(/([?&])token=[^&]*/g, '$1token=***');

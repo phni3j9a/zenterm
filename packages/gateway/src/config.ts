@@ -44,7 +44,7 @@ loadEnvFile();
 
 const configSchema = z.object({
   AUTH_TOKEN: z.string().min(1, 'AUTH_TOKEN is required'),
-  PORT: z.coerce.number().int().positive().default(8765),
+  PORT: z.coerce.number().int().positive().default(18765),
   HOST: z.string().min(1).default('0.0.0.0'),
   SESSION_PREFIX: z.string().min(1).default('ccs_'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info')
