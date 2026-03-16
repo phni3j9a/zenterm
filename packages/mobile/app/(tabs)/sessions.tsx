@@ -5,10 +5,21 @@ import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } fr
 import Toast from 'react-native-toast-message';
 
 import { createSession, deleteSession, listSessions, renameSession } from '@/src/api/client';
+import { InlineTerminal } from '@/src/components/InlineTerminal';
 import { Badge, Button, Card, EmptyState, Input, SkeletonLoader, SwipeableRow } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useTheme } from '@/src/theme';
+import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 import type { TmuxSession } from '@/src/types';
+
+type TerminalStatus = 'connected' | 'disconnected' | 'error' | 'reconnecting';
+
+const statusLabels: Record<TerminalStatus, string> = {
+  connected: '接続中',
+  disconnected: '未接続',
+  error: 'エラー',
+  reconnecting: '再接続中',
+};
 
 const formatDate = (created: number) => {
   const timestamp = created < 1_000_000_000_000 ? created * 1000 : created;
@@ -36,6 +47,11 @@ export default function SessionsScreen() {
   const [error, setError] = useState<string | null>(null);
   const sessionsCountRef = useRef(0);
   const requestIdRef = useRef(0);
+
+  // ── Inline terminal state ──
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [terminalStatus, setTerminalStatus] = useState<TerminalStatus>('disconnected');
+  const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
 
   const styles = useMemo(
     () =>
@@ -275,6 +291,16 @@ export default function SessionsScreen() {
     [isCurrentServer, server],
   );
 
+  const openTerminal = useCallback((sessionId: string) => {
+    setTerminalStatus('disconnected');
+    setActiveSessionId(sessionId);
+  }, []);
+
+  const closeTerminal = useCallback(() => {
+    setActiveSessionId(null);
+    void loadSessions('soft');
+  }, [loadSessions]);
+
   useFocusEffect(
     useCallback(() => {
       const mode: LoadMode = sessionsCountRef.current === 0 ? 'initial' : 'soft';
@@ -316,10 +342,7 @@ export default function SessionsScreen() {
       setSessions((current) => [session, ...current.filter((item) => item.name !== session.name)]);
       setError(null);
       resetCreateForm();
-      router.push({
-        pathname: '/terminal/[sessionId]',
-        params: { sessionId: session.displayName },
-      });
+      openTerminal(session.displayName);
     } catch (err) {
       if (!isCurrentServer(currentServer.id)) {
         return;
@@ -335,7 +358,7 @@ export default function SessionsScreen() {
         setCreating(false);
       }
     }
-  }, [createName, creating, isCurrentServer, resetCreateForm, router, server]);
+  }, [createName, creating, isCurrentServer, openTerminal, resetCreateForm, server]);
 
   const handleCreateAction = useCallback(() => {
     if (showCreateForm) {
@@ -548,31 +571,82 @@ export default function SessionsScreen() {
     </View>
   );
 
+  const statusColor = activeSessionId
+    ? {
+        connected: colors.success,
+        disconnected: colors.textMuted,
+        error: colors.error,
+        reconnecting: colors.warning,
+      }[terminalStatus]
+    : undefined;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, activeSessionId && { backgroundColor: termBg }]}>
       <Stack.Screen
-        options={{
-          title: 'Sessions',
-          headerRight: () => (
-            <Pressable
-              accessibilityLabel="セッションを作成"
-              accessibilityRole="button"
-              disabled={!server || creating}
-              hitSlop={8}
-              onPress={openCreateForm}
-              style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
-            >
-              <Ionicons
-                color={!server || creating ? colors.textMuted : showCreateForm ? colors.primary : colors.textPrimary}
-                name="add"
-                size={22}
-              />
-            </Pressable>
-          ),
-        }}
+        options={
+          activeSessionId
+            ? {
+                title: activeSessionId || 'Terminal',
+                headerStyle: { backgroundColor: termBg },
+                headerTintColor: colors.textPrimary,
+                headerLeft: () => (
+                  <Pressable
+                    accessibilityLabel="セッション一覧に戻る"
+                    accessibilityRole="button"
+                    hitSlop={12}
+                    onPress={closeTerminal}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
+                  >
+                    <Ionicons color={colors.textPrimary} name="chevron-back" size={24} />
+                  </Pressable>
+                ),
+                headerRight: () => (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: 9999,
+                        backgroundColor: statusColor,
+                      }}
+                    />
+                    <Text style={[typography.small, { color: statusColor }]}>
+                      {statusLabels[terminalStatus]}
+                    </Text>
+                  </View>
+                ),
+              }
+            : {
+                title: 'Sessions',
+                headerStyle: undefined,
+                headerLeft: undefined,
+                headerRight: () => (
+                  <Pressable
+                    accessibilityLabel="セッションを作成"
+                    accessibilityRole="button"
+                    disabled={!server || creating}
+                    hitSlop={8}
+                    onPress={openCreateForm}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
+                  >
+                    <Ionicons
+                      color={!server || creating ? colors.textMuted : showCreateForm ? colors.primary : colors.textPrimary}
+                      name="add"
+                      size={22}
+                    />
+                  </Pressable>
+                ),
+              }
+        }
       />
 
-      {!server ? (
+      {activeSessionId && server ? (
+        <InlineTerminal
+          server={server}
+          sessionId={activeSessionId}
+          onStatusChange={setTerminalStatus}
+        />
+      ) : !server ? (
         <EmptyState
           description="Servers タブでデフォルトサーバーを設定すると使えます"
           icon="server-outline"
@@ -652,11 +726,7 @@ export default function SessionsScreen() {
                   onPress={
                     isEditing
                       ? undefined
-                      : () =>
-                          router.push({
-                            pathname: '/terminal/[sessionId]',
-                            params: { sessionId: item.displayName },
-                          })
+                      : () => openTerminal(item.displayName)
                   }
                   style={styles.sessionCard}
                 >

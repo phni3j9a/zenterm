@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useTheme } from '@/src/theme';
+import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 
 interface Props {
   onKeyPress: (data: string) => void;
@@ -30,7 +31,8 @@ const CTRL_KEYS = [
 
 export function SpecialKeys({ onKeyPress }: Props) {
   const [isCtrl, setIsCtrl] = useState(false);
-  const { colors, radii, spacing, typography } = useTheme();
+  const { dark, colors, radii, spacing, typography } = useTheme();
+  const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
 
   const styles = useMemo(
     () =>
@@ -38,10 +40,8 @@ export function SpecialKeys({ onKeyPress }: Props) {
         container: {
           gap: spacing.sm,
           paddingHorizontal: spacing.lg,
-          paddingVertical: 10,
-          backgroundColor: colors.surface,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: colors.border,
+          paddingVertical: spacing.sm,
+          backgroundColor: termBg,
         },
         row: {
           flexDirection: 'row',
@@ -97,7 +97,7 @@ export function SpecialKeys({ onKeyPress }: Props) {
           color: colors.primary,
         },
       }),
-    [colors, radii, spacing, typography],
+    [colors, radii, spacing, termBg, typography],
   );
 
   const triggerHaptic = () => {

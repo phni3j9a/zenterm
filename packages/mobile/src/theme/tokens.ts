@@ -71,12 +71,14 @@ export const colorsDark = {
 } as const;
 
 // Terminal Colors — Light
+// bg は少し暖かめ (#F7F5F0) にしてアプリ背景 (#FDFCFA) との
+// 境界を自然に見せつつ、ANSI カラーとの調和を取る
 export const terminalColorsLight = {
-  bg: '#FDFCFA',
+  bg: '#F7F5F0',
   foreground: '#2C2A25',
   cursor: '#D4713D',
-  cursorAccent: '#FDFCFA',
-  selection: 'rgba(212, 113, 61, 0.2)',
+  cursorAccent: '#F7F5F0',
+  selection: 'rgba(212, 113, 61, 0.18)',
 } as const;
 
 // Terminal Colors — Dark

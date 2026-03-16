@@ -14,10 +14,10 @@ import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 type TerminalStatus = 'connected' | 'disconnected' | 'error' | 'reconnecting';
 
 const statusConfig = {
-  connected: { label: '\u63A5\u7D9A\u4E2D', getColor: (c: { success: string }) => c.success },
-  disconnected: { label: '\u672A\u63A5\u7D9A', getColor: (c: { textMuted: string }) => c.textMuted },
-  error: { label: '\u30A8\u30E9\u30FC', getColor: (c: { error: string }) => c.error },
-  reconnecting: { label: '\u518D\u63A5\u7D9A\u4E2D...', getColor: (c: { warning: string }) => c.warning },
+  connected: { label: '接続中', getColor: (c: { success: string }) => c.success },
+  disconnected: { label: '未接続', getColor: (c: { textMuted: string }) => c.textMuted },
+  error: { label: 'エラー', getColor: (c: { error: string }) => c.error },
+  reconnecting: { label: '再接続中...', getColor: (c: { warning: string }) => c.warning },
 } as const;
 
 export default function TerminalScreen() {
@@ -33,17 +33,18 @@ export default function TerminalScreen() {
   const sessionId = Array.isArray(value) ? value[0] ?? '' : value ?? '';
   const currentStatus = statusConfig[status];
   const statusColor = currentStatus.getColor(colors);
+  const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
 
   const styles = useMemo(
     () =>
       StyleSheet.create({
         safeArea: {
           flex: 1,
-          backgroundColor: colors.bg,
+          backgroundColor: termBg,
         },
         container: {
           flex: 1,
-          backgroundColor: dark ? terminalColorsDark.bg : terminalColorsLight.bg,
+          backgroundColor: termBg,
         },
         headerBar: {
           flexDirection: 'row',
@@ -51,9 +52,6 @@ export default function TerminalScreen() {
           justifyContent: 'space-between',
           paddingHorizontal: spacing.lg,
           paddingVertical: spacing.md,
-          backgroundColor: colors.surface,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.border,
         },
         closeButton: {
           width: 36,
@@ -93,7 +91,6 @@ export default function TerminalScreen() {
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: spacing['2xl'],
-          backgroundColor: dark ? terminalColorsDark.bg : terminalColorsLight.bg,
         },
         title: {
           ...typography.heading,
@@ -107,9 +104,10 @@ export default function TerminalScreen() {
           marginTop: spacing.xs,
         },
       }),
-    [colors, dark, radii, spacing, typography],
+    [colors, radii, spacing, termBg, typography],
   );
 
+  // ── Reconnecting pulse ──
   useEffect(() => {
     if (status !== 'reconnecting') {
       pulseOpacity.stopAnimation();
@@ -177,12 +175,12 @@ export default function TerminalScreen() {
   if (!server) {
     return (
       <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-        <StatusBar backgroundColor={colors.bg} style={dark ? 'light' : 'dark'} />
+        <StatusBar backgroundColor={termBg} style={dark ? 'light' : 'dark'} />
         {headerBar}
         <View style={styles.centered}>
-          <Text style={styles.title}>{'\u30C7\u30D5\u30A9\u30EB\u30C8\u30B5\u30FC\u30D0\u30FC\u304C\u3042\u308A\u307E\u305B\u3093'}</Text>
+          <Text style={styles.title}>デフォルトサーバーがありません</Text>
           <Text style={styles.description}>
-            {'Servers \u30BF\u30D6\u3067\u63A5\u7D9A\u5148\u3092\u8A2D\u5B9A\u3057\u3066\u304F\u3060\u3055\u3044\u3002'}
+            Servers タブで接続先を設定してください。
           </Text>
         </View>
       </SafeAreaView>
@@ -191,7 +189,7 @@ export default function TerminalScreen() {
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <StatusBar backgroundColor={colors.bg} style={dark ? 'light' : 'dark'} />
+      <StatusBar backgroundColor={termBg} style={dark ? 'light' : 'dark'} />
       {headerBar}
 
       <View style={styles.container}>

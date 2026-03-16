@@ -49,6 +49,33 @@ jest.mock('expo-router', () => {
   };
 });
 
+jest.mock('react-native-webview', () => {
+  const mockReact = require('react');
+  const RN = require('react-native');
+  return {
+    WebView: mockReact.forwardRef((props: any, ref: any) => {
+      mockReact.useImperativeHandle(ref, () => ({
+        injectJavaScript: jest.fn(),
+      }));
+      return mockReact.createElement(RN.View, { ...props, testID: 'mock-webview' });
+    }),
+  };
+});
+
+jest.mock('expo-clipboard', () => ({
+  getStringAsync: jest.fn(() => Promise.resolve('')),
+}));
+
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  ImpactFeedbackStyle: { Light: 'light' },
+}));
+
+jest.mock('@/src/stores/settings', () => ({
+  useSettingsStore: (selector: (s: any) => any) =>
+    selector({ settings: { fontSize: 14, themeMode: 'dark' as const } }),
+}));
+
 jest.mock('@/src/stores/servers', () => ({
   useServersStore: Object.assign(
     (selector: (state: { getDefaultServer: () => unknown }) => unknown) =>
