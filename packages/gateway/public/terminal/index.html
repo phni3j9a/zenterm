@@ -477,7 +477,7 @@
       });
     }
 
-    // ---- Gesture Support: Double-tap + Long-press+Swipe ----
+    // ---- Gesture Support: Double-tap → Enter ----
 
     // Gesture feedback overlay
     var gestureIndicator = document.createElement('div');
@@ -506,47 +506,21 @@
     var DOUBLE_TAP_DISTANCE = 30;
     var doubleTapPending = false;
 
-    // Long-press + swipe detection
-    var longPressTimer = null;
-    var longPressActive = false;
-    var longPressStartX = 0;
-    var longPressStartY = 0;
-    var longPressLastX = 0;
-    var longPressLastY = 0;
-    var LONG_PRESS_DURATION = 400;
-    var SWIPE_THRESHOLD = 20;
-    var SWIPE_REPEAT_THRESHOLD = 15;
-
-    function sendArrowKey(direction) {
-      var escSeq = { up: '\x1b[A', down: '\x1b[B', left: '\x1b[D', right: '\x1b[C' };
-      var seq = escSeq[direction];
-      if (seq && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'input', data: seq }));
-      }
-      var arrows = { up: '\u2191', down: '\u2193', left: '\u2190', right: '\u2192' };
-      showGestureIndicator(arrows[direction]);
-    }
-
-    function sendTabKey() {
+    function sendEnterKey() {
       if (term && typeof term.input === 'function') {
         term.focus();
-        term.input('\t', true);
+        term.input('\r', true);
       } else if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'input', data: '\t' }));
+        ws.send(JSON.stringify({ type: 'input', data: '\r' }));
       }
-      showGestureIndicator('Tab \u21e5');
-    }
-
-    function cancelLongPress() {
-      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-      longPressActive = false;
+      showGestureIndicator('Enter \u21b5');
     }
 
     // Gesture touchstart
     document.addEventListener('touchstart', function(e) {
-      if (e.touches.length !== 1) { cancelLongPress(); return; }
+      if (e.touches.length !== 1) return;
       var touch = e.touches[0];
-      if (!isTouchInTerminal(touch)) { cancelLongPress(); return; }
+      if (!isTouchInTerminal(touch)) return;
 
       var now = Date.now();
       var x = touch.clientX;
@@ -561,63 +535,19 @@
       lastTapTime = now;
       lastTapX = x;
       lastTapY = y;
-
-      // Long-press setup
-      longPressStartX = x;
-      longPressStartY = y;
-      longPressLastX = x;
-      longPressLastY = y;
-      cancelLongPress();
-      longPressTimer = setTimeout(function() {
-        longPressActive = true;
-        showGestureIndicator('\u21c4 \u30b9\u30ef\u30a4\u30d7\u3067\u65b9\u5411\u5165\u529b');
-      }, LONG_PRESS_DURATION);
     }, { passive: true, capture: false });
-
-    // Gesture touchmove
-    document.addEventListener('touchmove', function(e) {
-      if (e.touches.length !== 1) return;
-      var touch = e.touches[0];
-      var x = touch.clientX;
-      var y = touch.clientY;
-
-      // Cancel long-press if moved too far during wait
-      if (longPressTimer && !longPressActive) {
-        var dist = Math.sqrt(Math.pow(x - longPressStartX, 2) + Math.pow(y - longPressStartY, 2));
-        if (dist > SWIPE_THRESHOLD) { cancelLongPress(); return; }
-      }
-
-      if (!longPressActive) return;
-
-      // Detect swipe direction during long-press
-      var dx = x - longPressLastX;
-      var dy = y - longPressLastY;
-      if (Math.abs(dx) > SWIPE_REPEAT_THRESHOLD || Math.abs(dy) > SWIPE_REPEAT_THRESHOLD) {
-        if (Math.abs(dx) > Math.abs(dy)) {
-          sendArrowKey(dx > 0 ? 'right' : 'left');
-        } else {
-          sendArrowKey(dy > 0 ? 'down' : 'up');
-        }
-        longPressLastX = x;
-        longPressLastY = y;
-        e.preventDefault();
-      }
-    }, { passive: false, capture: false });
 
     // Gesture touchend
     document.addEventListener('touchend', function(e) {
-      if (doubleTapPending && !longPressActive) {
+      if (doubleTapPending) {
         doubleTapPending = false;
-        sendTabKey();
+        sendEnterKey();
         lastTapTime = 0;
       }
-      cancelLongPress();
-      doubleTapPending = false;
     }, { passive: true, capture: false });
 
     // Gesture touchcancel
     document.addEventListener('touchcancel', function(e) {
-      cancelLongPress();
       doubleTapPending = false;
     }, { passive: true, capture: false });
   </script>
