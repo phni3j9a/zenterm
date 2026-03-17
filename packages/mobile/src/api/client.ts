@@ -1,4 +1,4 @@
-import type { Server, TmuxSession } from '@/src/types';
+import type { Server, TmuxSession, SystemStatus, FileListResponse, FileContentResponse } from '@/src/types';
 
 const getBaseUrl = (url: string) => url.replace(/\/+$/, '');
 const DEFAULT_TIMEOUT = 15_000;
@@ -83,3 +83,12 @@ export const renameSession = (server: Server, id: string, name: string) =>
 
 export const deleteSession = (server: Server, id: string) =>
   apiRequest<{ ok: boolean }>(server, `/api/sessions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+
+export const getSystemStatus = (server: Server, options?: { signal?: AbortSignal }) =>
+  apiRequest<SystemStatus>(server, '/api/system/status', options?.signal ? { signal: options.signal } : undefined);
+
+export const listFiles = (server: Server, path = '~') =>
+  apiRequest<FileListResponse>(server, `/api/files?path=${encodeURIComponent(path)}`);
+
+export const getFileContent = (server: Server, path: string) =>
+  apiRequest<FileContentResponse>(server, `/api/files/content?path=${encodeURIComponent(path)}`);

@@ -1,2 +1,10 @@
 // 型は @ccsuite/shared から re-export
-export type { TmuxSession, ClientMessage, ServerMessage } from '@ccsuite/shared';
+export type {
+  TmuxSession,
+  ClientMessage,
+  ServerMessage,
+  SystemStatus,
+  FileEntry,
+  FileListResponse,
+  FileContentResponse
+} from '@ccsuite/shared';

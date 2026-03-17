@@ -1,11 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+  type ViewToken,
+} from 'react-native';
 import Toast from 'react-native-toast-message';
 
 import { createSession, deleteSession, listSessions, renameSession } from '@/src/api/client';
 import { InlineTerminal } from '@/src/components/InlineTerminal';
+import { SystemStatus } from '@/src/components/SystemStatus';
 import { Badge, Button, Card, EmptyState, Input, SkeletonLoader, SwipeableRow } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useTheme } from '@/src/theme';
@@ -52,6 +65,26 @@ export default function SessionsScreen() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [terminalStatus, setTerminalStatus] = useState<TerminalStatus>('disconnected');
   const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
+
+  // ── Swipe pager state ──
+  const { width: screenWidth } = useWindowDimensions();
+  const pagerRef = useRef<FlatList>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
+
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems.length > 0 && viewableItems[0].index != null) {
+      const idx = viewableItems[0].index;
+      setActiveIndex(idx);
+      const session = sessionsRef.current[idx];
+      if (session) {
+        setActiveSessionId(session.displayName);
+      }
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const styles = useMemo(
     () =>
@@ -198,6 +231,13 @@ export default function SessionsScreen() {
         addPromptCopy: {
           flex: 1,
           gap: spacing.xs,
+        },
+        pageIndicatorRow: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: spacing.xs,
+          gap: spacing.sm,
         },
       }),
     [colors, dark, radii, shadows, spacing],
@@ -531,6 +571,8 @@ export default function SessionsScreen() {
         </View>
       </Card>
 
+      {server && <SystemStatus server={server} />}
+
       {showCreateForm ? (
         <Card highlighted style={styles.formCard}>
           <View style={styles.formHeader}>
@@ -586,7 +628,7 @@ export default function SessionsScreen() {
         options={
           activeSessionId
             ? {
-                title: activeSessionId || 'Terminal',
+                title: sessions[activeIndex]?.displayName || activeSessionId || 'Terminal',
                 headerStyle: { backgroundColor: termBg },
                 headerTintColor: colors.textPrimary,
                 headerLeft: () => (
@@ -641,11 +683,49 @@ export default function SessionsScreen() {
       />
 
       {activeSessionId && server ? (
-        <InlineTerminal
-          server={server}
-          sessionId={activeSessionId}
-          onStatusChange={setTerminalStatus}
-        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+          style={{ flex: 1 }}
+        >
+          <FlatList
+            ref={pagerRef}
+            data={sessions}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.name}
+            initialScrollIndex={Math.max(0, sessions.findIndex((s) => s.displayName === activeSessionId))}
+            getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            renderItem={({ item }) => (
+              <View style={{ width: screenWidth, flex: 1 }}>
+                <InlineTerminal
+                  server={server}
+                  sessionId={item.displayName}
+                  onStatusChange={setTerminalStatus}
+                />
+              </View>
+            )}
+          />
+          {sessions.length > 1 && (
+            <View style={[styles.pageIndicatorRow, { backgroundColor: termBg }]}>
+              {sessions.map((session, index) => (
+                <View
+                  key={session.name}
+                  style={{
+                    width: index === activeIndex ? 20 : 6,
+                    height: 6,
+                    borderRadius: radii.full,
+                    backgroundColor: index === activeIndex ? colors.primary : colors.textMuted,
+                    opacity: index === activeIndex ? 1 : 0.4,
+                  }}
+                />
+              ))}
+            </View>
+          )}
+        </KeyboardAvoidingView>
       ) : !server ? (
         <EmptyState
           description="Servers タブでデフォルトサーバーを設定すると使えます"

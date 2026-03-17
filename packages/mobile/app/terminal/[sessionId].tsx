@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SpecialKeys } from '@/src/components/SpecialKeys';
@@ -192,10 +192,14 @@ export default function TerminalScreen() {
       <StatusBar backgroundColor={termBg} style={dark ? 'light' : 'dark'} />
       {headerBar}
 
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        style={styles.container}
+      >
         <TerminalWebView ref={terminalRef} server={server} sessionId={sessionId} onStatusChange={setStatus} />
         <SpecialKeys onKeyPress={(data) => terminalRef.current?.sendInput(data)} />
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

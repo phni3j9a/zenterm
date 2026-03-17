@@ -22,17 +22,24 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Servers',
-          tabBarIcon: ({ color, size }) => <Ionicons color={color} name="server-outline" size={size} />,
-        }}
-      />
-      <Tabs.Screen
         name="sessions"
         options={{
           title: 'Sessions',
           tabBarIcon: ({ color, size }) => <Ionicons color={color} name="terminal-outline" size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="files"
+        options={{
+          title: 'Files',
+          tabBarIcon: ({ color, size }) => <Ionicons color={color} name="folder-outline" size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Servers',
+          tabBarIcon: ({ color, size }) => <Ionicons color={color} name="server-outline" size={size} />,
         }}
       />
       <Tabs.Screen

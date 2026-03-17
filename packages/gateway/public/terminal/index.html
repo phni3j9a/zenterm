@@ -325,8 +325,18 @@
       try {
         var message = JSON.parse(rawData);
         if (message.type === 'input') {
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'input', data: message.data }));
+          if (term) {
+            term.focus();
+            // Route through xterm.js input pipeline (same as keyboard input)
+            // This triggers term.onData() which sends to WebSocket
+            if (typeof term.input === 'function') {
+              term.input(message.data, true);
+            } else {
+              // Fallback for older xterm.js: send directly
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'input', data: message.data }));
+              }
+            }
           }
           return;
         }
@@ -444,6 +454,172 @@
       touchScrollLastY = null;
       touchScrollActive = false;
     }, { passive: true, capture: true });
+
+    // ---- Keyboard / VisualViewport resize handling ----
+    if (window.visualViewport) {
+      var lastVpHeight = window.visualViewport.height;
+
+      window.visualViewport.addEventListener('resize', function() {
+        var vpHeight = window.visualViewport.height;
+        if (vpHeight !== lastVpHeight) {
+          lastVpHeight = vpHeight;
+          var terminalEl = document.getElementById('terminal');
+          if (terminalEl) {
+            terminalEl.style.height = vpHeight + 'px';
+          }
+          fitTerminal();
+          sendResize();
+        }
+      });
+
+      window.visualViewport.addEventListener('scroll', function() {
+        window.scrollTo(0, 0);
+      });
+    }
+
+    // ---- Gesture Support: Double-tap + Long-press+Swipe ----
+
+    // Gesture feedback overlay
+    var gestureIndicator = document.createElement('div');
+    gestureIndicator.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+      'z-index:1000;pointer-events:none;padding:8px 16px;border-radius:6px;' +
+      'background:rgba(0,0,0,0.65);color:#fff;font-size:16px;font-weight:600;' +
+      'opacity:0;transition:opacity 0.15s ease;white-space:nowrap;';
+    document.body.appendChild(gestureIndicator);
+
+    var gestureIndicatorTimer = null;
+    function showGestureIndicator(text) {
+      if (gestureIndicatorTimer) clearTimeout(gestureIndicatorTimer);
+      gestureIndicator.textContent = text;
+      gestureIndicator.style.opacity = '1';
+      gestureIndicatorTimer = setTimeout(function() {
+        gestureIndicator.style.opacity = '0';
+        gestureIndicatorTimer = null;
+      }, 500);
+    }
+
+    // Double-tap detection
+    var lastTapTime = 0;
+    var lastTapX = 0;
+    var lastTapY = 0;
+    var DOUBLE_TAP_DELAY = 300;
+    var DOUBLE_TAP_DISTANCE = 30;
+    var doubleTapPending = false;
+
+    // Long-press + swipe detection
+    var longPressTimer = null;
+    var longPressActive = false;
+    var longPressStartX = 0;
+    var longPressStartY = 0;
+    var longPressLastX = 0;
+    var longPressLastY = 0;
+    var LONG_PRESS_DURATION = 400;
+    var SWIPE_THRESHOLD = 20;
+    var SWIPE_REPEAT_THRESHOLD = 15;
+
+    function sendArrowKey(direction) {
+      var escSeq = { up: '\x1b[A', down: '\x1b[B', left: '\x1b[D', right: '\x1b[C' };
+      var seq = escSeq[direction];
+      if (seq && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'input', data: seq }));
+      }
+      var arrows = { up: '\u2191', down: '\u2193', left: '\u2190', right: '\u2192' };
+      showGestureIndicator(arrows[direction]);
+    }
+
+    function sendTabKey() {
+      if (term && typeof term.input === 'function') {
+        term.focus();
+        term.input('\t', true);
+      } else if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'input', data: '\t' }));
+      }
+      showGestureIndicator('Tab \u21e5');
+    }
+
+    function cancelLongPress() {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      longPressActive = false;
+    }
+
+    // Gesture touchstart
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) { cancelLongPress(); return; }
+      var touch = e.touches[0];
+      if (!isTouchInTerminal(touch)) { cancelLongPress(); return; }
+
+      var now = Date.now();
+      var x = touch.clientX;
+      var y = touch.clientY;
+
+      // Double-tap check
+      var timeDelta = now - lastTapTime;
+      var dist = Math.sqrt(Math.pow(x - lastTapX, 2) + Math.pow(y - lastTapY, 2));
+      if (timeDelta < DOUBLE_TAP_DELAY && dist < DOUBLE_TAP_DISTANCE) {
+        doubleTapPending = true;
+      }
+      lastTapTime = now;
+      lastTapX = x;
+      lastTapY = y;
+
+      // Long-press setup
+      longPressStartX = x;
+      longPressStartY = y;
+      longPressLastX = x;
+      longPressLastY = y;
+      cancelLongPress();
+      longPressTimer = setTimeout(function() {
+        longPressActive = true;
+        showGestureIndicator('\u21c4 \u30b9\u30ef\u30a4\u30d7\u3067\u65b9\u5411\u5165\u529b');
+      }, LONG_PRESS_DURATION);
+    }, { passive: true, capture: false });
+
+    // Gesture touchmove
+    document.addEventListener('touchmove', function(e) {
+      if (e.touches.length !== 1) return;
+      var touch = e.touches[0];
+      var x = touch.clientX;
+      var y = touch.clientY;
+
+      // Cancel long-press if moved too far during wait
+      if (longPressTimer && !longPressActive) {
+        var dist = Math.sqrt(Math.pow(x - longPressStartX, 2) + Math.pow(y - longPressStartY, 2));
+        if (dist > SWIPE_THRESHOLD) { cancelLongPress(); return; }
+      }
+
+      if (!longPressActive) return;
+
+      // Detect swipe direction during long-press
+      var dx = x - longPressLastX;
+      var dy = y - longPressLastY;
+      if (Math.abs(dx) > SWIPE_REPEAT_THRESHOLD || Math.abs(dy) > SWIPE_REPEAT_THRESHOLD) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          sendArrowKey(dx > 0 ? 'right' : 'left');
+        } else {
+          sendArrowKey(dy > 0 ? 'down' : 'up');
+        }
+        longPressLastX = x;
+        longPressLastY = y;
+        e.preventDefault();
+      }
+    }, { passive: false, capture: false });
+
+    // Gesture touchend
+    document.addEventListener('touchend', function(e) {
+      if (doubleTapPending && !longPressActive) {
+        doubleTapPending = false;
+        sendTabKey();
+        lastTapTime = 0;
+      }
+      cancelLongPress();
+      doubleTapPending = false;
+    }, { passive: true, capture: false });
+
+    // Gesture touchcancel
+    document.addEventListener('touchcancel', function(e) {
+      cancelLongPress();
+      doubleTapPending = false;
+    }, { passive: true, capture: false });
   </script>
 </body>
 </html>

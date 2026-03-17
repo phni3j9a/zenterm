@@ -18,3 +18,48 @@ export type ServerMessage =
   | { type: 'sessionInfo'; session: TmuxSession }
   | { type: 'exit'; code: number; signal?: number }
   | { type: 'error'; message: string };
+
+/** システムステータス情報 */
+export interface SystemStatus {
+  cpu: {
+    usage: number;
+    cores: number;
+    model: string;
+    loadAvg: number[];
+  };
+  memory: {
+    total: number;
+    used: number;
+    free: number;
+    percent: number;
+  };
+  disk: {
+    total: number;
+    used: number;
+    free: number;
+    percent: number;
+  };
+  temperature: number | null;
+  uptime: number;
+}
+
+export interface FileEntry {
+  name: string;
+  type: 'file' | 'directory' | 'symlink' | 'other';
+  size: number;
+  modified: number;
+  permissions: string;
+  symlinkTarget?: string;
+}
+
+export interface FileListResponse {
+  path: string;
+  entries: FileEntry[];
+}
+
+export interface FileContentResponse {
+  path: string;
+  content: string;
+  lines: number;
+  truncated: boolean;
+}

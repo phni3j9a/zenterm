@@ -11,6 +11,9 @@ import authRoutes from './routes/auth.js';
 import embedRoutes from './routes/embed.js';
 import sessionRoutes from './routes/sessions.js';
 import terminalRoutes from './routes/terminal.js';
+import fileRoutes from './routes/files.js';
+import systemRoutes from './routes/system.js';
+import { FilesystemError } from './services/filesystem.js';
 import { TmuxServiceError } from './services/tmux.js';
 
 const thisDir = fileURLToPath(new URL('.', import.meta.url));
@@ -56,6 +59,15 @@ export async function buildApp(): Promise<FastifyInstance> {
       return;
     }
 
+    if (error instanceof FilesystemError) {
+      request.log.error({ err: error, code: error.code }, 'filesystem operation failed');
+      reply.status(error.statusCode).send({
+        error: error.code,
+        message: error.message
+      });
+      return;
+    }
+
     const genericError = error instanceof Error ? error : new Error('Internal Server Error');
     const rawStatusCode =
       typeof error === 'object' && error !== null && 'statusCode' in error
@@ -94,6 +106,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(terminalRoutes);
   await app.register(authRoutes);
   await app.register(sessionRoutes);
+  await app.register(systemRoutes);
+  await app.register(fileRoutes);
 
   return app;
 }
