@@ -1,14 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
+import { uploadFile } from '@/src/api/client';
 import { useTheme } from '@/src/theme';
 import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
+import type { Server } from '@/src/types';
 
 interface Props {
   onKeyPress: (data: string) => void;
+  server?: Server;
 }
 
 const ARROW_KEYS = [
@@ -29,8 +34,9 @@ const CTRL_KEYS = [
   { label: 'R', code: '\x12' },
 ] as const;
 
-export function SpecialKeys({ onKeyPress }: Props) {
+export function SpecialKeys({ onKeyPress, server }: Props) {
   const [isCtrl, setIsCtrl] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const { dark, colors, radii, spacing, typography } = useTheme();
   const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
 
@@ -130,6 +136,29 @@ export function SpecialKeys({ onKeyPress }: Props) {
     onKeyPress(text);
   };
 
+  const handleImageUpload = async () => {
+    if (!server) return;
+    triggerHaptic();
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+      setUploading(true);
+      const fileName = asset.fileName ?? `image_${Date.now()}.jpg`;
+      const mimeType = asset.mimeType ?? 'image/jpeg';
+      const response = await uploadFile(server, asset.uri, fileName, mimeType);
+      onKeyPress(response.path + ' ');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'アップロードに失敗しました。';
+      Toast.show({ type: 'error', text1: 'アップロード失敗', text2: message });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView horizontal contentContainerStyle={styles.row} showsHorizontalScrollIndicator={false}>
@@ -160,10 +189,30 @@ export function SpecialKeys({ onKeyPress }: Props) {
           </TouchableOpacity>
         ))}
 
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\r')} style={styles.button}>
+          <Ionicons color={colors.textPrimary} name="return-down-back-outline" size={16} />
+        </TouchableOpacity>
+
         <TouchableOpacity activeOpacity={0.78} onPress={() => void handlePaste()} style={styles.pasteButton}>
           <Ionicons color={colors.textPrimary} name="clipboard-outline" size={16} />
           <Text style={styles.label}>Paste</Text>
         </TouchableOpacity>
+
+        {server && (
+          <TouchableOpacity
+            activeOpacity={0.78}
+            disabled={uploading}
+            onPress={() => void handleImageUpload()}
+            style={styles.pasteButton}
+          >
+            {uploading ? (
+              <ActivityIndicator color={colors.textPrimary} size={16} />
+            ) : (
+              <Ionicons color={colors.textPrimary} name="image-outline" size={16} />
+            )}
+            <Text style={styles.label}>{uploading ? '...' : 'Image'}</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       {isCtrl ? (

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { z } from 'zod';
 
 const envPath = resolve(process.cwd(), '.env');
@@ -46,8 +46,13 @@ const configSchema = z.object({
   AUTH_TOKEN: z.string().min(1, 'AUTH_TOKEN is required'),
   PORT: z.coerce.number().int().positive().default(18765),
   HOST: z.string().min(1).default('0.0.0.0'),
-  SESSION_PREFIX: z.string().min(1).default('ccs_'),
-  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info')
+  SESSION_PREFIX: z.string().min(1).default('psh_'),
+  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  UPLOAD_DIR: z
+    .string()
+    .min(1)
+    .default(join(process.env.HOME ?? '', 'uploads', 'palmsh')),
+  UPLOAD_MAX_SIZE: z.coerce.number().int().positive().default(10 * 1024 * 1024)
 });
 
 const parsedConfig = configSchema.safeParse(process.env);

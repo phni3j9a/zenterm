@@ -33,7 +33,7 @@ try {
     host: config.HOST
   });
 
-  app.log.info({ address }, 'ccsuite-gateway listening');
+  app.log.info({ address }, 'palmsh-gateway listening');
 } catch (error) {
   app.log.error({ err: error }, 'failed to start gateway');
   process.exit(1);

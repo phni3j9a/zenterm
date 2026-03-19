@@ -18,8 +18,8 @@ import Toast from 'react-native-toast-message';
 
 import { createSession, deleteSession, listSessions, renameSession } from '@/src/api/client';
 import { InlineTerminal } from '@/src/components/InlineTerminal';
-import { SystemStatus } from '@/src/components/SystemStatus';
-import { Badge, Button, Card, EmptyState, Input, SkeletonLoader, SwipeableRow } from '@/src/components/ui';
+import { SetupGuide } from '@/src/components/SetupGuide';
+import { Button, Card, EmptyState, Input, SkeletonLoader, SwipeableRow } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useTheme } from '@/src/theme';
 import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
@@ -110,40 +110,6 @@ export default function SessionsScreen() {
         headerSection: {
           marginBottom: spacing.lg,
           gap: spacing.md,
-        },
-        heroCard: {
-          gap: spacing.lg,
-          ...(dark ? {} : shadows.md),
-        },
-        heroTopRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
-        },
-        heroIcon: {
-          width: 52,
-          height: 52,
-          borderRadius: 26,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.primary,
-        },
-        heroCopy: {
-          gap: spacing.xs,
-        },
-        heroStatsRow: {
-          flexDirection: 'row',
-          gap: spacing.md,
-        },
-        heroStatCard: {
-          flex: 1,
-          padding: spacing.md,
-          borderRadius: radii.md,
-          backgroundColor: dark ? colors.surfaceHover : colors.primarySubtle,
-          borderWidth: 1,
-          borderColor: dark ? colors.border : colors.borderSubtle,
-          gap: spacing.xs,
         },
         addPrompt: {
           gap: spacing.sm,
@@ -540,39 +506,6 @@ export default function SessionsScreen() {
 
   const header = (
     <View style={styles.headerSection}>
-      <Card highlighted style={styles.heroCard}>
-        <View style={styles.heroTopRow}>
-          <View style={styles.heroIcon}>
-            <Ionicons color={colors.textInverse} name="terminal-outline" size={24} />
-          </View>
-          <Badge label={`${sessions.length} ACTIVE`} variant="primary" />
-        </View>
-
-        <View style={styles.heroCopy}>
-          <Text style={[typography.screenTitle, { color: colors.textPrimary }]}>あなたのワークスペースをすべてここから</Text>
-          <Text style={[typography.body, { color: colors.textSecondary }]}>
-            tmux セッションの確認、作成、ターミナル接続をまとめて管理できます。
-          </Text>
-        </View>
-
-        <View style={styles.heroStatsRow}>
-          <View style={styles.heroStatCard}>
-            <Text style={[typography.smallMedium, { color: colors.textMuted }]}>SESSIONS</Text>
-            <Text numberOfLines={1} style={[typography.bodyMedium, { color: colors.textPrimary }]}>
-              {sessions.length === 0 ? 'EMPTY' : `${sessions.length} sessions`}
-            </Text>
-          </View>
-          <View style={styles.heroStatCard}>
-            <Text style={[typography.smallMedium, { color: colors.textMuted }]}>SERVER</Text>
-            <Text numberOfLines={1} style={[typography.bodyMedium, { color: colors.textPrimary }]}>
-              {server?.name ?? '未設定'}
-            </Text>
-          </View>
-        </View>
-      </Card>
-
-      {server && <SystemStatus server={server} />}
-
       {showCreateForm ? (
         <Card highlighted style={styles.formCard}>
           <View style={styles.formHeader}>
@@ -727,11 +660,7 @@ export default function SessionsScreen() {
           )}
         </KeyboardAvoidingView>
       ) : !server ? (
-        <EmptyState
-          description="Servers タブでデフォルトサーバーを設定すると使えます"
-          icon="server-outline"
-          title="サーバーを設定してください"
-        />
+        <SetupGuide />
       ) : showSkeleton ? (
         <View style={styles.skeletonContainer}>
           {Array.from({ length: 4 }).map((_, index) => (

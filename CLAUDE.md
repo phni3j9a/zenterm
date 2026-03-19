@@ -1,4 +1,4 @@
-# ccsuite — エージェント指示
+# palmsh — エージェント指示
 
 ## プロジェクト概要
 iPhone → Raspberry Pi ターミナル接続システム（モノレポ）
@@ -26,7 +26,7 @@ npm run build:gateway       # Gateway TypeScript ビルド
 ## 設計方針
 - terminal 描画は WebView + xterm.js（ネイティブ実装ではない）
 - 認証は Bearer token（.env の AUTH_TOKEN）
-- tmux セッションの prefix は `ccs_`
+- tmux セッションの prefix は `psh_`
 - WebView ↔ RN 間通信は postMessage bridge
 
 ## 注意事項

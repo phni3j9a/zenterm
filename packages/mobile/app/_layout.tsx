@@ -32,6 +32,7 @@ function AppContent() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="servers" options={{ title: 'サーバー管理', presentation: 'card' }} />
         <Stack.Screen
           name="terminal/[sessionId]"
           options={{

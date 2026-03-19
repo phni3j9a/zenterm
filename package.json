@@ -1,5 +1,5 @@
 {
-  "name": "ccsuite",
+  "name": "palmsh",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -11,5 +11,8 @@
     "dev:gateway": "npm run dev -w packages/gateway",
     "dev:mobile": "npm run start -w packages/mobile",
     "build:gateway": "npm run build -w packages/gateway"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }

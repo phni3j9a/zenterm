@@ -2,17 +2,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
+  ActionSheetIOS,
+  Alert,
   FlatList,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import Toast from 'react-native-toast-message';
 
-import { listFiles, getFileContent } from '@/src/api/client';
+import { listFiles, getFileContent, writeFileContent } from '@/src/api/client';
+import { SetupGuide } from '@/src/components/SetupGuide';
 import { EmptyState, SkeletonLoader } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useTheme } from '@/src/theme';
@@ -92,7 +98,14 @@ export default function FilesScreen() {
   const [error, setError] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<FilePreview | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('name-asc');
-  const [previewLoading, setPreviewLoading] = useState(false);
+  const [, setPreviewLoading] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [showMarkdown, setShowMarkdown] = useState(false);
+  const [showNewFileInput, setShowNewFileInput] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
 
   const styles = useMemo(
     () =>
@@ -100,6 +113,11 @@ export default function FilesScreen() {
         container: {
           flex: 1,
           backgroundColor: colors.bg,
+        },
+        headerActions: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
         },
         breadcrumbBar: {
           height: 44,
@@ -122,6 +140,26 @@ export default function FilesScreen() {
         breadcrumbActive: {
           ...typography.captionMedium,
           color: colors.textPrimary,
+        },
+        newFileBar: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.sm,
+          gap: spacing.sm,
+          backgroundColor: colors.surface,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: colors.borderSubtle,
+        },
+        newFileInput: {
+          flex: 1,
+          ...typography.body,
+          color: colors.textPrimary,
+          padding: spacing.sm,
+          borderRadius: radii.sm,
+          backgroundColor: colors.bg,
+          borderWidth: 1,
+          borderColor: colors.border,
         },
         listContent: {
           flexGrow: 1,
@@ -170,7 +208,6 @@ export default function FilesScreen() {
           padding: spacing.lg,
           gap: spacing.md,
         },
-        // Modal styles
         modalContainer: {
           flex: 1,
           backgroundColor: termBgColor,
@@ -199,6 +236,16 @@ export default function FilesScreen() {
           paddingHorizontal: spacing.lg,
           paddingVertical: spacing.md,
         },
+        markdownContent: {
+          padding: spacing.lg,
+        },
+        editorInput: {
+          ...typography.mono,
+          color: colors.textPrimary,
+          padding: spacing.lg,
+          minHeight: 400,
+          textAlignVertical: 'top',
+        },
         codeLine: {
           flexDirection: 'row',
         },
@@ -224,15 +271,29 @@ export default function FilesScreen() {
     [colors, dark, radii, spacing, termBgColor, typography],
   );
 
+  const markdownStyles = useMemo(
+    () => ({
+      body: { color: colors.textPrimary },
+      heading1: { color: colors.textPrimary },
+      heading2: { color: colors.textPrimary },
+      heading3: { color: colors.textPrimary },
+      paragraph: { color: colors.textPrimary },
+      link: { color: colors.primary },
+      blockquote: { backgroundColor: colors.surface, borderColor: colors.border },
+      code_inline: { backgroundColor: colors.surface, color: colors.textPrimary },
+      code_block: { backgroundColor: colors.surface, color: colors.textPrimary },
+      fence: { backgroundColor: colors.surface, color: colors.textPrimary },
+    }),
+    [colors],
+  );
+
   const loadFiles = useCallback(
     async (path: string) => {
       if (!server) return;
-
       setLoading(true);
       setError(null);
-
       try {
-        const data = await listFiles(server, path);
+        const data = await listFiles(server, path, showHidden);
         setFiles(data.entries);
         setCurrentPath(data.path);
       } catch (err) {
@@ -242,10 +303,9 @@ export default function FilesScreen() {
         setLoading(false);
       }
     },
-    [server],
+    [server, showHidden],
   );
 
-  // Initial load
   const loadedRef = useCallback(
     (path: string) => {
       void loadFiles(path);
@@ -253,12 +313,33 @@ export default function FilesScreen() {
     [loadFiles],
   );
 
-  // Load on mount
   const [initialLoaded, setInitialLoaded] = useState(false);
   if (!initialLoaded && server) {
     setInitialLoaded(true);
     loadedRef(currentPath);
   }
+
+  const toggleShowHidden = useCallback(() => {
+    setShowHidden((prev) => {
+      const next = !prev;
+      if (server) {
+        void (async () => {
+          setLoading(true);
+          try {
+            const data = await listFiles(server, currentPath, next);
+            setFiles(data.entries);
+            setCurrentPath(data.path);
+          } catch (err) {
+            const message = err instanceof Error ? err.message : 'ファイル一覧を取得できませんでした。';
+            setError(message);
+          } finally {
+            setLoading(false);
+          }
+        })();
+      }
+      return next;
+    });
+  }, [server, currentPath]);
 
   const navigateTo = useCallback(
     (path: string) => {
@@ -266,6 +347,11 @@ export default function FilesScreen() {
     },
     [loadFiles],
   );
+
+  const closePreview = useCallback(() => {
+    setPreviewFile(null);
+    setIsEditing(false);
+  }, []);
 
   const openFile = useCallback(
     async (entry: FileEntry) => {
@@ -291,6 +377,8 @@ export default function FilesScreen() {
           lines: data.lines,
           truncated: data.truncated,
         });
+        setIsEditing(false);
+        setShowMarkdown(entry.name.endsWith('.md'));
       } catch (err) {
         const message = err instanceof Error ? err.message : 'ファイルを読み込めませんでした。';
         Toast.show({ type: 'error', text1: '読み込み失敗', text2: message });
@@ -300,6 +388,28 @@ export default function FilesScreen() {
     },
     [currentPath, server],
   );
+
+  const handleSave = useCallback(async () => {
+    if (!server || !previewFile) return;
+    setSaving(true);
+    try {
+      await writeFileContent(server, previewFile.path, editContent);
+      setPreviewFile({
+        ...previewFile,
+        content: editContent,
+        lines: editContent.split('\n').length,
+        truncated: false,
+      });
+      setIsEditing(false);
+      Toast.show({ type: 'success', text1: '保存しました' });
+      void loadFiles(currentPath);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'ファイルを保存できませんでした。';
+      Toast.show({ type: 'error', text1: '保存失敗', text2: message });
+    } finally {
+      setSaving(false);
+    }
+  }, [server, previewFile, editContent, currentPath, loadFiles]);
 
   const handleFilePress = useCallback(
     (entry: FileEntry) => {
@@ -353,13 +463,68 @@ export default function FilesScreen() {
     }
   };
 
-  const cycleSortMode = useCallback(() => {
-    setSortMode((current) => {
-      const modes: SortMode[] = ['name-asc', 'name-desc', 'size-desc', 'modified-desc'];
-      const idx = modes.indexOf(current);
-      return modes[(idx + 1) % modes.length];
-    });
+  const showSortPicker = useCallback(() => {
+    const options = ['名前 (A→Z)', '名前 (Z→A)', 'サイズ (大きい順)', '更新日 (新しい順)', 'キャンセル'];
+    const modeMap: SortMode[] = ['name-asc', 'name-desc', 'size-desc', 'modified-desc'];
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: options.length - 1, title: '並べ替え' },
+        (buttonIndex) => {
+          if (buttonIndex < modeMap.length) {
+            setSortMode(modeMap[buttonIndex]);
+          }
+        },
+      );
+      return;
+    }
+
+    Alert.alert('並べ替え', undefined, [
+      ...modeMap.map((mode, index) => ({
+        text: `${sortMode === mode ? '✓ ' : ''}${options[index]}`,
+        onPress: () => setSortMode(mode),
+      })),
+      { text: 'キャンセル', style: 'cancel' as const },
+    ]);
+  }, [sortMode]);
+
+  const openNewFileInput = useCallback(() => {
+    setShowNewFileInput(true);
   }, []);
+
+  const closeNewFileInput = useCallback(() => {
+    setShowNewFileInput(false);
+    setNewFileName('');
+  }, []);
+
+  const openNewFileEditor = useCallback((fileName: string) => {
+    const path = currentPath === '/' ? `/${fileName}` : `${currentPath}/${fileName}`;
+    setPreviewFile({ path, content: '', lines: 0, truncated: false });
+    setIsEditing(true);
+    setEditContent('');
+    setShowMarkdown(fileName.endsWith('.md'));
+    setShowNewFileInput(false);
+    setNewFileName('');
+  }, [currentPath]);
+
+  const confirmNewFile = useCallback(() => {
+    const trimmed = newFileName.trim();
+    if (!trimmed) return;
+    const exists = files.some((file) => file.name === trimmed && file.type === 'file');
+    if (!exists) {
+      openNewFileEditor(trimmed);
+      return;
+    }
+    Alert.alert('上書き確認', `${trimmed} は既に存在します。上書きしますか？`, [
+      { text: 'キャンセル', style: 'cancel' },
+      { text: '上書き', style: 'destructive', onPress: () => openNewFileEditor(trimmed) },
+    ]);
+  }, [files, newFileName, openNewFileEditor]);
+
+  const startEditing = useCallback(() => {
+    setIsEditing(true);
+    setEditContent(previewFile?.content ?? '');
+  }, [previewFile]);
 
   const renderBreadcrumbs = () => (
     <View style={styles.breadcrumbBar}>
@@ -367,6 +532,7 @@ export default function FilesScreen() {
         horizontal
         contentContainerStyle={styles.breadcrumbScroll}
         showsHorizontalScrollIndicator={false}
+        style={{ flex: 1 }}
       >
         <Pressable hitSlop={8} onPress={() => navigateTo('~')}>
           <Ionicons color={colors.textSecondary} name="home-outline" size={16} />
@@ -387,6 +553,14 @@ export default function FilesScreen() {
           );
         })}
       </ScrollView>
+      <Pressable
+        accessibilityLabel="新規ファイル作成"
+        hitSlop={8}
+        onPress={openNewFileInput}
+        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, paddingLeft: spacing.sm })}
+      >
+        <Ionicons color={colors.primary} name="add-circle-outline" size={20} />
+      </Pressable>
     </View>
   );
 
@@ -440,11 +614,7 @@ export default function FilesScreen() {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Files' }} />
-        <EmptyState
-          description="Servers タブでデフォルトサーバーを設定すると使えます"
-          icon="server-outline"
-          title="サーバーを設定してください"
-        />
+        <SetupGuide />
       </View>
     );
   }
@@ -455,20 +625,54 @@ export default function FilesScreen() {
         options={{
           title: 'Files',
           headerRight: () => (
-            <Pressable
-              accessibilityLabel="ソート切替"
-              accessibilityRole="button"
-              hitSlop={8}
-              onPress={cycleSortMode}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-            >
-              <Ionicons color={colors.textPrimary} name="swap-vertical-outline" size={22} />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable
+                accessibilityLabel="隠しファイル切替"
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={toggleShowHidden}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Ionicons
+                  color={showHidden ? colors.primary : colors.textPrimary}
+                  name={showHidden ? 'eye-outline' : 'eye-off-outline'}
+                  size={22}
+                />
+              </Pressable>
+              <Pressable
+                accessibilityLabel="ソート切替"
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={showSortPicker}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              >
+                <Ionicons color={colors.textPrimary} name="swap-vertical-outline" size={22} />
+              </Pressable>
+            </View>
           ),
         }}
       />
 
       {renderBreadcrumbs()}
+
+      {showNewFileInput ? (
+        <View style={styles.newFileBar}>
+          <TextInput
+            autoFocus
+            onChangeText={setNewFileName}
+            placeholder="ファイル名"
+            placeholderTextColor={colors.textMuted}
+            style={styles.newFileInput}
+            value={newFileName}
+          />
+          <Pressable onPress={confirmNewFile}>
+            <Ionicons color={colors.primary} name="checkmark-circle" size={24} />
+          </Pressable>
+          <Pressable onPress={closeNewFileInput}>
+            <Ionicons color={colors.textMuted} name="close-circle" size={24} />
+          </Pressable>
+        </View>
+      ) : null}
 
       {loading ? (
         <View style={styles.skeletonContainer}>
@@ -505,42 +709,78 @@ export default function FilesScreen() {
 
       <Modal
         animationType="slide"
-        onRequestClose={() => setPreviewFile(null)}
+        onRequestClose={closePreview}
         presentationStyle="pageSheet"
         visible={previewFile !== null}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Pressable hitSlop={12} onPress={() => setPreviewFile(null)}>
+            <Pressable hitSlop={12} onPress={closePreview}>
               <Ionicons color={colors.textSecondary} name="close" size={22} />
             </Pressable>
             <Text numberOfLines={1} style={styles.modalTitle}>
               {previewFileName}
             </Text>
-            <View style={{ width: 22 }} />
+            <View style={styles.headerActions}>
+              {previewFileName.endsWith('.md') && !isEditing ? (
+                <Pressable hitSlop={8} onPress={() => setShowMarkdown((prev) => !prev)}>
+                  <Ionicons
+                    color={colors.textSecondary}
+                    name={showMarkdown ? 'code-slash-outline' : 'book-outline'}
+                    size={20}
+                  />
+                </Pressable>
+              ) : null}
+              {isEditing ? (
+                <Pressable hitSlop={8} onPress={() => void handleSave()} disabled={saving}>
+                  <Ionicons color={saving ? colors.textMuted : colors.primary} name="checkmark" size={22} />
+                </Pressable>
+              ) : !previewFile?.truncated ? (
+                <Pressable hitSlop={8} onPress={startEditing}>
+                  <Ionicons color={colors.textSecondary} name="create-outline" size={20} />
+                </Pressable>
+              ) : null}
+            </View>
           </View>
 
-          <ScrollView
-            contentContainerStyle={styles.modalCodeScroll}
-            horizontal={false}
-            style={styles.modalContent}
-          >
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View>
-                {previewLines.map((line, index) => (
-                  <View key={index} style={styles.codeLine}>
-                    <Text style={styles.lineNumber}>{index + 1}</Text>
-                    <Text style={styles.lineContent}>{line || ' '}</Text>
-                  </View>
-                ))}
-                {previewFile?.truncated ? (
-                  <Text style={styles.truncatedIndicator}>
-                    ... truncated ({previewFile.lines} lines total)
-                  </Text>
-                ) : null}
-              </View>
+          {isEditing ? (
+            <ScrollView style={styles.modalContent} keyboardShouldPersistTaps="handled">
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                multiline
+                onChangeText={setEditContent}
+                style={styles.editorInput}
+                value={editContent}
+              />
             </ScrollView>
-          </ScrollView>
+          ) : showMarkdown && previewFile ? (
+            <ScrollView contentContainerStyle={styles.markdownContent} style={styles.modalContent}>
+              <Markdown style={markdownStyles}>{previewFile.content}</Markdown>
+            </ScrollView>
+          ) : (
+            <ScrollView
+              contentContainerStyle={styles.modalCodeScroll}
+              horizontal={false}
+              style={styles.modalContent}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View>
+                  {previewLines.map((line, index) => (
+                    <View key={index} style={styles.codeLine}>
+                      <Text style={styles.lineNumber}>{index + 1}</Text>
+                      <Text style={styles.lineContent}>{line || ' '}</Text>
+                    </View>
+                  ))}
+                  {previewFile?.truncated ? (
+                    <Text style={styles.truncatedIndicator}>
+                      ... truncated ({previewFile.lines} lines total)
+                    </Text>
+                  ) : null}
+                </View>
+              </ScrollView>
+            </ScrollView>
+          )}
         </View>
       </Modal>
     </View>

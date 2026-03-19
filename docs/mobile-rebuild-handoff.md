@@ -1,11 +1,11 @@
-# ccsuite Rebuild Handoff
+# palmsh Rebuild Handoff
 
 ## Goal
 
 既存 `ccmobile` は参考資産として扱い、新しく 2 プロジェクトで作り直す。
 
-- `ccsuite-mobile`: Expo / React Native アプリ
-- `ccsuite-gateway`: Raspberry Pi 上で動く terminal gateway
+- `palmsh-mobile`: Expo / React Native アプリ
+- `palmsh-gateway`: Raspberry Pi 上で動く terminal gateway
 
 目的は、iPhone から SSH で Raspberry Pi に入り、Pi 上の Codex だけで開発を進めつつ、最終的に `EAS Build / Submit` を使って iOS / Android に配布できる構成を作ること。
 
@@ -53,18 +53,18 @@
 親ディレクトリ案:
 
 ```text
-/home/raspi5/projects/ccsuite/
-  ccsuite-mobile/
-  ccsuite-gateway/
+/home/raspi5/projects/palmsh/
+  palmsh-mobile/
+  palmsh-gateway/
   docs/
 ```
 
 ## Recommended Repo Names
 
-- `ccsuite-mobile`
-- `ccsuite-gateway`
+- `palmsh-mobile`
+- `palmsh-gateway`
 
-親ディレクトリは `ccsuite` を使う。最初からモノレポにはしない。
+親ディレクトリは `palmsh` を使う。最初からモノレポにはしない。
 
 ## Tech Stack
 
@@ -183,11 +183,11 @@ server -> client
 
 ### M1
 
-`ccsuite-gateway` 単体で tmux セッション管理と terminal 表示が動く。
+`palmsh-gateway` 単体で tmux セッション管理と terminal 表示が動く。
 
 ### M2
 
-`ccsuite-mobile` で接続先登録とセッション一覧が動く。
+`palmsh-mobile` で接続先登録とセッション一覧が動く。
 
 ### M3
 
@@ -205,12 +205,12 @@ EAS Build / Submit で TestFlight / Play Internal Testing まで行く。
 
 最初のスプリントはここまでで切る。
 
-- `ccsuite-gateway` 初期化
+- `palmsh-gateway` 初期化
 - Bearer token 認証
 - tmux セッション API
 - WebSocket terminal gateway
 - embed terminal page の最小実装
-- `ccsuite-mobile` 初期化
+- `palmsh-mobile` 初期化
 - 接続先登録画面
 - セッション一覧画面
 - Terminal 画面の最小 WebView
@@ -230,15 +230,15 @@ EAS Build / Submit で TestFlight / Play Internal Testing まで行く。
 親ディレクトリ作成:
 
 ```bash
-mkdir -p /home/raspi5/projects/ccsuite
-cd /home/raspi5/projects/ccsuite
+mkdir -p /home/raspi5/projects/palmsh
+cd /home/raspi5/projects/palmsh
 ```
 
 server:
 
 ```bash
-mkdir ccsuite-gateway
-cd ccsuite-gateway
+mkdir palmsh-gateway
+cd palmsh-gateway
 git init
 npm init -y
 ```
@@ -246,9 +246,9 @@ npm init -y
 mobile:
 
 ```bash
-cd /home/raspi5/projects/ccsuite
-npx create-expo-app@latest ccsuite-mobile
-cd ccsuite-mobile
+cd /home/raspi5/projects/palmsh
+npx create-expo-app@latest palmsh-mobile
+cd palmsh-mobile
 git init
 ```
 

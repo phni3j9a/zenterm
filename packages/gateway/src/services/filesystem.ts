@@ -1,6 +1,6 @@
-import { type Stats, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
-import type { FileContentResponse, FileEntry, FileListResponse } from '../types/index.js';
+import { type Stats, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import type { FileContentResponse, FileEntry, FileListResponse, FileWriteResponse } from '../types/index.js';
 
 const homeDir = process.env.HOME ?? process.cwd();
 const homeDirPrefix = homeDir + '/';
@@ -23,36 +23,40 @@ function isWithinHome(absPath: string): boolean {
   return absPath === homeDir || absPath.startsWith(homeDirPrefix);
 }
 
+function assertPathWithinHome(absPath: string): void {
+  if (isWithinHome(absPath)) return;
+  throw new FilesystemError('ホームディレクトリ外へのアクセスは許可されていません。', 403, 'PATH_TRAVERSAL');
+}
+
+function assertSymlinkWithinHome(absPath: string): void {
+  if (isWithinHome(absPath)) return;
+  throw new FilesystemError('シンボリックリンク先がホームディレクトリ外です。', 403, 'SYMLINK_TRAVERSAL');
+}
+
+function assertExistingParentWithinHome(resolved: string, inputPath: string): void {
+  try {
+    assertSymlinkWithinHome(realpathSync(dirname(resolved)));
+  } catch (error) {
+    if (error instanceof FilesystemError) throw error;
+    throw new FilesystemError(`親ディレクトリが存在しません: ${inputPath}`, 404, 'PARENT_NOT_FOUND');
+  }
+}
+
+function assertResolvedSymlinkWithinHome(resolved: string, inputPath: string): void {
+  try {
+    assertSymlinkWithinHome(realpathSync(resolved));
+  } catch (error) {
+    if (error instanceof FilesystemError) throw error;
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    assertExistingParentWithinHome(resolved, inputPath);
+  }
+}
+
 export function validatePath(inputPath: string): string {
   const expanded = inputPath.startsWith('~') ? inputPath.replace('~', homeDir) : inputPath;
   const resolved = resolve(homeDir, expanded);
-
-  if (!isWithinHome(resolved)) {
-    throw new FilesystemError(
-      'ホームディレクトリ外へのアクセスは許可されていません。',
-      403,
-      'PATH_TRAVERSAL'
-    );
-  }
-
-  // Resolve symlinks and re-validate the real path
-  try {
-    const realPath = realpathSync(resolved);
-    if (!isWithinHome(realPath)) {
-      throw new FilesystemError(
-        'シンボリックリンク先がホームディレクトリ外です。',
-        403,
-        'SYMLINK_TRAVERSAL'
-      );
-    }
-  } catch (error) {
-    // ENOENT is OK (path doesn't exist yet or broken symlink)
-    if (error instanceof FilesystemError) throw error;
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      throw error;
-    }
-  }
-
+  assertPathWithinHome(resolved);
+  assertResolvedSymlinkWithinHome(resolved, inputPath);
   return resolved;
 }
 
@@ -127,12 +131,9 @@ function buildFileEntry(dirPath: string, name: string): FileEntry {
   return entry;
 }
 
-export function listDirectory(inputPath: string): FileListResponse {
-  const dirPath = validatePath(inputPath);
-
-  let stats;
+function getExistingStats(targetPath: string, inputPath: string): Stats {
   try {
-    stats = statSync(dirPath);
+    return statSync(targetPath);
   } catch (error) {
     throw new FilesystemError(
       `パスが見つかりません: ${inputPath}`,
@@ -141,7 +142,9 @@ export function listDirectory(inputPath: string): FileListResponse {
       { cause: error }
     );
   }
+}
 
+function assertDirectory(stats: Stats, inputPath: string): void {
   if (!stats.isDirectory()) {
     throw new FilesystemError(
       `ディレクトリではありません: ${inputPath}`,
@@ -149,10 +152,15 @@ export function listDirectory(inputPath: string): FileListResponse {
       'NOT_A_DIRECTORY'
     );
   }
+}
 
-  let names: string[];
+function readDirectoryNames(dirPath: string, inputPath: string, showHidden: boolean): string[] {
   try {
-    names = readdirSync(dirPath);
+    const names = readdirSync(dirPath);
+    if (showHidden) {
+      return names;
+    }
+    return names.filter((name) => !name.startsWith('.'));
   } catch (error) {
     throw new FilesystemError(
       `ディレクトリの読み取りに失敗しました: ${inputPath}`,
@@ -161,7 +169,21 @@ export function listDirectory(inputPath: string): FileListResponse {
       { cause: error }
     );
   }
+}
 
+function sortEntries(entries: FileEntry[]): void {
+  entries.sort((a, b) => {
+    if (a.type === 'directory' && b.type !== 'directory') return -1;
+    if (a.type !== 'directory' && b.type === 'directory') return 1;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+export function listDirectory(inputPath: string, showHidden = true): FileListResponse {
+  const dirPath = validatePath(inputPath);
+  const stats = getExistingStats(dirPath, inputPath);
+  assertDirectory(stats, inputPath);
+  const names = readDirectoryNames(dirPath, inputPath, showHidden);
   const entries: FileEntry[] = [];
 
   for (const name of names) {
@@ -172,13 +194,7 @@ export function listDirectory(inputPath: string): FileListResponse {
     }
   }
 
-  // Sort: directories first, then alphabetical
-  entries.sort((a, b) => {
-    if (a.type === 'directory' && b.type !== 'directory') return -1;
-    if (a.type !== 'directory' && b.type === 'directory') return 1;
-    return a.name.localeCompare(b.name);
-  });
-
+  sortEntries(entries);
   return { path: dirPath, entries };
 }
 
@@ -238,4 +254,50 @@ export function readFileContent(inputPath: string): FileContentResponse {
     lines: truncated ? MAX_CONTENT_LINES : allLines.length,
     truncated
   };
+}
+
+function assertWritableFile(filePath: string, inputPath: string): void {
+  try {
+    const stats = statSync(filePath);
+    if (!stats.isDirectory()) {
+      return;
+    }
+    throw new FilesystemError(
+      `ディレクトリには書き込めません: ${inputPath}`,
+      400,
+      'NOT_A_FILE'
+    );
+  } catch (error) {
+    if (error instanceof FilesystemError) throw error;
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return;
+    }
+    throw error;
+  }
+}
+
+function writeUtf8File(filePath: string, inputPath: string, content: string): void {
+  try {
+    writeFileSync(filePath, content, 'utf8');
+  } catch (error) {
+    throw new FilesystemError(
+      `ファイルの書き込みに失敗しました: ${inputPath}`,
+      403,
+      'WRITE_DENIED',
+      { cause: error }
+    );
+  }
+}
+
+export function writeFileContent(inputPath: string, content: string): FileWriteResponse {
+  const filePath = validatePath(inputPath);
+  const bytes = Buffer.byteLength(content, 'utf8');
+
+  if (bytes > MAX_FILE_SIZE) {
+    throw new FilesystemError('ファイルサイズが上限（512KB）を超えています。', 413, 'FILE_TOO_LARGE');
+  }
+
+  assertWritableFile(filePath, inputPath);
+  writeUtf8File(filePath, inputPath, content);
+  return { path: filePath, bytes };
 }

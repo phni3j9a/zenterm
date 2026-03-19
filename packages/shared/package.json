@@ -1,5 +1,5 @@
 {
-  "name": "@ccsuite/shared",
+  "name": "@palmsh/shared",
   "version": "0.1.0",
   "private": true,
   "types": "./src/index.ts",

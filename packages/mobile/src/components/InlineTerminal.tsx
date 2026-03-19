@@ -26,7 +26,7 @@ export function InlineTerminal({ server, sessionId, onStatusChange }: Props) {
         sessionId={sessionId}
         onStatusChange={onStatusChange}
       />
-      <SpecialKeys onKeyPress={(data) => terminalRef.current?.sendInput(data)} />
+      <SpecialKeys onKeyPress={(data) => terminalRef.current?.sendInput(data)} server={server} />
     </View>
   );
 }

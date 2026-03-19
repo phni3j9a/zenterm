@@ -30,6 +30,20 @@ jest.mock('@/src/api/client', () => ({
   renameSession: (...args: unknown[]) => mockRenameSession(...args),
 }));
 
+jest.mock('@/src/components/SystemStatus', () => {
+  const MockReact = require('react');
+  const RN = require('react-native');
+
+  return {
+    SystemStatus: ({ server }: { server: { name: string } }) =>
+      MockReact.createElement(
+        RN.View,
+        { testID: 'system-status' },
+        MockReact.createElement(RN.Text, null, `SystemStatus:${server.name}`),
+      ),
+  };
+});
+
 const mockPush = jest.fn();
 const mockGetDefaultServer = jest.fn();
 
@@ -96,13 +110,13 @@ const mockServer = {
 
 const sampleSessions: TmuxSession[] = [
   {
-    name: 'ccs_work',
+    name: 'psh_work',
     displayName: 'work',
     created: 1710576600,
     cwd: '/home/user/projects/myapp',
   },
   {
-    name: 'ccs_deploy',
+    name: 'psh_deploy',
     displayName: 'deploy',
     created: 1710580200,
     cwd: '/home/user/projects/deploy',
@@ -149,8 +163,8 @@ describe('SessionsScreen', () => {
     mockGetDefaultServer.mockReturnValue(mockServer);
   });
 
-  describe('Hero card', () => {
-    it('renders the hero card with terminal icon and badge', async () => {
+  describe('Header', () => {
+    it('renders the create prompt without the removed hero or system status', async () => {
       mockListSessions.mockResolvedValue(sampleSessions);
 
       let root: ReturnType<typeof create>;
@@ -159,31 +173,13 @@ describe('SessionsScreen', () => {
       });
 
       const texts = collectTexts(root!.root);
+      const systemStatus = findAllByTestID(root!.root, 'system-status');
 
-      expect(texts).toContain('あなたのワークスペースをすべてここから');
-      expect(texts.some((t) => t.includes('tmux セッションの確認'))).toBe(true);
-      expect(texts).toContain('2 ACTIVE');
-      expect(texts).toContain('SESSIONS');
-      expect(texts).toContain('SERVER');
-      expect(texts).toContain('2 sessions');
-      expect(texts).toContain('Test Server');
-
-      const icons = findAllByTestID(root!.root, 'mock-ionicon');
-      const iconNames = icons.map((i) => i.children?.[0]);
-      expect(iconNames).toContain('terminal-outline');
-    });
-
-    it('shows EMPTY when no sessions exist', async () => {
-      mockListSessions.mockResolvedValue([]);
-
-      let root: ReturnType<typeof create>;
-      await act(async () => {
-        root = create(React.createElement(SessionsScreen));
-      });
-
-      const texts = collectTexts(root!.root);
-      expect(texts).toContain('EMPTY');
-      expect(texts).toContain('0 ACTIVE');
+      expect(texts).toContain('新しいセッションを作成');
+      expect(texts.some((text) => text.includes('ターミナルを開いて作業を始めましょう'))).toBe(true);
+      expect(texts).not.toContain('あなたのワークスペースをすべてここから');
+      expect(texts.some((text) => text.includes('tmux セッションの確認'))).toBe(false);
+      expect(systemStatus).toHaveLength(0);
     });
   });
 
@@ -253,8 +249,8 @@ describe('SessionsScreen', () => {
       });
 
       const texts = collectTexts(root!.root);
-      expect(texts).toContain('サーバーを設定してください');
-      expect(texts).not.toContain('あなたのワークスペースをすべてここから');
+      expect(texts).toContain('はじめましょう');
+      expect(texts).not.toContain('新しいセッションを作成');
     });
   });
 
@@ -274,20 +270,6 @@ describe('SessionsScreen', () => {
       const icons = findAllByTestID(root!.root, 'mock-ionicon');
       const iconNames = icons.map((i) => i.children?.[0]);
       expect(iconNames).toContain('add-outline');
-    });
-  });
-
-  describe('Stat cards', () => {
-    it('shows correct server name in stat card', async () => {
-      mockListSessions.mockResolvedValue([]);
-
-      let root: ReturnType<typeof create>;
-      await act(async () => {
-        root = create(React.createElement(SessionsScreen));
-      });
-
-      const texts = collectTexts(root!.root);
-      expect(texts).toContain('Test Server');
     });
   });
 });

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "ccsuite-mobile",
-    "slug": "ccsuite-mobile",
+    "name": "palmsh-mobile",
+    "slug": "palmsh-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "ccsuitemobile",
+    "scheme": "palmsh",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/images/splash-icon.png",
@@ -33,7 +33,13 @@
       "expo-router",
       "expo-secure-store",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Upload images to terminal sessions"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,4 +1,4 @@
-// 型は @ccsuite/shared から re-export
+// 型は @palmsh/shared から re-export
 export type {
   TmuxSession,
   ClientMessage,
@@ -6,5 +6,7 @@ export type {
   SystemStatus,
   FileEntry,
   FileListResponse,
-  FileContentResponse
-} from '@ccsuite/shared';
+  FileContentResponse,
+  FileWriteResponse,
+  FileUploadResponse
+} from '@palmsh/shared';

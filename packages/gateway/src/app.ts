@@ -1,5 +1,6 @@
 import fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import staticPlugin from '@fastify/static';
 import websocket from '@fastify/websocket';
 import { join, resolve } from 'node:path';
@@ -13,6 +14,7 @@ import sessionRoutes from './routes/sessions.js';
 import terminalRoutes from './routes/terminal.js';
 import fileRoutes from './routes/files.js';
 import systemRoutes from './routes/system.js';
+import uploadRoutes from './routes/upload.js';
 import { FilesystemError } from './services/filesystem.js';
 import { TmuxServiceError } from './services/tmux.js';
 
@@ -99,6 +101,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(staticPlugin, {
     root: join(publicDir)
   });
+  await app.register(multipart, {
+    limits: { fileSize: config.UPLOAD_MAX_SIZE }
+  });
 
   app.get('/health', async () => ({ ok: true }));
 
@@ -108,6 +113,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(sessionRoutes);
   await app.register(systemRoutes);
   await app.register(fileRoutes);
+  await app.register(uploadRoutes);
 
   return app;
 }

@@ -198,7 +198,7 @@ export default function TerminalScreen() {
         style={styles.container}
       >
         <TerminalWebView ref={terminalRef} server={server} sessionId={sessionId} onStatusChange={setStatus} />
-        <SpecialKeys onKeyPress={(data) => terminalRef.current?.sendInput(data)} />
+        <SpecialKeys onKeyPress={(data) => terminalRef.current?.sendInput(data)} server={server} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

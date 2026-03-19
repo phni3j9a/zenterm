@@ -1,4 +1,12 @@
-import type { Server, TmuxSession, SystemStatus, FileListResponse, FileContentResponse } from '@/src/types';
+import type {
+  Server,
+  TmuxSession,
+  SystemStatus,
+  FileListResponse,
+  FileContentResponse,
+  FileWriteResponse,
+  FileUploadResponse,
+} from '@/src/types';
 
 const getBaseUrl = (url: string) => url.replace(/\/+$/, '');
 const DEFAULT_TIMEOUT = 15_000;
@@ -87,8 +95,31 @@ export const deleteSession = (server: Server, id: string) =>
 export const getSystemStatus = (server: Server, options?: { signal?: AbortSignal }) =>
   apiRequest<SystemStatus>(server, '/api/system/status', options?.signal ? { signal: options.signal } : undefined);
 
-export const listFiles = (server: Server, path = '~') =>
-  apiRequest<FileListResponse>(server, `/api/files?path=${encodeURIComponent(path)}`);
+export const listFiles = (server: Server, path = '~', showHidden = true) =>
+  apiRequest<FileListResponse>(server, `/api/files?path=${encodeURIComponent(path)}&showHidden=${showHidden}`);
 
 export const getFileContent = (server: Server, path: string) =>
   apiRequest<FileContentResponse>(server, `/api/files/content?path=${encodeURIComponent(path)}`);
+
+export const writeFileContent = (server: Server, path: string, content: string) =>
+  apiRequest<FileWriteResponse>(server, '/api/files/content', {
+    method: 'PUT',
+    body: JSON.stringify({ path, content }),
+  });
+
+export async function uploadFile(server: Server, fileUri: string, fileName: string, mimeType: string): Promise<FileUploadResponse> {
+  const formData = new FormData();
+  formData.append('image', { uri: fileUri, name: fileName, type: mimeType } as unknown as Blob);
+
+  const res = await fetch(`${getBaseUrl(server.url)}/api/upload`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${server.token}` },
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const message = body && typeof body === 'object' && 'message' in body ? String(body.message) : res.statusText;
+    throw new ApiError(res.status, message);
+  }
+  return res.json() as Promise<FileUploadResponse>;
+}

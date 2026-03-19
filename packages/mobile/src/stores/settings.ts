@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 import type { ThemeMode } from '../theme/tokens';
 
-const SETTINGS_KEY = 'ccsuite_settings';
+const SETTINGS_KEY = 'palmsh_settings';
 
 interface Settings {
   fontSize: number;

@@ -100,7 +100,7 @@ function runTmux(args: string[]): string {
   }
 }
 
-function normalizeSessionName(input: string): string {
+export function normalizeSessionName(input: string): string {
   const trimmed = input.trim();
   const rawName = trimmed.startsWith(config.SESSION_PREFIX)
     ? trimmed.slice(config.SESSION_PREFIX.length)

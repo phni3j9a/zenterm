@@ -1,0 +1,20 @@
+[Unit]
+Description=palmsh Terminal Gateway
+After=network.target
+Documentation=https://github.com/your-repo/palmsh
+
+[Service]
+Type=simple
+User=raspi5
+Group=raspi5
+WorkingDirectory=/home/raspi5/projects/palmsh/packages/gateway
+ExecStart=/usr/bin/node dist/index.js
+EnvironmentFile=/home/raspi5/projects/palmsh/packages/gateway/.env
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=palmsh-gateway
+
+[Install]
+WantedBy=multi-user.target

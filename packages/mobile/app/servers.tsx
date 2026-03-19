@@ -192,40 +192,6 @@ export default function ServersScreen() {
           marginBottom: spacing.lg,
           gap: spacing.md,
         },
-        heroCard: {
-          gap: spacing.lg,
-          ...(dark ? {} : shadows.md),
-        },
-        heroTopRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
-        },
-        heroIcon: {
-          width: 52,
-          height: 52,
-          borderRadius: 26,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.primary,
-        },
-        heroCopy: {
-          gap: spacing.xs,
-        },
-        heroStatsRow: {
-          flexDirection: 'row',
-          gap: spacing.md,
-        },
-        heroStatCard: {
-          flex: 1,
-          padding: spacing.md,
-          borderRadius: radii.md,
-          backgroundColor: dark ? colors.surfaceHover : colors.primarySubtle,
-          borderWidth: 1,
-          borderColor: dark ? colors.border : colors.borderSubtle,
-          gap: spacing.xs,
-        },
         addPrompt: {
           gap: spacing.sm,
         },
@@ -304,8 +270,6 @@ export default function ServersScreen() {
       }),
     [colors, dark, radii, shadows, spacing, typography],
   );
-
-  const defaultServer = servers.find((server) => server.isDefault) ?? null;
 
   const resetAddForm = () => {
     setForm(initialForm);
@@ -479,37 +443,6 @@ export default function ServersScreen() {
 
   const header = (
     <View style={styles.headerSection}>
-      <Card highlighted style={styles.heroCard}>
-        <View style={styles.heroTopRow}>
-          <View style={styles.heroIcon}>
-            <Ionicons color={colors.textInverse} name="server-outline" size={24} />
-          </View>
-          <Badge label={`${servers.length} SAVED`} variant="primary" />
-        </View>
-
-        <View style={styles.heroCopy}>
-          <Text style={[typography.screenTitle, { color: colors.textPrimary }]}>接続先を素早く切り替える</Text>
-          <Text style={[typography.body, { color: colors.textSecondary }]}>
-            タップで編集、スワイプで標準設定と削除。よく使うサーバーを迷わず管理できます。
-          </Text>
-        </View>
-
-        <View style={styles.heroStatsRow}>
-          <View style={styles.heroStatCard}>
-            <Text style={[typography.smallMedium, { color: colors.textMuted }]}>DEFAULT</Text>
-            <Text numberOfLines={1} style={[typography.bodyMedium, { color: colors.textPrimary }]}>
-              {defaultServer?.name ?? '未設定'}
-            </Text>
-          </View>
-          <View style={styles.heroStatCard}>
-            <Text style={[typography.smallMedium, { color: colors.textMuted }]}>STATE</Text>
-            <Text style={[typography.bodyMedium, { color: colors.textPrimary }]}>
-              {servers.length === 0 ? 'EMPTY' : `${servers.length} servers`}
-            </Text>
-          </View>
-        </View>
-      </Card>
-
       {showForm ? (
         <ServerFormCard
           accent={colors.primary}
@@ -547,7 +480,7 @@ export default function ServersScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Servers',
+          title: 'サーバー管理',
           headerRight: () => (
             <Pressable
               accessibilityLabel={showForm ? 'フォームを閉じる' : 'サーバーを追加'}

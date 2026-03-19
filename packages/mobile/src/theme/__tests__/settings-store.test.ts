@@ -42,7 +42,7 @@ describe('useSettingsStore', () => {
       await useSettingsStore.getState().load();
     });
 
-    expect(mockedAsyncStorage.getItem).toHaveBeenCalledWith('ccsuite_settings');
+    expect(mockedAsyncStorage.getItem).toHaveBeenCalledWith('palmsh_settings');
     expect(useSettingsStore.getState().loaded).toBe(true);
     expect(useSettingsStore.getState().settings).toEqual({
       fontSize: 14,
@@ -57,7 +57,7 @@ describe('useSettingsStore', () => {
 
     expect(useSettingsStore.getState().settings.themeMode).toBe('light');
     expect(mockedAsyncStorage.setItem).toHaveBeenCalledWith(
-      'ccsuite_settings',
+      'palmsh_settings',
       JSON.stringify({
         fontSize: 14,
         themeMode: 'light',
@@ -93,7 +93,7 @@ describe('useSettingsStore', () => {
       await useSettingsStore.getState().reset();
     });
 
-    expect(mockedAsyncStorage.removeItem).toHaveBeenCalledWith('ccsuite_settings');
+    expect(mockedAsyncStorage.removeItem).toHaveBeenCalledWith('palmsh_settings');
     expect(useSettingsStore.getState().settings).toEqual({
       fontSize: 14,
       themeMode: 'system',

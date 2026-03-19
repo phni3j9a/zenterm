@@ -1,17 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useMemo, type ComponentProps } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { SystemStatus } from '@/src/components/SystemStatus';
 import { Button, Card } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useSettingsStore } from '@/src/stores/settings';
 import { useTheme, type ThemeMode } from '@/src/theme';
 
-const STORAGE_KEY = 'ccsuite_servers';
+const STORAGE_KEY = 'palmsh_servers';
 const MIN_FONT_SIZE = 10;
 const MAX_FONT_SIZE = 24;
 
@@ -29,6 +30,7 @@ const THEME_OPTIONS: ThemeOption[] = [
 
 export default function SettingsScreen() {
   const { colors, radii, spacing, typography } = useTheme();
+  const router = useRouter();
   const server = useServersStore((state) => state.getDefaultServer());
   const clear = useServersStore((state) => state.clear);
   const resetSettings = useSettingsStore((state) => state.reset);
@@ -36,7 +38,7 @@ export default function SettingsScreen() {
   const themeMode = useSettingsStore((state) => state.settings.themeMode);
   const updateSettings = useSettingsStore((state) => state.updateSettings);
 
-  const appName = Constants.expoConfig?.name ?? 'ccsuite-mobile';
+  const appName = Constants.expoConfig?.name ?? 'palmsh-mobile';
   const version = Constants.expoConfig?.version ?? 'unknown';
 
   const styles = useMemo(
@@ -243,17 +245,27 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>デフォルトサーバー</Text>
-          <Card style={styles.card}>
-            {server ? (
-              <View style={styles.serverBlock}>
-                <Text style={styles.serverName}>{server.name}</Text>
-                <Text style={styles.serverUrl}>{server.url}</Text>
+          <Text style={styles.sectionHeader}>サーバー管理</Text>
+          <Card style={styles.card} onPress={() => router.push('/servers')}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flex: 1 }}>
+                {server ? (
+                  <View style={styles.serverBlock}>
+                    <Text style={styles.serverName}>{server.name}</Text>
+                    <Text style={styles.serverUrl}>{server.url}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.serverPlaceholder}>タップしてサーバーを追加</Text>
+                )}
               </View>
-            ) : (
-              <Text style={styles.serverPlaceholder}>Servers タブで設定してください</Text>
-            )}
+              <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
+            </View>
           </Card>
+          {server && (
+            <View style={{ marginTop: spacing.sm, marginHorizontal: spacing.lg }}>
+              <SystemStatus server={server} />
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>

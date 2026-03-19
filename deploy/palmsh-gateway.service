@@ -1,0 +1,28 @@
+[Unit]
+Description=palmsh Gateway - Terminal WebSocket Server
+After=network.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=raspi5
+Group=raspi5
+WorkingDirectory=/home/raspi5/projects/palmsh/packages/gateway
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=5
+EnvironmentFile=/home/raspi5/projects/palmsh/packages/gateway/.env
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=palmsh-gateway
+
+# セキュリティ設定
+# 注意: ターミナルアプリのため、ProtectSystem/ProtectHome/PrivateTmp は
+# 使用しない。tmux セッションが OS 全体にアクセスでき、SSH 側の tmux と
+# ソケットを共有する必要がある。
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

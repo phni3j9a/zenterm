@@ -1,4 +1,4 @@
-# ccsuite
+# palmsh
 
 iPhone → Raspberry Pi ターミナル接続システム（モノレポ）
 

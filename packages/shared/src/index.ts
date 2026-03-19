@@ -63,3 +63,18 @@ export interface FileContentResponse {
   lines: number;
   truncated: boolean;
 }
+
+/** ファイル書き込みレスポンス */
+export interface FileWriteResponse {
+  path: string;
+  bytes: number;
+}
+
+/** ファイルアップロードレスポンス */
+export interface FileUploadResponse {
+  success: boolean;
+  path: string;
+  filename: string;
+  size: number;
+  mimetype: string;
+}
