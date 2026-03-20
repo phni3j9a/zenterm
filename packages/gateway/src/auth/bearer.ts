@@ -1,12 +1,7 @@
-import bearerAuth from '@fastify/bearer-auth';
-import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
+import crypto from 'node:crypto';
+import fp from 'fastify-plugin';
+import type { FastifyPluginAsync } from 'fastify';
 import { config } from '../config.js';
-
-declare module 'fastify' {
-  interface FastifyInstance {
-    requireBearerAuth: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
-  }
-}
 
 const publicExactPaths = new Set([
   '/',
@@ -26,39 +21,32 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
+function verifyToken(token: string): boolean {
+  const expected = Buffer.from(config.AUTH_TOKEN);
+  const actual = Buffer.from(token);
+  if (expected.length !== actual.length) return false;
+  return crypto.timingSafeEqual(expected, actual);
+}
+
 const bearerPlugin: FastifyPluginAsync = async (fastify) => {
-  await fastify.register(bearerAuth, {
-    addHook: false,
-    keys: new Set([config.AUTH_TOKEN]),
-    verifyErrorLogLevel: config.LOG_LEVEL === 'debug' ? 'debug' : 'error'
-  });
-
-  const verifyBearerAuth = fastify.verifyBearerAuth;
-  if (!verifyBearerAuth) {
-    throw new Error('verifyBearerAuth decorator is not available');
-  }
-
-  fastify.decorate('requireBearerAuth', async (request, reply) => {
-    await new Promise<void>((resolve, reject) => {
-      verifyBearerAuth(request, reply, (error?: Error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-
-        resolve();
-      });
-    });
-  });
-
   fastify.addHook('onRequest', async (request, reply) => {
     const pathname = getPathname(request.raw.url);
     if (isPublicPath(pathname)) {
       return;
     }
 
-    await fastify.requireBearerAuth(request, reply);
+    const header = request.headers.authorization;
+    if (!header || !header.startsWith('Bearer ')) {
+      reply.code(401).send({ error: 'Unauthorized', message: 'Missing or invalid Authorization header' });
+      return;
+    }
+
+    const token = header.slice(7).trim();
+    if (!verifyToken(token)) {
+      reply.code(401).send({ error: 'Unauthorized', message: 'Invalid token' });
+      return;
+    }
   });
 };
 
-export default bearerPlugin;
+export default fp(bearerPlugin, { name: 'bearer-auth' });
