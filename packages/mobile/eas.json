@@ -16,6 +16,7 @@
       }
     },
     "preview": {
+      "autoIncrement": true,
       "distribution": "store",
       "ios": {
         "resourceClass": "m-medium"
