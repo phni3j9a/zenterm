@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { z } from 'zod';
 
-const envPath = resolve(process.cwd(), '.env');
+const envPath = join(process.env.HOME ?? '', '.config', 'palmsh', '.env');
 
 function loadEnvFile(): void {
   if (!existsSync(envPath)) {

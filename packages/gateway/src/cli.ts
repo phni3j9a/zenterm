@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import { existsSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
 
-const envPath = resolve(process.cwd(), '.env');
+const configDir = join(process.env.HOME ?? '', '.config', 'palmsh');
+const envPath = join(configDir, '.env');
 
 // tmux check
 try {
@@ -49,9 +50,10 @@ if (!existsSync(envPath)) {
     '',
   ].join('\n');
 
+  mkdirSync(configDir, { recursive: true });
   writeFileSync(envPath, content, 'utf8');
   console.log('');
-  console.log(`.env を生成しました (AUTH_TOKEN: ${token})`);
+  console.log(`${envPath} を生成しました (AUTH_TOKEN: ${token})`);
   console.log('');
 }
 

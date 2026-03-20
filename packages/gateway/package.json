@@ -1,6 +1,6 @@
 {
   "name": "palmsh-gateway",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Mobile terminal gateway — access your server from any browser or the palmsh app",
   "type": "module",
   "bin": {
