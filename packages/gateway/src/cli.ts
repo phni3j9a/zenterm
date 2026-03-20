@@ -2,6 +2,7 @@
 import { existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createInterface } from 'node:readline/promises';
 
 const envPath = resolve(process.cwd(), '.env');
 
@@ -15,9 +16,30 @@ try {
   process.exit(1);
 }
 
-// Auto-create .env if missing
+// Interactive .env setup if missing
 if (!existsSync(envPath)) {
-  const token = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  console.log('');
+  console.log('palmsh-gateway 初回セットアップ');
+  console.log('================================');
+  console.log('');
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+
+  let token: string;
+  while (true) {
+    const input = await rl.question('認証トークン（数字4桁）を入力してください: ');
+    const trimmed = input.trim();
+
+    if (/^\d{4}$/.test(trimmed)) {
+      token = trimmed;
+      break;
+    }
+
+    console.log('  → 数字4桁で入力してください（例: 1234）');
+  }
+
+  rl.close();
+
   const content = [
     `AUTH_TOKEN=${token}`,
     'PORT=18765',
@@ -28,7 +50,9 @@ if (!existsSync(envPath)) {
   ].join('\n');
 
   writeFileSync(envPath, content, 'utf8');
-  console.log('.env を生成しました (AUTH_TOKEN 自動生成)');
+  console.log('');
+  console.log(`.env を生成しました (AUTH_TOKEN: ${token})`);
+  console.log('');
 }
 
 // Start server

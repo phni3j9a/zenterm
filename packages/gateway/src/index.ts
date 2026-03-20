@@ -31,37 +31,55 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   });
 }
 
-function getLanIp(): string | null {
-  const interfaces = os.networkInterfaces();
+interface NetworkAddresses {
+  lan: string | null;
+  tailscale: string | null;
+}
 
-  for (const entries of Object.values(interfaces)) {
+function getNetworkAddresses(): NetworkAddresses {
+  const interfaces = os.networkInterfaces();
+  const result: NetworkAddresses = { lan: null, tailscale: null };
+
+  for (const [name, entries] of Object.entries(interfaces)) {
     if (!entries) continue;
 
     for (const entry of entries) {
-      if (entry.family === 'IPv4' && !entry.internal) {
-        return entry.address;
+      if (entry.family !== 'IPv4' || entry.internal) continue;
+
+      // Tailscale uses 100.64.0.0/10 (CGNAT range)
+      if (name.startsWith('tailscale') || entry.address.startsWith('100.')) {
+        result.tailscale ??= entry.address;
+      } else {
+        result.lan ??= entry.address;
       }
     }
   }
 
-  return null;
+  return result;
 }
 
 function showPairingInfo(): void {
-  const lanIp = getLanIp();
+  const { lan, tailscale } = getNetworkAddresses();
 
-  if (!lanIp) {
-    app.log.warn('LAN IP を検出できませんでした。');
+  if (!lan && !tailscale) {
+    app.log.warn('ネットワークアドレスを検出できませんでした。');
     return;
   }
 
-  const url = `http://${lanIp}:${config.PORT}`;
-  const pairingUrl = `palmsh://connect?url=${encodeURIComponent(url)}&token=${encodeURIComponent(config.AUTH_TOKEN)}`;
+  // Use LAN IP for QR pairing (prefer local network)
+  const primaryIp = lan ?? tailscale;
+  const primaryUrl = `http://${primaryIp}:${config.PORT}`;
+  const pairingUrl = `palmsh://connect?url=${encodeURIComponent(primaryUrl)}&token=${encodeURIComponent(config.AUTH_TOKEN)}`;
 
   console.log('');
   console.log('--- palmsh gateway ---');
-  console.log(`  Web:   ${url}`);
-  console.log(`  Token: ${config.AUTH_TOKEN}`);
+  if (lan) {
+    console.log(`  LAN:       http://${lan}:${config.PORT}`);
+  }
+  if (tailscale) {
+    console.log(`  Tailscale: http://${tailscale}:${config.PORT}`);
+  }
+  console.log(`  Token:     ${config.AUTH_TOKEN}`);
   console.log('');
 
   try {

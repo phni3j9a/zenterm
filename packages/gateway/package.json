@@ -1,6 +1,6 @@
 {
   "name": "palmsh-gateway",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Mobile terminal gateway — access your server from any browser or the palmsh app",
   "type": "module",
   "bin": {
@@ -19,7 +19,14 @@
     "start": "node dist/index.js",
     "prepublishOnly": "tsc"
   },
-  "keywords": ["terminal", "gateway", "ssh", "tmux", "raspberry-pi", "mobile"],
+  "keywords": [
+    "terminal",
+    "gateway",
+    "ssh",
+    "tmux",
+    "raspberry-pi",
+    "mobile"
+  ],
   "license": "MIT",
   "dependencies": {
     "@fastify/bearer-auth": "^10.1.0",
