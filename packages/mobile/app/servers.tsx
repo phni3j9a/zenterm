@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 import { verifyAuth } from '@/src/api/client';
+import { QrScannerModal, type QrScanResult } from '@/src/components/QrScannerModal';
 import { Badge, Button, Card, EmptyState, Input, SwipeableRow } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useTheme } from '@/src/theme';
@@ -174,6 +175,44 @@ export default function ServersScreen() {
   const [editErrors, setEditErrors] = useState<FormErrors>({});
   const [testingTarget, setTestingTarget] = useState<'add' | 'edit' | null>(null);
   const [savingTarget, setSavingTarget] = useState<'add' | 'edit' | null>(null);
+  const [showQrScanner, setShowQrScanner] = useState(false);
+
+  const handleQrScan = useCallback(
+    (result: QrScanResult) => {
+      // QRスキャン結果でフォームを自動入力
+      setEditingServerId(null);
+      setEditForm(initialForm);
+      setEditErrors({});
+      setShowForm(true);
+      setForm({
+        name: new URL(result.url).hostname,
+        url: result.url,
+        token: result.token,
+      });
+      setFormErrors({});
+
+      // 自動認証テスト
+      const testServer = createServerPayload({
+        name: new URL(result.url).hostname,
+        url: result.url,
+        token: result.token,
+      });
+
+      setTestingTarget('add');
+      verifyAuth(testServer)
+        .then(() => {
+          Toast.show({ type: 'success', text1: '接続成功', text2: 'QR コードから接続情報を読み取りました。' });
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : '接続に失敗しました。';
+          Toast.show({ type: 'error', text1: '接続失敗', text2: message });
+        })
+        .finally(() => {
+          setTestingTarget(null);
+        });
+    },
+    [],
+  );
 
   const styles = useMemo(
     () =>
@@ -459,28 +498,41 @@ export default function ServersScreen() {
           onTest={() => void runAuthTest('add')}
         />
       ) : (
-        <Card onPress={openAddForm} style={styles.addPrompt}>
-          <View style={styles.addPromptRow}>
-            <View style={{ flex: 1, gap: spacing.xs }}>
-              <Text style={[typography.heading, { color: colors.textPrimary }]}>新しい接続先を登録</Text>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                サーバー情報を追加して、必要なときにすぐ切り替えられる状態にします。
-              </Text>
+        <View style={{ gap: spacing.sm }}>
+          <Card onPress={openAddForm} style={styles.addPrompt}>
+            <View style={styles.addPromptRow}>
+              <View style={{ flex: 1, gap: spacing.xs }}>
+                <Text style={[typography.heading, { color: colors.textPrimary }]}>新しい接続先を登録</Text>
+                <Text style={[typography.caption, { color: colors.textSecondary }]}>
+                  サーバー情報を追加して、必要なときにすぐ切り替えられる状態にします。
+                </Text>
+              </View>
+              <View style={styles.addPromptIcon}>
+                <Ionicons color={colors.primary} name="add-outline" size={22} />
+              </View>
             </View>
-            <View style={styles.addPromptIcon}>
-              <Ionicons color={colors.primary} name="add-outline" size={22} />
-            </View>
-          </View>
-        </Card>
+          </Card>
+          <Button
+            icon={<Ionicons color={colors.textPrimary} name="qr-code-outline" size={16} />}
+            label="QR コードでスキャン"
+            variant="secondary"
+            onPress={() => setShowQrScanner(true)}
+          />
+        </View>
       )}
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+      style={styles.container}
+    >
       <Stack.Screen
         options={{
           title: 'サーバー管理',
+          headerBackTitle: '戻る',
           headerRight: () => (
             <Pressable
               accessibilityLabel={showForm ? 'フォームを閉じる' : 'サーバーを追加'}
@@ -494,9 +546,9 @@ export default function ServersScreen() {
 
                 openAddForm();
               }}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, paddingHorizontal: 4 })}
             >
-              <Ionicons color={colors.textPrimary} name={showForm ? 'close' : 'add'} size={22} />
+              <Ionicons color={colors.textPrimary} name={showForm ? 'close' : 'add'} size={24} />
             </Pressable>
           ),
         }}
@@ -602,6 +654,12 @@ export default function ServersScreen() {
           );
         }}
       />
-    </View>
+
+      <QrScannerModal
+        visible={showQrScanner}
+        onClose={() => setShowQrScanner(false)}
+        onScan={handleQrScan}
+      />
+    </KeyboardAvoidingView>
   );
 }

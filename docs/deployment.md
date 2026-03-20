@@ -1,47 +1,98 @@
 # palmsh デプロイメントガイド
 
 ## 前提条件
-- Raspberry Pi 5 (Raspberry Pi OS)
-- Node.js 20+ インストール済み
-- tmux インストール済み
+- **Linux**: Raspberry Pi OS / Ubuntu / Debian + Node.js 20+ + tmux
+- **macOS**: macOS 12+ + Homebrew + Node.js 20+ + tmux (`brew install tmux`)
 - npm workspaces 対応済み
 
-## Gateway デプロイ
+## ワンライナーインストール
 
-### 1. 依存インストール
 ```bash
 cd ~/projects/palmsh
-npm install
-```
-
-### 2. 環境変数設定
-```bash
-cp packages/gateway/.env.example packages/gateway/.env
-# .env を編集して AUTH_TOKEN を設定
-# AUTH_TOKEN には十分に長いランダム文字列を使用:
-#   openssl rand -base64 32
-```
-
-### 3. ビルド
-```bash
-npm run build:gateway
-```
-
-### 4. systemd サービスとして起動
-```bash
 ./deploy/install.sh
 ```
 
-### 5. 動作確認
-```bash
-# サービスステータス
-sudo systemctl status palmsh-gateway
+install.sh は以下を自動実行します:
+1. OS 検出（Linux / macOS）
+2. tmux・Node.js の存在確認
+3. Gateway ビルド（`npm install` + `npm run build:gateway`）
+4. `.env` 未作成なら AUTH_TOKEN を自動生成して `.env` 作成
+5. サービス登録（Linux → systemd、macOS → launchd）
+6. 起動確認 + QR コード表示
 
-# ヘルスチェック
-curl http://localhost:18765/health
+起動後、ターミナルに QR コードとペアリング URL が表示されます。
+モバイルアプリの「QR コードでスキャン」からスキャンすれば接続完了です。
+
+## Linux (systemd)
+
+### サービス管理
+```bash
+# ステータス確認
+sudo systemctl status palmsh-gateway
 
 # ログ確認
 sudo journalctl -u palmsh-gateway -f
+
+# 再起動
+sudo systemctl restart palmsh-gateway
+
+# 停止
+sudo systemctl stop palmsh-gateway
+```
+
+### アンインストール
+```bash
+./deploy/uninstall.sh
+```
+
+## macOS (launchd)
+
+### 前提条件
+```bash
+brew install tmux node
+```
+
+### サービス管理
+```bash
+# ステータス確認
+launchctl list | grep palmsh
+
+# ログ確認
+tail -f ~/Library/Logs/palmsh-gateway.log
+
+# 再起動
+launchctl unload ~/Library/LaunchAgents/com.palmsh.gateway.plist
+launchctl load ~/Library/LaunchAgents/com.palmsh.gateway.plist
+
+# 停止
+launchctl unload ~/Library/LaunchAgents/com.palmsh.gateway.plist
+```
+
+### アンインストール
+```bash
+./deploy/uninstall.sh
+```
+
+### macOS 固有の注意事項
+- CPU 温度は取得不可（モバイルアプリ上では非表示）
+- ディスク情報は `df -k /` からパース（`--output` オプンは macOS の df にはない）
+- launchd plist は `~/Library/LaunchAgents/` に配置（sudo 不要）
+- Node.js パスは plist 内で `/usr/local/bin/node` と `/opt/homebrew/bin` の両方を PATH に含む
+
+## 環境変数設定
+
+`.env` ファイル（`packages/gateway/.env`）:
+
+```bash
+AUTH_TOKEN=your-secret-token-here   # install.sh で自動生成
+PORT=18765
+HOST=0.0.0.0
+SESSION_PREFIX=psh_
+LOG_LEVEL=info
+
+# Upload settings
+UPLOAD_DIR=~/uploads/palmsh
+UPLOAD_MAX_SIZE=10485760
 ```
 
 ## Mobile アプリ
@@ -56,8 +107,8 @@ npm run dev:mobile
 
 ## 運用チェックリスト
 
-- [ ] AUTH_TOKEN をランダムな長い文字列に変更
-- [ ] Gateway が systemd で自動起動することを確認
-- [ ] ヘルスチェック（/health）が正常応答することを確認
-- [ ] Tailscale VPN 経由で iPhone から接続できることを確認
-- [ ] ログが journald に出力されていることを確認
+- [ ] AUTH_TOKEN がランダムな長い文字列であること
+- [ ] Gateway がサービスとして自動起動すること（systemd / launchd）
+- [ ] ヘルスチェック（/health）が正常応答すること
+- [ ] VPN 経由で iPhone から接続できること
+- [ ] ログが出力されていること（journald / ~/Library/Logs/）

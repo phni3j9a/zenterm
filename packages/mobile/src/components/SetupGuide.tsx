@@ -16,17 +16,17 @@ const STEPS: readonly SetupStep[] = [
   {
     icon: 'terminal-outline',
     title: 'Gateway を起動',
-    description: 'サーバー上で .env に AUTH_TOKEN を設定し、npm run dev:gateway で Gateway を起動します。',
+    description: 'Mac または Linux で npx palmsh-gateway を実行するだけ。トークン生成もセットアップも自動です。',
   },
   {
-    icon: 'add-circle-outline',
-    title: 'サーバーを追加',
-    description: 'Settings → サーバー管理で接続先の URL と Token を登録します。',
+    icon: 'qr-code-outline',
+    title: 'QR コードをスキャン',
+    description: '起動時にターミナルに表示される QR コードをスキャンすると、接続情報が自動入力されます。',
   },
   {
-    icon: 'shield-checkmark-outline',
-    title: '接続を確認',
-    description: '認証テストボタンで接続が成功することを確認したら準備完了です。',
+    icon: 'globe-outline',
+    title: 'ブラウザからもアクセス可能',
+    description: 'アプリがなくても http://<サーバーIP>:18765 にアクセスすればブラウザから使えます。',
   },
 ];
 

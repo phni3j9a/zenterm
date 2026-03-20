@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -306,6 +306,17 @@ export default function SessionsScreen() {
     setActiveSessionId(null);
     void loadSessions('soft');
   }, [loadSessions]);
+
+  const navigation = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress', (e) => {
+      if (activeSessionId) {
+        e.preventDefault();
+        closeTerminal();
+      }
+    });
+    return unsubscribe;
+  }, [activeSessionId, closeTerminal, navigation]);
 
   useFocusEffect(
     useCallback(() => {

@@ -13,8 +13,8 @@ import { useSettingsStore } from '@/src/stores/settings';
 import { useTheme, type ThemeMode } from '@/src/theme';
 
 const STORAGE_KEY = 'palmsh_servers';
-const MIN_FONT_SIZE = 10;
-const MAX_FONT_SIZE = 24;
+const MIN_FONT_SIZE = 6;
+const MAX_FONT_SIZE = 20;
 
 type ThemeOption = {
   value: ThemeMode;

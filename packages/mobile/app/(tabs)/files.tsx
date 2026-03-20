@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { Stack, useNavigation } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActionSheetIOS,
   Alert,
@@ -348,6 +348,17 @@ export default function FilesScreen() {
     [loadFiles],
   );
 
+  const navigation = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress', (e) => {
+      if (navigation.isFocused() && currentPath !== '~') {
+        e.preventDefault();
+        navigateTo('~');
+      }
+    });
+    return unsubscribe;
+  }, [currentPath, navigateTo, navigation]);
+
   const closePreview = useCallback(() => {
     setPreviewFile(null);
     setIsEditing(false);
@@ -526,8 +537,28 @@ export default function FilesScreen() {
     setEditContent(previewFile?.content ?? '');
   }, [previewFile]);
 
+  const navigateUp = useCallback(() => {
+    if (currentPath === '~' || currentPath === '/' || currentPath === '') return;
+    const parts = currentPath.split('/');
+    parts.pop();
+    const parentPath = parts.length <= 1 && currentPath.startsWith('~') ? '~' : parts.join('/') || '/';
+    navigateTo(parentPath);
+  }, [currentPath, navigateTo]);
+
+  const canNavigateUp = currentPath !== '~' && currentPath !== '/' && currentPath !== '';
+
   const renderBreadcrumbs = () => (
     <View style={styles.breadcrumbBar}>
+      {canNavigateUp ? (
+        <Pressable
+          accessibilityLabel="上の階層へ"
+          hitSlop={8}
+          onPress={navigateUp}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginRight: spacing.sm })}
+        >
+          <Ionicons color={colors.textSecondary} name="arrow-up-outline" size={18} />
+        </Pressable>
+      ) : null}
       <ScrollView
         horizontal
         contentContainerStyle={styles.breadcrumbScroll}

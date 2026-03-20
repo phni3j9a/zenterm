@@ -6,13 +6,17 @@
   "build": {
     "development": {
       "developmentClient": true,
+      "distribution": "internal"
+    },
+    "development-simulator": {
+      "developmentClient": true,
       "distribution": "internal",
       "ios": {
         "simulator": true
       }
     },
     "preview": {
-      "distribution": "internal",
+      "distribution": "store",
       "ios": {
         "resourceClass": "m-medium"
       }
@@ -27,9 +31,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "PLACEHOLDER_APPLE_ID",
-        "ascAppId": "PLACEHOLDER_ASC_APP_ID",
-        "appleTeamId": "PLACEHOLDER_APPLE_TEAM_ID"
+        "appleId": "yuki.nakano.1020@gmail.com",
+        "ascAppId": "6760901993",
+        "appleTeamId": "49CJSL7HXG"
       }
     }
   }

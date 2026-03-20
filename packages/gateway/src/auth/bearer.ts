@@ -8,10 +8,22 @@ declare module 'fastify' {
   }
 }
 
-const publicPaths = new Set(['/embed/terminal', '/health', '/ws/terminal']);
+const publicExactPaths = new Set([
+  '/',
+  '/index.html',
+  '/embed/terminal',
+  '/health',
+  '/ws/terminal',
+]);
 
 function getPathname(url?: string): string {
   return new URL(url ?? '/', 'http://localhost').pathname;
+}
+
+function isPublicPath(pathname: string): boolean {
+  if (publicExactPaths.has(pathname)) return true;
+  if (pathname.startsWith('/terminal/lib/')) return true;
+  return false;
 }
 
 const bearerPlugin: FastifyPluginAsync = async (fastify) => {
@@ -41,7 +53,7 @@ const bearerPlugin: FastifyPluginAsync = async (fastify) => {
 
   fastify.addHook('onRequest', async (request, reply) => {
     const pathname = getPathname(request.raw.url);
-    if (publicPaths.has(pathname)) {
+    if (isPublicPath(pathname)) {
       return;
     }
 

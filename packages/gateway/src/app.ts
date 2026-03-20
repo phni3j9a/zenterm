@@ -107,6 +107,12 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   app.get('/health', async () => ({ ok: true }));
 
+  app.get('/', async (_request, reply) => {
+    reply.type('text/html; charset=utf-8');
+    reply.header('Cache-Control', 'no-store');
+    return reply.sendFile('index.html');
+  });
+
   await app.register(embedRoutes);
   await app.register(terminalRoutes);
   await app.register(authRoutes);

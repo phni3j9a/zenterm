@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>palmsh</title>
+  <link rel="stylesheet" href="/terminal/lib/xterm.min.css">
+  <style>
+    :root {
+      --bg: #1A1915;
+      --surface: #252320;
+      --surface2: #2E2B27;
+      --border: #3A3733;
+      --primary: #D4713D;
+      --primary-hover: #E07F4A;
+      --primary-subtle: rgba(212,113,61,0.12);
+      --danger: #d45d5d;
+      --danger-hover: #e06b6b;
+      --success: #8cb369;
+      --text: #E8E4DC;
+      --text2: #A09A8F;
+      --text3: #706C63;
+      --text-inv: #1A1915;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; min-height: 100dvh;
+    }
+    button {
+      font-family: inherit; cursor: pointer; border: none;
+      font-size: 14px; font-weight: 600; border-radius: var(--radius-sm);
+      transition: background 0.15s, opacity 0.15s;
+    }
+    button:active { opacity: 0.85; }
+    input {
+      font-family: inherit; font-size: 15px;
+      background: var(--surface); color: var(--text);
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 10px 14px; outline: none; width: 100%;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--primary); }
+    input::placeholder { color: var(--text3); }
+
+    .view { display:none; }
+    .view.active { display:flex; }
+
+    /* ── Login ── */
+    #login-view {
+      flex-direction:column; align-items:center; justify-content:center;
+      min-height:100vh; min-height:100dvh; padding:24px;
+    }
+    .login-card {
+      width:100%; max-width:380px;
+      background:var(--surface); border-radius:var(--radius);
+      padding:40px 32px; text-align:center;
+    }
+    .login-logo {
+      font-size:28px; font-weight:700; color:var(--primary);
+      margin-bottom:4px; letter-spacing:-0.5px;
+    }
+    .login-sub { color:var(--text2); font-size:13px; margin-bottom:28px; }
+    .login-field { margin-bottom:14px; text-align:left; }
+    .login-field label { display:block; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:6px; }
+    .login-btn {
+      width:100%; padding:12px; margin-top:8px;
+      background:var(--primary); color:var(--text-inv); font-size:15px;
+    }
+    .login-btn:hover { background:var(--primary-hover); }
+    .login-error {
+      color:var(--danger); font-size:13px; margin-top:12px;
+      min-height:20px;
+    }
+
+    /* ── Dashboard ── */
+    #dashboard-view {
+      flex-direction:column; min-height:100vh; min-height:100dvh;
+    }
+    .topbar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 20px; border-bottom:1px solid var(--border);
+      background:var(--surface);
+    }
+    .topbar-brand { font-size:18px; font-weight:700; color:var(--primary); }
+    .topbar-actions { display:flex; gap:8px; align-items:center; }
+    .btn-ghost {
+      background:transparent; color:var(--text2); padding:6px 12px;
+      font-size:13px;
+    }
+    .btn-ghost:hover { color:var(--text); background:var(--surface2); }
+    .dashboard-body {
+      flex:1; padding:20px; overflow-y:auto;
+      max-width:800px; width:100%; margin:0 auto;
+    }
+    .section { margin-bottom:28px; }
+    .section-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:12px;
+    }
+    .section-title { font-size:15px; font-weight:700; color:var(--text2); }
+    .btn-primary {
+      background:var(--primary); color:var(--text-inv); padding:8px 16px;
+    }
+    .btn-primary:hover { background:var(--primary-hover); }
+    .btn-danger {
+      background:transparent; color:var(--danger); padding:6px 10px; font-size:12px;
+    }
+    .btn-danger:hover { background:rgba(212,93,93,0.12); }
+    .empty-state {
+      text-align:center; padding:40px 20px; color:var(--text3); font-size:14px;
+    }
+    .session-list { display:flex; flex-direction:column; gap:8px; }
+    .session-card {
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--surface); border-radius:var(--radius-sm);
+      padding:14px 16px; cursor:pointer;
+      border:1px solid transparent;
+      transition:border-color 0.15s, background 0.15s;
+    }
+    .session-card:hover { border-color:var(--border); background:var(--surface2); }
+    .session-name { font-weight:600; font-size:15px; }
+    .session-meta { font-size:12px; color:var(--text3); margin-top:2px; }
+    .session-actions { display:flex; gap:6px; align-items:center; }
+
+    .stats-grid {
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+      gap:10px;
+    }
+    .stat-card {
+      background:var(--surface); border-radius:var(--radius-sm);
+      padding:14px 16px;
+    }
+    .stat-label { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; }
+    .stat-value { font-size:22px; font-weight:700; margin-top:4px; }
+    .stat-detail { font-size:12px; color:var(--text2); margin-top:2px; }
+    .stat-bar { height:4px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; }
+    .stat-bar-fill { height:100%; border-radius:2px; background:var(--primary); transition:width 0.3s; }
+
+    /* ── Terminal ── */
+    #terminal-view {
+      flex-direction:column; height:100vh; height:100dvh;
+    }
+    .term-header {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 16px; background:var(--surface);
+      border-bottom:1px solid var(--border);
+      flex-shrink:0;
+    }
+    .btn-back {
+      background:transparent; color:var(--text2); padding:6px 10px;
+      font-size:14px;
+    }
+    .btn-back:hover { color:var(--text); }
+    .term-title { font-weight:600; font-size:14px; flex:1; }
+    .term-status {
+      width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    }
+    .term-status.connected { background:var(--success); }
+    .term-status.disconnected { background:var(--danger); }
+    .term-status.connecting { background:var(--primary); animation:pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    #web-terminal { flex:1; overflow:hidden; background:var(--bg); }
+
+    /* ── Responsive ── */
+    @media (max-width:480px) {
+      .login-card { padding:32px 20px; }
+      .dashboard-body { padding:16px; }
+      .stats-grid { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login View -->
+  <div id="login-view" class="view active">
+    <div class="login-card">
+      <div class="login-logo">palmsh</div>
+      <div class="login-sub">Terminal Gateway</div>
+      <div class="login-field">
+        <label>Token</label>
+        <input id="token-input" type="password" placeholder="AUTH_TOKEN を入力" autocomplete="off">
+      </div>
+      <button class="login-btn" id="login-btn">接続</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- Dashboard View -->
+  <div id="dashboard-view" class="view">
+    <div class="topbar">
+      <div class="topbar-brand">palmsh</div>
+      <div class="topbar-actions">
+        <button class="btn-ghost" id="refresh-btn">更新</button>
+        <button class="btn-ghost" id="logout-btn">ログアウト</button>
+      </div>
+    </div>
+    <div class="dashboard-body">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">Sessions</span>
+          <button class="btn-primary" id="new-session-btn">+ 新規セッション</button>
+        </div>
+        <div id="session-list" class="session-list">
+          <div class="empty-state">セッションがありません</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">System</span>
+        </div>
+        <div id="system-stats" class="stats-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal View -->
+  <div id="terminal-view" class="view">
+    <div class="term-header">
+      <button class="btn-back" id="term-back-btn">&larr; 戻る</button>
+      <span class="term-title" id="term-title"></span>
+      <span class="term-status" id="term-status"></span>
+    </div>
+    <div id="web-terminal"></div>
+  </div>
+
+  <script src="/terminal/lib/xterm.min.js"></script>
+  <script src="/terminal/lib/addon-fit.min.js"></script>
+  <script src="/terminal/lib/addon-unicode11.min.js"></script>
+  <script>
+  (function() {
+    'use strict';
+
+    // ── State ──
+    var token = localStorage.getItem('palmsh_token') || '';
+    var currentSession = null;
+    var term = null;
+    var fitAddon = null;
+    var ws = null;
+    var reconnectTimer = null;
+    var reconnectAttempt = 0;
+    var reconnectDelay = 1000;
+    var systemPollTimer = null;
+
+    // ── DOM ──
+    var views = {
+      login: document.getElementById('login-view'),
+      dashboard: document.getElementById('dashboard-view'),
+      terminal: document.getElementById('terminal-view'),
+    };
+    var tokenInput = document.getElementById('token-input');
+    var loginBtn = document.getElementById('login-btn');
+    var loginError = document.getElementById('login-error');
+    var logoutBtn = document.getElementById('logout-btn');
+    var refreshBtn = document.getElementById('refresh-btn');
+    var newSessionBtn = document.getElementById('new-session-btn');
+    var sessionList = document.getElementById('session-list');
+    var systemStats = document.getElementById('system-stats');
+    var termBackBtn = document.getElementById('term-back-btn');
+    var termTitle = document.getElementById('term-title');
+    var termStatus = document.getElementById('term-status');
+    var webTerminal = document.getElementById('web-terminal');
+
+    // ── Navigation ──
+    function showView(name) {
+      for (var k in views) {
+        views[k].classList.toggle('active', k === name);
+      }
+      if (name === 'dashboard') {
+        loadDashboard();
+        startSystemPoll();
+      } else {
+        stopSystemPoll();
+      }
+    }
+
+    // ── API ──
+    function api(method, path, body) {
+      var opts = {
+        method: method,
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      return fetch(path, opts).then(function(res) {
+        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+        return res.json();
+      });
+    }
+
+    // ── Login ──
+    function attemptLogin() {
+      var val = tokenInput.value.trim();
+      if (!val) { loginError.textContent = 'Token を入力してください'; return; }
+      loginError.textContent = '';
+      loginBtn.disabled = true;
+      loginBtn.textContent = '接続中...';
+
+      token = val;
+      api('POST', '/api/auth/verify').then(function() {
+        localStorage.setItem('palmsh_token', token);
+        showView('dashboard');
+      }).catch(function() {
+        loginError.textContent = '認証に失敗しました。Token を確認してください。';
+        token = '';
+      }).finally(function() {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '接続';
+      });
+    }
+
+    loginBtn.addEventListener('click', attemptLogin);
+    tokenInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') attemptLogin(); });
+    logoutBtn.addEventListener('click', function() {
+      localStorage.removeItem('palmsh_token');
+      token = '';
+      tokenInput.value = '';
+      showView('login');
+    });
+
+    // ── Dashboard ──
+    function loadDashboard() {
+      loadSessions();
+      loadSystem();
+    }
+
+    refreshBtn.addEventListener('click', loadDashboard);
+
+    function loadSessions() {
+      api('GET', '/api/sessions').then(function(data) {
+        renderSessions(data.sessions || []);
+      }).catch(function() {
+        sessionList.innerHTML = '<div class="empty-state">取得に失敗しました</div>';
+      });
+    }
+
+    function renderSessions(sessions) {
+      if (!sessions.length) {
+        sessionList.innerHTML = '<div class="empty-state">セッションがありません</div>';
+        return;
+      }
+      sessionList.innerHTML = '';
+      sessions.forEach(function(s) {
+        var card = document.createElement('div');
+        card.className = 'session-card';
+        var info = document.createElement('div');
+        info.innerHTML = '<div class="session-name">' + escHtml(s.displayName) + '</div>' +
+          '<div class="session-meta">' + formatTime(s.created) + '</div>';
+        var actions = document.createElement('div');
+        actions.className = 'session-actions';
+        var delBtn = document.createElement('button');
+        delBtn.className = 'btn-danger';
+        delBtn.textContent = '削除';
+        delBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (confirm(s.displayName + ' を削除しますか？')) {
+            api('DELETE', '/api/sessions/' + encodeURIComponent(s.name)).then(loadSessions);
+          }
+        });
+        actions.appendChild(delBtn);
+        card.appendChild(info);
+        card.appendChild(actions);
+        card.addEventListener('click', function() { openTerminal(s.name); });
+        sessionList.appendChild(card);
+      });
+    }
+
+    newSessionBtn.addEventListener('click', function() {
+      api('POST', '/api/sessions').then(function(data) {
+        openTerminal(data.session.name);
+      }).catch(function(err) { alert('セッション作成に失敗: ' + err.message); });
+    });
+
+    function loadSystem() {
+      api('GET', '/api/system/status').then(function(data) {
+        renderSystem(data);
+      }).catch(function() {
+        systemStats.innerHTML = '<div class="empty-state">取得に失敗しました</div>';
+      });
+    }
+
+    function renderSystem(s) {
+      var cards = [];
+      cards.push(statCard('CPU', s.cpu.usage.toFixed(0) + '%', s.cpu.model, s.cpu.usage));
+      cards.push(statCard('メモリ', formatBytes(s.memory.used) + ' / ' + formatBytes(s.memory.total), s.memory.percent.toFixed(0) + '% 使用中', s.memory.percent));
+      cards.push(statCard('ディスク', formatBytes(s.disk.used) + ' / ' + formatBytes(s.disk.total), s.disk.percent.toFixed(0) + '% 使用中', s.disk.percent));
+      if (s.temperature !== null) {
+        cards.push(statCard('温度', s.temperature.toFixed(1) + '°C', '', null));
+      }
+      cards.push(statCard('稼働時間', formatUptime(s.uptime), '', null));
+      systemStats.innerHTML = cards.join('');
+    }
+
+    function statCard(label, value, detail, percent) {
+      var bar = '';
+      if (percent !== null && percent !== undefined) {
+        var color = percent > 80 ? 'var(--danger)' : percent > 60 ? '#e0a458' : 'var(--primary)';
+        bar = '<div class="stat-bar"><div class="stat-bar-fill" style="width:' + percent + '%;background:' + color + '"></div></div>';
+      }
+      return '<div class="stat-card"><div class="stat-label">' + escHtml(label) + '</div>' +
+        '<div class="stat-value">' + escHtml(value) + '</div>' +
+        (detail ? '<div class="stat-detail">' + escHtml(detail) + '</div>' : '') +
+        bar + '</div>';
+    }
+
+    function startSystemPoll() {
+      stopSystemPoll();
+      systemPollTimer = setInterval(loadSystem, 10000);
+    }
+    function stopSystemPoll() {
+      if (systemPollTimer) { clearInterval(systemPollTimer); systemPollTimer = null; }
+    }
+
+    // ── Terminal ──
+    function openTerminal(sessionName) {
+      currentSession = sessionName;
+      var displayName = sessionName.replace(/^psh_/, '');
+      termTitle.textContent = displayName;
+      showView('terminal');
+      initTerminal(sessionName);
+    }
+
+    termBackBtn.addEventListener('click', function() {
+      closeTerminal();
+      showView('dashboard');
+    });
+
+    function initTerminal(sessionName) {
+      cleanupTerminal();
+
+      term = new Terminal({
+        allowProposedApi: true,
+        fontFamily: '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", "Fira Code", "Cascadia Code", monospace',
+        fontSize: 14,
+        cursorBlink: true,
+        cursorStyle: 'block',
+        scrollback: 5000,
+        theme: {
+          background: '#1a1915',
+          foreground: '#e8e4dc',
+          cursor: '#d97757',
+          cursorAccent: '#1a1915',
+          selectionBackground: 'rgba(217,119,87,0.25)',
+          black: '#1a1915', red: '#d45d5d', green: '#8cb369', yellow: '#e0a458',
+          blue: '#6fa3cc', magenta: '#b585b8', cyan: '#6fb5b5', white: '#c8c3b8',
+          brightBlack: '#7a7268', brightRed: '#e87f7f', brightGreen: '#a4c785',
+          brightYellow: '#f0bc70', brightBlue: '#8db9dd', brightMagenta: '#cda0d0',
+          brightCyan: '#88cccc', brightWhite: '#f5f2eb',
+        },
+      });
+
+      fitAddon = new FitAddon.FitAddon();
+      term.loadAddon(fitAddon);
+      var unicode11 = new Unicode11Addon.Unicode11Addon();
+      term.loadAddon(unicode11);
+      term.unicode.activeVersion = '11';
+
+      term.open(webTerminal);
+      fitAddon.fit();
+
+      term.onData(function(data) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'input', data: data }));
+        }
+      });
+
+      connectWs(sessionName);
+
+      window.addEventListener('resize', onResize);
+    }
+
+    function onResize() {
+      if (fitAddon) { fitAddon.fit(); sendResize(); }
+    }
+
+    function sendResize() {
+      if (!ws || ws.readyState !== WebSocket.OPEN || !term) return;
+      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+    }
+
+    function connectWs(sessionName) {
+      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+      var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      var params = new URLSearchParams();
+      params.set('sessionId', sessionName);
+      params.set('token', token);
+      var url = proto + '//' + location.host + '/ws/terminal?' + params.toString();
+
+      setTermStatus('connecting');
+
+      try {
+        ws = new WebSocket(url);
+      } catch (e) {
+        setTermStatus('disconnected');
+        scheduleReconnect(sessionName);
+        return;
+      }
+
+      ws.onopen = function() {
+        reconnectAttempt = 0;
+        reconnectDelay = 1000;
+        setTermStatus('connected');
+        term.reset();
+        fitAddon.fit();
+        sendResize();
+        term.focus();
+      };
+
+      ws.onmessage = function(ev) {
+        var msg = JSON.parse(ev.data);
+        if (msg.type === 'output') { term.write(msg.data); }
+      };
+
+      ws.onclose = function(ev) {
+        ws = null;
+        setTermStatus('disconnected');
+        if (ev.code !== 1000 && ev.code !== 1008 && currentSession === sessionName) {
+          scheduleReconnect(sessionName);
+        }
+      };
+
+      ws.onerror = function() {};
+    }
+
+    function scheduleReconnect(sessionName) {
+      if (reconnectAttempt >= 20) return;
+      reconnectAttempt++;
+      var delay = reconnectDelay;
+      reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+      setTermStatus('connecting');
+      clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(function() { connectWs(sessionName); }, delay);
+    }
+
+    function setTermStatus(status) {
+      termStatus.className = 'term-status ' + status;
+    }
+
+    function cleanupTerminal() {
+      window.removeEventListener('resize', onResize);
+      clearTimeout(reconnectTimer);
+      reconnectAttempt = 0;
+      reconnectDelay = 1000;
+      if (ws) { try { ws.close(); } catch(e){} ws = null; }
+      if (term) { term.dispose(); term = null; fitAddon = null; }
+      webTerminal.innerHTML = '';
+    }
+
+    function closeTerminal() {
+      cleanupTerminal();
+      currentSession = null;
+    }
+
+    // ── Helpers ──
+    function escHtml(s) {
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function formatTime(ts) {
+      if (!ts) return '';
+      var d = new Date(typeof ts === 'number' && ts < 1e12 ? ts * 1000 : ts);
+      return d.toLocaleString('ja-JP', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    function formatBytes(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1048576) return (b / 1024).toFixed(0) + ' KB';
+      if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB';
+      return (b / 1073741824).toFixed(1) + ' GB';
+    }
+
+    function formatUptime(sec) {
+      var d = Math.floor(sec / 86400);
+      var h = Math.floor((sec % 86400) / 3600);
+      var m = Math.floor((sec % 3600) / 60);
+      if (d > 0) return d + '日 ' + h + '時間';
+      if (h > 0) return h + '時間 ' + m + '分';
+      return m + '分';
+    }
+
+    // ── Init ──
+    if (token) {
+      api('POST', '/api/auth/verify').then(function() {
+        showView('dashboard');
+      }).catch(function() {
+        localStorage.removeItem('palmsh_token');
+        token = '';
+        showView('login');
+      });
+    }
+  })();
+  </script>
+</body>
+</html>

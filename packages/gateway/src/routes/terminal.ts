@@ -128,7 +128,7 @@ const terminalRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     if (query.token !== config.AUTH_TOKEN) {
-      request.log.warn({ sessionId: query.sessionId }, 'terminal websocket rejected');
+      request.log.warn({ sessionId: query.sessionId, receivedLength: query.token?.length, expectedLength: config.AUTH_TOKEN.length }, 'terminal websocket rejected');
       fail('Unauthorized');
       return;
     }
