@@ -278,9 +278,11 @@
 
     // ── API ──
     function api(method, path, body) {
+      var headers = { 'Authorization': 'Bearer ' + token };
+      if (body !== undefined) headers['Content-Type'] = 'application/json';
       var opts = {
         method: method,
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        headers: headers,
       };
       if (body !== undefined) opts.body = JSON.stringify(body);
       return fetch(path, opts).then(function(res) {
