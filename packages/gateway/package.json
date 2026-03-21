@@ -1,10 +1,10 @@
 {
-  "name": "palmsh-gateway",
-  "version": "0.1.5",
-  "description": "Mobile terminal gateway — access your server from any browser or the palmsh app",
+  "name": "zenterm-gateway",
+  "version": "0.1.6",
+  "description": "Mobile terminal gateway — access your server from any browser or the ZenTerm app",
   "type": "module",
   "bin": {
-    "palmsh-gateway": "./dist/cli.js"
+    "zenterm-gateway": "./dist/cli.js"
   },
   "files": [
     "dist/",
@@ -40,7 +40,7 @@
     "zod": "^4.3.0"
   },
   "devDependencies": {
-    "@palmsh/shared": "*",
+    "@zenterm/shared": "*",
     "@types/node": "^22.0.0",
     "@types/ws": "^8.5.0",
     "tsx": "^4.19.0",
