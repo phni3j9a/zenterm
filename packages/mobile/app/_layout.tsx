@@ -1,4 +1,3 @@
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
@@ -69,12 +68,10 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={styles.gestureRoot}>
-      <BottomSheetModalProvider>
-        <AppThemeProvider>
-          <AppContent />
-          <ToastConfig />
-        </AppThemeProvider>
-      </BottomSheetModalProvider>
+      <AppThemeProvider>
+        <AppContent />
+        <ToastConfig />
+      </AppThemeProvider>
     </GestureHandlerRootView>
   );
 }

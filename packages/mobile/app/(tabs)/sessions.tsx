@@ -1,4 +1,3 @@
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -6,6 +5,7 @@ import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   RefreshControl,
@@ -61,7 +61,7 @@ export default function SessionsScreen() {
   const [error, setError] = useState<string | null>(null);
   const sessionsCountRef = useRef(0);
   const requestIdRef = useRef(0);
-  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // ── Inline terminal state ──
   const activeSessionId = useSessionViewStore((state) => state.activeSessionId);
@@ -189,7 +189,7 @@ export default function SessionsScreen() {
   const isCurrentServer = useCallback((serverId: string) => useServersStore.getState().getDefaultServer()?.id === serverId, []);
 
   const resetCreateForm = useCallback(() => {
-    bottomSheetRef.current?.dismiss();
+    setShowCreateModal(false);
     setCreateName('');
   }, []);
 
@@ -211,7 +211,7 @@ export default function SessionsScreen() {
     setRenamingSessionId(null);
     setError(null);
     sessionsCountRef.current = 0;
-    bottomSheetRef.current?.dismiss();
+    setShowCreateModal(false);
     setCreateName('');
     resetRenameForm();
     useSessionViewStore.getState().close();
@@ -297,7 +297,7 @@ export default function SessionsScreen() {
     }
 
     resetRenameForm();
-    bottomSheetRef.current?.present();
+    setShowCreateModal(true);
   }, [creating, resetRenameForm, server]);
 
   const cancelCreate = useCallback(() => {
@@ -305,7 +305,7 @@ export default function SessionsScreen() {
       return;
     }
 
-    bottomSheetRef.current?.dismiss();
+    setShowCreateModal(false);
     setCreateName('');
   }, [creating]);
 
@@ -745,50 +745,52 @@ export default function SessionsScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-      <BottomSheetModal
-        ref={bottomSheetRef}
-        snapPoints={['38%']}
-        keyboardBehavior="interactive"
-        keyboardBlurBehavior="restore"
-        backgroundStyle={{ backgroundColor: colors.surface }}
-        handleIndicatorStyle={{
-          backgroundColor: colors.textMuted,
-          width: 40,
-          height: 4,
-          borderRadius: radii.full,
-        }}
+      <Modal
+        animationType="slide"
+        onRequestClose={cancelCreate}
+        presentationStyle="pageSheet"
+        transparent={false}
+        visible={showCreateModal}
       >
-        <BottomSheetView
-          style={{
-            paddingHorizontal: spacing.lg,
-            paddingTop: spacing.sm,
-            paddingBottom: spacing['2xl'],
-            gap: spacing.lg,
-          }}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1, backgroundColor: colors.surface }}
         >
-          <View style={{ gap: spacing.xs }}>
-            <Text style={[typography.heading, { color: colors.textPrimary }]}>
-              新しいセッション
-            </Text>
-            <Text style={[typography.caption, { color: colors.textSecondary }]}>
-              名前は空欄のままでも作成できます。
-            </Text>
+          <View style={{ alignItems: 'center', paddingTop: spacing.sm }}>
+            <View style={{ width: 40, height: 4, borderRadius: radii.full, backgroundColor: colors.textMuted }} />
           </View>
+          <View
+            style={{
+              paddingHorizontal: spacing.lg,
+              paddingTop: spacing.lg,
+              paddingBottom: spacing['2xl'],
+              gap: spacing.lg,
+            }}
+          >
+            <View style={{ gap: spacing.xs }}>
+              <Text style={[typography.heading, { color: colors.textPrimary }]}>
+                新しいセッション
+              </Text>
+              <Text style={[typography.caption, { color: colors.textSecondary }]}>
+                名前は空欄のままでも作成できます。
+              </Text>
+            </View>
 
-          <Input
-            autoCapitalize="none"
-            label="セッション名"
-            onChangeText={setCreateName}
-            placeholder="例: 作業メモ / deploy / scratch"
-            value={createName}
-          />
+            <Input
+              autoCapitalize="none"
+              label="セッション名"
+              onChangeText={setCreateName}
+              placeholder="例: 作業メモ / deploy / scratch"
+              value={createName}
+            />
 
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
-            <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
-            <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
+              <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
+              <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
+            </View>
           </View>
-        </BottomSheetView>
-      </BottomSheetModal>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }

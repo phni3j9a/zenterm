@@ -91,20 +91,6 @@ jest.mock('react-native-webview', () => {
   };
 });
 
-jest.mock('@gorhom/bottom-sheet', () => {
-  const MockReact = require('react');
-  const RN = require('react-native');
-  return {
-    BottomSheetModal: MockReact.forwardRef(({ children }: { children?: React.ReactNode }, ref: any) => {
-      MockReact.useImperativeHandle(ref, () => ({ present: jest.fn(), dismiss: jest.fn() }));
-      return null;
-    }),
-    BottomSheetView: ({ children, ...props }: any) =>
-      MockReact.createElement(RN.View, props, children),
-    BottomSheetModalProvider: ({ children }: any) => children,
-  };
-});
-
 jest.mock('expo-clipboard', () => ({
   getStringAsync: jest.fn(() => Promise.resolve('')),
 }));
