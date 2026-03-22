@@ -101,6 +101,9 @@ export const listFiles = (server: Server, path = '~', showHidden = true) =>
 export const getFileContent = (server: Server, path: string) =>
   apiRequest<FileContentResponse>(server, `/api/files/content?path=${encodeURIComponent(path)}`);
 
+export const getFileRawUrl = (server: Server, path: string): string =>
+  `${getBaseUrl(server.url)}/api/files/raw?path=${encodeURIComponent(path)}`;
+
 export const writeFileContent = (server: Server, path: string, content: string) =>
   apiRequest<FileWriteResponse>(server, '/api/files/content', {
     method: 'PUT',
@@ -112,6 +115,30 @@ export async function uploadFile(server: Server, fileUri: string, fileName: stri
   formData.append('image', { uri: fileUri, name: fileName, type: mimeType } as unknown as Blob);
 
   const res = await fetch(`${getBaseUrl(server.url)}/api/upload`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${server.token}` },
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const message = body && typeof body === 'object' && 'message' in body ? String(body.message) : res.statusText;
+    throw new ApiError(res.status, message);
+  }
+  return res.json() as Promise<FileUploadResponse>;
+}
+
+export async function uploadFileToPath(
+  server: Server,
+  fileUri: string,
+  fileName: string,
+  mimeType: string,
+  destDir: string,
+): Promise<FileUploadResponse> {
+  const formData = new FormData();
+  formData.append('file', { uri: fileUri, name: fileName, type: mimeType } as unknown as Blob);
+
+  const dest = encodeURIComponent(destDir);
+  const res = await fetch(`${getBaseUrl(server.url)}/api/upload?dest=${dest}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${server.token}` },
     body: formData,

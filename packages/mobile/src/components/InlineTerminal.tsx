@@ -17,6 +17,9 @@ export function InlineTerminal({ server, sessionId, onStatusChange }: Props) {
   const terminalRef = useRef<TerminalWebViewHandle>(null);
   const { dark } = useTheme();
   const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
+  const handleKeyPress = (data: string, options?: { noFocus?: boolean }) => {
+    terminalRef.current?.sendInput(data, options);
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: termBg }]}>
@@ -26,7 +29,7 @@ export function InlineTerminal({ server, sessionId, onStatusChange }: Props) {
         sessionId={sessionId}
         onStatusChange={onStatusChange}
       />
-      <SpecialKeys onKeyPress={(data) => terminalRef.current?.sendInput(data)} server={server} />
+      <SpecialKeys onKeyPress={handleKeyPress} server={server} />
     </View>
   );
 }

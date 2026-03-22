@@ -1,6 +1,7 @@
 import React from 'react';
 import { create, act } from 'react-test-renderer';
 
+import { useSessionViewStore } from '@/src/stores/sessionView';
 import { resolveTheme } from '@/src/theme';
 import type { TmuxSession } from '@/src/types';
 
@@ -44,6 +45,20 @@ jest.mock('@/src/components/SystemStatus', () => {
   };
 });
 
+jest.mock('@/src/components/InlineTerminal', () => {
+  const MockReact = require('react');
+  const RN = require('react-native');
+
+  return {
+    InlineTerminal: ({ sessionId }: { sessionId: string }) =>
+      MockReact.createElement(
+        RN.View,
+        { testID: 'mock-inline-terminal' },
+        MockReact.createElement(RN.Text, null, `terminal:${sessionId}`),
+      ),
+  };
+});
+
 const mockPush = jest.fn();
 const mockGetDefaultServer = jest.fn();
 
@@ -51,8 +66,8 @@ jest.mock('expo-router', () => {
   const mockReact = require('react');
   return {
     Stack: {
-      Screen: ({ children }: { children?: React.ReactNode }) =>
-        mockReact.createElement('View', { testID: 'stack-screen' }, children),
+      Screen: ({ children, ...props }: { children?: React.ReactNode; options?: unknown }) =>
+        mockReact.createElement('View', { testID: 'stack-screen', ...props }, children),
     },
     useRouter: () => ({ push: mockPush }),
     useFocusEffect: (cb: () => void) => {
@@ -149,6 +164,12 @@ function collectTexts(root: ReturnType<typeof create>['root']): string[] {
   return texts;
 }
 
+function getStackOptions(root: ReturnType<typeof create>['root']) {
+  return root.findByProps({ testID: 'stack-screen' }).props.options as {
+    headerLeft?: () => React.ReactElement<{ onPress?: () => void }>;
+  };
+}
+
 /* ---------- component import ---------- */
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -161,6 +182,9 @@ describe('SessionsScreen', () => {
     jest.clearAllMocks();
     mockListSessions.mockResolvedValue([]);
     mockGetDefaultServer.mockReturnValue(mockServer);
+    act(() => {
+      useSessionViewStore.setState({ activeSessionId: null });
+    });
   });
 
   describe('Header', () => {
@@ -205,6 +229,69 @@ describe('SessionsScreen', () => {
       const icons = findAllByTestID(root!.root, 'mock-ionicon');
       const iconNames = icons.map((i) => i.children?.[0]);
       expect(iconNames.filter((n) => n === 'folder-outline').length).toBe(2);
+    });
+
+    it('opens the selected session in the shared session view store', async () => {
+      mockListSessions.mockResolvedValue(sampleSessions);
+
+      let root: ReturnType<typeof create>;
+      await act(async () => {
+        root = create(React.createElement(SessionsScreen));
+      });
+
+      const workCard = root!.root.find(
+        (node) => typeof node.props.accessibilityLabel === 'string' && node.props.accessibilityLabel.startsWith('work '),
+      );
+
+      await act(async () => {
+        workCard.props.onPress();
+      });
+
+      expect(useSessionViewStore.getState().activeSessionId).toBe('work');
+      expect(collectTexts(root!.root)).toContain('terminal:work');
+    });
+
+    it('reopens the active terminal when the screen mounts with a stored session id', async () => {
+      mockListSessions.mockResolvedValue(sampleSessions);
+      act(() => {
+        useSessionViewStore.setState({ activeSessionId: 'deploy' });
+      });
+
+      let root: ReturnType<typeof create>;
+      await act(async () => {
+        root = create(React.createElement(SessionsScreen));
+      });
+
+      const options = getStackOptions(root!.root);
+      const terminalPager = root!.root.findAll(
+        (node) => typeof node.props.initialScrollIndex === 'number' && node.props.horizontal === true,
+      );
+
+      expect(options.headerLeft).toBeDefined();
+      expect(terminalPager.some((node) => node.props.initialScrollIndex === 1)).toBe(true);
+      expect(collectTexts(root!.root)).not.toContain('新しいセッションを作成');
+    });
+
+    it('closes the active terminal from the header back action and reloads sessions', async () => {
+      mockListSessions.mockResolvedValue(sampleSessions);
+      act(() => {
+        useSessionViewStore.setState({ activeSessionId: 'work' });
+      });
+
+      let root: ReturnType<typeof create>;
+      await act(async () => {
+        root = create(React.createElement(SessionsScreen));
+      });
+
+      const options = getStackOptions(root!.root);
+
+      await act(async () => {
+        options.headerLeft?.().props.onPress?.();
+      });
+
+      expect(useSessionViewStore.getState().activeSessionId).toBeNull();
+      expect(mockListSessions).toHaveBeenCalledTimes(2);
+      expect(collectTexts(root!.root)).toContain('新しいセッションを作成');
     });
   });
 

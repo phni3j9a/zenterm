@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useFocusEffect, useNavigation, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -21,6 +21,7 @@ import { InlineTerminal } from '@/src/components/InlineTerminal';
 import { SetupGuide } from '@/src/components/SetupGuide';
 import { Button, Card, EmptyState, Input, SkeletonLoader, SwipeableRow } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
+import { useSessionViewStore } from '@/src/stores/sessionView';
 import { useTheme } from '@/src/theme';
 import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 import type { TmuxSession } from '@/src/types';
@@ -62,7 +63,9 @@ export default function SessionsScreen() {
   const requestIdRef = useRef(0);
 
   // ── Inline terminal state ──
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const activeSessionId = useSessionViewStore((state) => state.activeSessionId);
+  const openSession = useSessionViewStore((state) => state.open);
+  const closeSession = useSessionViewStore((state) => state.close);
   const [terminalStatus, setTerminalStatus] = useState<TerminalStatus>('disconnected');
   const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
 
@@ -79,7 +82,7 @@ export default function SessionsScreen() {
       setActiveIndex(idx);
       const session = sessionsRef.current[idx];
       if (session) {
-        setActiveSessionId(session.displayName);
+        useSessionViewStore.getState().open(session.displayName);
       }
     }
   }).current;
@@ -238,6 +241,7 @@ export default function SessionsScreen() {
     sessionsCountRef.current = 0;
     resetCreateForm();
     resetRenameForm();
+    useSessionViewStore.getState().close();
   }, [server?.id, resetCreateForm, resetRenameForm]);
 
   const loadSessions = useCallback(
@@ -299,24 +303,13 @@ export default function SessionsScreen() {
 
   const openTerminal = useCallback((sessionId: string) => {
     setTerminalStatus('disconnected');
-    setActiveSessionId(sessionId);
-  }, []);
+    openSession(sessionId);
+  }, [openSession]);
 
   const closeTerminal = useCallback(() => {
-    setActiveSessionId(null);
+    closeSession();
     void loadSessions('soft');
-  }, [loadSessions]);
-
-  const navigation = useNavigation();
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('tabPress', (e) => {
-      if (activeSessionId) {
-        e.preventDefault();
-        closeTerminal();
-      }
-    });
-    return unsubscribe;
-  }, [activeSessionId, closeTerminal, navigation]);
+  }, [closeSession, loadSessions]);
 
   useFocusEffect(
     useCallback(() => {

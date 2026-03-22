@@ -7,7 +7,7 @@ export interface Server {
   isDefault: boolean;
 }
 
-// 共通型は @palmsh/shared から re-export
+// 共通型は @zenterm/shared から re-export
 export type {
   TmuxSession,
   ClientMessage,
@@ -18,4 +18,4 @@ export type {
   FileContentResponse,
   FileWriteResponse,
   FileUploadResponse,
-} from '@palmsh/shared';
+} from '@zenterm/shared';

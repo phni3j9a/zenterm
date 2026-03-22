@@ -12,7 +12,7 @@ import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 import type { Server } from '@/src/types';
 
 interface Props {
-  onKeyPress: (data: string) => void;
+  onKeyPress: (data: string, options?: { noFocus?: boolean }) => void;
   server?: Server;
 }
 
@@ -112,7 +112,7 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
 
   const handleBaseKeyPress = (data: string) => {
     triggerHaptic();
-    onKeyPress(data);
+    onKeyPress(data, { noFocus: true });
   };
 
   const handleCtrlToggle = () => {
@@ -122,7 +122,7 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
 
   const handleCtrlKeyPress = (data: string) => {
     triggerHaptic();
-    onKeyPress(data);
+    onKeyPress(data, { noFocus: true });
     setIsCtrl(false);
   };
 
@@ -168,6 +168,10 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
 
         <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\t')} style={styles.button}>
           <Text style={styles.label}>Tab</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b[Z')} style={styles.button}>
+          <Text style={styles.label}>S-Tab</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

@@ -19,8 +19,8 @@ interface QrScannerModalProps {
 
 function parsePairingUrl(data: string): QrScanResult | null {
   try {
-    // palmsh://connect?url=http://...&token=...
-    if (!data.startsWith('palmsh://connect')) {
+    // zenterm://connect?url=http://...&token=...
+    if (!data.startsWith('zenterm://connect')) {
       return null;
     }
 
@@ -52,7 +52,7 @@ export function QrScannerModal({ visible, onClose, onScan }: QrScannerModalProps
       const result = parsePairingUrl(event.data);
 
       if (!result) {
-        setError('palmsh の QR コードではありません。Gateway の起動時に表示される QR コードをスキャンしてください。');
+        setError('zenterm の QR コードではありません。Gateway の起動時に表示される QR コードをスキャンしてください。');
         return;
       }
 

@@ -2,10 +2,9 @@
 
 import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import * as ReactNative from 'react-native';
 
 import { useSettingsStore } from '../../stores/settings';
-import { AppThemeProvider, useTheme, type AppTheme } from '../ThemeProvider';
+import { AppThemeProvider, resolveTheme, useTheme, type AppTheme } from '../ThemeProvider';
 import { colors, colorsDark } from '../tokens';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -25,16 +24,14 @@ function ThemeProbe({ onTheme }: { onTheme: (theme: AppTheme) => void }) {
 describe('AppThemeProvider', () => {
   let renderer: ReactTestRenderer | null = null;
   const onTheme = jest.fn();
-  let useColorSchemeSpy: jest.SpiedFunction<typeof ReactNative.useColorScheme>;
 
   beforeEach(() => {
     onTheme.mockReset();
-    useColorSchemeSpy = jest.spyOn(ReactNative, 'useColorScheme').mockReturnValue('light');
     useSettingsStore.setState({
       loaded: false,
       settings: {
-        fontSize: 14,
-        themeMode: 'system',
+        fontSize: 10,
+        themeMode: 'light',
       },
     });
   });
@@ -46,10 +43,9 @@ describe('AppThemeProvider', () => {
       });
     }
     renderer = null;
-    useColorSchemeSpy.mockRestore();
   });
 
-  it('useTheme がシステムライト時にライトトークンを返す', () => {
+  it('useTheme がライトトークンを返す', () => {
     act(() => {
       renderer = create(
         <AppThemeProvider>
@@ -67,7 +63,13 @@ describe('AppThemeProvider', () => {
   });
 
   it('themeMode 切り替えで dark/light の colors が変わる', () => {
-    useColorSchemeSpy.mockReturnValue('dark');
+    useSettingsStore.setState({
+      loaded: true,
+      settings: {
+        fontSize: 10,
+        themeMode: 'dark',
+      },
+    });
 
     act(() => {
       renderer = create(
@@ -90,6 +92,11 @@ describe('AppThemeProvider', () => {
 
     expect(onTheme.mock.calls.at(-1)?.[0].colors).toBe(colors);
     expect(onTheme.mock.calls.at(-1)?.[0].dark).toBe(false);
+  });
+
+  it('resolveTheme は systemScheme に依存せず themeMode を優先する', () => {
+    expect(resolveTheme('light', 'dark').colors).toBe(colors);
+    expect(resolveTheme('dark', 'light').colors).toBe(colorsDark);
   });
 
   it('useTheme は provider 外で使うと例外を投げる', () => {

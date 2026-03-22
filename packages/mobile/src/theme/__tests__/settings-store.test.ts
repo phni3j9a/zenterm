@@ -25,8 +25,8 @@ describe('useSettingsStore', () => {
     useSettingsStore.setState({
       loaded: false,
       settings: {
-        fontSize: 14,
-        themeMode: 'system',
+        fontSize: 10,
+        themeMode: 'light',
       },
     });
   });
@@ -42,11 +42,24 @@ describe('useSettingsStore', () => {
       await useSettingsStore.getState().load();
     });
 
-    expect(mockedAsyncStorage.getItem).toHaveBeenCalledWith('palmsh_settings');
+    expect(mockedAsyncStorage.getItem).toHaveBeenCalledWith('zenterm_settings');
     expect(useSettingsStore.getState().loaded).toBe(true);
     expect(useSettingsStore.getState().settings).toEqual({
-      fontSize: 14,
+      fontSize: 10,
       themeMode: 'dark',
+    });
+  });
+
+  it('system テーマを light にマイグレーションする', async () => {
+    mockedAsyncStorage.getItem.mockResolvedValueOnce(JSON.stringify({ themeMode: 'system', fontSize: 12 }));
+
+    await act(async () => {
+      await useSettingsStore.getState().load();
+    });
+
+    expect(useSettingsStore.getState().settings).toEqual({
+      fontSize: 12,
+      themeMode: 'light',
     });
   });
 
@@ -57,9 +70,9 @@ describe('useSettingsStore', () => {
 
     expect(useSettingsStore.getState().settings.themeMode).toBe('light');
     expect(mockedAsyncStorage.setItem).toHaveBeenCalledWith(
-      'palmsh_settings',
+      'zenterm_settings',
       JSON.stringify({
-        fontSize: 14,
+        fontSize: 10,
         themeMode: 'light',
       }),
     );
@@ -74,8 +87,8 @@ describe('useSettingsStore', () => {
     });
 
     expect(useSettingsStore.getState().settings).toEqual({
-      fontSize: 14,
-      themeMode: 'system',
+      fontSize: 10,
+      themeMode: 'light',
     });
     expect(warnSpy).toHaveBeenCalledWith('Failed to persist settings:', error);
   });
@@ -93,10 +106,10 @@ describe('useSettingsStore', () => {
       await useSettingsStore.getState().reset();
     });
 
-    expect(mockedAsyncStorage.removeItem).toHaveBeenCalledWith('palmsh_settings');
+    expect(mockedAsyncStorage.removeItem).toHaveBeenCalledWith('zenterm_settings');
     expect(useSettingsStore.getState().settings).toEqual({
-      fontSize: 14,
-      themeMode: 'system',
+      fontSize: 10,
+      themeMode: 'light',
     });
   });
 

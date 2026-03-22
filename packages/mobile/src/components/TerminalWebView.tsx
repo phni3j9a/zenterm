@@ -7,7 +7,7 @@ import { useTheme } from '@/src/theme';
 import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 
 export interface TerminalWebViewHandle {
-  sendInput: (data: string) => void;
+  sendInput: (data: string, options?: { noFocus?: boolean }) => void;
 }
 
 interface Props {
@@ -56,9 +56,10 @@ export const TerminalWebView = forwardRef<TerminalWebViewHandle, Props>(
       [onStatusChange],
     );
 
-    const sendInput = useCallback((data: string) => {
+    const sendInput = useCallback((data: string, options?: { noFocus?: boolean }) => {
+      const noFocus = options?.noFocus ? ', "noFocus": true' : '';
       webViewRef.current?.injectJavaScript(
-        `handleBridgeMessage(JSON.stringify({ type: 'input', data: ${JSON.stringify(data)} })); true;`,
+        `handleBridgeMessage(JSON.stringify({ type: 'input', data: ${JSON.stringify(data)}${noFocus} })); true;`,
       );
     }, []);
 

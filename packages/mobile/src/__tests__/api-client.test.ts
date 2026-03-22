@@ -1,4 +1,13 @@
-import { ApiError, getSystemStatus, listFiles, getFileContent, writeFileContent, uploadFile } from '../api/client';
+import {
+  ApiError,
+  getFileContent,
+  getFileRawUrl,
+  getSystemStatus,
+  listFiles,
+  uploadFile,
+  uploadFileToPath,
+  writeFileContent,
+} from '../api/client';
 import type { Server } from '../types';
 
 const mockServer: Server = {
@@ -140,6 +149,17 @@ describe('API client', () => {
     });
   });
 
+  describe('getFileRawUrl', () => {
+    it('builds the raw file URL with an encoded path', () => {
+      const url = getFileRawUrl(
+        { ...mockServer, url: 'http://localhost:3000/' },
+        '/home/user/My File.png',
+      );
+
+      expect(url).toBe('http://localhost:3000/api/files/raw?path=%2Fhome%2Fuser%2FMy%20File.png');
+    });
+  });
+
   describe('writeFileContent', () => {
     it('writes file content with JSON payload', async () => {
       const mockResponse = { path: '/home/user/test.txt', bytes: 5 };
@@ -215,6 +235,71 @@ describe('API client', () => {
       await expect(promise).rejects.toMatchObject({
         status: 400,
         message: 'invalid file',
+      });
+    });
+  });
+
+  describe('uploadFileToPath', () => {
+    it('uploads file to the requested destination with FormData and auth header', async () => {
+      const formData = new MockFormData();
+      const formDataCtor = jest.fn(() => formData as unknown as FormData);
+      const mockResponse = {
+        success: true,
+        path: '/home/user/uploads/test.pdf',
+        filename: 'test.pdf',
+        size: 456,
+        mimetype: 'application/pdf',
+      };
+
+      global.FormData = formDataCtor as unknown as typeof FormData;
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await uploadFileToPath(
+        mockServer,
+        'file:///tmp/test.pdf',
+        'test.pdf',
+        'application/pdf',
+        '/home/user/uploads',
+      );
+      const [url, options] = (global.fetch as jest.Mock).mock.calls[0] as [string, RequestInit];
+
+      expect(formDataCtor).toHaveBeenCalledTimes(1);
+      expect(formData.entries).toEqual([
+        ['file', { uri: 'file:///tmp/test.pdf', name: 'test.pdf', type: 'application/pdf' }],
+      ]);
+      expect(url).toBe('http://localhost:3000/api/upload?dest=%2Fhome%2Fuser%2Fuploads');
+      expect(options).toMatchObject({
+        method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+      });
+      expect(options.body).toBe(formData);
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('throws ApiError when destination upload fails', async () => {
+      global.FormData = jest.fn(() => new MockFormData() as unknown as FormData) as unknown as typeof FormData;
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Server Error',
+        json: () => Promise.resolve({ message: 'upload failed' }),
+      });
+
+      const promise = uploadFileToPath(
+        mockServer,
+        'file:///tmp/test.pdf',
+        'test.pdf',
+        'application/pdf',
+        '/home/user/uploads',
+      );
+
+      await expect(promise).rejects.toBeInstanceOf(ApiError);
+      await expect(promise).rejects.toMatchObject({
+        status: 500,
+        message: 'upload failed',
       });
     });
   });

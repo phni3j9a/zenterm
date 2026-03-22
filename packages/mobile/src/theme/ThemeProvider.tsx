@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, type Theme as NavigationTheme } from '@react-navigation/native';
 import React, { createContext, useContext, useMemo } from 'react';
-import { useColorScheme, type ColorSchemeName } from 'react-native';
+import { type ColorSchemeName } from 'react-native';
 
 import { useSettingsStore } from '../stores/settings';
 import { colors, colorsDark, radii, shadows, spacing, typography, type ColorTokens, type ThemeMode } from './tokens';
@@ -17,8 +17,8 @@ export interface AppTheme {
 
 const ThemeContext = createContext<AppTheme | null>(null);
 
-export const resolveTheme = (themeMode: ThemeMode, systemScheme: ColorSchemeName): AppTheme => {
-  const dark = themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
+export const resolveTheme = (themeMode: ThemeMode, _systemScheme?: ColorSchemeName): AppTheme => {
+  const dark = themeMode === 'dark';
   const colorTokens = dark ? colorsDark : colors;
   const baseNavTheme = dark ? DarkTheme : DefaultTheme;
 
@@ -47,10 +47,8 @@ export const resolveTheme = (themeMode: ThemeMode, systemScheme: ColorSchemeName
 };
 
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useColorScheme();
   const themeMode = useSettingsStore((state) => state.settings.themeMode);
-
-  const theme = useMemo(() => resolveTheme(themeMode, systemScheme), [systemScheme, themeMode]);
+  const theme = useMemo(() => resolveTheme(themeMode), [themeMode]);
 
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

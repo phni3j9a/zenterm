@@ -12,7 +12,7 @@ import { useServersStore } from '@/src/stores/servers';
 import { useSettingsStore } from '@/src/stores/settings';
 import { useTheme, type ThemeMode } from '@/src/theme';
 
-const STORAGE_KEY = 'palmsh_servers';
+const STORAGE_KEY = 'zenterm_servers';
 const MIN_FONT_SIZE = 6;
 const MAX_FONT_SIZE = 20;
 
@@ -23,7 +23,6 @@ type ThemeOption = {
 };
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { value: 'system', label: 'System', icon: 'phone-portrait-outline' },
   { value: 'light', label: 'Light', icon: 'sunny-outline' },
   { value: 'dark', label: 'Dark', icon: 'moon-outline' },
 ];
@@ -38,7 +37,7 @@ export default function SettingsScreen() {
   const themeMode = useSettingsStore((state) => state.settings.themeMode);
   const updateSettings = useSettingsStore((state) => state.updateSettings);
 
-  const appName = Constants.expoConfig?.name ?? 'palmsh-mobile';
+  const appName = Constants.expoConfig?.name ?? 'ZenTerm';
   const version = Constants.expoConfig?.version ?? 'unknown';
 
   const styles = useMemo(

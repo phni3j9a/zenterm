@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 import { Button, Card } from '@/src/components/ui';
 import { useTheme } from '@/src/theme';
@@ -16,7 +18,7 @@ const STEPS: readonly SetupStep[] = [
   {
     icon: 'terminal-outline',
     title: 'Gateway を起動',
-    description: 'Mac または Linux で npx palmsh-gateway を実行するだけ。トークン生成もセットアップも自動です。',
+    description: 'Mac または Linux で npx zenterm-gateway を実行するだけ。トークン生成もセットアップも自動です。',
   },
   {
     icon: 'qr-code-outline',
@@ -29,6 +31,8 @@ const STEPS: readonly SetupStep[] = [
     description: 'アプリがなくても http://<サーバーIP>:18765 にアクセスすればブラウザから使えます。',
   },
 ];
+
+const SETUP_COMMAND = 'npx zenterm-gateway setup';
 
 type SetupGuideStyles = ReturnType<typeof createStyles>;
 
@@ -48,6 +52,41 @@ function StepCard({ index, step, styles }: StepCardProps) {
         <View style={styles.stepContent}>
           <Text style={styles.stepTitle}>{step.title}</Text>
           <Text style={styles.stepDescription}>{step.description}</Text>
+        </View>
+      </View>
+    </Card>
+  );
+}
+
+interface AutoStartCardProps {
+  styles: SetupGuideStyles;
+  colors: ReturnType<typeof useTheme>['colors'];
+}
+
+function AutoStartCard({ styles, colors }: AutoStartCardProps) {
+  const handleCopy = useCallback(async () => {
+    await Clipboard.setStringAsync(SETUP_COMMAND);
+    Toast.show({ type: 'success', text1: 'コピーしました' });
+  }, []);
+
+  return (
+    <Card>
+      <View style={styles.stepCard}>
+        <View style={styles.stepNumberOptional}>
+          <Ionicons color={colors.textMuted} name="time-outline" size={16} />
+        </View>
+        <View style={styles.stepContent}>
+          <View style={styles.optionalHeader}>
+            <Text style={styles.stepTitle}>常時起動にする</Text>
+            <Text style={styles.optionalBadge}>任意</Text>
+          </View>
+          <Text style={styles.stepDescription}>
+            サーバーの起動時に Gateway を自動で立ち上げたい場合は、以下を実行してください。macOS では launchd、Linux では systemd に登録されます。
+          </Text>
+          <Pressable onPress={handleCopy} style={styles.commandChip}>
+            <Text style={styles.commandText}>{SETUP_COMMAND}</Text>
+            <Ionicons color={colors.textMuted} name="copy-outline" size={14} />
+          </Pressable>
         </View>
       </View>
     </Card>
@@ -76,6 +115,7 @@ export function SetupGuide() {
           {STEPS.map((step, index) => (
             <StepCard key={step.title} index={index} step={step} styles={styles} />
           ))}
+          <AutoStartCard colors={colors} styles={styles} />
         </View>
 
         <Button
@@ -149,6 +189,16 @@ function createStyles(
       ...typography.captionMedium,
       color: colors.textInverse,
     },
+    stepNumberOptional: {
+      width: 28,
+      height: 28,
+      borderRadius: radii.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
     stepContent: {
       flex: 1,
       gap: spacing.xs,
@@ -160,6 +210,35 @@ function createStyles(
     stepDescription: {
       ...typography.caption,
       color: colors.textSecondary,
+    },
+    optionalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    optionalBadge: {
+      ...typography.small,
+      color: colors.textMuted,
+      backgroundColor: colors.surface,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 1,
+      borderRadius: radii.sm,
+      overflow: 'hidden',
+    },
+    commandChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.surface,
+      borderRadius: radii.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      marginTop: spacing.xs,
+      alignSelf: 'flex-start',
+    },
+    commandText: {
+      ...typography.mono,
+      color: colors.textPrimary,
     },
   });
 }

@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 import type { Server } from '@/src/types';
 
-const STORAGE_KEY = 'palmsh_servers';
+const STORAGE_KEY = 'zenterm_servers';
 
 interface ServerInput {
   name: string;

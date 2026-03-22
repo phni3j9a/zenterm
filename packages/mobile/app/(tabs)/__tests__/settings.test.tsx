@@ -15,7 +15,7 @@ jest.mock('expo-constants', () => ({
   __esModule: true,
   default: {
     expoConfig: {
-      name: 'palmsh-mobile',
+      name: 'ZenTerm',
       version: '1.0.0-test',
     },
   },
@@ -147,5 +147,20 @@ describe('SettingsScreen', () => {
 
     expect(texts).toContain('タップしてサーバーを追加');
     expect(systemStatus).toHaveLength(0);
+  });
+
+  it('テーマ選択肢から System を除外し Light と Dark のみ表示する', async () => {
+    mockGetDefaultServer.mockReturnValue(null);
+    let root: ReturnType<typeof create>;
+
+    await act(async () => {
+      root = create(React.createElement(SettingsScreen));
+    });
+
+    const texts = collectTexts(root!.root);
+
+    expect(texts).toContain('Light');
+    expect(texts).toContain('Dark');
+    expect(texts).not.toContain('System');
   });
 });

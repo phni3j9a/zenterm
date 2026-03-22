@@ -1,10 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { Stack, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActionSheetIOS,
   Alert,
   FlatList,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -17,7 +21,7 @@ import {
 import Markdown from 'react-native-markdown-display';
 import Toast from 'react-native-toast-message';
 
-import { listFiles, getFileContent, writeFileContent } from '@/src/api/client';
+import { getFileContent, getFileRawUrl, listFiles, uploadFileToPath, writeFileContent } from '@/src/api/client';
 import { SetupGuide } from '@/src/components/SetupGuide';
 import { EmptyState, SkeletonLoader } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
@@ -39,7 +43,7 @@ const CODE_EXTENSIONS = new Set([
 ]);
 
 const IMAGE_EXTENSIONS = new Set([
-  '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
+  '.png', '.jpg', '.jpeg', '.gif', '.webp',
 ]);
 
 type FileIconType = 'folder' | 'code' | 'image' | 'text' | 'symlink' | 'other';
@@ -97,6 +101,7 @@ export default function FilesScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<FilePreview | null>(null);
+  const [imagePreview, setImagePreview] = useState<{ path: string; name: string } | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('name-asc');
   const [, setPreviewLoading] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
@@ -106,6 +111,7 @@ export default function FilesScreen() {
   const [showMarkdown, setShowMarkdown] = useState(false);
   const [showNewFileInput, setShowNewFileInput] = useState(false);
   const [newFileName, setNewFileName] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const styles = useMemo(
     () =>
@@ -232,6 +238,13 @@ export default function FilesScreen() {
           flex: 1,
           backgroundColor: termBgColor,
         },
+        imagePreviewContent: {
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.bg,
+          padding: spacing.lg,
+        },
         modalCodeScroll: {
           paddingHorizontal: spacing.lg,
           paddingVertical: spacing.md,
@@ -348,9 +361,9 @@ export default function FilesScreen() {
     [loadFiles],
   );
 
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   useEffect(() => {
-    const unsubscribe = navigation.addListener('tabPress', (e) => {
+    const unsubscribe = navigation.addListener('tabPress', (e: { preventDefault: () => void }) => {
       if (navigation.isFocused() && currentPath !== '~') {
         e.preventDefault();
         navigateTo('~');
@@ -364,40 +377,54 @@ export default function FilesScreen() {
     setIsEditing(false);
   }, []);
 
+  const getEntryPath = useCallback(
+    (name: string) => (currentPath === '/' ? `/${name}` : `${currentPath}/${name}`),
+    [currentPath],
+  );
+
+  const showUnsupportedPreviewToast = useCallback((name: string) => {
+    Toast.show({
+      type: 'info',
+      text1: 'プレビューできません',
+      text2: `${name} はプレビューに対応していません。`,
+    });
+  }, []);
+
+  const openImagePreview = useCallback((entry: FileEntry) => {
+    setImagePreview({ path: getEntryPath(entry.name), name: entry.name });
+  }, [getEntryPath]);
+
+  const openTextPreview = useCallback(async (entry: FileEntry) => {
+    if (!server) return;
+    setPreviewLoading(true);
+    try {
+      const data = await getFileContent(server, getEntryPath(entry.name));
+      setPreviewFile({ path: data.path, content: data.content, lines: data.lines, truncated: data.truncated });
+      setIsEditing(false);
+      setShowMarkdown(entry.name.endsWith('.md'));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'ファイルを読み込めませんでした。';
+      Toast.show({ type: 'error', text1: '読み込み失敗', text2: message });
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, [getEntryPath, server]);
+
   const openFile = useCallback(
     async (entry: FileEntry) => {
       if (!server) return;
-
       const iconType = getFileIconType(entry);
-      if (iconType !== 'text' && iconType !== 'code') {
-        Toast.show({
-          type: 'info',
-          text1: 'プレビューできません',
-          text2: `${entry.name} はプレビューに対応していません。`,
-        });
+      if (iconType === 'image') {
+        openImagePreview(entry);
         return;
       }
-
-      setPreviewLoading(true);
-      try {
-        const filePath = currentPath === '/' ? `/${entry.name}` : `${currentPath}/${entry.name}`;
-        const data = await getFileContent(server, filePath);
-        setPreviewFile({
-          path: data.path,
-          content: data.content,
-          lines: data.lines,
-          truncated: data.truncated,
-        });
-        setIsEditing(false);
-        setShowMarkdown(entry.name.endsWith('.md'));
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'ファイルを読み込めませんでした。';
-        Toast.show({ type: 'error', text1: '読み込み失敗', text2: message });
-      } finally {
-        setPreviewLoading(false);
+      if (iconType !== 'text' && iconType !== 'code') {
+        showUnsupportedPreviewToast(entry.name);
+        return;
       }
+      await openTextPreview(entry);
     },
-    [currentPath, server],
+    [openImagePreview, openTextPreview, server, showUnsupportedPreviewToast],
   );
 
   const handleSave = useCallback(async () => {
@@ -425,23 +452,16 @@ export default function FilesScreen() {
   const handleFilePress = useCallback(
     (entry: FileEntry) => {
       if (entry.type === 'directory') {
-        const nextPath = currentPath === '/' ? `/${entry.name}` : `${currentPath}/${entry.name}`;
-        navigateTo(nextPath);
+        navigateTo(getEntryPath(entry.name));
         return;
       }
-
       if (entry.type === 'file' || entry.type === 'symlink') {
         void openFile(entry);
         return;
       }
-
-      Toast.show({
-        type: 'info',
-        text1: 'プレビューできません',
-        text2: `${entry.name} はプレビューに対応していません。`,
-      });
+      showUnsupportedPreviewToast(entry.name);
     },
-    [currentPath, navigateTo, openFile],
+    [getEntryPath, navigateTo, openFile, showUnsupportedPreviewToast],
   );
 
   const sortedFiles = useMemo(() => sortFiles(files, sortMode), [files, sortMode]);
@@ -509,14 +529,51 @@ export default function FilesScreen() {
   }, []);
 
   const openNewFileEditor = useCallback((fileName: string) => {
-    const path = currentPath === '/' ? `/${fileName}` : `${currentPath}/${fileName}`;
-    setPreviewFile({ path, content: '', lines: 0, truncated: false });
+    setPreviewFile({ path: getEntryPath(fileName), content: '', lines: 0, truncated: false });
     setIsEditing(true);
     setEditContent('');
     setShowMarkdown(fileName.endsWith('.md'));
     setShowNewFileInput(false);
     setNewFileName('');
-  }, [currentPath]);
+  }, [getEntryPath]);
+
+  const getDownloadUri = useCallback((filename: string) => {
+    if (!FileSystem.cacheDirectory) {
+      throw new Error('一時保存ディレクトリを利用できません。');
+    }
+    return `${FileSystem.cacheDirectory}${filename}`;
+  }, []);
+
+  const handleUpload = useCallback(async () => {
+    if (!server) return;
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      setUploading(true);
+      await uploadFileToPath(server, asset.uri, asset.name, asset.mimeType ?? 'application/octet-stream', currentPath);
+      Toast.show({ type: 'success', text1: 'アップロード完了', text2: asset.name });
+      await loadFiles(currentPath);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'アップロードに失敗しました。';
+      Toast.show({ type: 'error', text1: 'アップロード失敗', text2: message });
+    } finally {
+      setUploading(false);
+    }
+  }, [currentPath, loadFiles, server]);
+
+  const handleDownload = useCallback(async (remotePath: string, filename: string) => {
+    if (!server) return;
+    try {
+      const result = await FileSystem.downloadAsync(getFileRawUrl(server, remotePath), getDownloadUri(filename), {
+        headers: { Authorization: `Bearer ${server.token}` },
+      });
+      await Sharing.shareAsync(result.uri);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'ダウンロードに失敗しました。';
+      Toast.show({ type: 'error', text1: 'ダウンロード失敗', text2: message });
+    }
+  }, [getDownloadUri, server]);
 
   const confirmNewFile = useCallback(() => {
     const trimmed = newFileName.trim();
@@ -658,6 +715,20 @@ export default function FilesScreen() {
           headerRight: () => (
             <View style={styles.headerActions}>
               <Pressable
+                accessibilityLabel="ファイルをアップロード"
+                accessibilityRole="button"
+                disabled={uploading}
+                hitSlop={8}
+                onPress={() => void handleUpload()}
+                style={({ pressed }) => ({ opacity: pressed || uploading ? 0.5 : 1 })}
+              >
+                <Ionicons
+                  color={uploading ? colors.textMuted : colors.primary}
+                  name="cloud-upload-outline"
+                  size={22}
+                />
+              </Pressable>
+              <Pressable
                 accessibilityLabel="隠しファイル切替"
                 accessibilityRole="button"
                 hitSlop={8}
@@ -753,6 +824,16 @@ export default function FilesScreen() {
               {previewFileName}
             </Text>
             <View style={styles.headerActions}>
+              <Pressable
+                hitSlop={8}
+                onPress={() => {
+                  if (!previewFile) return;
+                  const filename = previewFile.path.split('/').pop() ?? 'file';
+                  void handleDownload(previewFile.path, filename);
+                }}
+              >
+                <Ionicons color={colors.textSecondary} name="share-outline" size={20} />
+              </Pressable>
               {previewFileName.endsWith('.md') && !isEditing ? (
                 <Pressable hitSlop={8} onPress={() => setShowMarkdown((prev) => !prev)}>
                   <Ionicons
@@ -812,6 +893,47 @@ export default function FilesScreen() {
               </ScrollView>
             </ScrollView>
           )}
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        onRequestClose={() => setImagePreview(null)}
+        presentationStyle="pageSheet"
+        visible={imagePreview !== null}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Pressable hitSlop={12} onPress={() => setImagePreview(null)}>
+              <Ionicons color={colors.textSecondary} name="close" size={22} />
+            </Pressable>
+            <Text numberOfLines={1} style={styles.modalTitle}>
+              {imagePreview?.name ?? ''}
+            </Text>
+            <View style={styles.headerActions}>
+              <Pressable
+                hitSlop={8}
+                onPress={() => {
+                  if (!imagePreview) return;
+                  void handleDownload(imagePreview.path, imagePreview.name);
+                }}
+              >
+                <Ionicons color={colors.textSecondary} name="share-outline" size={20} />
+              </Pressable>
+            </View>
+          </View>
+          <View style={styles.imagePreviewContent}>
+            {imagePreview && server ? (
+              <Image
+                resizeMode="contain"
+                source={{
+                  uri: getFileRawUrl(server, imagePreview.path),
+                  headers: { Authorization: `Bearer ${server.token}` },
+                }}
+                style={{ width: '100%', height: '100%' }}
+              />
+            ) : null}
+          </View>
         </View>
       </Modal>
     </View>

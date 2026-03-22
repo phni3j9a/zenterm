@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 import type { ThemeMode } from '../theme/tokens';
 
-const SETTINGS_KEY = 'palmsh_settings';
+const SETTINGS_KEY = 'zenterm_settings';
 
 interface Settings {
   fontSize: number;
@@ -11,8 +11,8 @@ interface Settings {
 }
 
 const defaultSettings: Settings = {
-  fontSize: 14,
-  themeMode: 'system',
+  fontSize: 10,
+  themeMode: 'light',
 };
 
 interface SettingsState {
@@ -31,8 +31,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const raw = await AsyncStorage.getItem(SETTINGS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<Settings>;
+        const merged = { ...defaultSettings, ...parsed };
+        if ((merged.themeMode as string) === 'system') {
+          merged.themeMode = 'light';
+        }
         set({
-          settings: { ...defaultSettings, ...parsed },
+          settings: merged,
           loaded: true,
         });
       } else {

@@ -6,7 +6,7 @@ const CODE_EXTENSIONS = new Set([
 ]);
 
 const IMAGE_EXTENSIONS = new Set([
-  '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
+  '.png', '.jpg', '.jpeg', '.gif', '.webp',
 ]);
 
 type FileIconType = 'folder' | 'code' | 'image' | 'text' | 'symlink' | 'other';
@@ -77,7 +77,7 @@ describe('getFileIconType', () => {
     expect(getFileIconType(makeEntry('photo.jpg'))).toBe('image');
     expect(getFileIconType(makeEntry('photo.jpeg'))).toBe('image');
     expect(getFileIconType(makeEntry('animation.gif'))).toBe('image');
-    expect(getFileIconType(makeEntry('icon.svg'))).toBe('image');
+    expect(getFileIconType(makeEntry('icon.svg'))).toBe('text');
     expect(getFileIconType(makeEntry('hero.webp'))).toBe('image');
   });
 

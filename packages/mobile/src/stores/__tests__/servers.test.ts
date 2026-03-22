@@ -155,6 +155,6 @@ describe('useServersStore', () => {
     });
 
     expect(mockedSecureStore.setItemAsync).toHaveBeenCalledTimes(3);
-    expect(mockedSecureStore.setItemAsync).toHaveBeenLastCalledWith('palmsh_servers', '[]');
+    expect(mockedSecureStore.setItemAsync).toHaveBeenLastCalledWith('zenterm_servers', '[]');
   });
 });

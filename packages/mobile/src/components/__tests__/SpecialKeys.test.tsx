@@ -65,6 +65,7 @@ describe('SpecialKeys', () => {
     const json = JSON.stringify(tree?.toJSON());
     expect(json).toContain('Esc');
     expect(json).toContain('Tab');
+    expect(json).toContain('S-Tab');
     expect(json).toContain('Ctrl');
   });
 
@@ -100,7 +101,7 @@ describe('SpecialKeys', () => {
     act(() => {
       escButton!.props.onPress();
     });
-    expect(mockOnKeyPress).toHaveBeenCalledWith('\x1b');
+    expect(mockOnKeyPress).toHaveBeenCalledWith('\x1b', { noFocus: true });
   });
 
   it('calls onKeyPress with TAB code when Tab is pressed', () => {
@@ -113,7 +114,33 @@ describe('SpecialKeys', () => {
     act(() => {
       tabButton!.props.onPress();
     });
-    expect(mockOnKeyPress).toHaveBeenCalledWith('\t');
+    expect(mockOnKeyPress).toHaveBeenCalledWith('\t', { noFocus: true });
+  });
+
+  it('calls onKeyPress with Shift-Tab escape sequence when S-Tab is pressed', () => {
+    let tree: ReactTestRenderer | undefined;
+    act(() => {
+      tree = create(<SpecialKeys onKeyPress={mockOnKeyPress} />);
+    });
+    const sTabButton = findTouchableByText(tree!.root, 'S-Tab');
+    expect(sTabButton).toBeTruthy();
+    act(() => {
+      sTabButton!.props.onPress();
+    });
+    expect(mockOnKeyPress).toHaveBeenCalledWith('\x1b[Z', { noFocus: true });
+  });
+
+  it('calls onKeyPress without noFocus when Paste is pressed', async () => {
+    let tree: ReactTestRenderer | undefined;
+    act(() => {
+      tree = create(<SpecialKeys onKeyPress={mockOnKeyPress} />);
+    });
+    const pasteButton = findTouchableByText(tree!.root, 'Paste');
+    expect(pasteButton).toBeTruthy();
+    await act(async () => {
+      await pasteButton!.props.onPress();
+    });
+    expect(mockOnKeyPress).toHaveBeenCalledWith('pasted-text');
   });
 
   it('does not show Ctrl row initially', () => {
@@ -159,7 +186,7 @@ describe('SpecialKeys', () => {
     act(() => {
       ctrlCButton!.props.onPress();
     });
-    expect(mockOnKeyPress).toHaveBeenCalledWith('\x03');
+    expect(mockOnKeyPress).toHaveBeenCalledWith('\x03', { noFocus: true });
     json = JSON.stringify(tree?.toJSON());
     expect(json).not.toContain('Ctrl mode');
   });
