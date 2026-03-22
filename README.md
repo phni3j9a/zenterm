@@ -1,4 +1,4 @@
-# palmsh
+# ZenTerm
 
 iPhone → Raspberry Pi ターミナル接続システム（モノレポ）
 

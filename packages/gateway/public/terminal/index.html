@@ -40,6 +40,15 @@
       height: 100%;
       background: var(--terminal-bg);
     }
+
+    /* Hide xterm scrollbar - touch scroll handles scrollback */
+    .xterm-viewport {
+      scrollbar-width: none;
+    }
+
+    .xterm-viewport::-webkit-scrollbar {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -49,8 +58,8 @@
     var sessionId = params.get('sessionId');
     var token = params.get('token');
     var theme = params.get('theme') || 'dark';
-    var parsedFontSize = Number.parseInt(params.get('fontSize') || '14', 10);
-    var fontSize = Number.isFinite(parsedFontSize) ? parsedFontSize : 14;
+    var parsedFontSize = Number.parseInt(params.get('fontSize') || '10', 10);
+    var fontSize = Number.isFinite(parsedFontSize) ? parsedFontSize : 10;
     var reconnectAttempt = 0;
     var reconnectTimer = null;
     var reconnectDelay = 1000;
@@ -326,13 +335,12 @@
         var message = JSON.parse(rawData);
         if (message.type === 'input') {
           if (term) {
-            term.focus();
-            // Route through xterm.js input pipeline (same as keyboard input)
-            // This triggers term.onData() which sends to WebSocket
+            if (!message.noFocus) {
+              term.focus();
+            }
             if (typeof term.input === 'function') {
               term.input(message.data, true);
             } else {
-              // Fallback for older xterm.js: send directly
               if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'input', data: message.data }));
               }

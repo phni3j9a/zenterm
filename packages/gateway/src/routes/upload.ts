@@ -1,17 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { randomBytes } from 'node:crypto';
 import { createWriteStream, mkdirSync, statSync, unlinkSync } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
+import { dirname, extname, join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
+import { z } from 'zod';
 import { config } from '../config.js';
+import { validatePath } from '../services/filesystem.js';
 import type { FileUploadResponse } from '../types/index.js';
 
-const ALLOWED_MIMETYPES = new Set([
-  'image/png',
-  'image/jpeg',
-  'image/gif',
-  'image/webp'
-]);
+const uploadQuerySchema = z.object({
+  dest: z.string().optional()
+});
 
 function createFailureResponse(mimetype = ''): FileUploadResponse {
   return {
@@ -34,15 +33,32 @@ function generateFilename(originalName: string): string {
 
 function resolveUploadDir(inputPath: string): string {
   const homeDir = process.env.HOME ?? process.cwd();
-  if (inputPath === '~') {
-    return homeDir;
-  }
+  if (inputPath === '~') return homeDir;
+  if (inputPath.startsWith('~/')) return resolve(homeDir, inputPath.slice(2));
+  return resolve(homeDir, inputPath);
+}
 
-  if (inputPath.startsWith('~/')) {
-    return resolve(homeDir, inputPath.slice(2));
-  }
+function validateUploadDir(uploadDir: string): void {
+  let currentPath = uploadDir;
 
-  return inputPath;
+  while (true) {
+    try {
+      validatePath(currentPath);
+      return;
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'PARENT_NOT_FOUND') throw error;
+      const parentPath = dirname(currentPath);
+      if (parentPath === currentPath) throw error;
+      currentPath = parentPath;
+    }
+  }
+}
+
+function getUploadDir(inputPath?: string): string {
+  const uploadDir = resolveUploadDir(inputPath ?? config.UPLOAD_DIR);
+  if (!inputPath) return uploadDir;
+  validateUploadDir(uploadDir);
+  return uploadDir;
 }
 
 function removeFile(path: string): void {
@@ -51,19 +67,21 @@ function removeFile(path: string): void {
   } catch {}
 }
 
+function createSuccessResponse(
+  destPath: string,
+  filename: string,
+  mimetype: string
+): FileUploadResponse {
+  const stats = statSync(destPath);
+  return { success: true, path: destPath, filename, size: stats.size, mimetype };
+}
+
 const uploadRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Reply: FileUploadResponse }>('/api/upload', async (request, reply) => {
+    const query = uploadQuerySchema.parse(request.query);
+    const uploadDir = getUploadDir(query.dest);
     const data = await request.file({ throwFileSizeLimit: false });
-    if (!data) {
-      return reply.status(400).send(createFailureResponse());
-    }
-
-    if (!ALLOWED_MIMETYPES.has(data.mimetype)) {
-      data.file.resume();
-      return reply.status(400).send(createFailureResponse(data.mimetype));
-    }
-
-    const uploadDir = resolveUploadDir(config.UPLOAD_DIR);
+    if (!data) return reply.status(400).send(createFailureResponse());
     mkdirSync(uploadDir, { recursive: true });
 
     const filename = generateFilename(data.filename);
@@ -75,14 +93,7 @@ const uploadRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(413).send(createFailureResponse(data.mimetype));
     }
 
-    const stats = statSync(destPath);
-    return {
-      success: true,
-      path: destPath,
-      filename,
-      size: stats.size,
-      mimetype: data.mimetype
-    };
+    return createSuccessResponse(destPath, filename, data.mimetype);
   });
 };
 

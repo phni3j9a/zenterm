@@ -2,6 +2,7 @@ process.env.AUTH_TOKEN = 'test-token';
 process.env.LOG_LEVEL = 'error';
 
 import type { FastifyInstance } from 'fastify';
+import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const tmuxMocks = vi.hoisted(() => ({
@@ -17,6 +18,7 @@ const tmuxMocks = vi.hoisted(() => ({
 const filesystemMocks = vi.hoisted(() => ({
   listDirectory: vi.fn(),
   readFileContent: vi.fn(),
+  readFileRaw: vi.fn(),
   writeFileContent: vi.fn(),
 }));
 
@@ -165,6 +167,31 @@ describe('file routes', () => {
       truncated: false,
     });
     expect(filesystemMocks.readFileContent).toHaveBeenCalledWith('test.txt');
+  });
+
+  it('GET /api/files/raw?path=guide.pdf: 生ファイルを配信する', async () => {
+    filesystemMocks.readFileRaw.mockReturnValue({
+      stream: Readable.from('pdf'),
+      size: 3,
+      mimeType: 'application/pdf',
+      filename: 'guide.pdf',
+    });
+
+    const response = await app!.inject({
+      method: 'GET',
+      url: '/api/files/raw?path=guide.pdf',
+      headers: {
+        authorization: 'Bearer test-token',
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toBe('pdf');
+    expect(response.headers['content-type']).toContain('application/pdf');
+    expect(response.headers['content-length']).toBe('3');
+    expect(response.headers['content-disposition']).toBe('inline; filename="guide.pdf"');
+    expect(response.headers['cache-control']).toBe('private, max-age=300');
+    expect(filesystemMocks.readFileRaw).toHaveBeenCalledWith('guide.pdf');
   });
 
   it('PUT /api/files/content: ファイル内容を書き込む', async () => {

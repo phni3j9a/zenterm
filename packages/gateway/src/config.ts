@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
 
-const envPath = join(process.env.HOME ?? '', '.config', 'palmsh', '.env');
+const envPath = join(process.env.HOME ?? '', '.config', 'zenterm', '.env');
 
 function loadEnvFile(): void {
   if (!existsSync(envPath)) {
@@ -51,7 +51,7 @@ const configSchema = z.object({
   UPLOAD_DIR: z
     .string()
     .min(1)
-    .default(join(process.env.HOME ?? '', 'uploads', 'palmsh')),
+    .default(join(process.env.HOME ?? '', 'uploads', 'zenterm')),
   UPLOAD_MAX_SIZE: z.coerce.number().int().positive().default(10 * 1024 * 1024)
 });
 

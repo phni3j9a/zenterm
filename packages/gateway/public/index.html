@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>palmsh</title>
+  <title>ZenTerm</title>
   <link rel="stylesheet" href="/terminal/lib/xterm.min.css">
   <style>
     :root {
@@ -177,7 +177,7 @@
   <!-- Login View -->
   <div id="login-view" class="view active">
     <div class="login-card">
-      <div class="login-logo">palmsh</div>
+      <div class="login-logo">ZenTerm</div>
       <div class="login-sub">Terminal Gateway</div>
       <div class="login-field">
         <label>Token</label>
@@ -191,7 +191,7 @@
   <!-- Dashboard View -->
   <div id="dashboard-view" class="view">
     <div class="topbar">
-      <div class="topbar-brand">palmsh</div>
+      <div class="topbar-brand">ZenTerm</div>
       <div class="topbar-actions">
         <button class="btn-ghost" id="refresh-btn">更新</button>
         <button class="btn-ghost" id="logout-btn">ログアウト</button>
@@ -234,7 +234,7 @@
     'use strict';
 
     // ── State ──
-    var token = localStorage.getItem('palmsh_token') || '';
+    var token = localStorage.getItem('ZenTerm_token') || '';
     var currentSession = null;
     var term = null;
     var fitAddon = null;
@@ -301,7 +301,7 @@
 
       token = val;
       api('POST', '/api/auth/verify').then(function() {
-        localStorage.setItem('palmsh_token', token);
+        localStorage.setItem('ZenTerm_token', token);
         showView('dashboard');
       }).catch(function() {
         loginError.textContent = '認証に失敗しました。Token を確認してください。';
@@ -315,7 +315,7 @@
     loginBtn.addEventListener('click', attemptLogin);
     tokenInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') attemptLogin(); });
     logoutBtn.addEventListener('click', function() {
-      localStorage.removeItem('palmsh_token');
+      localStorage.removeItem('ZenTerm_token');
       token = '';
       tokenInput.value = '';
       showView('login');
@@ -589,7 +589,7 @@
       api('POST', '/api/auth/verify').then(function() {
         showView('dashboard');
       }).catch(function() {
-        localStorage.removeItem('palmsh_token');
+        localStorage.removeItem('ZenTerm_token');
         token = '';
         showView('login');
       });

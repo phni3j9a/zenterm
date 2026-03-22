@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.palmsh.gateway</string>
+	<string>com.zenterm.gateway</string>
 
 	<key>ProgramArguments</key>
 	<array>
@@ -32,10 +32,10 @@
 	<true/>
 
 	<key>StandardOutPath</key>
-	<string>__HOME__/Library/Logs/palmsh-gateway.log</string>
+	<string>__HOME__/Library/Logs/zenterm-gateway.log</string>
 
 	<key>StandardErrorPath</key>
-	<string>__HOME__/Library/Logs/palmsh-gateway.log</string>
+	<string>__HOME__/Library/Logs/zenterm-gateway.log</string>
 
 	<key>ThrottleInterval</key>
 	<integer>5</integer>

@@ -1,11 +1,34 @@
-import { type Stats, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { createReadStream, type ReadStream, type Stats, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, extname, resolve } from 'node:path';
 import type { FileContentResponse, FileEntry, FileListResponse, FileWriteResponse } from '../types/index.js';
 
 const homeDir = process.env.HOME ?? process.cwd();
 const homeDirPrefix = homeDir + '/';
 const MAX_FILE_SIZE = 512 * 1024; // 512KB
 const MAX_CONTENT_LINES = 1000;
+const MAX_RAW_SIZE = 20 * 1024 * 1024; // 20MB
+
+const MIME_TYPES: Record<string, string> = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
+  '.txt': 'text/plain',
+  '.json': 'application/json',
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'application/javascript'
+};
+
+export interface RawFileInfo {
+  stream: ReadStream;
+  size: number;
+  mimeType: string;
+  filename: string;
+}
 
 export class FilesystemError extends Error {
   constructor(
@@ -198,9 +221,7 @@ export function listDirectory(inputPath: string, showHidden = true): FileListRes
   return { path: dirPath, entries };
 }
 
-export function readFileContent(inputPath: string): FileContentResponse {
-  const filePath = validatePath(inputPath);
-
+function getFileStats(filePath: string, inputPath: string): Stats {
   let stats;
   try {
     stats = statSync(filePath);
@@ -213,25 +234,26 @@ export function readFileContent(inputPath: string): FileContentResponse {
     );
   }
 
-  if (!stats.isFile()) {
-    throw new FilesystemError(
-      `ファイルではありません: ${inputPath}`,
-      400,
-      'NOT_A_FILE'
-    );
-  }
+  return stats;
+}
 
-  if (stats.size > MAX_FILE_SIZE) {
-    throw new FilesystemError(
-      `ファイルサイズが上限（512KB）を超えています。`,
-      413,
-      'FILE_TOO_LARGE'
-    );
-  }
+function assertFile(stats: Stats, inputPath: string): void {
+  if (stats.isFile()) return;
+  throw new FilesystemError(
+    `ファイルではありません: ${inputPath}`,
+    400,
+    'NOT_A_FILE'
+  );
+}
 
-  let content: string;
+function assertMaxFileSize(stats: Stats, maxSize: number, message: string): void {
+  if (stats.size <= maxSize) return;
+  throw new FilesystemError(message, 413, 'FILE_TOO_LARGE');
+}
+
+function readUtf8File(filePath: string, inputPath: string): string {
   try {
-    content = readFileSync(filePath, 'utf8');
+    return readFileSync(filePath, 'utf8');
   } catch (error) {
     throw new FilesystemError(
       `ファイルの読み取りに失敗しました: ${inputPath}`,
@@ -240,6 +262,23 @@ export function readFileContent(inputPath: string): FileContentResponse {
       { cause: error }
     );
   }
+}
+
+function getFilename(filePath: string): string {
+  return filePath.split('/').pop() ?? 'file';
+}
+
+function getMimeType(filePath: string): string {
+  const ext = extname(filePath).toLowerCase();
+  return MIME_TYPES[ext] ?? 'application/octet-stream';
+}
+
+export function readFileContent(inputPath: string): FileContentResponse {
+  const filePath = validatePath(inputPath);
+  const stats = getFileStats(filePath, inputPath);
+  assertFile(stats, inputPath);
+  assertMaxFileSize(stats, MAX_FILE_SIZE, 'ファイルサイズが上限（512KB）を超えています。');
+  let content = readUtf8File(filePath, inputPath);
 
   const allLines = content.split('\n');
   const truncated = allLines.length > MAX_CONTENT_LINES;
@@ -300,4 +339,17 @@ export function writeFileContent(inputPath: string, content: string): FileWriteR
   assertWritableFile(filePath, inputPath);
   writeUtf8File(filePath, inputPath, content);
   return { path: filePath, bytes };
+}
+
+export function readFileRaw(inputPath: string): RawFileInfo {
+  const filePath = validatePath(inputPath);
+  const stats = getFileStats(filePath, inputPath);
+  assertFile(stats, inputPath);
+  assertMaxFileSize(stats, MAX_RAW_SIZE, 'ファイルサイズが上限（20MB）を超えています。');
+  return {
+    stream: createReadStream(filePath),
+    size: stats.size,
+    mimeType: getMimeType(filePath),
+    filename: getFilename(filePath)
+  };
 }

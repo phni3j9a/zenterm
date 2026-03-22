@@ -40,3 +40,9 @@ yarn-error.*
 
 # misc
 *.pem
+
+# test artifacts
+playwright-artifacts/
+playwright-report/
+test-results/
+TEST_RESULTS.md

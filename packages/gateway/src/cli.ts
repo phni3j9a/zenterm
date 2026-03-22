@@ -4,7 +4,14 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
 
-const configDir = join(process.env.HOME ?? '', '.config', 'palmsh');
+// --- setup subcommand ---
+if (process.argv[2] === 'setup') {
+  const { runSetup } = await import('./setup.js');
+  await runSetup();
+  process.exit(0);
+}
+
+const configDir = join(process.env.HOME ?? '', '.config', 'zenterm');
 const envPath = join(configDir, '.env');
 
 // tmux check
@@ -20,7 +27,7 @@ try {
 // Interactive .env setup if missing
 if (!existsSync(envPath)) {
   console.log('');
-  console.log('palmsh-gateway 初回セットアップ');
+  console.log('zenterm-gateway 初回セットアップ');
   console.log('================================');
   console.log('');
 

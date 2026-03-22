@@ -69,10 +69,10 @@ function showPairingInfo(): void {
   // Use LAN IP for QR pairing (prefer local network)
   const primaryIp = lan ?? tailscale;
   const primaryUrl = `http://${primaryIp}:${config.PORT}`;
-  const pairingUrl = `palmsh://connect?url=${encodeURIComponent(primaryUrl)}&token=${encodeURIComponent(config.AUTH_TOKEN)}`;
+  const pairingUrl = `zenterm://connect?url=${encodeURIComponent(primaryUrl)}&token=${encodeURIComponent(config.AUTH_TOKEN)}`;
 
   console.log('');
-  console.log('--- palmsh gateway ---');
+  console.log('--- zenterm gateway ---');
   if (lan) {
     console.log(`  LAN:       http://${lan}:${config.PORT}`);
   }
@@ -103,7 +103,7 @@ try {
     host: config.HOST
   });
 
-  app.log.info({ address }, 'palmsh-gateway listening');
+  app.log.info({ address }, 'zenterm-gateway listening');
   showPairingInfo();
 } catch (error) {
   app.log.error({ err: error }, 'failed to start gateway');

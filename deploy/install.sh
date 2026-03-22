@@ -6,7 +6,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 ENV_FILE="$PROJECT_DIR/packages/gateway/.env"
 OS="$(uname -s)"
 
-echo "=== palmsh Gateway インストール ==="
+echo "=== zenterm Gateway インストール ==="
 echo "OS: $OS"
 
 # 1. tmux 確認
@@ -44,7 +44,7 @@ SESSION_PREFIX=psh_
 LOG_LEVEL=info
 
 # Upload settings
-UPLOAD_DIR=~/uploads/palmsh
+UPLOAD_DIR=~/uploads/zenterm
 UPLOAD_MAX_SIZE=10485760
 EOF
   echo "  AUTH_TOKEN を自動生成しました。"
@@ -56,9 +56,9 @@ fi
 # 5. OS別サービス登録
 if [ "$OS" = "Darwin" ]; then
   # --- macOS: launchd ---
-  PLIST_SRC="$SCRIPT_DIR/com.palmsh.gateway.plist"
+  PLIST_SRC="$SCRIPT_DIR/com.zenterm.gateway.plist"
   PLIST_DIR="$HOME/Library/LaunchAgents"
-  PLIST_DST="$PLIST_DIR/com.palmsh.gateway.plist"
+  PLIST_DST="$PLIST_DIR/com.zenterm.gateway.plist"
 
   if [ ! -f "$PLIST_SRC" ]; then
     echo "エラー: $PLIST_SRC が見つかりません。"
@@ -81,26 +81,26 @@ if [ "$OS" = "Darwin" ]; then
 
   echo "[5/5] サービス起動確認..."
   sleep 2
-  if launchctl list | grep -q com.palmsh.gateway; then
+  if launchctl list | grep -q com.zenterm.gateway; then
     echo "  launchd サービスが起動しました。"
   else
     echo "  警告: サービスが起動していない可能性があります。"
-    echo "  確認: launchctl list | grep palmsh"
+    echo "  確認: launchctl list | grep zenterm"
   fi
 else
   # --- Linux: systemd ---
-  SERVICE_FILE="$SCRIPT_DIR/palmsh-gateway.service"
+  SERVICE_FILE="$SCRIPT_DIR/zenterm-gateway.service"
   SYSTEMD_DIR="/etc/systemd/system"
 
   echo "[3/5] サービスファイル配置..."
-  sudo cp "$SERVICE_FILE" "$SYSTEMD_DIR/palmsh-gateway.service"
+  sudo cp "$SERVICE_FILE" "$SYSTEMD_DIR/zenterm-gateway.service"
 
   echo "[4/5] systemd デーモンリロード..."
   sudo systemctl daemon-reload
-  sudo systemctl enable palmsh-gateway
+  sudo systemctl enable zenterm-gateway
 
   echo "[5/5] サービス起動..."
-  sudo systemctl start palmsh-gateway
+  sudo systemctl start zenterm-gateway
 fi
 
 # 6. QRコード表示
@@ -120,7 +120,7 @@ else
 fi
 
 if [ -n "$LAN_IP" ] && [ -n "$TOKEN" ]; then
-  PAIRING_URL="palmsh://connect?url=http://${LAN_IP}:${PORT}&token=${TOKEN}"
+  PAIRING_URL="zenterm://connect?url=http://${LAN_IP}:${PORT}&token=${TOKEN}"
   echo "ペアリング URL:"
   echo "  $PAIRING_URL"
   echo ""
@@ -146,21 +146,21 @@ fi
 echo ""
 if [ "$OS" = "Darwin" ]; then
   echo "ステータス確認:"
-  echo "  launchctl list | grep palmsh"
+  echo "  launchctl list | grep zenterm"
   echo ""
   echo "ログ確認:"
-  echo "  tail -f ~/Library/Logs/palmsh-gateway.log"
+  echo "  tail -f ~/Library/Logs/zenterm-gateway.log"
   echo ""
   echo "再起動:"
-  echo "  launchctl unload ~/Library/LaunchAgents/com.palmsh.gateway.plist"
-  echo "  launchctl load ~/Library/LaunchAgents/com.palmsh.gateway.plist"
+  echo "  launchctl unload ~/Library/LaunchAgents/com.zenterm.gateway.plist"
+  echo "  launchctl load ~/Library/LaunchAgents/com.zenterm.gateway.plist"
 else
   echo "ステータス確認:"
-  echo "  sudo systemctl status palmsh-gateway"
+  echo "  sudo systemctl status zenterm-gateway"
   echo ""
   echo "ログ確認:"
-  echo "  sudo journalctl -u palmsh-gateway -f"
+  echo "  sudo journalctl -u zenterm-gateway -f"
   echo ""
   echo "再起動:"
-  echo "  sudo systemctl restart palmsh-gateway"
+  echo "  sudo systemctl restart zenterm-gateway"
 fi

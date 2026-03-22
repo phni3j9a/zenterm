@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:fs', () => ({
+  createReadStream: vi.fn(),
   lstatSync: vi.fn(),
   readFileSync: vi.fn(),
   readdirSync: vi.fn(),
@@ -12,6 +13,7 @@ vi.mock('node:fs', () => ({
   writeFileSync: vi.fn(),
 }));
 
+const createReadStreamMock = vi.mocked(fs.createReadStream);
 const lstatSyncMock = vi.mocked(fs.lstatSync);
 const readFileSyncMock = vi.mocked(fs.readFileSync);
 const readdirSyncMock = vi.mocked(fs.readdirSync);
@@ -252,6 +254,52 @@ describe('filesystem service', () => {
     expect(result.content.split('\n')).toHaveLength(1000);
     expect(result.content).toContain('line-1000');
     expect(result.content).not.toContain('line-1001');
+  });
+
+  it('readFileRaw: MIME type と stream を返す', async () => {
+    const { readFileRaw } = await loadFilesystemModule();
+    const stream = {} as fs.ReadStream;
+
+    statSyncMock.mockReturnValue(makeStats('file', { size: 128, mode: 0o100644 }));
+    createReadStreamMock.mockReturnValue(stream);
+
+    expect(readFileRaw('~/docs/image.JPG')).toEqual({
+      stream,
+      size: 128,
+      mimeType: 'image/jpeg',
+      filename: 'image.JPG'
+    });
+    expect(createReadStreamMock).toHaveBeenCalledWith('/home/testuser/docs/image.JPG');
+  });
+
+  it('readFileRaw: 20MB 超過なら FILE_TOO_LARGE', async () => {
+    const { readFileRaw } = await loadFilesystemModule();
+
+    statSyncMock.mockReturnValue(makeStats('file', { size: 20 * 1024 * 1024 + 1 }));
+
+    try {
+      readFileRaw('~/large.bin');
+      throw new Error('Expected readFileRaw to throw');
+    } catch (error) {
+      expectFilesystemError(error, 413, 'FILE_TOO_LARGE');
+    }
+
+    expect(createReadStreamMock).not.toHaveBeenCalled();
+  });
+
+  it('readFileRaw: ファイルでなければ NOT_A_FILE', async () => {
+    const { readFileRaw } = await loadFilesystemModule();
+
+    statSyncMock.mockReturnValue(makeStats('directory', { mode: 0o040755 }));
+
+    try {
+      readFileRaw('~/docs');
+      throw new Error('Expected readFileRaw to throw');
+    } catch (error) {
+      expectFilesystemError(error, 400, 'NOT_A_FILE');
+    }
+
+    expect(createReadStreamMock).not.toHaveBeenCalled();
   });
 
   it('writeFileContent: 新規ファイルを書き込んで bytes を返す', async () => {

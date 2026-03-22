@@ -1,5 +1,5 @@
 [Unit]
-Description=palmsh Gateway - Terminal WebSocket Server
+Description=zenterm Gateway - Terminal WebSocket Server
 After=network.target
 Wants=network-online.target
 StartLimitIntervalSec=60
@@ -9,14 +9,14 @@ StartLimitBurst=5
 Type=simple
 User=raspi5
 Group=raspi5
-WorkingDirectory=/home/raspi5/projects/palmsh/packages/gateway
+WorkingDirectory=/home/raspi5/projects/zenterm/packages/gateway
 ExecStart=/usr/bin/node dist/index.js
 Restart=always
 RestartSec=5
-EnvironmentFile=/home/raspi5/projects/palmsh/packages/gateway/.env
+EnvironmentFile=/home/raspi5/projects/zenterm/packages/gateway/.env
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=palmsh-gateway
+SyslogIdentifier=zenterm-gateway
 
 # セキュリティ設定
 # 注意: ターミナルアプリのため、ProtectSystem/ProtectHome/PrivateTmp は

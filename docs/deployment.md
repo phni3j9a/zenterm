@@ -1,4 +1,4 @@
-# palmsh デプロイメントガイド
+# zenterm デプロイメントガイド
 
 ## 前提条件
 - **Linux**: Raspberry Pi OS / Ubuntu / Debian + Node.js 20+ + tmux
@@ -8,7 +8,7 @@
 ## ワンライナーインストール
 
 ```bash
-cd ~/projects/palmsh
+cd ~/projects/zenterm
 ./deploy/install.sh
 ```
 
@@ -28,16 +28,16 @@ install.sh は以下を自動実行します:
 ### サービス管理
 ```bash
 # ステータス確認
-sudo systemctl status palmsh-gateway
+sudo systemctl status zenterm-gateway
 
 # ログ確認
-sudo journalctl -u palmsh-gateway -f
+sudo journalctl -u zenterm-gateway -f
 
 # 再起動
-sudo systemctl restart palmsh-gateway
+sudo systemctl restart zenterm-gateway
 
 # 停止
-sudo systemctl stop palmsh-gateway
+sudo systemctl stop zenterm-gateway
 ```
 
 ### アンインストール
@@ -55,17 +55,17 @@ brew install tmux node
 ### サービス管理
 ```bash
 # ステータス確認
-launchctl list | grep palmsh
+launchctl list | grep zenterm
 
 # ログ確認
-tail -f ~/Library/Logs/palmsh-gateway.log
+tail -f ~/Library/Logs/zenterm-gateway.log
 
 # 再起動
-launchctl unload ~/Library/LaunchAgents/com.palmsh.gateway.plist
-launchctl load ~/Library/LaunchAgents/com.palmsh.gateway.plist
+launchctl unload ~/Library/LaunchAgents/com.zenterm.gateway.plist
+launchctl load ~/Library/LaunchAgents/com.zenterm.gateway.plist
 
 # 停止
-launchctl unload ~/Library/LaunchAgents/com.palmsh.gateway.plist
+launchctl unload ~/Library/LaunchAgents/com.zenterm.gateway.plist
 ```
 
 ### アンインストール
@@ -91,7 +91,7 @@ SESSION_PREFIX=psh_
 LOG_LEVEL=info
 
 # Upload settings
-UPLOAD_DIR=~/uploads/palmsh
+UPLOAD_DIR=~/uploads/zenterm
 UPLOAD_MAX_SIZE=10485760
 ```
 

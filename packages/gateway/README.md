@@ -1,4 +1,4 @@
-# palmsh-gateway
+# zenterm-gateway
 
 Raspberry Pi 上で動く terminal gateway 用リポジトリ。
 

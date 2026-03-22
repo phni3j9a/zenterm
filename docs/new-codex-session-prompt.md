@@ -6,8 +6,8 @@
 
 `ccmobile` をそのまま移植するのではなく、モバイルアプリ中心の新規システムとして再設計します。
 
-- `palmsh-mobile`: Expo / React Native アプリ
-- `palmsh-gateway`: Raspberry Pi 上で動く terminal gateway
+- `zenterm-mobile`: Expo / React Native アプリ
+- `zenterm-gateway`: Raspberry Pi 上で動く terminal gateway
 
 ## Fixed Decisions
 
@@ -21,10 +21,10 @@
 
 ## What To Do First
 
-1. `/home/raspi5/projects/palmsh` を使う
-2. その配下の `palmsh-mobile` と `palmsh-gateway` を対象に進める
-3. `palmsh-gateway` は TypeScript + Fastify + ws + node-pty + tmux で初期化する
-4. `palmsh-mobile` は Expo + expo-router + react-native-webview で初期化する
+1. `/home/raspi5/projects/zenterm` を使う
+2. その配下の `zenterm-mobile` と `zenterm-gateway` を対象に進める
+3. `zenterm-gateway` は TypeScript + Fastify + ws + node-pty + tmux で初期化する
+4. `zenterm-mobile` は Expo + expo-router + react-native-webview で初期化する
 5. 実装前にディレクトリ構成とタスク分解を短く提示する
 6. その後、最小接続経路の実装に入る
 
@@ -78,4 +78,4 @@
 
 詳細は以下を参照してください。
 
-`/home/raspi5/projects/palmsh/docs/mobile-rebuild-handoff.md`
+`/home/raspi5/projects/zenterm/docs/mobile-rebuild-handoff.md`

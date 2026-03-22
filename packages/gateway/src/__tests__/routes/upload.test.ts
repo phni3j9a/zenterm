@@ -1,7 +1,7 @@
 process.env.AUTH_TOKEN = 'test-token';
 process.env.LOG_LEVEL = 'error';
 
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import type { FastifyInstance } from 'fastify';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -53,7 +53,7 @@ function buildFilePayload(
   mimetype: string,
   content: Buffer
 ): { boundary: string; payload: Buffer } {
-  const boundary = '----palmsh-upload-boundary';
+  const boundary = '----zenterm-upload-boundary';
   const header = Buffer.from(
     `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mimetype}\r\n\r\n`
   );
@@ -62,7 +62,7 @@ function buildFilePayload(
 }
 
 function buildFieldPayload(name: string, value: string): { boundary: string; payload: Buffer } {
-  const boundary = '----palmsh-upload-boundary';
+  const boundary = '----zenterm-upload-boundary';
   const payload = Buffer.from(
     `--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n--${boundary}--\r\n`
   );
@@ -76,14 +76,15 @@ let tempDir = '';
 beforeEach(async () => {
   vi.clearAllMocks();
   vi.resetModules();
-  tempDir = mkdtempSync(join(tmpdir(), 'palmsh-upload-'));
+  tempDir = mkdtempSync(join(tmpdir(), 'zenterm-upload-'));
   const homeDir = join(tempDir, 'home');
+  mkdirSync(homeDir, { recursive: true });
   process.env.AUTH_TOKEN = 'test-token';
   process.env.HOME = homeDir;
   process.env.LOG_LEVEL = 'error';
-  process.env.UPLOAD_DIR = '~/uploads/palmsh';
+  process.env.UPLOAD_DIR = '~/uploads/zenterm';
   process.env.UPLOAD_MAX_SIZE = '16';
-  expectedUploadDir = join(homeDir, 'uploads', 'palmsh');
+  expectedUploadDir = join(homeDir, 'uploads', 'zenterm');
   app = await buildTestApp();
 });
 
@@ -134,6 +135,36 @@ describe('upload routes', () => {
     expect(readFileSync(body.path)).toEqual(file);
   });
 
+  it('POST /api/upload?dest=docs/raw: dest 配下に保存する', async () => {
+    const file = Buffer.from('custom');
+    const { boundary, payload } = buildFilePayload('note.txt', 'text/plain', file);
+    const customDir = join(process.env.HOME!, 'docs', 'raw');
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/api/upload?dest=docs/raw',
+      headers: {
+        authorization: 'Bearer test-token',
+        'content-type': `multipart/form-data; boundary=${boundary}`
+      },
+      payload
+    });
+
+    const body = JSON.parse(response.body) as {
+      filename: string;
+      mimetype: string;
+      path: string;
+      size: number;
+      success: boolean;
+    };
+
+    expect(response.statusCode).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.path).toBe(join(customDir, body.filename));
+    expect(body.mimetype).toBe('text/plain');
+    expect(readFileSync(body.path)).toEqual(file);
+  });
+
   it('POST /api/upload: ファイルがなければ 400 を返す', async () => {
     const { boundary, payload } = buildFieldPayload('note', 'hello');
 
@@ -157,7 +188,7 @@ describe('upload routes', () => {
     });
   });
 
-  it('POST /api/upload: 非対応 MIME type なら 400 を返す', async () => {
+  it('POST /api/upload: 非画像 MIME type でも保存する', async () => {
     const { boundary, payload } = buildFilePayload('note.txt', 'text/plain', Buffer.from('text'));
 
     const response = await app!.inject({
@@ -170,15 +201,39 @@ describe('upload routes', () => {
       payload
     });
 
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body)).toEqual({
-      success: false,
-      path: '',
-      filename: '',
-      size: 0,
-      mimetype: 'text/plain'
+    const body = JSON.parse(response.body) as {
+      filename: string;
+      mimetype: string;
+      path: string;
+      size: number;
+      success: boolean;
+    };
+
+    expect(response.statusCode).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.path).toBe(join(expectedUploadDir, body.filename));
+    expect(body.mimetype).toBe('text/plain');
+    expect(readFileSync(body.path)).toEqual(Buffer.from('text'));
+  });
+
+  it('POST /api/upload?dest=/var/log: ホーム外 dest は 403 を返す', async () => {
+    const { boundary, payload } = buildFilePayload('note.txt', 'text/plain', Buffer.from('text'));
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/api/upload?dest=/var/log',
+      headers: {
+        authorization: 'Bearer test-token',
+        'content-type': `multipart/form-data; boundary=${boundary}`
+      },
+      payload
     });
-    expect(existsSync(expectedUploadDir)).toBe(false);
+
+    expect(response.statusCode).toBe(403);
+    expect(JSON.parse(response.body)).toEqual({
+      error: 'PATH_TRAVERSAL',
+      message: 'ホームディレクトリ外へのアクセスは許可されていません。'
+    });
   });
 
   it('POST /api/upload: サイズ超過なら 413 を返して一時ファイルを削除する', async () => {

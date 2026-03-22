@@ -1,4 +1,4 @@
-# palmsh — エージェント指示
+# ZenTerm — エージェント指示
 
 ## プロジェクト概要
 iPhone → Raspberry Pi ターミナル接続システム（モノレポ）

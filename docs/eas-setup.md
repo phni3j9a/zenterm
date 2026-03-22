@@ -48,11 +48,11 @@ eas submit --platform ios
 ### monorepo でのビルドエラー
 ルートの `package-lock.json` が存在することを確認。
 ```bash
-ls ~/projects/palmsh/package-lock.json
+ls ~/projects/zenterm/package-lock.json
 ```
 
 ### shared パッケージの型解決エラー
-`@palmsh/shared` が workspaces で正しくリンクされているか確認。
+`@zenterm/shared` が workspaces で正しくリンクされているか確認。
 ```bash
-npm ls @palmsh/shared
+npm ls @zenterm/shared
 ```
