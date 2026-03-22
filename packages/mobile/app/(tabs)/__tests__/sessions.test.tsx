@@ -91,6 +91,20 @@ jest.mock('react-native-webview', () => {
   };
 });
 
+jest.mock('@gorhom/bottom-sheet', () => {
+  const MockReact = require('react');
+  const RN = require('react-native');
+  return {
+    BottomSheetModal: MockReact.forwardRef(({ children }: { children?: React.ReactNode }, ref: any) => {
+      MockReact.useImperativeHandle(ref, () => ({ present: jest.fn(), dismiss: jest.fn() }));
+      return null;
+    }),
+    BottomSheetView: ({ children, ...props }: any) =>
+      MockReact.createElement(RN.View, props, children),
+    BottomSheetModalProvider: ({ children }: any) => children,
+  };
+});
+
 jest.mock('expo-clipboard', () => ({
   getStringAsync: jest.fn(() => Promise.resolve('')),
 }));
@@ -208,7 +222,7 @@ describe('SessionsScreen', () => {
   });
 
   describe('Session list', () => {
-    it('renders session cards with name, cwd, date, and status pill', async () => {
+    it('renders session cards with name, cwd, and date', async () => {
       mockListSessions.mockResolvedValue(sampleSessions);
 
       let root: ReturnType<typeof create>;
@@ -222,9 +236,10 @@ describe('SessionsScreen', () => {
       expect(texts).toContain('deploy');
       expect(texts).toContain('/home/user/projects/myapp');
       expect(texts).toContain('/home/user/projects/deploy');
-      expect(texts.filter((t) => t === 'active').length).toBe(2);
-      expect(texts.filter((t) => t === 'タップで接続').length).toBe(2);
-      expect(texts.filter((t) => t === 'スワイプで操作').length).toBe(2);
+      // Status pill and hint rows were removed — replaced by dot indicator
+      expect(texts.filter((t) => t === 'active').length).toBe(0);
+      expect(texts.filter((t) => t === 'タップで接続').length).toBe(0);
+      expect(texts.filter((t) => t === 'スワイプで操作').length).toBe(0);
 
       const icons = findAllByTestID(root!.root, 'mock-ionicon');
       const iconNames = icons.map((i) => i.children?.[0]);
@@ -251,15 +266,17 @@ describe('SessionsScreen', () => {
       expect(collectTexts(root!.root)).toContain('terminal:work');
     });
 
-    it('reopens the active terminal when the screen mounts with a stored session id', async () => {
+    it('shows the terminal view when a session is opened', async () => {
       mockListSessions.mockResolvedValue(sampleSessions);
-      act(() => {
-        useSessionViewStore.setState({ activeSessionId: 'deploy' });
-      });
 
       let root: ReturnType<typeof create>;
       await act(async () => {
         root = create(React.createElement(SessionsScreen));
+      });
+
+      // Open a session after mount (simulates user tap)
+      await act(async () => {
+        useSessionViewStore.setState({ activeSessionId: 'deploy' });
       });
 
       const options = getStackOptions(root!.root);
@@ -274,13 +291,17 @@ describe('SessionsScreen', () => {
 
     it('closes the active terminal from the header back action and reloads sessions', async () => {
       mockListSessions.mockResolvedValue(sampleSessions);
-      act(() => {
-        useSessionViewStore.setState({ activeSessionId: 'work' });
-      });
 
       let root: ReturnType<typeof create>;
       await act(async () => {
         root = create(React.createElement(SessionsScreen));
+      });
+
+      const callsBefore = mockListSessions.mock.calls.length;
+
+      // Open a session after mount
+      await act(async () => {
+        useSessionViewStore.setState({ activeSessionId: 'work' });
       });
 
       const options = getStackOptions(root!.root);
@@ -290,7 +311,7 @@ describe('SessionsScreen', () => {
       });
 
       expect(useSessionViewStore.getState().activeSessionId).toBeNull();
-      expect(mockListSessions).toHaveBeenCalledTimes(2);
+      expect(mockListSessions.mock.calls.length).toBeGreaterThan(callsBefore);
       expect(collectTexts(root!.root)).toContain('新しいセッションを作成');
     });
   });

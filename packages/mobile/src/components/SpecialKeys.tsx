@@ -3,7 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, LayoutAnimation, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 import { uploadFile } from '@/src/api/client';
@@ -46,13 +46,14 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
         container: {
           gap: spacing.sm,
           paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.sm,
+          paddingVertical: spacing.md,
           backgroundColor: termBg,
         },
         row: {
           flexDirection: 'row',
-          gap: spacing.sm,
+          gap: spacing.xs,
           paddingRight: spacing.sm,
+          alignItems: 'center',
         },
         ctrlRow: {
           gap: spacing.xs,
@@ -63,9 +64,14 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
           textTransform: 'uppercase',
           letterSpacing: 0.6,
         },
+        keyGroup: {
+          flexDirection: 'row',
+          gap: spacing.xs,
+          alignItems: 'center',
+        },
         button: {
           minWidth: 44,
-          height: 36,
+          height: 44,
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: spacing.md,
@@ -81,20 +87,35 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
           borderWidth: 1,
           borderColor: colors.primary,
         },
-        pasteButton: {
+        navButton: {
+          minWidth: 44,
+          height: 44,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: spacing.md,
+          borderRadius: radii.sm,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.borderSubtle,
+        },
+        actionButton: {
           minWidth: 70,
-          height: 36,
+          height: 44,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
           gap: spacing.xs,
           paddingHorizontal: spacing.md,
           borderRadius: radii.sm,
-          backgroundColor: colors.surfaceHover,
+          backgroundColor: colors.primarySubtle,
         },
         label: {
           ...typography.captionMedium,
           color: colors.textPrimary,
+        },
+        actionLabel: {
+          ...typography.captionMedium,
+          color: colors.primary,
         },
         labelActive: {
           color: colors.textInverse,
@@ -117,6 +138,7 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
 
   const handleCtrlToggle = () => {
     triggerHaptic();
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsCtrl((current) => !current);
   };
 
@@ -162,61 +184,70 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
   return (
     <View style={styles.container}>
       <ScrollView horizontal contentContainerStyle={styles.row} showsHorizontalScrollIndicator={false}>
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b')} style={styles.button}>
-          <Text style={styles.label}>Esc</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\t')} style={styles.button}>
-          <Text style={styles.label}>Tab</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b[Z')} style={styles.button}>
-          <Text style={styles.label}>S-Tab</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.78}
-          onPress={handleCtrlToggle}
-          style={[styles.button, isCtrl && styles.buttonActive]}
-        >
-          <Text style={[styles.label, isCtrl && styles.labelActive]}>Ctrl</Text>
-        </TouchableOpacity>
-
-        {ARROW_KEYS.map((key) => (
-          <TouchableOpacity
-            key={key.label}
-            activeOpacity={0.78}
-            onPress={() => handleBaseKeyPress(key.data)}
-            style={styles.button}
-          >
-            <Text style={styles.label}>{key.label}</Text>
+        {/* Group 1: 修飾キー */}
+        <View style={styles.keyGroup}>
+          <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b')} style={styles.button}>
+            <Text style={styles.label}>Esc</Text>
           </TouchableOpacity>
-        ))}
 
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\r')} style={styles.button}>
-          <Ionicons color={colors.textPrimary} name="return-down-back-outline" size={16} />
-        </TouchableOpacity>
+          <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\t')} style={styles.button}>
+            <Text style={styles.label}>Tab</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity activeOpacity={0.78} onPress={() => void handlePaste()} style={styles.pasteButton}>
-          <Ionicons color={colors.textPrimary} name="clipboard-outline" size={16} />
-          <Text style={styles.label}>Paste</Text>
-        </TouchableOpacity>
+          <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b[Z')} style={styles.button}>
+            <Text style={styles.label}>S-Tab</Text>
+          </TouchableOpacity>
 
-        {server && (
           <TouchableOpacity
             activeOpacity={0.78}
-            disabled={uploading}
-            onPress={() => void handleImageUpload()}
-            style={styles.pasteButton}
+            onPress={handleCtrlToggle}
+            style={[styles.button, isCtrl && styles.buttonActive]}
           >
-            {uploading ? (
-              <ActivityIndicator color={colors.textPrimary} size={16} />
-            ) : (
-              <Ionicons color={colors.textPrimary} name="image-outline" size={16} />
-            )}
-            <Text style={styles.label}>{uploading ? '...' : 'Image'}</Text>
+            <Text style={[styles.label, isCtrl && styles.labelActive]}>Ctrl</Text>
           </TouchableOpacity>
-        )}
+        </View>
+
+        {/* Group 2: ナビゲーション */}
+        <View style={[styles.keyGroup, { marginLeft: spacing.lg }]}>
+          {ARROW_KEYS.map((key) => (
+            <TouchableOpacity
+              key={key.label}
+              activeOpacity={0.78}
+              onPress={() => handleBaseKeyPress(key.data)}
+              style={styles.navButton}
+            >
+              <Text style={styles.label}>{key.label}</Text>
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\r')} style={styles.navButton}>
+            <Ionicons color={colors.textPrimary} name="return-down-back-outline" size={16} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Group 3: アクション */}
+        <View style={[styles.keyGroup, { marginLeft: spacing.lg }]}>
+          <TouchableOpacity activeOpacity={0.78} onPress={() => void handlePaste()} style={styles.actionButton}>
+            <Ionicons color={colors.primary} name="clipboard-outline" size={16} />
+            <Text style={styles.actionLabel}>Paste</Text>
+          </TouchableOpacity>
+
+          {server && (
+            <TouchableOpacity
+              activeOpacity={0.78}
+              disabled={uploading}
+              onPress={() => void handleImageUpload()}
+              style={[styles.actionButton, uploading && { opacity: 0.5 }]}
+            >
+              {uploading ? (
+                <ActivityIndicator color={colors.primary} size={16} />
+              ) : (
+                <Ionicons color={colors.primary} name="image-outline" size={16} />
+              )}
+              <Text style={styles.actionLabel}>{uploading ? '...' : 'Image'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
 
       {isCtrl ? (

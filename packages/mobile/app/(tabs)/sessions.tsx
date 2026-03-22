@@ -1,3 +1,4 @@
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -53,7 +54,6 @@ export default function SessionsScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [createName, setCreateName] = useState('');
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -61,6 +61,7 @@ export default function SessionsScreen() {
   const [error, setError] = useState<string | null>(null);
   const sessionsCountRef = useRef(0);
   const requestIdRef = useRef(0);
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   // ── Inline terminal state ──
   const activeSessionId = useSessionViewStore((state) => state.activeSessionId);
@@ -144,51 +145,22 @@ export default function SessionsScreen() {
           gap: spacing.sm,
         },
         sessionCard: {
-          gap: spacing.md,
+          gap: spacing.sm,
           ...(dark ? {} : shadows.sm),
         },
         sessionHeader: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
+          gap: spacing.sm,
         },
         sessionTitleWrap: {
           flex: 1,
         },
-        statusPill: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          alignSelf: 'flex-start',
-          gap: spacing.xs,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: 5,
-          borderRadius: radii.full,
-          backgroundColor: dark ? colors.surfaceHover : colors.bg,
-          borderWidth: 1,
-          borderColor: dark ? colors.border : colors.borderSubtle,
-        },
-        sessionCwd: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-        },
-        sessionDate: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
-        },
-        sessionFooter: {
+        sessionMeta: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: spacing.md,
-        },
-        sessionHint: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-          flex: 1,
         },
         renameForm: {
           gap: spacing.md,
@@ -217,7 +189,7 @@ export default function SessionsScreen() {
   const isCurrentServer = useCallback((serverId: string) => useServersStore.getState().getDefaultServer()?.id === serverId, []);
 
   const resetCreateForm = useCallback(() => {
-    setShowCreateForm(false);
+    bottomSheetRef.current?.dismiss();
     setCreateName('');
   }, []);
 
@@ -239,10 +211,11 @@ export default function SessionsScreen() {
     setRenamingSessionId(null);
     setError(null);
     sessionsCountRef.current = 0;
-    resetCreateForm();
+    bottomSheetRef.current?.dismiss();
+    setCreateName('');
     resetRenameForm();
     useSessionViewStore.getState().close();
-  }, [server?.id, resetCreateForm, resetRenameForm]);
+  }, [server?.id, resetRenameForm]);
 
   const loadSessions = useCallback(
     async (mode: LoadMode = 'initial') => {
@@ -324,7 +297,7 @@ export default function SessionsScreen() {
     }
 
     resetRenameForm();
-    setShowCreateForm(true);
+    bottomSheetRef.current?.present();
   }, [creating, resetRenameForm, server]);
 
   const cancelCreate = useCallback(() => {
@@ -332,8 +305,9 @@ export default function SessionsScreen() {
       return;
     }
 
-    resetCreateForm();
-  }, [creating, resetCreateForm]);
+    bottomSheetRef.current?.dismiss();
+    setCreateName('');
+  }, [creating]);
 
   const handleCreate = useCallback(async () => {
     if (!server || creating) {
@@ -371,13 +345,8 @@ export default function SessionsScreen() {
   }, [createName, creating, isCurrentServer, openTerminal, resetCreateForm, server]);
 
   const handleCreateAction = useCallback(() => {
-    if (showCreateForm) {
-      void handleCreate();
-      return;
-    }
-
     openCreateForm();
-  }, [handleCreate, openCreateForm, showCreateForm]);
+  }, [openCreateForm]);
 
   const handleDelete = useCallback(
     async (session: TmuxSession) => {
@@ -510,43 +479,19 @@ export default function SessionsScreen() {
 
   const header = (
     <View style={styles.headerSection}>
-      {showCreateForm ? (
-        <Card highlighted style={styles.formCard}>
-          <View style={styles.formHeader}>
-            <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッション</Text>
+      <Card onPress={openCreateForm} style={styles.addPrompt}>
+        <View style={styles.addPromptRow}>
+          <View style={styles.addPromptCopy}>
+            <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッションを作成</Text>
             <Text style={[typography.caption, { color: colors.textSecondary }]}>
-              名前は空欄のままでも作成できます。必要ならあとでスワイプしてリネームできます。
+              ターミナルを開いて作業を始めましょう。名前はあとで変更できます。
             </Text>
           </View>
-
-          <Input
-            autoCapitalize="none"
-            label="セッション名"
-            onChangeText={setCreateName}
-            placeholder="例: 作業メモ / deploy / scratch"
-            value={createName}
-          />
-
-          <View style={styles.formActions}>
-            <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
-            <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
+          <View style={styles.addPromptIcon}>
+            <Ionicons color={colors.primary} name="add-outline" size={22} />
           </View>
-        </Card>
-      ) : (
-        <Card onPress={openCreateForm} style={styles.addPrompt}>
-          <View style={styles.addPromptRow}>
-            <View style={styles.addPromptCopy}>
-              <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッションを作成</Text>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                ターミナルを開いて作業を始めましょう。名前はあとで変更できます。
-              </Text>
-            </View>
-            <View style={styles.addPromptIcon}>
-              <Ionicons color={colors.primary} name="add-outline" size={22} />
-            </View>
-          </View>
-        </Card>
-      )}
+        </View>
+      </Card>
     </View>
   );
 
@@ -596,7 +541,7 @@ export default function SessionsScreen() {
                 ),
               }
             : {
-                title: 'Sessions',
+                title: 'セッション',
                 headerStyle: undefined,
                 headerLeft: undefined,
                 headerRight: () => (
@@ -609,7 +554,7 @@ export default function SessionsScreen() {
                     style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
                   >
                     <Ionicons
-                      color={!server || creating ? colors.textMuted : showCreateForm ? colors.primary : colors.textPrimary}
+                      color={!server || creating ? colors.textMuted : colors.textPrimary}
                       name="add"
                       size={22}
                     />
@@ -673,7 +618,7 @@ export default function SessionsScreen() {
         </View>
       ) : (
         <FlatList
-          contentContainerStyle={[styles.listContent, sessions.length === 0 && !showCreateForm && styles.centeredContent]}
+          contentContainerStyle={[styles.listContent, sessions.length === 0 && styles.centeredContent]}
           data={sessions}
           ItemSeparatorComponent={renderSeparator}
           keyboardShouldPersistTaps="handled"
@@ -744,35 +689,31 @@ export default function SessionsScreen() {
                   style={styles.sessionCard}
                 >
                   <View style={styles.sessionHeader}>
+                    <View
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: radii.full,
+                        backgroundColor: colors.success,
+                      }}
+                    />
                     <View style={styles.sessionTitleWrap}>
                       <Text numberOfLines={1} style={[typography.heading, { color: colors.textPrimary }]}>
                         {isEditing && renameValue ? renameValue : item.displayName}
                       </Text>
                     </View>
-                    <View style={styles.statusPill}>
-                      <Ionicons color={colors.success} name="radio-button-on-outline" size={14} />
-                      <Text style={[typography.smallMedium, { color: colors.success }]}>active</Text>
-                    </View>
                   </View>
 
-                  <View style={styles.sessionCwd}>
-                    <Ionicons color={colors.textMuted} name="folder-outline" size={14} />
-                    <Text numberOfLines={1} style={[typography.mono, { color: colors.textSecondary }]}>
-                      {item.cwd}
+                  <View style={styles.sessionMeta}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flex: 1 }}>
+                      <Ionicons color={colors.textMuted} name="folder-outline" size={12} />
+                      <Text numberOfLines={1} style={[typography.mono, { color: colors.textSecondary, flex: 1 }]}>
+                        {item.cwd}
+                      </Text>
+                    </View>
+                    <Text style={[typography.small, { color: colors.textMuted }]}>
+                      {formatDate(item.created)}
                     </Text>
-                  </View>
-
-                  <View style={styles.sessionDate}>
-                    <Ionicons color={colors.textMuted} name="time-outline" size={14} />
-                    <Text style={[typography.caption, { color: colors.textMuted }]}>作成 {formatDate(item.created)}</Text>
-                  </View>
-
-                  <View style={styles.sessionFooter}>
-                    <View style={styles.sessionHint}>
-                      <Ionicons color={colors.textMuted} name="open-outline" size={14} />
-                      <Text style={[typography.caption, { color: colors.textSecondary }]}>タップで接続</Text>
-                    </View>
-                    <Text style={[typography.small, { color: colors.textMuted }]}>スワイプで操作</Text>
                   </View>
 
                   {isEditing ? (
@@ -804,6 +745,50 @@ export default function SessionsScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+      <BottomSheetModal
+        ref={bottomSheetRef}
+        snapPoints={['38%']}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        backgroundStyle={{ backgroundColor: colors.surface }}
+        handleIndicatorStyle={{
+          backgroundColor: colors.textMuted,
+          width: 40,
+          height: 4,
+          borderRadius: radii.full,
+        }}
+      >
+        <BottomSheetView
+          style={{
+            paddingHorizontal: spacing.lg,
+            paddingTop: spacing.sm,
+            paddingBottom: spacing['2xl'],
+            gap: spacing.lg,
+          }}
+        >
+          <View style={{ gap: spacing.xs }}>
+            <Text style={[typography.heading, { color: colors.textPrimary }]}>
+              新しいセッション
+            </Text>
+            <Text style={[typography.caption, { color: colors.textSecondary }]}>
+              名前は空欄のままでも作成できます。
+            </Text>
+          </View>
+
+          <Input
+            autoCapitalize="none"
+            label="セッション名"
+            onChangeText={setCreateName}
+            placeholder="例: 作業メモ / deploy / scratch"
+            value={createName}
+          />
+
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.sm }}>
+            <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
+            <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
     </View>
   );
 }

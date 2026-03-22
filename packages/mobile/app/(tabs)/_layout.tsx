@@ -24,22 +24,28 @@ export default function TabLayout() {
       <Tabs.Screen
         name="sessions"
         options={{
-          title: 'Sessions',
-          tabBarIcon: ({ color, size }) => <Ionicons color={color} name="terminal-outline" size={size} />,
+          title: 'セッション',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons color={color} name={focused ? 'terminal' : 'terminal-outline'} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="files"
         options={{
-          title: 'Files',
-          tabBarIcon: ({ color, size }) => <Ionicons color={color} name="folder-outline" size={size} />,
+          title: 'ファイル',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons color={color} name={focused ? 'folder' : 'folder-outline'} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color, size }) => <Ionicons color={color} name="settings-outline" size={size} />,
+          title: '設定',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons color={color} name={focused ? 'settings' : 'settings-outline'} size={size} />
+          ),
         }}
       />
     </Tabs>

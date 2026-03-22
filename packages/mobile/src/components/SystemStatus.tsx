@@ -155,7 +155,7 @@ export function SystemStatus({ server }: SystemStatusProps) {
     return (
       <Card style={styles.card}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerLabel}>System Status</Text>
+          <Text style={styles.headerLabel}>システムステータス</Text>
         </View>
         <View style={styles.skeletonRow}>
           <View style={styles.skeletonTile}>
@@ -176,7 +176,7 @@ export function SystemStatus({ server }: SystemStatusProps) {
     return (
       <Card style={styles.card}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerLabel}>System Status</Text>
+          <Text style={styles.headerLabel}>システムステータス</Text>
         </View>
         <Text style={styles.errorText}>{error}</Text>
       </Card>
@@ -193,7 +193,7 @@ export function SystemStatus({ server }: SystemStatusProps) {
   return (
     <Card style={styles.card}>
       <View style={styles.headerRow}>
-        <Text style={styles.headerLabel}>System Status</Text>
+        <Text style={styles.headerLabel}>システムステータス</Text>
       </View>
 
       <View style={styles.metricsRow}>

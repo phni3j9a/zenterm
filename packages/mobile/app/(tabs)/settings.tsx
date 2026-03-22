@@ -23,8 +23,8 @@ type ThemeOption = {
 };
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { value: 'light', label: 'Light', icon: 'sunny-outline' },
-  { value: 'dark', label: 'Dark', icon: 'moon-outline' },
+  { value: 'light', label: 'ライト', icon: 'sunny-outline' },
+  { value: 'dark', label: 'ダーク', icon: 'moon-outline' },
 ];
 
 export default function SettingsScreen() {
@@ -184,7 +184,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Settings' }} />
+      <Stack.Screen options={{ title: '設定' }} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>

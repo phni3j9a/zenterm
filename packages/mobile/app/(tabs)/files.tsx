@@ -174,7 +174,7 @@ export default function FilesScreen() {
           flexDirection: 'row',
           alignItems: 'center',
           paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.md,
+          paddingVertical: spacing.lg,
           borderBottomWidth: StyleSheet.hairlineWidth,
           borderBottomColor: colors.borderSubtle,
           gap: spacing.md,
@@ -192,7 +192,7 @@ export default function FilesScreen() {
         },
         fileInfo: {
           flex: 1,
-          gap: 2,
+          gap: spacing.xs,
         },
         fileName: {
           ...typography.body,
@@ -622,7 +622,7 @@ export default function FilesScreen() {
         showsHorizontalScrollIndicator={false}
         style={{ flex: 1 }}
       >
-        <Pressable hitSlop={8} onPress={() => navigateTo('~')}>
+        <Pressable hitSlop={12} onPress={() => navigateTo('~')}>
           <Ionicons color={colors.textSecondary} name="home-outline" size={16} />
         </Pressable>
         {pathSegments.map((segment, index) => {
@@ -632,7 +632,7 @@ export default function FilesScreen() {
           return (
             <View key={segmentPath} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
               <Ionicons color={colors.textMuted} name="chevron-forward" size={12} />
-              <Pressable hitSlop={4} onPress={isLast ? undefined : () => navigateTo(segmentPath)}>
+              <Pressable hitSlop={6} onPress={isLast ? undefined : () => navigateTo(segmentPath)}>
                 <Text style={isLast ? styles.breadcrumbActive : styles.breadcrumbSegment}>
                   {segment}
                 </Text>
@@ -701,7 +701,7 @@ export default function FilesScreen() {
   if (!server) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Files' }} />
+        <Stack.Screen options={{ title: 'ファイル' }} />
         <SetupGuide />
       </View>
     );
@@ -711,7 +711,7 @@ export default function FilesScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Files',
+          title: 'ファイル',
           headerRight: () => (
             <View style={styles.headerActions}>
               <Pressable

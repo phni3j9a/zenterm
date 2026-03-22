@@ -159,8 +159,8 @@ describe('SettingsScreen', () => {
 
     const texts = collectTexts(root!.root);
 
-    expect(texts).toContain('Light');
-    expect(texts).toContain('Dark');
+    expect(texts).toContain('ライト');
+    expect(texts).toContain('ダーク');
     expect(texts).not.toContain('System');
   });
 });
