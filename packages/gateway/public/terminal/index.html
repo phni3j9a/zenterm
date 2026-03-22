@@ -337,6 +337,12 @@
           if (term) {
             if (!message.noFocus) {
               term.focus();
+            } else {
+              // noFocus時は内部textareaのfocusを外してiOSキーボード再表示を防ぐ
+              var textarea = document.querySelector('.xterm-helper-textarea');
+              if (textarea) {
+                textarea.blur();
+              }
             }
             if (typeof term.input === 'function') {
               term.input(message.data, true);
@@ -506,17 +512,18 @@
       }, 500);
     }
 
-    // Double-tap detection
-    var lastTapTime = 0;
-    var lastTapX = 0;
-    var lastTapY = 0;
-    var DOUBLE_TAP_DELAY = 300;
-    var DOUBLE_TAP_DISTANCE = 30;
-    var doubleTapPending = false;
+    // Long-press detection → Enter
+    var LONG_PRESS_DURATION = 400;
+    var LONG_PRESS_MOVE_LIMIT = 15;
+    var longPressTimer = null;
+    var longPressStartX = 0;
+    var longPressStartY = 0;
+    var longPressFired = false;
 
     function sendEnterKey() {
       if (term && typeof term.input === 'function') {
-        term.focus();
+        var textarea = document.querySelector('.xterm-helper-textarea');
+        if (textarea) textarea.blur();
         term.input('\r', true);
       } else if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'input', data: '\r' }));
@@ -524,39 +531,63 @@
       showGestureIndicator('Enter \u21b5');
     }
 
-    // Gesture touchstart
+    function cancelLongPress() {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    }
+
     document.addEventListener('touchstart', function(e) {
       if (e.touches.length !== 1) return;
       var touch = e.touches[0];
       if (!isTouchInTerminal(touch)) return;
 
-      var now = Date.now();
-      var x = touch.clientX;
-      var y = touch.clientY;
+      longPressStartX = touch.clientX;
+      longPressStartY = touch.clientY;
+      longPressFired = false;
 
-      // Double-tap check
-      var timeDelta = now - lastTapTime;
-      var dist = Math.sqrt(Math.pow(x - lastTapX, 2) + Math.pow(y - lastTapY, 2));
-      if (timeDelta < DOUBLE_TAP_DELAY && dist < DOUBLE_TAP_DISTANCE) {
-        doubleTapPending = true;
-      }
-      lastTapTime = now;
-      lastTapX = x;
-      lastTapY = y;
-    }, { passive: true, capture: false });
-
-    // Gesture touchend
-    document.addEventListener('touchend', function(e) {
-      if (doubleTapPending) {
-        doubleTapPending = false;
+      cancelLongPress();
+      longPressTimer = setTimeout(function() {
+        longPressTimer = null;
+        longPressFired = true;
         sendEnterKey();
-        lastTapTime = 0;
+      }, LONG_PRESS_DURATION);
+    }, { passive: true, capture: false });
+
+    document.addEventListener('touchmove', function(e) {
+      if (!longPressTimer) return;
+      if (e.touches.length !== 1) { cancelLongPress(); return; }
+      var touch = e.touches[0];
+      var dist = Math.sqrt(
+        Math.pow(touch.clientX - longPressStartX, 2) +
+        Math.pow(touch.clientY - longPressStartY, 2)
+      );
+      if (dist > LONG_PRESS_MOVE_LIMIT) cancelLongPress();
+    }, { passive: true, capture: false });
+
+    document.addEventListener('touchend', function() {
+      cancelLongPress();
+      if (longPressFired) {
+        longPressFired = false;
+        // 長押し後の touchend → click → focus を一時的にブロック
+        var textarea = document.querySelector('.xterm-helper-textarea');
+        if (textarea) {
+          textarea.blur();
+          var blockFocus = function() {
+            textarea.blur();
+            textarea.removeEventListener('focus', blockFocus);
+          };
+          textarea.addEventListener('focus', blockFocus);
+          setTimeout(function() {
+            textarea.removeEventListener('focus', blockFocus);
+          }, 300);
+        }
       }
     }, { passive: true, capture: false });
 
-    // Gesture touchcancel
-    document.addEventListener('touchcancel', function(e) {
-      doubleTapPending = false;
+    document.addEventListener('touchcancel', function() {
+      cancelLongPress();
     }, { passive: true, capture: false });
   </script>
 </body>
