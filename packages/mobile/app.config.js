@@ -36,7 +36,6 @@ export default {
         monochromeImage: './assets/images/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: false,
-      permissions: ['android.permission.RECORD_AUDIO'],
     },
     web: {
       bundler: 'metro',
@@ -48,6 +47,7 @@ export default {
       'expo-secure-store',
       'expo-font',
       'expo-web-browser',
+      'expo-camera',
       [
         'expo-image-picker',
         {

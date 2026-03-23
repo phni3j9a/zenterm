@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { Stack, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useMemo, type ComponentProps } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SystemStatus } from '@/src/components/SystemStatus';
 import { Button, Card } from '@/src/components/ui';
@@ -279,6 +279,14 @@ export default function SettingsScreen() {
           <View style={styles.footer}>
             <Text style={styles.footerTitle}>{appName}</Text>
             <Text style={styles.footerMeta}>Version {version}</Text>
+            <Pressable
+              onPress={() => Linking.openURL('https://github.com/phni3j9a/zenterm/blob/main/PRIVACY_POLICY.md')}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, marginTop: spacing.xs })}
+            >
+              <Text style={[styles.footerMeta, { textDecorationLine: 'underline', color: colors.primary }]}>
+                プライバシーポリシー
+              </Text>
+            </Pressable>
           </View>
         </View>
       </ScrollView>
