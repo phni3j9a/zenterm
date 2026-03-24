@@ -1,0 +1,63 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.wrapper[data-active="false"] {
+  display: none;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+  padding: var(--sp-xs);
+}
+
+.container :global(.xterm) {
+  height: 100%;
+}
+
+.statusOverlay {
+  position: absolute;
+  bottom: var(--sp-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-sm) var(--sp-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.statusDot[data-status="disconnected"] {
+  background: var(--error);
+  animation: none;
+}
+
+.statusDot[data-status="error"] {
+  background: var(--error);
+  animation: none;
+}
+
+.statusText {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

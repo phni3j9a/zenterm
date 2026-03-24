@@ -5,12 +5,16 @@
   "workspaces": [
     "packages/shared",
     "packages/gateway",
-    "packages/mobile"
+    "packages/mobile",
+    "packages/web"
   ],
   "scripts": {
     "dev:gateway": "npm run dev -w packages/gateway",
     "dev:mobile": "npm run start -w packages/mobile",
-    "build:gateway": "npm run build -w packages/gateway"
+    "dev:web": "npm run dev -w packages/web",
+    "build:gateway": "npm run build -w packages/gateway",
+    "build:web": "npm run build -w packages/web",
+    "mock:zen-light": "node scripts/generate-zen-light-mockups.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"

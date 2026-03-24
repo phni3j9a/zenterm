@@ -15,9 +15,9 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "npm run build -w ../web && tsc",
     "start": "node dist/index.js",
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "npm run build -w ../web && tsc"
   },
   "keywords": [
     "terminal",
