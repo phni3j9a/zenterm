@@ -14,10 +14,10 @@ import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
 type TerminalStatus = 'connected' | 'disconnected' | 'error' | 'reconnecting';
 
 const statusConfig = {
-  connected: { label: '接続中', getColor: (c: { success: string }) => c.success },
-  disconnected: { label: '未接続', getColor: (c: { textMuted: string }) => c.textMuted },
-  error: { label: 'エラー', getColor: (c: { error: string }) => c.error },
-  reconnecting: { label: '再接続中...', getColor: (c: { warning: string }) => c.warning },
+  connected: { label: 'Connected', getColor: (c: { success: string }) => c.success },
+  disconnected: { label: 'Disconnected', getColor: (c: { textMuted: string }) => c.textMuted },
+  error: { label: 'Error', getColor: (c: { error: string }) => c.error },
+  reconnecting: { label: 'Reconnecting...', getColor: (c: { warning: string }) => c.warning },
 } as const;
 
 export default function TerminalScreen() {
@@ -75,8 +75,6 @@ export default function TerminalScreen() {
           paddingVertical: 5,
           borderRadius: radii.full,
           backgroundColor: colors.surfaceHover,
-          borderWidth: 1,
-          borderColor: colors.borderSubtle,
         },
         statusDot: {
           width: 7,
@@ -178,9 +176,9 @@ export default function TerminalScreen() {
         <StatusBar backgroundColor={termBg} style={dark ? 'light' : 'dark'} />
         {headerBar}
         <View style={styles.centered}>
-          <Text style={styles.title}>デフォルトサーバーがありません</Text>
+          <Text style={styles.title}>No Default Server</Text>
           <Text style={styles.description}>
-            Servers タブで接続先を設定してください。
+            Set up a server in the Servers tab.
           </Text>
         </View>
       </SafeAreaView>

@@ -17,6 +17,16 @@ jest.mock('@/src/api/client', () => ({
   verifyAuth: (...args: unknown[]) => mockVerifyAuth(...args),
 }));
 
+jest.mock('@/src/components/QrScannerModal', () => {
+  const MockReact = require('react');
+  const RN = require('react-native');
+
+  return {
+    QrScannerModal: ({ visible }: { visible: boolean }) =>
+      visible ? MockReact.createElement(RN.View, { testID: 'qr-scanner-modal' }) : null,
+  };
+});
+
 let mockServers: Server[] = [];
 const mockAddServer = jest.fn();
 const mockUpdateServer = jest.fn();
@@ -39,6 +49,16 @@ jest.mock('expo-router', () => {
       Screen: ({ children }: { children?: React.ReactNode }) =>
         MockReact.createElement('View', { testID: 'stack-screen' }, children),
     },
+    useRouter: () => ({ back: jest.fn() }),
+  };
+});
+
+jest.mock('react-native-safe-area-context', () => {
+  const MockReact = require('react');
+  const RN = require('react-native');
+  return {
+    SafeAreaView: ({ children, ...props }: any) =>
+      MockReact.createElement(RN.View, { ...props, testID: 'safe-area' }, children),
   };
 });
 
@@ -63,6 +83,22 @@ function collectTexts(root: ReturnType<typeof create>['root']): string[] {
   traverse(root);
 
   return texts;
+}
+
+function findTouchableByText(root: ReturnType<typeof create>['root'], label: string) {
+  const textNode = root.find(
+    (node) => (node.type as string) === 'Text' && node.children.some((child) => typeof child === 'string' && child === label),
+  );
+
+  let current: typeof textNode | null = textNode;
+  while (current) {
+    if (current.props.onPress) {
+      return current;
+    }
+    current = current.parent;
+  }
+
+  throw new Error(`Touchable not found for label: ${label}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -99,8 +135,8 @@ describe('ServersScreen', () => {
 
     const texts = collectTexts(root!.root);
 
-    expect(texts).toContain('新しい接続先を登録');
-    expect(texts.some((text) => text.includes('必要なときにすぐ切り替えられる状態にします'))).toBe(true);
+    expect(texts).toContain('Add Connection');
+    expect(texts.some((text) => text.includes('so you can switch connections anytime'))).toBe(true);
     expect(texts).toContain('DEFAULT');
     expect(texts).not.toContain('接続先を素早く切り替える');
     expect(texts).not.toContain('2 SAVED');
@@ -117,8 +153,35 @@ describe('ServersScreen', () => {
 
     const texts = collectTexts(root!.root);
 
-    expect(texts).toContain('サーバーがありません');
-    expect(texts).toContain('新しい接続先を登録');
+    expect(texts).toContain('No Servers');
+    expect(texts).toContain('Add Connection');
     expect(texts).not.toContain('接続先を素早く切り替える');
+  });
+
+  it('renders visible quick actions for each server row', async () => {
+    let root: ReturnType<typeof create>;
+
+    await act(async () => {
+      root = create(React.createElement(ServersScreen));
+    });
+
+    const texts = collectTexts(root!.root);
+    expect(texts).toContain('Edit');
+    expect(texts).toContain('Delete');
+    expect(texts).toContain('Set Default');
+  });
+
+  it('sets a standby server as default from the visible action button', async () => {
+    let root: ReturnType<typeof create>;
+
+    await act(async () => {
+      root = create(React.createElement(ServersScreen));
+    });
+
+    await act(async () => {
+      findTouchableByText(root!.root, 'Set Default').props.onPress();
+    });
+
+    expect(mockUpdateServer).toHaveBeenCalledWith('srv-2', { isDefault: true });
   });
 });

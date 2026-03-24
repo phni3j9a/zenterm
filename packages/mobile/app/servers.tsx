@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 import { verifyAuth } from '@/src/api/client';
@@ -37,17 +38,17 @@ function validateForm(form: ServerForm): FormErrors {
   const errors: FormErrors = {};
 
   if (!form.name.trim()) {
-    errors.name = 'サーバー名を入力してください。';
+    errors.name = 'Please enter a server name.';
   }
 
   if (!form.url.trim()) {
-    errors.url = 'URL を入力してください。';
+    errors.url = 'Please enter a URL.';
   } else if (!urlPattern.test(form.url.trim())) {
-    errors.url = 'http:// または https:// で始めてください。';
+    errors.url = 'Must start with http:// or https://.';
   }
 
   if (!form.token.trim()) {
-    errors.token = 'Token を入力してください。';
+    errors.token = 'Please enter a token.';
   }
 
   return errors;
@@ -136,14 +137,14 @@ function ServerFormCard({
         <Button
           disabled={saving}
           icon={<Ionicons color={colors.textPrimary} name="shield-checkmark-outline" size={16} />}
-          label={testing ? '認証確認中...' : '認証テスト'}
+          label={testing ? 'Testing...' : 'Auth Test'}
           loading={testing}
           variant="secondary"
           onPress={onTest}
         />
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <View style={{ flex: 1 }}>
-            <Button disabled={saving || testing} label="キャンセル" variant="ghost" onPress={onCancel} />
+            <Button disabled={saving || testing} label="Cancel" variant="ghost" onPress={onCancel} />
           </View>
           <View style={{ flex: 1 }}>
             <Button
@@ -161,7 +162,8 @@ function ServerFormCard({
 }
 
 export default function ServersScreen() {
-  const { colors, dark, radii, shadows, spacing, typography } = useTheme();
+  const router = useRouter();
+  const { colors, dark, radii, spacing, typography } = useTheme();
   const servers = useServersStore((state) => state.servers);
   const addServer = useServersStore((state) => state.addServer);
   const updateServer = useServersStore((state) => state.updateServer);
@@ -201,11 +203,11 @@ export default function ServersScreen() {
       setTestingTarget('add');
       verifyAuth(testServer)
         .then(() => {
-          Toast.show({ type: 'success', text1: '接続成功', text2: 'QR コードから接続情報を読み取りました。' });
+          Toast.show({ type: 'success', text1: 'Connected', text2: 'Connection info loaded from QR code.' });
         })
         .catch((error: unknown) => {
-          const message = error instanceof Error ? error.message : '接続に失敗しました。';
-          Toast.show({ type: 'error', text1: '接続失敗', text2: message });
+          const message = error instanceof Error ? error.message : 'Connection failed.';
+          Toast.show({ type: 'error', text1: 'Connection Failed', text2: message });
         })
         .finally(() => {
           setTestingTarget(null);
@@ -220,6 +222,30 @@ export default function ServersScreen() {
         container: {
           flex: 1,
           backgroundColor: colors.bg,
+        },
+        headerBar: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.md,
+        },
+        headerButton: {
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+        headerBackLabel: {
+          color: colors.primary,
+          fontSize: 17,
+        },
+        headerTitle: {
+          ...typography.bodyMedium,
+          color: colors.textPrimary,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          pointerEvents: 'none',
         },
         listContent: {
           flexGrow: 1,
@@ -253,7 +279,6 @@ export default function ServersScreen() {
         },
         serverCard: {
           gap: spacing.md,
-          ...(dark ? {} : shadows.sm),
         },
         serverHeader: {
           flexDirection: 'row',
@@ -279,8 +304,6 @@ export default function ServersScreen() {
           paddingVertical: 5,
           borderRadius: radii.full,
           backgroundColor: dark ? colors.surfaceHover : colors.bg,
-          borderWidth: 1,
-          borderColor: dark ? colors.border : colors.borderSubtle,
         },
         serverUrl: {
           ...typography.mono,
@@ -289,7 +312,6 @@ export default function ServersScreen() {
         serverFooter: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
           gap: spacing.md,
         },
         serverHint: {
@@ -297,6 +319,35 @@ export default function ServersScreen() {
           alignItems: 'center',
           gap: spacing.xs,
           flex: 1,
+        },
+        serverActionRow: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+          gap: spacing.sm,
+          paddingLeft: spacing.sm,
+        },
+        serverActionButton: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.xs,
+          borderRadius: radii.full,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: colors.surface,
+        },
+        serverActionButtonDanger: {
+          borderColor: colors.error,
+          backgroundColor: colors.errorSubtle,
+        },
+        serverActionLabel: {
+          ...typography.smallMedium,
+          color: colors.textSecondary,
+        },
+        serverActionLabelDanger: {
+          color: colors.error,
         },
         separator: {
           height: spacing.md,
@@ -307,7 +358,7 @@ export default function ServersScreen() {
           paddingVertical: spacing['4xl'],
         },
       }),
-    [colors, dark, radii, shadows, spacing, typography],
+    [colors, dark, radii, spacing, typography],
   );
 
   const resetAddForm = () => {
@@ -373,7 +424,7 @@ export default function ServersScreen() {
       } else {
         setEditErrors(nextErrors);
       }
-      Toast.show({ type: 'error', text1: '入力を確認してください', text2: 'Name、URL、Token を正しく入力してください。' });
+      Toast.show({ type: 'error', text1: 'Check Input', text2: 'Please fill in Name, URL, and Token correctly.' });
       return;
     }
 
@@ -381,10 +432,10 @@ export default function ServersScreen() {
 
     try {
       await verifyAuth(createServerPayload(currentForm));
-      Toast.show({ type: 'success', text1: '接続成功', text2: '認証に成功しました。' });
+      Toast.show({ type: 'success', text1: 'Connected', text2: 'Authentication successful.' });
     } catch (error) {
-      const message = error instanceof Error ? error.message : '接続に失敗しました。';
-      Toast.show({ type: 'error', text1: '接続失敗', text2: message });
+      const message = error instanceof Error ? error.message : 'Connection failed.';
+      Toast.show({ type: 'error', text1: 'Connection Failed', text2: message });
     } finally {
       setTestingTarget(null);
     }
@@ -395,7 +446,7 @@ export default function ServersScreen() {
 
     if (hasErrors(nextErrors)) {
       setFormErrors(nextErrors);
-      Toast.show({ type: 'error', text1: '入力を確認してください', text2: '追加前に各項目を見直してください。' });
+      Toast.show({ type: 'error', text1: 'Check Input', text2: 'Please review each field before adding.' });
       return;
     }
 
@@ -404,11 +455,11 @@ export default function ServersScreen() {
     try {
       const server = await addServer(form);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Toast.show({ type: 'success', text1: 'サーバーを追加しました', text2: `${server.name} を保存しました。` });
+      Toast.show({ type: 'success', text1: 'Server Added', text2: `Saved ${server.name}.` });
       closeAddForm();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'サーバーを追加できませんでした。';
-      Toast.show({ type: 'error', text1: '追加失敗', text2: message });
+      const message = error instanceof Error ? error.message : 'Failed to add server.';
+      Toast.show({ type: 'error', text1: 'Add Failed', text2: message });
     } finally {
       setSavingTarget(null);
     }
@@ -423,7 +474,7 @@ export default function ServersScreen() {
 
     if (hasErrors(nextErrors)) {
       setEditErrors(nextErrors);
-      Toast.show({ type: 'error', text1: '入力を確認してください', text2: '保存前に各項目を見直してください。' });
+      Toast.show({ type: 'error', text1: 'Check Input', text2: 'Please review each field before saving.' });
       return;
     }
 
@@ -431,21 +482,21 @@ export default function ServersScreen() {
 
     try {
       await updateServer(editingServerId, editForm);
-      Toast.show({ type: 'success', text1: 'サーバーを更新しました', text2: '保存内容を反映しました。' });
+      Toast.show({ type: 'success', text1: 'Server Updated', text2: 'Changes saved.' });
       cancelEdit();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'サーバーを更新できませんでした。';
-      Toast.show({ type: 'error', text1: '更新失敗', text2: message });
+      const message = error instanceof Error ? error.message : 'Failed to update server.';
+      Toast.show({ type: 'error', text1: 'Update Failed', text2: message });
     } finally {
       setSavingTarget(null);
     }
   };
 
   const confirmDelete = (server: Server) => {
-    Alert.alert('サーバー削除', `${server.name} を削除しますか。`, [
-      { text: 'キャンセル', style: 'cancel' },
+    Alert.alert('Delete Server', `Delete "${server.name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: '削除',
+        text: 'Delete',
         style: 'destructive',
         onPress: () => {
           if (editingServerId === server.id) {
@@ -454,11 +505,11 @@ export default function ServersScreen() {
 
           void removeServer(server.id)
             .then(() => {
-              Toast.show({ type: 'success', text1: 'サーバーを削除しました', text2: `${server.name} を一覧から削除しました。` });
+              Toast.show({ type: 'success', text1: 'Server Deleted', text2: `Removed ${server.name}.` });
             })
             .catch((error: unknown) => {
-              const message = error instanceof Error ? error.message : 'サーバーを削除できませんでした。';
-              Toast.show({ type: 'error', text1: '削除失敗', text2: message });
+              const message = error instanceof Error ? error.message : 'Failed to delete server.';
+              Toast.show({ type: 'error', text1: 'Delete Failed', text2: message });
             });
         },
       },
@@ -473,25 +524,44 @@ export default function ServersScreen() {
     try {
       await updateServer(server.id, { isDefault: true });
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      Toast.show({ type: 'success', text1: 'デフォルトを更新しました', text2: `${server.name} を標準接続先に設定しました。` });
+      Toast.show({ type: 'success', text1: 'Default Updated', text2: `Set ${server.name} as default.` });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'デフォルトサーバーを更新できませんでした。';
-      Toast.show({ type: 'error', text1: '更新失敗', text2: message });
+      const message = error instanceof Error ? error.message : 'Failed to update default server.';
+      Toast.show({ type: 'error', text1: 'Update Failed', text2: message });
     }
   };
+
+  const handleServerAccessibilityAction = useCallback(
+    (server: Server, actionName: string) => {
+      if (actionName === 'activate' || actionName === 'edit') {
+        beginEdit(server);
+        return;
+      }
+
+      if (actionName === 'set-default') {
+        void setDefault(server);
+        return;
+      }
+
+      if (actionName === 'delete') {
+        confirmDelete(server);
+      }
+    },
+    [beginEdit, confirmDelete, setDefault],
+  );
 
   const header = (
     <View style={styles.headerSection}>
       {showForm ? (
         <ServerFormCard
           accent={colors.primary}
-          description="接続先 URL と認証 token を保存し、認証テストまでここで完結できます。"
+          description="Save the connection URL and auth token. You can run an auth test here too."
           errors={formErrors}
           form={form}
           saving={savingTarget === 'add'}
-          submitLabel={savingTarget === 'add' ? '追加中...' : '追加'}
+          submitLabel={savingTarget === 'add' ? 'Adding...' : 'Add'}
           testing={testingTarget === 'add'}
-          title="新しいサーバーを追加"
+          title="Add New Server"
           onCancel={closeAddForm}
           onChange={setAddField}
           onSubmit={() => void submitAdd()}
@@ -502,9 +572,9 @@ export default function ServersScreen() {
           <Card onPress={openAddForm} style={styles.addPrompt}>
             <View style={styles.addPromptRow}>
               <View style={{ flex: 1, gap: spacing.xs }}>
-                <Text style={[typography.heading, { color: colors.textPrimary }]}>新しい接続先を登録</Text>
+                <Text style={[typography.heading, { color: colors.textPrimary }]}>Add Connection</Text>
                 <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                  サーバー情報を追加して、必要なときにすぐ切り替えられる状態にします。
+                  Add server info so you can switch connections anytime.
                 </Text>
               </View>
               <View style={styles.addPromptIcon}>
@@ -514,7 +584,7 @@ export default function ServersScreen() {
           </Card>
           <Button
             icon={<Ionicons color={colors.textPrimary} name="qr-code-outline" size={16} />}
-            label="QR コードでスキャン"
+            label="Scan QR Code"
             variant="secondary"
             onPress={() => setShowQrScanner(true)}
           />
@@ -524,35 +594,40 @@ export default function ServersScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
-      style={styles.container}
-    >
-      <Stack.Screen
-        options={{
-          title: 'サーバー管理',
-          headerBackTitle: '戻る',
-          headerRight: () => (
-            <Pressable
-              accessibilityLabel={showForm ? 'フォームを閉じる' : 'サーバーを追加'}
-              accessibilityRole="button"
-              hitSlop={8}
-              onPress={() => {
-                if (showForm) {
-                  closeAddForm();
-                  return;
-                }
-
-                openAddForm();
-              }}
-              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, paddingHorizontal: 4 })}
-            >
-              <Ionicons color={colors.textPrimary} name={showForm ? 'close' : 'add'} size={24} />
-            </Pressable>
-          ),
-        }}
-      />
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={styles.headerBar}>
+        <Pressable
+          accessibilityLabel="Back"
+          accessibilityRole="button"
+          hitSlop={12}
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Ionicons color={colors.primary} name="chevron-back" size={22} />
+          <Text style={styles.headerBackLabel}>Back</Text>
+        </Pressable>
+        <Text style={styles.headerTitle}>Servers</Text>
+        <Pressable
+          accessibilityLabel={showForm ? 'Close form' : 'Add server'}
+          accessibilityRole="button"
+          hitSlop={12}
+          onPress={() => {
+            if (showForm) {
+              closeAddForm();
+              return;
+            }
+            openAddForm();
+          }}
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+          <Ionicons color={colors.textPrimary} name={showForm ? 'close' : 'add'} size={24} />
+        </Pressable>
+      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
 
       <FlatList
         contentContainerStyle={styles.listContent}
@@ -563,10 +638,10 @@ export default function ServersScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <EmptyState
-              action={{ label: 'サーバーを追加', onPress: openAddForm }}
-              description="接続先を追加して開始しましょう"
+              action={{ label: 'Add Server', onPress: openAddForm }}
+              description="Add a connection to get started."
               icon="server-outline"
-              title="サーバーがありません"
+              title="No Servers"
             />
           </View>
         }
@@ -583,7 +658,7 @@ export default function ServersScreen() {
                     : {
                         icon: 'star-outline',
                         color: colors.primary,
-                        label: 'デフォルトに設定',
+                        label: 'Set as Default',
                         hapticStyle: null,
                         onPress: () => {
                           void setDefault(item);
@@ -593,13 +668,21 @@ export default function ServersScreen() {
                 rightAction={{
                   icon: 'trash-outline',
                   color: colors.error,
-                  label: 'サーバーを削除',
+                  label: 'Delete Server',
                   onPress: () => confirmDelete(item),
                 }}
               >
                 <Card
-                  accessibilityLabel={`${item.name} ${item.isDefault ? 'デフォルト' : ''}`.trim()}
+                  accessibilityActions={[
+                    { name: 'activate', label: 'Edit server' },
+                    ...(item.isDefault ? [] : [{ name: 'set-default', label: 'Set as default' }]),
+                    { name: 'delete', label: 'Delete server' },
+                  ]}
+                  accessibilityHint="Opens server details and quick actions."
+                  accessibilityLabel={`${item.name} ${item.isDefault ? 'default' : ''}`.trim()}
+                  accessibilityState={{ selected: item.isDefault }}
                   highlighted={item.isDefault}
+                  onAccessibilityAction={({ nativeEvent }) => handleServerAccessibilityAction(item, nativeEvent.actionName)}
                   onLongPress={() => confirmDelete(item)}
                   onPress={() => beginEdit(item)}
                   style={styles.serverCard}
@@ -611,7 +694,7 @@ export default function ServersScreen() {
                         <View style={styles.statusPill}>
                           <Ionicons color={item.isDefault ? colors.primary : colors.textMuted} name="radio-button-on-outline" size={14} />
                           <Text style={[typography.smallMedium, { color: item.isDefault ? colors.primary : colors.textSecondary }]}>
-                            {item.isDefault ? '現在のデフォルト' : '待機中'}
+                            {item.isDefault ? 'Current Default' : 'Standby'}
                           </Text>
                         </View>
                       </View>
@@ -624,26 +707,66 @@ export default function ServersScreen() {
                   <View style={styles.serverFooter}>
                     <View style={styles.serverHint}>
                       <Ionicons color={colors.textMuted} name="create-outline" size={14} />
-                      <Text style={[typography.caption, { color: colors.textSecondary }]}>{isEditing ? '編集中です' : 'タップで編集'}</Text>
+                      <Text style={[typography.caption, { color: colors.textSecondary }]}>{isEditing ? 'Editing' : 'Tap to edit'}</Text>
                     </View>
                     <Text style={[typography.small, { color: colors.textMuted }]}>
-                      {item.isDefault ? '左スワイプで削除' : '右スワイプで標準化'}
+                      Swipe actions are still available as shortcuts.
                     </Text>
                   </View>
                 </Card>
               </SwipeableRow>
 
+              {!isEditing ? (
+                <View style={styles.serverActionRow}>
+                  <Pressable
+                    accessibilityLabel={`Edit ${item.name}`}
+                    accessibilityRole="button"
+                    onPress={() => beginEdit(item)}
+                    style={({ pressed }) => [styles.serverActionButton, pressed && { opacity: 0.7 }]}
+                  >
+                    <Ionicons color={colors.primary} name="create-outline" size={14} />
+                    <Text style={styles.serverActionLabel}>Edit</Text>
+                  </Pressable>
+                  {!item.isDefault ? (
+                    <Pressable
+                      accessibilityLabel={`Set ${item.name} as default`}
+                      accessibilityRole="button"
+                      onPress={() => {
+                        void setDefault(item);
+                      }}
+                      style={({ pressed }) => [styles.serverActionButton, pressed && { opacity: 0.7 }]}
+                    >
+                      <Ionicons color={colors.primary} name="star-outline" size={14} />
+                      <Text style={styles.serverActionLabel}>Set Default</Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    accessibilityLabel={`Delete ${item.name}`}
+                    accessibilityRole="button"
+                    onPress={() => confirmDelete(item)}
+                    style={({ pressed }) => [
+                      styles.serverActionButton,
+                      styles.serverActionButtonDanger,
+                      pressed && { opacity: 0.7 },
+                    ]}
+                  >
+                    <Ionicons color={colors.error} name="trash-outline" size={14} />
+                    <Text style={[styles.serverActionLabel, styles.serverActionLabelDanger]}>Delete</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
               {isEditing ? (
                 <ServerFormCard
                   accent={colors.info}
-                  description="保存前に認証テストも実行できます。デフォルト設定はスワイプ操作で変更してください。"
+                  description="You can run an auth test before saving. Default switching is also available from the quick actions."
                   errors={editErrors}
                   form={editForm}
                   saving={savingTarget === 'edit'}
                   style={{ marginLeft: spacing.sm }}
-                  submitLabel={savingTarget === 'edit' ? '保存中...' : '保存'}
+                  submitLabel={savingTarget === 'edit' ? 'Saving...' : 'Save'}
                   testing={testingTarget === 'edit'}
-                  title={`${item.name} を編集`}
+                  title={`Edit ${item.name}`}
                   onCancel={cancelEdit}
                   onChange={setEditField}
                   onSubmit={() => void submitEdit()}
@@ -658,8 +781,10 @@ export default function ServersScreen() {
       <QrScannerModal
         visible={showQrScanner}
         onClose={() => setShowQrScanner(false)}
+        onManualEntry={openAddForm}
         onScan={handleQrScan}
       />
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

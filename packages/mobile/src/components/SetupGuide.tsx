@@ -17,18 +17,18 @@ type SetupStep = {
 const STEPS: readonly SetupStep[] = [
   {
     icon: 'terminal-outline',
-    title: 'Gateway を起動',
-    description: 'Mac または Linux で npx zenterm-gateway を実行するだけ。トークン生成もセットアップも自動です。',
+    title: 'Start the Gateway',
+    description: 'Just run npx zenterm-gateway on Mac or Linux. Token generation and setup are automatic.',
   },
   {
     icon: 'qr-code-outline',
-    title: 'QR コードをスキャン',
-    description: '起動時にターミナルに表示される QR コードをスキャンすると、接続情報が自動入力されます。',
+    title: 'Scan the QR Code',
+    description: 'Scan the QR code shown in the terminal at startup to auto-fill connection info.',
   },
   {
     icon: 'globe-outline',
-    title: 'ブラウザからもアクセス可能',
-    description: 'アプリがなくても http://<サーバーIP>:18765 にアクセスすればブラウザから使えます。',
+    title: 'Also Available via Browser',
+    description: 'No app needed — just visit http://<server-ip>:18765 in your browser.',
   },
 ];
 
@@ -66,7 +66,7 @@ interface AutoStartCardProps {
 function AutoStartCard({ styles, colors }: AutoStartCardProps) {
   const handleCopy = useCallback(async () => {
     await Clipboard.setStringAsync(SETUP_COMMAND);
-    Toast.show({ type: 'success', text1: 'コピーしました' });
+    Toast.show({ type: 'success', text1: 'Copied' });
   }, []);
 
   return (
@@ -77,11 +77,11 @@ function AutoStartCard({ styles, colors }: AutoStartCardProps) {
         </View>
         <View style={styles.stepContent}>
           <View style={styles.optionalHeader}>
-            <Text style={styles.stepTitle}>常時起動にする</Text>
-            <Text style={styles.optionalBadge}>任意</Text>
+            <Text style={styles.stepTitle}>Auto-Start on Boot</Text>
+            <Text style={styles.optionalBadge}>Optional</Text>
           </View>
           <Text style={styles.stepDescription}>
-            サーバーの起動時に Gateway を自動で立ち上げたい場合は、以下を実行してください。macOS では launchd、Linux では systemd に登録されます。
+            To auto-start the gateway on boot, run the command below. It registers with launchd on macOS or systemd on Linux.
           </Text>
           <Pressable onPress={handleCopy} style={styles.commandChip}>
             <Text style={styles.commandText}>{SETUP_COMMAND}</Text>
@@ -105,9 +105,9 @@ export function SetupGuide() {
           <View style={styles.iconCircle}>
             <Ionicons color={colors.primary} name="rocket-outline" size={28} />
           </View>
-          <Text style={styles.title}>はじめましょう</Text>
+          <Text style={styles.title}>Get Started</Text>
           <Text style={styles.subtitle}>
-            Gateway サーバーへの接続を設定すると、ターミナルやファイル操作が使えるようになります。
+            Set up a connection to the gateway server to use the terminal and file browser.
           </Text>
         </View>
 
@@ -120,7 +120,7 @@ export function SetupGuide() {
 
         <Button
           icon={<Ionicons color={colors.textInverse} name="server-outline" size={16} />}
-          label="サーバー管理へ"
+          label="Manage Servers"
           onPress={() => router.push('/servers')}
         />
       </View>

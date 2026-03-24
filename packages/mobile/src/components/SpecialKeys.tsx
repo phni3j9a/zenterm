@@ -78,8 +78,6 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
         ctrlKeyButton: {
           minWidth: 46,
           backgroundColor: colors.primarySubtle,
-          borderWidth: 1,
-          borderColor: colors.primary,
         },
         pasteButton: {
           minWidth: 70,
@@ -152,8 +150,8 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
       const response = await uploadFile(server, asset.uri, fileName, mimeType);
       onKeyPress(response.path + ' ');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'アップロードに失敗しました。';
-      Toast.show({ type: 'error', text1: 'アップロード失敗', text2: message });
+      const message = err instanceof Error ? err.message : 'Upload failed.';
+      Toast.show({ type: 'error', text1: 'Upload Failed', text2: message });
     } finally {
       setUploading(false);
     }

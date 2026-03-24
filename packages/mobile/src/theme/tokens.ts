@@ -1,96 +1,94 @@
 export type ThemeMode = 'light' | 'dark';
 
-// Light Mode Colors
+// Light Mode Colors — Zen (subtle warmth + moss green)
 export const colors = {
-  bg: '#FDFCFA',
-  surface: '#F5F3EE',
-  surfaceHover: '#EDEAE3',
-  surfaceActive: '#E5E1D8',
-  border: '#E0DCD4',
-  borderSubtle: '#EDEBE6',
+  bg: '#F5F4F0',
+  surface: '#EEEDEA',
+  surfaceHover: '#E7E6E2',
+  surfaceActive: '#E0DFDB',
+  border: '#D8D6D0',
+  borderSubtle: '#EAE9E5',
 
-  textPrimary: '#2C2A25',
-  textSecondary: '#706C63',
-  textMuted: '#9E998F',
-  textInverse: '#FDFCFA',
+  textPrimary: '#2A2721',
+  textSecondary: '#66614F',
+  textMuted: '#958E7E',
+  textInverse: '#F5F4F0',
 
-  primary: '#D4713D',
-  primaryHover: '#BE6335',
-  primaryActive: '#A8572F',
-  primarySubtle: '#FDF0E9',
-  primaryMuted: '#E8A882',
+  primary: '#7B8B6F',
+  primaryHover: '#6C7C61',
+  primaryActive: '#5E6D54',
+  primarySubtle: '#E8EDE4',
+  primaryMuted: '#A4B199',
 
-  success: '#5A8A5E',
-  successSubtle: '#EFF5F0',
-  warning: '#C49830',
-  warningSubtle: '#FBF5E6',
-  error: '#C44D4D',
-  errorSubtle: '#FCEAEA',
-  info: '#5B8FB9',
-  infoSubtle: '#EBF3FA',
+  success: '#7B8B6F',
+  successSubtle: '#E8EDE4',
+  warning: '#B89F56',
+  warningSubtle: '#F5F0E0',
+  error: '#B25A5A',
+  errorSubtle: '#F5E6E6',
+  info: '#7A96A8',
+  infoSubtle: '#E8EFF4',
 
-  overlay: 'rgba(44, 42, 37, 0.4)',
-  focus: 'rgba(212, 113, 61, 0.4)',
-  skeleton: '#EDEBE6',
-  skeletonHighlight: '#F5F3EE',
+  overlay: 'rgba(42, 39, 33, 0.4)',
+  focus: 'rgba(123, 139, 111, 0.4)',
+  skeleton: '#EAE9E5',
+  skeletonHighlight: '#EEEDEA',
 } as const;
 
-// Dark Mode Colors
+// Dark Mode Colors — Zen
 export const colorsDark = {
-  bg: '#1A1915',
-  surface: '#24211D',
-  surfaceHover: '#2F2B25',
-  surfaceActive: '#3A3630',
-  border: '#4B443A',
-  borderSubtle: '#342F28',
+  bg: '#1B1A17',
+  surface: '#242320',
+  surfaceHover: '#2E2D29',
+  surfaceActive: '#383631',
+  border: '#3A3832',
+  borderSubtle: '#2E2D29',
 
-  textPrimary: '#E8E4DC',
-  textSecondary: '#B7AFA2',
-  textMuted: '#7A7268',
-  textInverse: '#1A1915',
+  textPrimary: '#DBD6C8',
+  textSecondary: '#A5A090',
+  textMuted: '#6D6860',
+  textInverse: '#1B1A17',
 
-  primary: '#E08B5A',
-  primaryHover: '#E9A376',
-  primaryActive: '#D4713D',
-  primarySubtle: '#332520',
-  primaryMuted: '#8B5D3A',
+  primary: '#94A687',
+  primaryHover: '#A5B59A',
+  primaryActive: '#7B8B6F',
+  primarySubtle: '#262B23',
+  primaryMuted: '#4E5746',
 
-  success: '#8CB369',
-  successSubtle: '#1E2A1A',
-  warning: '#E0A458',
-  warningSubtle: '#2A2518',
-  error: '#D45D5D',
-  errorSubtle: '#2E1C1C',
-  info: '#6FA3CC',
-  infoSubtle: '#1A2530',
+  success: '#94A687',
+  successSubtle: '#262B23',
+  warning: '#D4B86A',
+  warningSubtle: '#2A2719',
+  error: '#C46A6A',
+  errorSubtle: '#2E1F1F',
+  info: '#8EB0C4',
+  infoSubtle: '#1C2630',
 
   overlay: 'rgba(0, 0, 0, 0.5)',
-  focus: 'rgba(224, 139, 90, 0.4)',
-  skeleton: '#2F2B25',
-  skeletonHighlight: '#3A3630',
+  focus: 'rgba(148, 166, 135, 0.4)',
+  skeleton: '#2E2D29',
+  skeletonHighlight: '#383631',
 } as const;
 
-// Terminal Colors — Light
-// bg は少し暖かめ (#F7F5F0) にしてアプリ背景 (#FDFCFA) との
-// 境界を自然に見せつつ、ANSI カラーとの調和を取る
+// Terminal Colors — Light (Zen)
 export const terminalColorsLight = {
-  bg: '#F7F5F0',
-  foreground: '#2C2A25',
-  cursor: '#D4713D',
-  cursorAccent: '#F7F5F0',
-  selection: 'rgba(212, 113, 61, 0.18)',
+  bg: '#F5F4F0',
+  foreground: '#2A2721',
+  cursor: '#7B8B6F',
+  cursorAccent: '#F5F4F0',
+  selection: 'rgba(123, 139, 111, 0.18)',
 } as const;
 
-// Terminal Colors — Dark
+// Terminal Colors — Dark (Zen)
 export const terminalColorsDark = {
-  bg: '#1A1915',
-  foreground: '#E8E4DC',
-  cursor: '#D97757',
-  cursorAccent: '#1A1915',
-  selection: 'rgba(217, 119, 87, 0.25)',
+  bg: '#1B1A17',
+  foreground: '#DBD6C8',
+  cursor: '#94A687',
+  cursorAccent: '#1B1A17',
+  selection: 'rgba(148, 166, 135, 0.25)',
 } as const;
 
-// 後方互換: 既存の terminalColors は dark のエイリアス
+// Backward compat: terminalColors is an alias for terminalColorsDark
 export const terminalColors = terminalColorsDark;
 
 export type ColorTokens = {
@@ -137,21 +135,21 @@ export const radii = {
 // Shadows (Light mode only)
 export const shadows = {
   sm: {
-    shadowColor: '#2C2A25',
+    shadowColor: '#2A2721',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 3,
     elevation: 1,
   },
   md: {
-    shadowColor: '#2C2A25',
+    shadowColor: '#2A2721',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
   lg: {
-    shadowColor: '#2C2A25',
+    shadowColor: '#2A2721',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 16,

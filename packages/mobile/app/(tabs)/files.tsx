@@ -27,7 +27,7 @@ import { EmptyState, SkeletonLoader } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useTheme } from '@/src/theme';
 import { terminalColorsLight, terminalColorsDark } from '@/src/theme/tokens';
-import type { FileEntry } from '@/src/types';
+import type { FileEntry, FileListResponse } from '@/src/types';
 
 type SortMode = 'name-asc' | 'name-desc' | 'size-desc' | 'modified-desc';
 
@@ -37,6 +37,14 @@ interface FilePreview {
   lines: number;
   truncated: boolean;
 }
+
+interface BreadcrumbSegment {
+  key: string;
+  label: string;
+  path: string;
+}
+
+type PreviewKind = 'image' | 'text' | 'unsupported';
 
 const CODE_EXTENSIONS = new Set([
   '.ts', '.tsx', '.js', '.jsx', '.py', '.sh', '.json', '.yaml', '.yml', '.toml', '.md',
@@ -48,15 +56,82 @@ const IMAGE_EXTENSIONS = new Set([
 
 type FileIconType = 'folder' | 'code' | 'image' | 'text' | 'symlink' | 'other';
 
+function getFileExtension(name: string): string {
+  return name.includes('.') ? `.${name.split('.').pop()?.toLowerCase()}` : '';
+}
+
 function getFileIconType(entry: FileEntry): FileIconType {
   if (entry.type === 'directory') return 'folder';
   if (entry.type === 'symlink') return 'symlink';
   if (entry.type === 'other') return 'other';
 
-  const ext = entry.name.includes('.') ? `.${entry.name.split('.').pop()?.toLowerCase()}` : '';
+  const ext = getFileExtension(entry.name);
   if (CODE_EXTENSIONS.has(ext)) return 'code';
   if (IMAGE_EXTENSIONS.has(ext)) return 'image';
   return 'text';
+}
+
+function getPreviewKind(name: string): PreviewKind {
+  const ext = getFileExtension(name);
+  if (IMAGE_EXTENSIONS.has(ext)) return 'image';
+  if (CODE_EXTENSIONS.has(ext) || !ext) return 'text';
+  return 'text';
+}
+
+function buildEntryPath(parentPath: string, name: string): string {
+  if (parentPath === '/') return `/${name}`;
+  if (parentPath === '~') return `~/${name}`;
+  return `${parentPath.replace(/\/+$/, '')}/${name}`;
+}
+
+function getParentPath(path: string): string {
+  if (!path || path === '~' || path === '/') {
+    return path || '~';
+  }
+
+  if (path.startsWith('~/')) {
+    const parts = path.slice(2).split('/').filter(Boolean);
+    return parts.length <= 1 ? '~' : `~/${parts.slice(0, -1).join('/')}`;
+  }
+
+  if (path.startsWith('/')) {
+    const parts = path.split('/').filter(Boolean);
+    return parts.length <= 1 ? '/' : `/${parts.slice(0, -1).join('/')}`;
+  }
+
+  const parts = path.split('/').filter(Boolean);
+  return parts.length <= 1 ? '~' : parts.slice(0, -1).join('/');
+}
+
+function buildBreadcrumbSegments(path: string): BreadcrumbSegment[] {
+  if (!path || path === '~' || path === '/') {
+    return [];
+  }
+
+  if (path.startsWith('~/')) {
+    const parts = path.slice(2).split('/').filter(Boolean);
+    return parts.map((label, index) => ({
+      key: `home:${parts.slice(0, index + 1).join('/')}`,
+      label,
+      path: `~/${parts.slice(0, index + 1).join('/')}`,
+    }));
+  }
+
+  if (path.startsWith('/')) {
+    const parts = path.split('/').filter(Boolean);
+    return parts.map((label, index) => ({
+      key: `abs:${parts.slice(0, index + 1).join('/')}`,
+      label,
+      path: `/${parts.slice(0, index + 1).join('/')}`,
+    }));
+  }
+
+  const parts = path.split('/').filter(Boolean);
+  return parts.map((label, index) => ({
+    key: `rel:${parts.slice(0, index + 1).join('/')}`,
+    label,
+    path: parts.slice(0, index + 1).join('/'),
+  }));
 }
 
 const formatFileDate = (modified: number): string => {
@@ -124,6 +199,7 @@ export default function FilesScreen() {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 12,
+          marginRight: 8,
         },
         breadcrumbBar: {
           height: 44,
@@ -131,8 +207,6 @@ export default function FilesScreen() {
           alignItems: 'center',
           paddingHorizontal: spacing.lg,
           backgroundColor: colors.surface,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.borderSubtle,
         },
         breadcrumbScroll: {
           flexDirection: 'row',
@@ -154,8 +228,6 @@ export default function FilesScreen() {
           paddingVertical: spacing.sm,
           gap: spacing.sm,
           backgroundColor: colors.surface,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.borderSubtle,
         },
         newFileInput: {
           flex: 1,
@@ -175,9 +247,9 @@ export default function FilesScreen() {
           alignItems: 'center',
           paddingHorizontal: spacing.lg,
           paddingVertical: spacing.lg,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.borderSubtle,
           gap: spacing.md,
+          borderRadius: radii.sm,
+          marginHorizontal: spacing.sm,
         },
         fileItemPressed: {
           backgroundColor: colors.surfaceHover,
@@ -225,8 +297,6 @@ export default function FilesScreen() {
           paddingHorizontal: spacing.lg,
           paddingVertical: spacing.md,
           backgroundColor: dark ? colors.surface : colors.bg,
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: colors.borderSubtle,
         },
         modalTitle: {
           ...typography.bodyMedium,
@@ -300,59 +370,70 @@ export default function FilesScreen() {
     [colors],
   );
 
-  const loadFiles = useCallback(
-    async (path: string) => {
-      if (!server) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await listFiles(server, path, showHidden);
-        setFiles(data.entries);
-        setCurrentPath(data.path);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'ファイル一覧を取得できませんでした。';
-        setError(message);
-      } finally {
-        setLoading(false);
+  const applyFileList = useCallback((data: FileListResponse) => {
+    setFiles(data.entries);
+    setCurrentPath(data.path);
+    setError(null);
+  }, []);
+
+  const fetchFileList = useCallback(
+    async (path: string, hidden = showHidden) => {
+      if (!server) {
+        throw new Error('No server configured.');
       }
+
+      return listFiles(server, path, hidden);
     },
     [server, showHidden],
   );
 
-  const loadedRef = useCallback(
-    (path: string) => {
-      void loadFiles(path);
+  const loadFiles = useCallback(
+    async (path: string, hidden = showHidden) => {
+      if (!server) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchFileList(path, hidden);
+        applyFileList(data);
+        return data;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to fetch files.';
+        setError(message);
+        return null;
+      } finally {
+        setLoading(false);
+      }
     },
-    [loadFiles],
+    [applyFileList, fetchFileList, server, showHidden],
   );
 
-  const [initialLoaded, setInitialLoaded] = useState(false);
-  if (!initialLoaded && server) {
-    setInitialLoaded(true);
-    loadedRef(currentPath);
-  }
+  const [initialServerId, setInitialServerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!server) {
+      setInitialServerId(null);
+      setCurrentPath('~');
+      setFiles([]);
+      setError(null);
+      return;
+    }
+
+    if (initialServerId === server.id) {
+      return;
+    }
+
+    setInitialServerId(server.id);
+    setCurrentPath('~');
+    void loadFiles('~', showHidden);
+  }, [initialServerId, loadFiles, server, showHidden]);
 
   const toggleShowHidden = useCallback(() => {
     setShowHidden((prev) => {
       const next = !prev;
-      if (server) {
-        void (async () => {
-          setLoading(true);
-          try {
-            const data = await listFiles(server, currentPath, next);
-            setFiles(data.entries);
-            setCurrentPath(data.path);
-          } catch (err) {
-            const message = err instanceof Error ? err.message : 'ファイル一覧を取得できませんでした。';
-            setError(message);
-          } finally {
-            setLoading(false);
-          }
-        })();
-      }
+      void loadFiles(currentPath, next);
       return next;
     });
-  }, [server, currentPath]);
+  }, [currentPath, loadFiles]);
 
   const navigateTo = useCallback(
     (path: string) => {
@@ -377,54 +458,89 @@ export default function FilesScreen() {
     setIsEditing(false);
   }, []);
 
-  const getEntryPath = useCallback(
-    (name: string) => (currentPath === '/' ? `/${name}` : `${currentPath}/${name}`),
-    [currentPath],
-  );
+  const getEntryPath = useCallback((name: string) => buildEntryPath(currentPath, name), [currentPath]);
 
   const showUnsupportedPreviewToast = useCallback((name: string) => {
     Toast.show({
       type: 'info',
-      text1: 'プレビューできません',
-      text2: `${name} はプレビューに対応していません。`,
+      text1: 'Cannot Open',
+      text2: `${name} cannot be opened from the app.`,
     });
   }, []);
 
-  const openImagePreview = useCallback((entry: FileEntry) => {
-    setImagePreview({ path: getEntryPath(entry.name), name: entry.name });
-  }, [getEntryPath]);
+  const openImagePreview = useCallback((path: string, name: string) => {
+    setImagePreview({ path, name });
+    setError(null);
+  }, []);
 
-  const openTextPreview = useCallback(async (entry: FileEntry) => {
+  const openTextPreview = useCallback(async (path: string, name: string) => {
     if (!server) return;
     setPreviewLoading(true);
     try {
-      const data = await getFileContent(server, getEntryPath(entry.name));
+      const data = await getFileContent(server, path);
       setPreviewFile({ path: data.path, content: data.content, lines: data.lines, truncated: data.truncated });
       setIsEditing(false);
-      setShowMarkdown(entry.name.endsWith('.md'));
+      setShowMarkdown(name.endsWith('.md'));
+      setError(null);
+      return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'ファイルを読み込めませんでした。';
-      Toast.show({ type: 'error', text1: '読み込み失敗', text2: message });
+      const message = err instanceof Error ? err.message : 'Failed to load file.';
+      Toast.show({ type: 'error', text1: 'Load Failed', text2: message });
+      return false;
     } finally {
       setPreviewLoading(false);
     }
-  }, [getEntryPath, server]);
+  }, [server]);
 
-  const openFile = useCallback(
+  const openPathPreview = useCallback(
+    async (path: string, name: string) => {
+      const previewKind = getPreviewKind(name);
+
+      if (previewKind === 'image') {
+        openImagePreview(path, name);
+        return true;
+      }
+
+      if (previewKind === 'text') {
+        return openTextPreview(path, name);
+      }
+
+      showUnsupportedPreviewToast(name);
+      return false;
+    },
+    [openImagePreview, openTextPreview, showUnsupportedPreviewToast],
+  );
+
+  const openSymlink = useCallback(
     async (entry: FileEntry) => {
       if (!server) return;
-      const iconType = getFileIconType(entry);
-      if (iconType === 'image') {
-        openImagePreview(entry);
+
+      const entryPath = getEntryPath(entry.name);
+      setLoading(true);
+
+      try {
+        const data = await fetchFileList(entryPath);
+        applyFileList(data);
         return;
+      } catch (directoryError) {
+        const previewKind = getPreviewKind(entry.name);
+        const handled = await openPathPreview(entryPath, entry.name);
+        if (handled || previewKind !== 'unsupported') {
+          return;
+        }
+
+        const message = directoryError instanceof Error ? directoryError.message : 'Failed to open link.';
+        setError(message);
+        Toast.show({
+          type: 'error',
+          text1: 'Cannot Open',
+          text2: message,
+        });
+      } finally {
+        setLoading(false);
       }
-      if (iconType !== 'text' && iconType !== 'code') {
-        showUnsupportedPreviewToast(entry.name);
-        return;
-      }
-      await openTextPreview(entry);
     },
-    [openImagePreview, openTextPreview, server, showUnsupportedPreviewToast],
+    [applyFileList, fetchFileList, getEntryPath, openPathPreview, server],
   );
 
   const handleSave = useCallback(async () => {
@@ -439,11 +555,11 @@ export default function FilesScreen() {
         truncated: false,
       });
       setIsEditing(false);
-      Toast.show({ type: 'success', text1: '保存しました' });
+      Toast.show({ type: 'success', text1: 'Saved' });
       void loadFiles(currentPath);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'ファイルを保存できませんでした。';
-      Toast.show({ type: 'error', text1: '保存失敗', text2: message });
+      const message = err instanceof Error ? err.message : 'Failed to save file.';
+      Toast.show({ type: 'error', text1: 'Save Failed', text2: message });
     } finally {
       setSaving(false);
     }
@@ -451,30 +567,28 @@ export default function FilesScreen() {
 
   const handleFilePress = useCallback(
     (entry: FileEntry) => {
+      const entryPath = getEntryPath(entry.name);
+
       if (entry.type === 'directory') {
-        navigateTo(getEntryPath(entry.name));
+        navigateTo(entryPath);
         return;
       }
-      if (entry.type === 'file' || entry.type === 'symlink') {
-        void openFile(entry);
+      if (entry.type === 'file') {
+        void openPathPreview(entryPath, entry.name);
+        return;
+      }
+      if (entry.type === 'symlink') {
+        void openSymlink(entry);
         return;
       }
       showUnsupportedPreviewToast(entry.name);
     },
-    [getEntryPath, navigateTo, openFile, showUnsupportedPreviewToast],
+    [getEntryPath, navigateTo, openPathPreview, openSymlink, showUnsupportedPreviewToast],
   );
 
   const sortedFiles = useMemo(() => sortFiles(files, sortMode), [files, sortMode]);
 
-  const pathSegments = useMemo(() => {
-    if (currentPath === '~' || currentPath === '') return [];
-    const normalized = currentPath.startsWith('~') ? currentPath : currentPath;
-    const parts = normalized.split('/').filter(Boolean);
-    if (currentPath.startsWith('~')) {
-      return ['~', ...parts.slice(1)];
-    }
-    return parts;
-  }, [currentPath]);
+  const breadcrumbSegments = useMemo(() => buildBreadcrumbSegments(currentPath), [currentPath]);
 
   const getIconConfig = (iconType: FileIconType) => {
     switch (iconType) {
@@ -495,12 +609,12 @@ export default function FilesScreen() {
   };
 
   const showSortPicker = useCallback(() => {
-    const options = ['名前 (A→Z)', '名前 (Z→A)', 'サイズ (大きい順)', '更新日 (新しい順)', 'キャンセル'];
+    const options = ['Name (A→Z)', 'Name (Z→A)', 'Size (largest)', 'Modified (newest)', 'Cancel'];
     const modeMap: SortMode[] = ['name-asc', 'name-desc', 'size-desc', 'modified-desc'];
 
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: options.length - 1, title: '並べ替え' },
+        { options, cancelButtonIndex: options.length - 1, title: 'Sort' },
         (buttonIndex) => {
           if (buttonIndex < modeMap.length) {
             setSortMode(modeMap[buttonIndex]);
@@ -510,12 +624,12 @@ export default function FilesScreen() {
       return;
     }
 
-    Alert.alert('並べ替え', undefined, [
+    Alert.alert('Sort', undefined, [
       ...modeMap.map((mode, index) => ({
         text: `${sortMode === mode ? '✓ ' : ''}${options[index]}`,
         onPress: () => setSortMode(mode),
       })),
-      { text: 'キャンセル', style: 'cancel' as const },
+      { text: 'Cancel', style: 'cancel' as const },
     ]);
   }, [sortMode]);
 
@@ -539,7 +653,7 @@ export default function FilesScreen() {
 
   const getDownloadUri = useCallback((filename: string) => {
     if (!FileSystem.cacheDirectory) {
-      throw new Error('一時保存ディレクトリを利用できません。');
+      throw new Error('Cache directory unavailable.');
     }
     return `${FileSystem.cacheDirectory}${filename}`;
   }, []);
@@ -552,11 +666,11 @@ export default function FilesScreen() {
       const asset = result.assets[0];
       setUploading(true);
       await uploadFileToPath(server, asset.uri, asset.name, asset.mimeType ?? 'application/octet-stream', currentPath);
-      Toast.show({ type: 'success', text1: 'アップロード完了', text2: asset.name });
+      Toast.show({ type: 'success', text1: 'Upload Complete', text2: asset.name });
       await loadFiles(currentPath);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'アップロードに失敗しました。';
-      Toast.show({ type: 'error', text1: 'アップロード失敗', text2: message });
+      const message = err instanceof Error ? err.message : 'Upload failed.';
+      Toast.show({ type: 'error', text1: 'Upload Failed', text2: message });
     } finally {
       setUploading(false);
     }
@@ -570,8 +684,8 @@ export default function FilesScreen() {
       });
       await Sharing.shareAsync(result.uri);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'ダウンロードに失敗しました。';
-      Toast.show({ type: 'error', text1: 'ダウンロード失敗', text2: message });
+      const message = err instanceof Error ? err.message : 'Download failed.';
+      Toast.show({ type: 'error', text1: 'Download Failed', text2: message });
     }
   }, [getDownloadUri, server]);
 
@@ -583,9 +697,9 @@ export default function FilesScreen() {
       openNewFileEditor(trimmed);
       return;
     }
-    Alert.alert('上書き確認', `${trimmed} は既に存在します。上書きしますか？`, [
-      { text: 'キャンセル', style: 'cancel' },
-      { text: '上書き', style: 'destructive', onPress: () => openNewFileEditor(trimmed) },
+    Alert.alert('Overwrite?', `${trimmed} already exists. Overwrite?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Overwrite', style: 'destructive', onPress: () => openNewFileEditor(trimmed) },
     ]);
   }, [files, newFileName, openNewFileEditor]);
 
@@ -596,10 +710,7 @@ export default function FilesScreen() {
 
   const navigateUp = useCallback(() => {
     if (currentPath === '~' || currentPath === '/' || currentPath === '') return;
-    const parts = currentPath.split('/');
-    parts.pop();
-    const parentPath = parts.length <= 1 && currentPath.startsWith('~') ? '~' : parts.join('/') || '/';
-    navigateTo(parentPath);
+    navigateTo(getParentPath(currentPath));
   }, [currentPath, navigateTo]);
 
   const canNavigateUp = currentPath !== '~' && currentPath !== '/' && currentPath !== '';
@@ -608,7 +719,7 @@ export default function FilesScreen() {
     <View style={styles.breadcrumbBar}>
       {canNavigateUp ? (
         <Pressable
-          accessibilityLabel="上の階層へ"
+          accessibilityLabel="Go up"
           hitSlop={8}
           onPress={navigateUp}
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginRight: spacing.sm })}
@@ -625,16 +736,15 @@ export default function FilesScreen() {
         <Pressable hitSlop={12} onPress={() => navigateTo('~')}>
           <Ionicons color={colors.textSecondary} name="home-outline" size={16} />
         </Pressable>
-        {pathSegments.map((segment, index) => {
-          const isLast = index === pathSegments.length - 1;
-          const segmentPath = pathSegments.slice(0, index + 1).join('/');
+        {breadcrumbSegments.map((segment, index) => {
+          const isLast = index === breadcrumbSegments.length - 1;
 
           return (
-            <View key={segmentPath} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <View key={segment.key} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
               <Ionicons color={colors.textMuted} name="chevron-forward" size={12} />
-              <Pressable hitSlop={6} onPress={isLast ? undefined : () => navigateTo(segmentPath)}>
+              <Pressable hitSlop={6} onPress={isLast ? undefined : () => navigateTo(segment.path)}>
                 <Text style={isLast ? styles.breadcrumbActive : styles.breadcrumbSegment}>
-                  {segment}
+                  {segment.label}
                 </Text>
               </Pressable>
             </View>
@@ -642,7 +752,7 @@ export default function FilesScreen() {
         })}
       </ScrollView>
       <Pressable
-        accessibilityLabel="新規ファイル作成"
+        accessibilityLabel="Create new file"
         hitSlop={8}
         onPress={openNewFileInput}
         style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, paddingLeft: spacing.sm })}
@@ -680,7 +790,7 @@ export default function FilesScreen() {
 
         {item.type === 'file' ? (
           <Text style={styles.fileSize}>{formatFileSize(item.size)}</Text>
-        ) : item.type === 'directory' ? (
+        ) : item.type === 'directory' || item.type === 'symlink' ? (
           <Ionicons color={colors.textMuted} name="chevron-forward" size={16} />
         ) : null}
       </Pressable>
@@ -701,7 +811,7 @@ export default function FilesScreen() {
   if (!server) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'ファイル' }} />
+        <Stack.Screen options={{ title: 'Files' }} />
         <SetupGuide />
       </View>
     );
@@ -711,11 +821,11 @@ export default function FilesScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'ファイル',
+          title: 'Files',
           headerRight: () => (
             <View style={styles.headerActions}>
               <Pressable
-                accessibilityLabel="ファイルをアップロード"
+                accessibilityLabel="Upload file"
                 accessibilityRole="button"
                 disabled={uploading}
                 hitSlop={8}
@@ -729,7 +839,7 @@ export default function FilesScreen() {
                 />
               </Pressable>
               <Pressable
-                accessibilityLabel="隠しファイル切替"
+                accessibilityLabel="Toggle hidden files"
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={toggleShowHidden}
@@ -742,7 +852,7 @@ export default function FilesScreen() {
                 />
               </Pressable>
               <Pressable
-                accessibilityLabel="ソート切替"
+                accessibilityLabel="Toggle sort"
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={showSortPicker}
@@ -762,7 +872,7 @@ export default function FilesScreen() {
           <TextInput
             autoFocus
             onChangeText={setNewFileName}
-            placeholder="ファイル名"
+            placeholder="File name"
             placeholderTextColor={colors.textMuted}
             style={styles.newFileInput}
             value={newFileName}
@@ -791,16 +901,16 @@ export default function FilesScreen() {
           ListEmptyComponent={
             error ? (
               <EmptyState
-                action={{ label: '再試行', onPress: () => navigateTo(currentPath) }}
+                action={{ label: 'Retry', onPress: () => navigateTo(currentPath) }}
                 description={error}
                 icon="cloud-offline-outline"
-                title="ファイルを取得できません"
+                title="Cannot fetch files"
               />
             ) : (
               <EmptyState
-                description="このディレクトリにはファイルがありません"
+                description="This directory is empty."
                 icon="folder-open-outline"
-                title="空のディレクトリ"
+                title="Empty Directory"
               />
             )
           }

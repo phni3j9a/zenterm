@@ -48,11 +48,11 @@ export function Button({
         };
       case 'danger':
         return {
-          backgroundColor: pressed ? colors.errorSubtle : colors.error,
-          borderColor: 'transparent',
-          textColor: colors.textInverse,
-          indicatorColor: colors.textInverse,
-          borderWidth: 0,
+          backgroundColor: pressed ? colors.errorSubtle : 'transparent',
+          borderColor: colors.error,
+          textColor: colors.error,
+          indicatorColor: colors.error,
+          borderWidth: 1,
         };
       case 'ghost':
         return {

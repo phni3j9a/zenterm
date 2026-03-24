@@ -170,6 +170,26 @@ function getStackOptions(root: ReturnType<typeof create>['root']) {
   };
 }
 
+function findTouchableByText(root: ReturnType<typeof create>['root'], label: string) {
+  const [textNode] = root.findAll(
+    (node) => (node.type as string) === 'Text' && node.children.some((child) => typeof child === 'string' && child === label),
+  );
+
+  if (!textNode) {
+    throw new Error(`Text not found for label: ${label}`);
+  }
+
+  let current: typeof textNode | null = textNode;
+  while (current) {
+    if (current.props.onPress) {
+      return current;
+    }
+    current = current.parent;
+  }
+
+  throw new Error(`Touchable not found for label: ${label}`);
+}
+
 /* ---------- component import ---------- */
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -199,8 +219,7 @@ describe('SessionsScreen', () => {
       const texts = collectTexts(root!.root);
       const systemStatus = findAllByTestID(root!.root, 'system-status');
 
-      expect(texts).toContain('新しいセッションを作成');
-      expect(texts.some((text) => text.includes('ターミナルを開いて作業を始めましょう'))).toBe(true);
+      expect(texts).toContain('New Session');
       expect(texts).not.toContain('あなたのワークスペースをすべてここから');
       expect(texts.some((text) => text.includes('tmux セッションの確認'))).toBe(false);
       expect(systemStatus).toHaveLength(0);
@@ -220,16 +239,16 @@ describe('SessionsScreen', () => {
 
       expect(texts).toContain('work');
       expect(texts).toContain('deploy');
-      expect(texts).toContain('/home/user/projects/myapp');
-      expect(texts).toContain('/home/user/projects/deploy');
+      // cwd paths are shortened and displayed as text (no folder icon in flat row)
+      expect(texts).toContain('~/projects/myapp');
+      expect(texts).toContain('~/projects/deploy');
       // Status pill and hint rows were removed — replaced by dot indicator
       expect(texts.filter((t) => t === 'active').length).toBe(0);
       expect(texts.filter((t) => t === 'タップで接続').length).toBe(0);
       expect(texts.filter((t) => t === 'スワイプで操作').length).toBe(0);
-
-      const icons = findAllByTestID(root!.root, 'mock-ionicon');
-      const iconNames = icons.map((i) => i.children?.[0]);
-      expect(iconNames.filter((n) => n === 'folder-outline').length).toBe(2);
+      // Rename/Delete buttons removed — actions available via swipe
+      expect(texts).not.toContain('Rename');
+      expect(texts).not.toContain('Delete');
     });
 
     it('opens the selected session in the shared session view store', async () => {
@@ -272,7 +291,7 @@ describe('SessionsScreen', () => {
 
       expect(options.headerLeft).toBeDefined();
       expect(terminalPager.some((node) => node.props.initialScrollIndex === 1)).toBe(true);
-      expect(collectTexts(root!.root)).not.toContain('新しいセッションを作成');
+      expect(collectTexts(root!.root)).not.toContain('New Session');
     });
 
     it('closes the active terminal from the header back action and reloads sessions', async () => {
@@ -298,7 +317,47 @@ describe('SessionsScreen', () => {
 
       expect(useSessionViewStore.getState().activeSessionId).toBeNull();
       expect(mockListSessions.mock.calls.length).toBeGreaterThan(callsBefore);
-      expect(collectTexts(root!.root)).toContain('新しいセッションを作成');
+      expect(collectTexts(root!.root)).toContain('New Session');
+    });
+
+    it('opens rename UI from the accessibility action', async () => {
+      mockListSessions.mockResolvedValue(sampleSessions);
+
+      let root: ReturnType<typeof create>;
+      await act(async () => {
+        root = create(React.createElement(SessionsScreen));
+      });
+
+      const workCard = root!.root.find(
+        (node) => typeof node.props.accessibilityLabel === 'string' && node.props.accessibilityLabel.startsWith('work '),
+      );
+
+      await act(async () => {
+        workCard.props.onAccessibilityAction?.({ nativeEvent: { actionName: 'rename' } });
+      });
+
+      const texts = collectTexts(root!.root);
+      expect(texts).toContain('Display Name');
+      expect(texts).toContain('Save');
+    });
+
+    it('opens rename UI via swipe action accessibility', async () => {
+      mockListSessions.mockResolvedValue(sampleSessions);
+
+      let root: ReturnType<typeof create>;
+      await act(async () => {
+        root = create(React.createElement(SessionsScreen));
+      });
+
+      const workCard = root!.root.find(
+        (node) => typeof node.props.accessibilityLabel === 'string' && node.props.accessibilityLabel.startsWith('work '),
+      );
+
+      await act(async () => {
+        workCard.props.onAccessibilityAction?.({ nativeEvent: { actionName: 'rename' } });
+      });
+
+      expect(collectTexts(root!.root)).toContain('Display Name');
     });
   });
 
@@ -315,8 +374,8 @@ describe('SessionsScreen', () => {
       expect(emptyStates.length).toBeGreaterThanOrEqual(1);
 
       const texts = collectTexts(root!.root);
-      expect(texts).toContain('セッションがありません');
-      expect(texts).toContain('新しい tmux セッションを作成して開始しましょう');
+      expect(texts).toContain('No Sessions');
+      expect(texts).toContain('Create a new tmux session to get started.');
     });
 
     it('shows error EmptyState when loading fails', async () => {
@@ -328,8 +387,8 @@ describe('SessionsScreen', () => {
       });
 
       const texts = collectTexts(root!.root);
-      expect(texts).toContain('セッションを取得できません');
-      expect(texts).toContain('再試行');
+      expect(texts).toContain('Cannot fetch sessions');
+      expect(texts).toContain('Retry');
     });
   });
 
@@ -343,8 +402,8 @@ describe('SessionsScreen', () => {
       });
 
       const texts = collectTexts(root!.root);
-      expect(texts).toContain('はじめましょう');
-      expect(texts).not.toContain('新しいセッションを作成');
+      expect(texts).toContain('Get Started');
+      expect(texts).not.toContain('New Session');
     });
   });
 
@@ -358,12 +417,11 @@ describe('SessionsScreen', () => {
       });
 
       const texts = collectTexts(root!.root);
-      expect(texts).toContain('新しいセッションを作成');
-      expect(texts.some((t) => t.includes('ターミナルを開いて作業を始めましょう'))).toBe(true);
+      expect(texts).toContain('New Session');
 
       const icons = findAllByTestID(root!.root, 'mock-ionicon');
       const iconNames = icons.map((i) => i.children?.[0]);
-      expect(iconNames).toContain('add-outline');
+      expect(iconNames).toContain('add');
     });
   });
 });

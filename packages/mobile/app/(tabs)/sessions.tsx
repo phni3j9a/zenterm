@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -29,15 +29,38 @@ import type { TmuxSession } from '@/src/types';
 type TerminalStatus = 'connected' | 'disconnected' | 'error' | 'reconnecting';
 
 const statusLabels: Record<TerminalStatus, string> = {
-  connected: '接続中',
-  disconnected: '未接続',
-  error: 'エラー',
-  reconnecting: '再接続中',
+  connected: 'Connected',
+  disconnected: 'Disconnected',
+  error: 'Error',
+  reconnecting: 'Reconnecting',
 };
 
-const formatDate = (created: number) => {
+const formatSmartDate = (created: number): string => {
   const timestamp = created < 1_000_000_000_000 ? created * 1000 : created;
-  return new Date(timestamp).toLocaleString('ja-JP');
+  const date = new Date(timestamp);
+  const now = new Date();
+
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  }
+
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  }
+
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+};
+
+const shortenPath = (cwd: string): string => {
+  const homeMatch = cwd.match(/^\/home\/[^/]+/);
+  if (homeMatch) return cwd.replace(homeMatch[0], '~');
+  return cwd;
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
@@ -45,9 +68,8 @@ const getErrorMessage = (error: unknown, fallback: string) => (error instanceof 
 type LoadMode = 'initial' | 'refresh' | 'soft';
 
 export default function SessionsScreen() {
-  const router = useRouter();
   const server = useServersStore((state) => state.getDefaultServer());
-  const { colors, dark, radii, shadows, spacing, typography } = useTheme();
+  const { colors, dark, radii, spacing, typography } = useTheme();
 
   const [sessions, setSessions] = useState<TmuxSession[]>([]);
   const [loading, setLoading] = useState(false);
@@ -103,36 +125,43 @@ export default function SessionsScreen() {
         },
         listContent: {
           flexGrow: 1,
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.lg,
+          paddingTop: spacing.sm,
           paddingBottom: spacing['4xl'],
         },
         centeredContent: {
           justifyContent: 'center',
         },
         headerSection: {
-          marginBottom: spacing.lg,
-          gap: spacing.md,
+          marginBottom: 0,
         },
-        addPrompt: {
-          gap: spacing.sm,
+        sectionLabel: {
+          fontSize: 11,
+          fontWeight: '500',
+          letterSpacing: 1.5,
+          textTransform: 'uppercase',
+          color: colors.textMuted,
+          paddingTop: spacing.xl,
+          paddingBottom: spacing.sm,
+          paddingHorizontal: spacing.xl,
         },
-        addPromptRow: {
+        newSessionRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
           gap: spacing.md,
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.xl,
         },
-        addPromptIcon: {
-          width: 44,
-          height: 44,
-          borderRadius: 22,
+        newSessionDot: {
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          backgroundColor: colors.primary,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: colors.primarySubtle,
         },
         formCard: {
           gap: spacing.lg,
+          marginHorizontal: spacing.lg,
         },
         formHeader: {
           gap: spacing.xs,
@@ -143,63 +172,52 @@ export default function SessionsScreen() {
           justifyContent: 'flex-end',
           gap: spacing.sm,
         },
-        sessionCard: {
-          gap: spacing.md,
-          ...(dark ? {} : shadows.sm),
-        },
-        sessionHeader: {
+        sessionRow: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
           gap: spacing.md,
+          paddingVertical: 16,
+          paddingHorizontal: spacing.xl,
+          borderRadius: radii.md,
+          marginHorizontal: spacing.sm,
         },
-        sessionTitleWrap: {
+        sessionDot: {
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: colors.success,
+          opacity: 0.8,
+        },
+        sessionBody: {
           flex: 1,
+          minWidth: 0,
         },
-        statusPill: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          alignSelf: 'flex-start',
-          gap: spacing.xs,
-          paddingHorizontal: spacing.sm,
-          paddingVertical: 5,
-          borderRadius: radii.full,
-          backgroundColor: dark ? colors.surfaceHover : colors.bg,
-          borderWidth: 1,
-          borderColor: dark ? colors.border : colors.borderSubtle,
+        sessionName: {
+          ...typography.bodyMedium,
+          color: colors.textPrimary,
         },
-        sessionCwd: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
+        sessionPath: {
+          ...typography.mono,
+          fontSize: 12,
+          lineHeight: 16,
+          color: colors.textMuted,
+          marginTop: 3,
         },
-        sessionDate: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.sm,
+        sessionTime: {
+          ...typography.small,
+          color: colors.textMuted,
         },
-        sessionFooter: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: spacing.md,
-        },
-        sessionHint: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.xs,
-          flex: 1,
+        sessionArrow: {
+          color: colors.textMuted,
+          opacity: 0.4,
         },
         renameForm: {
           gap: spacing.md,
-          paddingTop: spacing.xs,
+          paddingHorizontal: spacing.xl,
+          paddingVertical: spacing.sm,
         },
         separator: {
-          height: spacing.md,
-        },
-        addPromptCopy: {
-          flex: 1,
-          gap: spacing.xs,
+          height: 0,
         },
         pageIndicatorRow: {
           flexDirection: 'row',
@@ -209,7 +227,7 @@ export default function SessionsScreen() {
           gap: spacing.sm,
         },
       }),
-    [colors, dark, radii, shadows, spacing],
+    [colors, radii, spacing, typography],
   );
 
   const renderSeparator = useCallback(() => <View style={styles.separator} />, [styles.separator]);
@@ -277,11 +295,11 @@ export default function SessionsScreen() {
         if (requestIdRef.current !== currentRequestId || !isCurrentServer(currentServer.id)) {
           return;
         }
-        const message = getErrorMessage(err, 'セッション一覧を取得できませんでした。');
+        const message = getErrorMessage(err, 'Failed to fetch sessions.');
         setError(message);
         Toast.show({
           type: 'error',
-          text1: 'セッション取得失敗',
+          text1: 'Fetch Failed',
           text2: message,
         });
       } finally {
@@ -357,10 +375,10 @@ export default function SessionsScreen() {
       if (!isCurrentServer(currentServer.id)) {
         return;
       }
-      const message = getErrorMessage(err, 'セッションを作成できませんでした。');
+      const message = getErrorMessage(err, 'Failed to create session.');
       Toast.show({
         type: 'error',
-        text1: 'セッション作成失敗',
+        text1: 'Create Failed',
         text2: message,
       });
     } finally {
@@ -402,10 +420,10 @@ export default function SessionsScreen() {
         if (!isCurrentServer(currentServer.id)) {
           return;
         }
-        const message = getErrorMessage(err, 'セッションを削除できませんでした。');
+        const message = getErrorMessage(err, 'Failed to delete session.');
         Toast.show({
           type: 'error',
-          text1: 'セッション削除失敗',
+          text1: 'Delete Failed',
           text2: message,
         });
       }
@@ -415,10 +433,10 @@ export default function SessionsScreen() {
 
   const confirmDelete = useCallback(
     (session: TmuxSession) => {
-      Alert.alert('セッション削除', `${session.displayName} を削除しますか。`, [
-        { text: 'キャンセル', style: 'cancel' },
+      Alert.alert('Delete Session', `Delete "${session.displayName}"?`, [
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: '削除',
+          text: 'Delete',
           style: 'destructive',
           onPress: () => {
             void handleDelete(session);
@@ -462,8 +480,8 @@ export default function SessionsScreen() {
       if (!nextName) {
         Toast.show({
           type: 'error',
-          text1: 'リネーム失敗',
-          text2: '名前を入力してください。',
+          text1: 'Rename Failed',
+          text2: 'Please enter a name.',
         });
         return;
       }
@@ -484,16 +502,16 @@ export default function SessionsScreen() {
         resetRenameForm();
         Toast.show({
           type: 'success',
-          text1: 'リネーム完了',
+          text1: 'Renamed',
         });
       } catch (err) {
         if (!isCurrentServer(currentServer.id)) {
           return;
         }
-        const message = getErrorMessage(err, 'セッションをリネームできませんでした。');
+        const message = getErrorMessage(err, 'Failed to rename session.');
         Toast.show({
           type: 'error',
-          text1: 'リネーム失敗',
+          text1: 'Rename Failed',
           text2: message,
         });
       } finally {
@@ -505,6 +523,25 @@ export default function SessionsScreen() {
     [isCurrentServer, renameValue, renamingSessionId, resetRenameForm, server],
   );
 
+  const handleSessionAccessibilityAction = useCallback(
+    (session: TmuxSession, actionName: string) => {
+      if (actionName === 'activate') {
+        openTerminal(session.displayName);
+        return;
+      }
+
+      if (actionName === 'rename') {
+        startRename(session);
+        return;
+      }
+
+      if (actionName === 'delete') {
+        confirmDelete(session);
+      }
+    },
+    [confirmDelete, openTerminal, startRename],
+  );
+
   const showSkeleton = loading && sessions.length === 0;
   const showErrorState = Boolean(error) && sessions.length === 0;
 
@@ -513,40 +550,34 @@ export default function SessionsScreen() {
       {showCreateForm ? (
         <Card highlighted style={styles.formCard}>
           <View style={styles.formHeader}>
-            <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッション</Text>
+            <Text style={[typography.heading, { color: colors.textPrimary }]}>New Session</Text>
             <Text style={[typography.caption, { color: colors.textSecondary }]}>
-              名前は空欄のままでも作成できます。必要ならあとでスワイプしてリネームできます。
+              Name is optional. You can rename it later from the session actions.
             </Text>
           </View>
 
           <Input
             autoCapitalize="none"
-            label="セッション名"
+            label="Session Name"
             onChangeText={setCreateName}
-            placeholder="例: 作業メモ / deploy / scratch"
+            placeholder="e.g. deploy / scratch"
             value={createName}
           />
 
           <View style={styles.formActions}>
-            <Button label="キャンセル" onPress={cancelCreate} size="sm" variant="secondary" />
-            <Button label="作成" loading={creating} onPress={() => void handleCreate()} size="sm" />
+            <Button label="Cancel" onPress={cancelCreate} size="sm" variant="secondary" />
+            <Button label="Create" loading={creating} onPress={() => void handleCreate()} size="sm" />
           </View>
         </Card>
       ) : (
-        <Card onPress={openCreateForm} style={styles.addPrompt}>
-          <View style={styles.addPromptRow}>
-            <View style={styles.addPromptCopy}>
-              <Text style={[typography.heading, { color: colors.textPrimary }]}>新しいセッションを作成</Text>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>
-                ターミナルを開いて作業を始めましょう。名前はあとで変更できます。
-              </Text>
-            </View>
-            <View style={styles.addPromptIcon}>
-              <Ionicons color={colors.primary} name="add-outline" size={22} />
-            </View>
+        <Pressable onPress={openCreateForm} style={styles.newSessionRow}>
+          <View style={styles.newSessionDot}>
+            <Ionicons color={colors.textInverse} name="add" size={16} />
           </View>
-        </Card>
+          <Text style={[typography.bodyMedium, { color: colors.primary }]}>New Session</Text>
+        </Pressable>
       )}
+      {sessions.length > 0 && <Text style={styles.sectionLabel}>Active</Text>}
     </View>
   );
 
@@ -570,7 +601,7 @@ export default function SessionsScreen() {
                 headerTintColor: colors.textPrimary,
                 headerLeft: () => (
                   <Pressable
-                    accessibilityLabel="セッション一覧に戻る"
+                    accessibilityLabel="Back to sessions"
                     accessibilityRole="button"
                     hitSlop={12}
                     onPress={closeTerminal}
@@ -580,7 +611,7 @@ export default function SessionsScreen() {
                   </Pressable>
                 ),
                 headerRight: () => (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginRight: 8 }}>
                     <View
                       style={{
                         width: 7,
@@ -601,12 +632,12 @@ export default function SessionsScreen() {
                 headerLeft: undefined,
                 headerRight: () => (
                   <Pressable
-                    accessibilityLabel="セッションを作成"
+                    accessibilityLabel="Create session"
                     accessibilityRole="button"
                     disabled={!server || creating}
                     hitSlop={8}
                     onPress={openCreateForm}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1, marginRight: 8 })}
                   >
                     <Ionicons
                       color={!server || creating ? colors.textMuted : showCreateForm ? colors.primary : colors.textPrimary}
@@ -681,17 +712,17 @@ export default function SessionsScreen() {
           ListEmptyComponent={
             showErrorState ? (
               <EmptyState
-                action={{ label: '再試行', onPress: () => void loadSessions('initial') }}
-                description={error ?? '時間をおいて再試行してください'}
+                action={{ label: 'Retry', onPress: () => void loadSessions('initial') }}
+                description={error ?? 'Please try again later.'}
                 icon="cloud-offline-outline"
-                title="セッションを取得できません"
+                title="Cannot fetch sessions"
               />
             ) : (
               <EmptyState
-                action={{ label: 'セッションを作成', onPress: handleCreateAction }}
-                description="新しい tmux セッションを作成して開始しましょう"
+                action={{ label: 'Create Session', onPress: handleCreateAction }}
+                description="Create a new tmux session to get started."
                 icon="terminal-outline"
-                title="セッションがありません"
+                title="No Sessions"
               />
             )
           }
@@ -707,7 +738,12 @@ export default function SessionsScreen() {
           renderItem={({ item }) => {
             const isEditing = editingSessionId === item.name;
             const isRenaming = renamingSessionId === item.name;
-            const sessionAccessibilityLabel = `${item.displayName} ${formatDate(item.created)}`;
+            const sessionAccessibilityLabel = `${item.displayName} ${formatSmartDate(item.created)}`;
+            const accessibilityActions = [
+              { name: 'activate', label: 'Open terminal' },
+              { name: 'rename', label: 'Rename session' },
+              { name: 'delete', label: 'Delete session' },
+            ] as const;
 
             return (
               <SwipeableRow
@@ -717,7 +753,7 @@ export default function SessionsScreen() {
                     : {
                         icon: 'pencil-outline',
                         color: colors.primary,
-                        label: 'セッションをリネーム',
+                        label: 'Rename session',
                         onPress: () => startRename(item),
                       }
                 }
@@ -727,77 +763,61 @@ export default function SessionsScreen() {
                     : {
                         icon: 'trash-outline',
                         color: colors.error,
-                        label: 'セッションを削除',
+                        label: 'Delete session',
                         onPress: () => confirmDelete(item),
-                      }
+                    }
                 }
               >
-                <Card
-                  accessibilityLabel={sessionAccessibilityLabel}
-                  highlighted={isEditing}
-                  onLongPress={isEditing ? undefined : () => confirmDelete(item)}
-                  onPress={
-                    isEditing
-                      ? undefined
-                      : () => openTerminal(item.displayName)
-                  }
-                  style={styles.sessionCard}
-                >
-                  <View style={styles.sessionHeader}>
-                    <View style={styles.sessionTitleWrap}>
-                      <Text numberOfLines={1} style={[typography.heading, { color: colors.textPrimary }]}>
+                <View>
+                  <Pressable
+                    accessibilityActions={accessibilityActions}
+                    accessibilityLabel={sessionAccessibilityLabel}
+                    accessibilityRole="button"
+                    delayLongPress={300}
+                    onAccessibilityAction={({ nativeEvent }) => handleSessionAccessibilityAction(item, nativeEvent.actionName)}
+                    onLongPress={isEditing ? undefined : () => confirmDelete(item)}
+                    onPress={isEditing ? undefined : () => openTerminal(item.displayName)}
+                    style={({ pressed }) => [
+                      styles.sessionRow,
+                      isEditing && { backgroundColor: colors.primarySubtle },
+                      pressed && { backgroundColor: colors.surfaceHover },
+                    ]}
+                  >
+                    <View style={styles.sessionDot} />
+                    <View style={styles.sessionBody}>
+                      <Text numberOfLines={1} style={styles.sessionName}>
                         {isEditing && renameValue ? renameValue : item.displayName}
                       </Text>
+                      <Text numberOfLines={1} style={styles.sessionPath}>{shortenPath(item.cwd)}</Text>
                     </View>
-                    <View style={styles.statusPill}>
-                      <Ionicons color={colors.success} name="radio-button-on-outline" size={14} />
-                      <Text style={[typography.smallMedium, { color: colors.success }]}>active</Text>
-                    </View>
-                  </View>
+                    <Text style={styles.sessionTime}>{formatSmartDate(item.created)}</Text>
+                    <Text style={styles.sessionArrow}>›</Text>
+                  </Pressable>
 
-                  <View style={styles.sessionCwd}>
-                    <Ionicons color={colors.textMuted} name="folder-outline" size={14} />
-                    <Text numberOfLines={1} style={[typography.mono, { color: colors.textSecondary }]}>
-                      {item.cwd}
-                    </Text>
-                  </View>
+                </View>
 
-                  <View style={styles.sessionDate}>
-                    <Ionicons color={colors.textMuted} name="time-outline" size={14} />
-                    <Text style={[typography.caption, { color: colors.textMuted }]}>作成 {formatDate(item.created)}</Text>
-                  </View>
+                {isEditing ? (
+                  <View style={styles.renameForm}>
+                    <Input
+                      autoCapitalize="none"
+                      label="Display Name"
+                      onChangeText={setRenameValue}
+                      placeholder="Enter new name"
+                      value={renameValue}
+                    />
 
-                  <View style={styles.sessionFooter}>
-                    <View style={styles.sessionHint}>
-                      <Ionicons color={colors.textMuted} name="open-outline" size={14} />
-                      <Text style={[typography.caption, { color: colors.textSecondary }]}>タップで接続</Text>
-                    </View>
-                    <Text style={[typography.small, { color: colors.textMuted }]}>スワイプで操作</Text>
-                  </View>
-
-                  {isEditing ? (
-                    <View style={styles.renameForm}>
-                      <Input
-                        autoCapitalize="none"
-                        label="表示名"
-                        onChangeText={setRenameValue}
-                        placeholder="新しい表示名を入力"
-                        value={renameValue}
+                    <View style={styles.formActions}>
+                      <Button label="Cancel" onPress={cancelRename} size="sm" variant="secondary" />
+                      <Button
+                        disabled={!renameValue.trim()}
+                        label="Save"
+                        loading={isRenaming}
+                        onPress={() => void handleRename(item)}
+                        size="sm"
                       />
-
-                      <View style={styles.formActions}>
-                        <Button label="キャンセル" onPress={cancelRename} size="sm" variant="secondary" />
-                        <Button
-                          disabled={!renameValue.trim()}
-                          label="保存"
-                          loading={isRenaming}
-                          onPress={() => void handleRename(item)}
-                          size="sm"
-                        />
-                      </View>
                     </View>
-                  ) : null}
-                </Card>
+                  </View>
+                ) : null}
               </SwipeableRow>
             );
           }}

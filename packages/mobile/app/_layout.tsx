@@ -32,7 +32,7 @@ function AppContent() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="servers" options={{ title: 'サーバー管理', presentation: 'card' }} />
+        <Stack.Screen name="servers" options={{ title: 'Servers', presentation: 'card' }} />
         <Stack.Screen
           name="terminal/[sessionId]"
           options={{
@@ -61,7 +61,7 @@ export default function RootLayout() {
     return (
       <View style={styles.loadingContainer}>
         <StatusBar style="light" />
-        <ActivityIndicator color="#D4713D" size="large" />
+        <ActivityIndicator color="#94A687" size="large" />
       </View>
     );
   }
@@ -84,6 +84,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1A1915',
+    backgroundColor: '#1B1A17',
   },
 });

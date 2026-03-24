@@ -62,7 +62,7 @@ export async function apiRequest<T>(server: Server, path: string, options?: Requ
         throw error;
       }
 
-      throw new ApiError(0, '接続がタイムアウトしました。サーバーの状態を確認してください。');
+      throw new ApiError(0, 'Connection timed out. Please check the server status.');
     }
 
     throw error;

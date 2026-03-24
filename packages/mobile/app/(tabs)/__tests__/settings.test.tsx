@@ -127,7 +127,7 @@ describe('SettingsScreen', () => {
     const texts = collectTexts(root!.root);
     const systemStatus = findAllByTestID(root!.root, 'system-status');
 
-    expect(texts).toContain('サーバー管理');
+    expect(texts).toContain('Server');
     expect(texts).toContain('Raspberry Pi 5');
     expect(texts).toContain('http://raspi.local:3000');
     expect(texts).toContain('SystemStatus:Raspberry Pi 5');
@@ -145,11 +145,11 @@ describe('SettingsScreen', () => {
     const texts = collectTexts(root!.root);
     const systemStatus = findAllByTestID(root!.root, 'system-status');
 
-    expect(texts).toContain('タップしてサーバーを追加');
+    expect(texts).toContain('Tap to add a server');
     expect(systemStatus).toHaveLength(0);
   });
 
-  it('テーマ選択肢から System を除外し Light と Dark のみ表示する', async () => {
+  it('shows only Light and Dark theme options', async () => {
     mockGetDefaultServer.mockReturnValue(null);
     let root: ReturnType<typeof create>;
 
@@ -159,8 +159,8 @@ describe('SettingsScreen', () => {
 
     const texts = collectTexts(root!.root);
 
-    expect(texts).toContain('ライト');
-    expect(texts).toContain('ダーク');
+    expect(texts).toContain('Light');
+    expect(texts).toContain('Dark');
     expect(texts).not.toContain('System');
   });
 });

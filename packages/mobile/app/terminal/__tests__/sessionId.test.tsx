@@ -117,7 +117,7 @@ describe('TerminalScreen', () => {
         tree = create(<TerminalScreen />);
       });
       const json = JSON.stringify(tree?.toJSON());
-      expect(json).toContain('\u672A\u63A5\u7D9A');
+      expect(json).toContain('Disconnected');
     });
 
     it('calls router.back when close button is pressed', () => {
@@ -167,7 +167,7 @@ describe('TerminalScreen', () => {
         tree = create(<TerminalScreen />);
       });
       const json = JSON.stringify(tree?.toJSON());
-      expect(json).toContain('\u30C7\u30D5\u30A9\u30EB\u30C8\u30B5\u30FC\u30D0\u30FC\u304C\u3042\u308A\u307E\u305B\u3093');
+      expect(json).toContain('No Default Server');
     });
 
     it('still renders close button in header', () => {

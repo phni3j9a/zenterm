@@ -93,10 +93,10 @@ describe('SystemStatus', () => {
 
     const texts = collectAllText(renderer.root);
 
-    expect(texts.some((t) => t.includes('システムステータス'))).toBe(true);
     expect(texts.some((t) => t.includes('42'))).toBe(true);
-    // "4 cores" may be rendered as separate children ("4" and " cores") by RN
-    expect(texts.some((t) => t.includes('cores'))).toBe(true);
+    expect(texts.some((t) => t.includes('CPU'))).toBe(true);
+    expect(texts.some((t) => t.includes('Memory'))).toBe(true);
+    expect(texts.some((t) => t.includes('Disk'))).toBe(true);
   });
 
   it('renders error message when fetch fails', async () => {
@@ -117,7 +117,6 @@ describe('SystemStatus', () => {
     }
 
     const texts = collectAllText(renderer.root);
-    expect(texts.some((t) => t.includes('システムステータス'))).toBe(true);
     expect(texts.some((t) => t.includes('Connection failed'))).toBe(true);
   });
 });

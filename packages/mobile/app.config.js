@@ -17,6 +17,11 @@ export default {
     ios: {
       bundleIdentifier: IS_DEV ? 'com.zenterm.mobile.dev' : 'com.zenterm.mobile',
       supportsTablet: true,
+      icon: {
+        light: './assets/images/icon.png',
+        dark: './assets/images/icon-dark.png',
+        tinted: './assets/images/icon-tinted.png',
+      },
       infoPlist: {
         NSCameraUsageDescription:
           'QRコードをスキャンしてサーバーに接続するためにカメラを使用します',

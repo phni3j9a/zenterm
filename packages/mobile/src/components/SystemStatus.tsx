@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { getSystemStatus } from '@/src/api/client';
-import { Card, SkeletonLoader } from '@/src/components/ui';
+import { SkeletonLoader } from '@/src/components/ui';
 import { useTheme } from '@/src/theme';
 import type { Server, SystemStatus as SystemStatusType } from '@/src/types';
 
@@ -12,21 +12,6 @@ interface SystemStatusProps {
 
 const POLL_INTERVAL = 5_000;
 
-const formatBytes = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-};
-
-const formatUptime = (seconds: number): string => {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  if (days > 0) return `${days}d ${hours}h`;
-  return `${hours}h ${minutes}m`;
-};
 
 export function SystemStatus({ server }: SystemStatusProps) {
   const { colors, dark, radii, spacing, typography } = useTheme();
@@ -37,69 +22,53 @@ export function SystemStatus({ server }: SystemStatusProps) {
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        card: {
-          gap: spacing.md,
-        },
-        headerRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        },
-        headerLabel: {
-          ...typography.captionMedium,
-          color: colors.textPrimary,
+        container: {
+          gap: 0,
         },
         metricsRow: {
           flexDirection: 'row',
-          gap: spacing.sm,
+          paddingVertical: spacing.xs,
+          paddingHorizontal: spacing.xl,
         },
-        tile: {
+        metricItem: {
           flex: 1,
-          padding: spacing.md,
-          borderRadius: radii.md,
-          backgroundColor: dark ? colors.surfaceHover : colors.primarySubtle,
-          borderWidth: 1,
-          borderColor: colors.borderSubtle,
-          gap: spacing.xs,
-        },
-        tileLabel: {
-          ...typography.smallMedium,
-          color: colors.textMuted,
-        },
-        progressBg: {
-          height: 4,
-          borderRadius: radii.full,
-          backgroundColor: colors.border,
-        },
-        progressFill: {
-          height: 4,
-          borderRadius: radii.full,
-        },
-        tileValue: {
-          ...typography.bodyMedium,
-          color: colors.textPrimary,
-        },
-        tileDetail: {
-          ...typography.small,
-          color: colors.textSecondary,
-        },
-        footerRow: {
-          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
         },
-        footerText: {
-          ...typography.small,
-          color: colors.textSecondary,
+        metricDivider: {
+          width: 1,
+          alignSelf: 'stretch',
+          marginVertical: spacing.xs,
+          backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(42,39,33,0.08)',
+        },
+        metricValue: {
+          fontSize: 16,
+          fontWeight: '600',
+          fontFamily: 'Menlo',
+          color: colors.textPrimary,
+          lineHeight: 20,
+        },
+        metricUnit: {
+          fontSize: 10,
+          fontWeight: '400',
+        },
+        metricLabel: {
+          fontSize: 8,
+          fontWeight: '500',
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          color: colors.textMuted,
+          marginTop: 3,
         },
         errorText: {
           ...typography.caption,
           color: colors.textMuted,
           textAlign: 'center',
+          paddingHorizontal: spacing.lg,
         },
         skeletonRow: {
           flexDirection: 'row',
           gap: spacing.sm,
+          paddingHorizontal: spacing.lg,
         },
         skeletonTile: {
           flex: 1,
@@ -124,7 +93,7 @@ export function SystemStatus({ server }: SystemStatusProps) {
         }
       } catch (err) {
         if (controller.signal.aborted) return;
-        const message = err instanceof Error ? err.message : 'ステータス取得失敗';
+        const message = err instanceof Error ? err.message : 'Failed to fetch status';
         setError(message);
       }
     };
@@ -138,132 +107,62 @@ export function SystemStatus({ server }: SystemStatusProps) {
     };
   }, [server]);
 
-  const getProgressColor = (percent: number): string => {
-    if (percent >= 90) return colors.error;
-    if (percent >= 70) return colors.warning;
-    return colors.success;
-  };
-
-  const getTemperatureColor = (temp: number | null): string => {
-    if (temp === null) return colors.textSecondary;
-    if (temp > 75) return colors.error;
-    if (temp >= 60) return colors.warning;
-    return colors.textSecondary;
-  };
 
   if (!status && !error) {
     return (
-      <Card style={styles.card}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerLabel}>システムステータス</Text>
-        </View>
+      <View style={styles.container}>
         <View style={styles.skeletonRow}>
           <View style={styles.skeletonTile}>
-            <SkeletonLoader height={80} radius={radii.md} width="100%" />
+            <SkeletonLoader height={36} radius={radii.md} width="100%" />
           </View>
           <View style={styles.skeletonTile}>
-            <SkeletonLoader height={80} radius={radii.md} width="100%" />
+            <SkeletonLoader height={36} radius={radii.md} width="100%" />
           </View>
           <View style={styles.skeletonTile}>
-            <SkeletonLoader height={80} radius={radii.md} width="100%" />
+            <SkeletonLoader height={36} radius={radii.md} width="100%" />
           </View>
         </View>
-      </Card>
+      </View>
     );
   }
 
   if (error && !status) {
     return (
-      <Card style={styles.card}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerLabel}>システムステータス</Text>
-        </View>
+      <View style={styles.container}>
         <Text style={styles.errorText}>{error}</Text>
-      </Card>
+      </View>
     );
   }
 
   if (!status) return null;
 
-  const memTotalGB = status.memory.total / (1024 * 1024 * 1024);
-  const memUsedGB = status.memory.used / (1024 * 1024 * 1024);
-  const diskTotalGB = status.disk.total / (1024 * 1024 * 1024);
-  const diskUsedGB = status.disk.used / (1024 * 1024 * 1024);
-
   return (
-    <Card style={styles.card}>
-      <View style={styles.headerRow}>
-        <Text style={styles.headerLabel}>システムステータス</Text>
-      </View>
-
+    <View style={styles.container}>
       <View style={styles.metricsRow}>
-        <View style={styles.tile}>
-          <Text style={styles.tileLabel}>CPU</Text>
-          <View style={styles.progressBg}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${Math.min(status.cpu.usage, 100)}%`,
-                  backgroundColor: getProgressColor(status.cpu.usage),
-                },
-              ]}
-            />
-          </View>
-          <Text style={styles.tileValue}>{status.cpu.usage.toFixed(0)}%</Text>
-          <Text style={styles.tileDetail}>{status.cpu.cores} cores</Text>
-        </View>
-
-        <View style={styles.tile}>
-          <Text style={styles.tileLabel}>Memory</Text>
-          <View style={styles.progressBg}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${Math.min(status.memory.percent, 100)}%`,
-                  backgroundColor: getProgressColor(status.memory.percent),
-                },
-              ]}
-            />
-          </View>
-          <Text style={styles.tileValue}>{status.memory.percent.toFixed(0)}%</Text>
-          <Text style={styles.tileDetail}>
-            {memUsedGB.toFixed(1)}/{memTotalGB.toFixed(1)} GB
+        <View style={styles.metricItem}>
+          <Text style={styles.metricValue}>
+            {status.cpu.usage.toFixed(0)}
+            <Text style={styles.metricUnit}>%</Text>
           </Text>
+          <Text style={styles.metricLabel}>CPU</Text>
         </View>
-
-        <View style={styles.tile}>
-          <Text style={styles.tileLabel}>Disk</Text>
-          <View style={styles.progressBg}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${Math.min(status.disk.percent, 100)}%`,
-                  backgroundColor: getProgressColor(status.disk.percent),
-                },
-              ]}
-            />
-          </View>
-          <Text style={styles.tileValue}>{status.disk.percent.toFixed(0)}%</Text>
-          <Text style={styles.tileDetail}>
-            {formatBytes(status.disk.used)}/{formatBytes(status.disk.total)}
+        <View style={styles.metricDivider} />
+        <View style={styles.metricItem}>
+          <Text style={styles.metricValue}>
+            {status.memory.percent.toFixed(0)}
+            <Text style={styles.metricUnit}>%</Text>
           </Text>
+          <Text style={styles.metricLabel}>Memory</Text>
+        </View>
+        <View style={styles.metricDivider} />
+        <View style={styles.metricItem}>
+          <Text style={styles.metricValue}>
+            {status.disk.percent.toFixed(0)}
+            <Text style={styles.metricUnit}>%</Text>
+          </Text>
+          <Text style={styles.metricLabel}>Disk</Text>
         </View>
       </View>
-
-      <View style={styles.footerRow}>
-        <Text
-          style={[
-            styles.footerText,
-            { color: getTemperatureColor(status.temperature) },
-          ]}
-        >
-          {status.temperature !== null ? `${status.temperature.toFixed(0)}\u00B0C` : '--'}
-        </Text>
-        <Text style={styles.footerText}>Uptime {formatUptime(status.uptime)}</Text>
-      </View>
-    </Card>
+    </View>
   );
 }

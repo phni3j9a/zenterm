@@ -7,7 +7,7 @@ import { useMemo, type ComponentProps } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SystemStatus } from '@/src/components/SystemStatus';
-import { Button, Card } from '@/src/components/ui';
+import { Button } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useSettingsStore } from '@/src/stores/settings';
 import { useTheme, type ThemeMode } from '@/src/theme';
@@ -23,8 +23,8 @@ type ThemeOption = {
 };
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { value: 'light', label: 'ライト', icon: 'sunny-outline' },
-  { value: 'dark', label: 'ダーク', icon: 'moon-outline' },
+  { value: 'light', label: 'Light', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Dark', icon: 'moon-outline' },
 ];
 
 export default function SettingsScreen() {
@@ -48,71 +48,99 @@ export default function SettingsScreen() {
           backgroundColor: colors.bg,
         },
         content: {
-          paddingTop: spacing.md,
+          paddingTop: spacing.xs,
           paddingBottom: spacing['4xl'],
-          gap: spacing.xl,
         },
-        section: {},
+        section: {
+          marginBottom: spacing.xs,
+        },
         sectionHeader: {
-          ...typography.smallMedium,
-          color: colors.textMuted,
+          fontSize: 11,
+          fontWeight: '500',
+          letterSpacing: 1.5,
           textTransform: 'uppercase',
-          letterSpacing: 0.6,
-          marginBottom: spacing.sm,
-          paddingHorizontal: spacing.lg,
+          color: colors.textMuted,
+          paddingTop: spacing.xl,
+          paddingBottom: spacing.sm,
+          paddingHorizontal: spacing.xl,
         },
-        card: {
-          gap: spacing.lg,
-          marginHorizontal: spacing.lg,
-        },
-        settingLabel: {
-          ...typography.bodyMedium,
-          color: colors.textPrimary,
-        },
-        segmentedRow: {
-          flexDirection: 'row',
-          gap: spacing.sm,
-        },
-        segmentButton: {
-          flex: 1,
-          height: 44,
-          borderRadius: radii.sm,
-          borderWidth: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'row',
-          gap: spacing.xs,
-        },
-        segmentLabel: {
-          ...typography.captionMedium,
-        },
-        fontRow: {
+        settingRow: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: spacing.md,
+          paddingVertical: spacing.lg,
+          paddingHorizontal: spacing.xl,
+          minHeight: 48,
         },
-        fontValueBlock: {
-          flex: 1,
+        settingLabel: {
+          ...typography.body,
+          color: colors.textPrimary,
+        },
+        themeRow: {
+          flexDirection: 'row',
           gap: spacing.xs,
         },
-        fontValue: {
-          ...typography.heading,
-          color: colors.textPrimary,
-          fontSize: 28,
-          lineHeight: 32,
+        themeButton: {
+          paddingVertical: 8,
+          paddingHorizontal: 20,
+          borderRadius: radii.sm,
+          borderWidth: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xs,
         },
-        fontRange: {
-          ...typography.caption,
-          color: colors.textMuted,
+        themeLabel: {
+          fontSize: 13,
+          fontWeight: '500',
         },
-        stepper: {
+        fontVal: {
           flexDirection: 'row',
           alignItems: 'center',
           gap: spacing.sm,
         },
-        serverBlock: {
-          gap: spacing.xs,
+        fontNum: {
+          fontSize: 18,
+          fontWeight: '600',
+          fontFamily: 'Menlo',
+          color: colors.textPrimary,
+          minWidth: 28,
+          textAlign: 'center',
+        },
+        stepRow: {
+          flexDirection: 'row',
+          gap: 3,
+        },
+        stepButton: {
+          width: 34,
+          height: 32,
+          borderRadius: radii.sm,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: 'transparent',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        stepButtonText: {
+          fontSize: 15,
+          color: colors.textSecondary,
+        },
+        serverRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.md,
+          paddingVertical: spacing.lg,
+          paddingHorizontal: spacing.xl,
+        },
+        serverIcon: {
+          width: 34,
+          height: 34,
+          borderRadius: 8,
+          backgroundColor: colors.primarySubtle,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        serverBody: {
+          flex: 1,
         },
         serverName: {
           ...typography.bodyMedium,
@@ -120,38 +148,45 @@ export default function SettingsScreen() {
         },
         serverUrl: {
           ...typography.mono,
+          fontSize: 12,
           color: colors.textMuted,
+          marginTop: 2,
         },
         serverPlaceholder: {
           ...typography.caption,
           color: colors.textMuted,
           fontStyle: 'italic',
         },
+        dangerSection: {
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.xl,
+        },
         footer: {
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.xs,
+          paddingTop: spacing.lg,
           alignItems: 'center',
-          gap: spacing.xs,
+          gap: 1,
         },
         footerTitle: {
-          ...typography.captionMedium,
+          fontSize: 12,
+          letterSpacing: 1,
           color: colors.textMuted,
           textAlign: 'center',
         },
         footerMeta: {
-          ...typography.caption,
+          fontSize: 10,
           color: colors.textMuted,
           textAlign: 'center',
+          opacity: 0.6,
         },
       }),
     [colors, radii, spacing, typography],
   );
 
   const confirmReset = () => {
-    Alert.alert('全データ削除', '保存済みのサーバー情報と設定をすべて削除しますか。', [
-      { text: 'キャンセル', style: 'cancel' },
+    Alert.alert('Reset All Data', 'Delete all saved servers and settings?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: '削除',
+        text: 'Delete',
         style: 'destructive',
         onPress: () => {
           void (async () => {
@@ -184,110 +219,107 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: '設定' }} />
+      <Stack.Screen options={{ title: 'Settings' }} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>外観</Text>
-          <Card style={styles.card}>
-            <Text style={styles.settingLabel}>テーマ</Text>
-            <View style={styles.segmentedRow}>
+          <Text style={styles.sectionHeader}>Appearance</Text>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Theme</Text>
+            <View style={styles.themeRow}>
               {THEME_OPTIONS.map((option) => {
                 const selected = option.value === themeMode;
-
                 return (
                   <Pressable
                     key={option.value}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
                     onPress={() => selectTheme(option.value)}
-                    style={({ pressed }) => [
-                      styles.segmentButton,
+                    style={[
+                      styles.themeButton,
                       {
-                        backgroundColor: selected
-                          ? pressed
-                            ? colors.primaryActive
-                            : colors.primary
-                          : pressed
-                            ? colors.surfaceHover
-                            : colors.surface,
+                        backgroundColor: selected ? colors.primary : 'transparent',
                         borderColor: selected ? colors.primary : colors.border,
                       },
                     ]}
                   >
-                    <Ionicons color={selected ? colors.textInverse : colors.textSecondary} name={option.icon} size={16} />
-                    <Text style={[styles.segmentLabel, { color: selected ? colors.textInverse : colors.textSecondary }]}>{option.label}</Text>
+                    <Ionicons color={selected ? colors.textInverse : colors.textSecondary} name={option.icon} size={15} />
+                    <Text style={[styles.themeLabel, { color: selected ? colors.textInverse : colors.textSecondary }]}>{option.label}</Text>
                   </Pressable>
                 );
               })}
             </View>
-          </Card>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>ターミナル</Text>
-          <Card style={styles.card}>
-            <Text style={styles.settingLabel}>フォントサイズ</Text>
-            <View style={styles.fontRow}>
-              <View style={styles.fontValueBlock}>
-                <Text style={styles.fontValue}>{fontSize}</Text>
-                <Text style={styles.fontRange}>
-                  {MIN_FONT_SIZE} - {MAX_FONT_SIZE}
-                </Text>
-              </View>
-              <View style={styles.stepper}>
-                <Button disabled={fontSize <= MIN_FONT_SIZE} label="-" size="sm" variant="secondary" onPress={() => adjustFontSize(-1)} />
-                <Button disabled={fontSize >= MAX_FONT_SIZE} label="+" size="sm" variant="secondary" onPress={() => adjustFontSize(1)} />
-              </View>
-            </View>
-          </Card>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>サーバー管理</Text>
-          <Card style={styles.card} onPress={() => router.push('/servers')}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flex: 1 }}>
-                {server ? (
-                  <View style={styles.serverBlock}>
-                    <Text style={styles.serverName}>{server.name}</Text>
-                    <Text style={styles.serverUrl}>{server.url}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.serverPlaceholder}>タップしてサーバーを追加</Text>
-                )}
-              </View>
-              <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
-            </View>
-          </Card>
-          {server && (
-            <View style={{ marginTop: spacing.sm, marginHorizontal: spacing.lg }}>
-              <SystemStatus server={server} />
-            </View>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>データ管理</Text>
-          <Card style={styles.card}>
-            <Button label="全データ削除" size="md" variant="danger" onPress={confirmReset} />
-          </Card>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>アプリ情報</Text>
-          <View style={styles.footer}>
-            <Text style={styles.footerTitle}>{appName}</Text>
-            <Text style={styles.footerMeta}>Version {version}</Text>
-            <Pressable
-              onPress={() => Linking.openURL('https://github.com/phni3j9a/zenterm/blob/main/PRIVACY_POLICY.md')}
-              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, marginTop: spacing.xs })}
-            >
-              <Text style={[styles.footerMeta, { textDecorationLine: 'underline', color: colors.primary }]}>
-                プライバシーポリシー
-              </Text>
-            </Pressable>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Terminal</Text>
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Font Size</Text>
+            <View style={styles.fontVal}>
+              <Text style={styles.fontNum}>{fontSize}</Text>
+              <View style={styles.stepRow}>
+                <Pressable
+                  disabled={fontSize <= MIN_FONT_SIZE}
+                  onPress={() => adjustFontSize(-1)}
+                  style={[styles.stepButton, { opacity: fontSize <= MIN_FONT_SIZE ? 0.4 : 1 }]}
+                >
+                  <Text style={styles.stepButtonText}>-</Text>
+                </Pressable>
+                <Pressable
+                  disabled={fontSize >= MAX_FONT_SIZE}
+                  onPress={() => adjustFontSize(1)}
+                  style={[styles.stepButton, { opacity: fontSize >= MAX_FONT_SIZE ? 0.4 : 1 }]}
+                >
+                  <Text style={styles.stepButtonText}>+</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Server</Text>
+          <Pressable
+            onPress={() => router.push('/servers')}
+            style={({ pressed }) => [styles.serverRow, pressed && { backgroundColor: colors.surfaceHover }]}
+          >
+            <View style={styles.serverIcon}>
+              <Ionicons color={colors.primary} name="server-outline" size={16} />
+            </View>
+            {server ? (
+              <View style={styles.serverBody}>
+                <Text style={styles.serverName}>{server.name}</Text>
+                <Text style={styles.serverUrl}>{server.url}</Text>
+              </View>
+            ) : (
+              <View style={styles.serverBody}>
+                <Text style={styles.serverPlaceholder}>Tap to add a server</Text>
+              </View>
+            )}
+            <Ionicons color={colors.textMuted} name="chevron-forward" size={16} style={{ opacity: 0.4 }} />
+          </Pressable>
+          {server && <SystemStatus server={server} />}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Data</Text>
+          <View style={styles.dangerSection}>
+            <Button label="Reset All Data" size="md" variant="danger" onPress={confirmReset} />
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerTitle}>{appName}</Text>
+          <Text style={styles.footerMeta}>v{version}</Text>
+          <Pressable
+            onPress={() => Linking.openURL('https://github.com/phni3j9a/zenterm/blob/main/PRIVACY_POLICY.md')}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, marginTop: spacing.xs })}
+          >
+            <Text style={[styles.footerMeta, { textDecorationLine: 'underline', color: colors.primary, opacity: 1 }]}>
+              Privacy Policy
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>

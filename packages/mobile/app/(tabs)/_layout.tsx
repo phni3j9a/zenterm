@@ -10,12 +10,13 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerStyle: { backgroundColor: dark ? colors.surface : colors.bg },
+        headerShadowVisible: false,
         headerTintColor: colors.textPrimary,
         headerTitleStyle: { color: colors.textPrimary, fontWeight: '600' },
         sceneStyle: { backgroundColor: colors.bg },
         tabBarStyle: {
           backgroundColor: dark ? colors.surface : colors.bg,
-          borderTopColor: dark ? colors.border : colors.borderSubtle,
+          borderTopWidth: 0,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -24,7 +25,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="sessions"
         options={{
-          title: 'セッション',
+          title: 'Sessions',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons color={color} name={focused ? 'terminal' : 'terminal-outline'} size={size} />
           ),
@@ -33,7 +34,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="files"
         options={{
-          title: 'ファイル',
+          title: 'Files',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons color={color} name={focused ? 'folder' : 'folder-outline'} size={size} />
           ),
@@ -42,7 +43,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: '設定',
+          title: 'Settings',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons color={color} name={focused ? 'settings' : 'settings-outline'} size={size} />
           ),

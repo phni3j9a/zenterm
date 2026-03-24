@@ -132,13 +132,14 @@ const mockServer: Server = {
   isDefault: true,
 };
 
-function makeEntry(name: string, type: FileEntry['type'] = 'file'): FileEntry {
+function makeEntry(name: string, type: FileEntry['type'] = 'file', overrides: Partial<FileEntry> = {}): FileEntry {
   return {
     name,
     type,
     size: 100,
     modified: 1_000,
     permissions: '-rw-r--r--',
+    ...overrides,
   };
 }
 
@@ -189,6 +190,29 @@ async function renderScreen(): Promise<ReactTestRenderer> {
   });
   renderedTrees.push(tree);
   return tree;
+}
+
+function collectTexts(root: ReactTestInstance): string[] {
+  const texts: string[] = [];
+
+  const traverse = (node: ReactTestInstance) => {
+    if (String(node.type) === 'Text') {
+      node.children.forEach((child) => {
+        if (typeof child === 'string') {
+          texts.push(child);
+        }
+      });
+    }
+
+    node.children.forEach((child) => {
+      if (typeof child !== 'string') {
+        traverse(child);
+      }
+    });
+  };
+
+  traverse(root);
+  return texts;
 }
 
 describe('FilesScreen', () => {
@@ -283,7 +307,7 @@ describe('FilesScreen', () => {
     expect(mockListFiles).toHaveBeenLastCalledWith(mockServer, '/uploads', false);
     expect(Toast.show).toHaveBeenCalledWith({
       type: 'success',
-      text1: 'アップロード完了',
+      text1: 'Upload Complete',
       text2: 'report.pdf',
     });
   });
@@ -313,5 +337,77 @@ describe('FilesScreen', () => {
       { headers: { Authorization: 'Bearer token-1' } },
     );
     expect(mockShareAsync).toHaveBeenCalledWith('file:///cache/note.txt');
+  });
+
+  it('keeps absolute paths intact when navigating from breadcrumbs', async () => {
+    mockListFiles.mockImplementation((_server: Server, path: string) =>
+      Promise.resolve({
+        path: path === '~' ? '/home/raspi5/projects/zenterm' : path,
+        entries: [],
+      }),
+    );
+
+    const tree = await renderScreen();
+
+    await press(findTouchableByText(tree.root, 'home'));
+
+    expect(mockListFiles).toHaveBeenLastCalledWith(mockServer, '/home', false);
+  });
+
+  it('opens symlinked directories by loading the target path', async () => {
+    mockListFiles.mockImplementation((_server: Server, path: string) => {
+      if (path === '~') {
+        return Promise.resolve({
+          path: '/workspace',
+          entries: [makeEntry('shared', 'symlink', { symlinkTarget: '/srv/shared' })],
+        });
+      }
+
+      if (path === '/workspace/shared') {
+        return Promise.resolve({
+          path: '/workspace/shared',
+          entries: [makeEntry('note.txt')],
+        });
+      }
+
+      return Promise.resolve({ path, entries: [] });
+    });
+
+    const tree = await renderScreen();
+
+    await press(findTouchableByText(tree.root, 'shared'));
+
+    expect(mockListFiles).toHaveBeenLastCalledWith(mockServer, '/workspace/shared', false);
+    expect(collectTexts(tree.root)).toContain('note.txt');
+  });
+
+  it('falls back to preview when a symlink points to a file', async () => {
+    mockListFiles.mockImplementation((_server: Server, path: string) => {
+      if (path === '~') {
+        return Promise.resolve({
+          path: '/workspace',
+          entries: [makeEntry('linked.txt', 'symlink', { symlinkTarget: '/docs/note.txt' })],
+        });
+      }
+
+      if (path === '/workspace/linked.txt') {
+        return Promise.reject(new Error('Not a directory'));
+      }
+
+      return Promise.resolve({ path, entries: [] });
+    });
+    mockGetFileContent.mockResolvedValue({
+      path: '/workspace/linked.txt',
+      content: 'via link',
+      lines: 1,
+      truncated: false,
+    });
+
+    const tree = await renderScreen();
+
+    await press(findTouchableByText(tree.root, 'linked.txt'));
+
+    expect(mockGetFileContent).toHaveBeenCalledWith(mockServer, '/workspace/linked.txt');
+    expect(collectTexts(tree.root)).toContain('via link');
   });
 });
