@@ -34,41 +34,60 @@ const CTRL_KEYS = [
   { label: 'R', code: '\x12' },
 ] as const;
 
+type ExpandedPanel = 'ctrl' | 'more' | null;
+
 export function SpecialKeys({ onKeyPress, server }: Props) {
-  const [isCtrl, setIsCtrl] = useState(false);
+  const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(null);
   const [uploading, setUploading] = useState(false);
   const { dark, colors, radii, spacing, typography } = useTheme();
   const termBg = dark ? terminalColorsDark.bg : terminalColorsLight.bg;
+
+  const isCtrl = expandedPanel === 'ctrl';
+  const isMore = expandedPanel === 'more';
 
   const styles = useMemo(
     () =>
       StyleSheet.create({
         container: {
           gap: spacing.sm,
-          paddingHorizontal: spacing.lg,
+          paddingHorizontal: spacing.sm,
           paddingVertical: spacing.sm,
+          maxWidth: 480,
+          alignSelf: 'center',
+          width: '100%',
           backgroundColor: termBg,
         },
         row: {
           flexDirection: 'row',
-          gap: spacing.sm,
-          paddingRight: spacing.sm,
-        },
-        ctrlRow: {
           gap: spacing.xs,
         },
-        ctrlHint: {
+        expandedRow: {
+          gap: spacing.xs,
+        },
+        expandedHint: {
           ...typography.smallMedium,
           color: colors.primary,
           textTransform: 'uppercase',
           letterSpacing: 0.6,
         },
-        button: {
-          minWidth: 44,
+        expandedScrollContent: {
+          flexDirection: 'row',
+          gap: spacing.sm,
+          paddingRight: spacing.sm,
+        },
+        buttonText: {
           height: 36,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingHorizontal: spacing.md,
+          paddingHorizontal: spacing.sm,
+          borderRadius: radii.sm,
+          backgroundColor: colors.surfaceHover,
+        },
+        buttonSymbol: {
+          flex: 1,
+          height: 36,
+          alignItems: 'center',
+          justifyContent: 'center',
           borderRadius: radii.sm,
           backgroundColor: colors.surfaceHover,
         },
@@ -79,7 +98,7 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
           minWidth: 46,
           backgroundColor: colors.primarySubtle,
         },
-        pasteButton: {
+        moreItemButton: {
           minWidth: 70,
           height: 36,
           flexDirection: 'row',
@@ -113,15 +132,15 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
     onKeyPress(data, { noFocus: true });
   };
 
-  const handleCtrlToggle = () => {
+  const togglePanel = (panel: 'ctrl' | 'more') => {
     triggerHaptic();
-    setIsCtrl((current) => !current);
+    setExpandedPanel((current) => (current === panel ? null : panel));
   };
 
   const handleCtrlKeyPress = (data: string) => {
     triggerHaptic();
     onKeyPress(data, { noFocus: true });
-    setIsCtrl(false);
+    setExpandedPanel(null);
   };
 
   const handlePaste = async () => {
@@ -159,23 +178,23 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
 
   return (
     <View style={styles.container}>
-      <ScrollView horizontal contentContainerStyle={styles.row} showsHorizontalScrollIndicator={false}>
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b')} style={styles.button}>
+      <View style={styles.row}>
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b')} style={styles.buttonText}>
           <Text style={styles.label}>Esc</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\t')} style={styles.button}>
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\t')} style={styles.buttonText}>
           <Text style={styles.label}>Tab</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b[Z')} style={styles.button}>
-          <Text style={styles.label}>S-Tab</Text>
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\x1b[Z')} style={styles.buttonText}>
+          <Text style={styles.label}>{'\u21e7Tab'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.78}
-          onPress={handleCtrlToggle}
-          style={[styles.button, isCtrl && styles.buttonActive]}
+          onPress={() => togglePanel('ctrl')}
+          style={[styles.buttonText, isCtrl && styles.buttonActive]}
         >
           <Text style={[styles.label, isCtrl && styles.labelActive]}>Ctrl</Text>
         </TouchableOpacity>
@@ -185,53 +204,65 @@ export function SpecialKeys({ onKeyPress, server }: Props) {
             key={key.label}
             activeOpacity={0.78}
             onPress={() => handleBaseKeyPress(key.data)}
-            style={styles.button}
+            style={styles.buttonSymbol}
           >
             <Text style={styles.label}>{key.label}</Text>
           </TouchableOpacity>
         ))}
 
-        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\r')} style={styles.button}>
+        <TouchableOpacity activeOpacity={0.78} onPress={() => handleBaseKeyPress('\r')} style={styles.buttonSymbol}>
           <Ionicons color={colors.textPrimary} name="return-down-back-outline" size={16} />
         </TouchableOpacity>
 
-        <TouchableOpacity activeOpacity={0.78} onPress={() => void handlePaste()} style={styles.pasteButton}>
-          <Ionicons color={colors.textPrimary} name="clipboard-outline" size={16} />
-          <Text style={styles.label}>Paste</Text>
+        <TouchableOpacity
+          activeOpacity={0.78}
+          onPress={() => togglePanel('more')}
+          style={[styles.buttonSymbol, isMore && styles.buttonActive]}
+        >
+          <Ionicons color={isMore ? colors.textInverse : colors.textPrimary} name="ellipsis-horizontal" size={16} />
         </TouchableOpacity>
-
-        {server && (
-          <TouchableOpacity
-            activeOpacity={0.78}
-            disabled={uploading}
-            onPress={() => void handleImageUpload()}
-            style={styles.pasteButton}
-          >
-            {uploading ? (
-              <ActivityIndicator color={colors.textPrimary} size={16} />
-            ) : (
-              <Ionicons color={colors.textPrimary} name="image-outline" size={16} />
-            )}
-            <Text style={styles.label}>{uploading ? '...' : 'Image'}</Text>
-          </TouchableOpacity>
-        )}
-      </ScrollView>
+      </View>
 
       {isCtrl ? (
-        <View style={styles.ctrlRow}>
-          <Text style={styles.ctrlHint}>Ctrl mode</Text>
-          <ScrollView horizontal contentContainerStyle={styles.row} showsHorizontalScrollIndicator={false}>
+        <View style={styles.expandedRow}>
+          <Text style={styles.expandedHint}>Ctrl mode</Text>
+          <ScrollView horizontal contentContainerStyle={styles.expandedScrollContent} showsHorizontalScrollIndicator={false}>
             {CTRL_KEYS.map((key) => (
               <TouchableOpacity
                 key={key.label}
                 activeOpacity={0.78}
                 onPress={() => handleCtrlKeyPress(key.code)}
-                style={[styles.button, styles.ctrlKeyButton]}
+                style={[styles.buttonText, styles.ctrlKeyButton]}
               >
                 <Text style={[styles.label, styles.labelCtrl]}>{key.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
+        </View>
+      ) : null}
+
+      {isMore ? (
+        <View style={[styles.expandedRow, styles.row]}>
+          <TouchableOpacity activeOpacity={0.78} onPress={() => void handlePaste()} style={styles.moreItemButton}>
+            <Ionicons color={colors.textPrimary} name="clipboard-outline" size={16} />
+            <Text style={styles.label}>Paste</Text>
+          </TouchableOpacity>
+
+          {server && (
+            <TouchableOpacity
+              activeOpacity={0.78}
+              disabled={uploading}
+              onPress={() => void handleImageUpload()}
+              style={styles.moreItemButton}
+            >
+              {uploading ? (
+                <ActivityIndicator color={colors.textPrimary} size={16} />
+              ) : (
+                <Ionicons color={colors.textPrimary} name="image-outline" size={16} />
+              )}
+              <Text style={styles.label}>{uploading ? '...' : 'Image'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : null}
     </View>
