@@ -9,6 +9,9 @@ packages/gateway/public/app/
 .env
 .env*.local
 
+# EAS (contains Apple credentials)
+eas.json
+
 # Expo
 .expo/
 web-build/
