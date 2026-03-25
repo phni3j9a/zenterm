@@ -40,7 +40,7 @@ if [ ! -f "$ENV_FILE" ]; then
 AUTH_TOKEN=$TOKEN
 PORT=18765
 HOST=0.0.0.0
-SESSION_PREFIX=psh_
+SESSION_PREFIX=zen_
 LOG_LEVEL=info
 
 # Upload settings

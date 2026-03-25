@@ -38,7 +38,7 @@ npm run build:web           # Web ビルド → gateway/public/app/ に出力
 - Mobile: WebView + xterm.js（ネイティブ実装ではない）
 - Web: xterm.js を npm パッケージとして直接 import（WebView 不要）
 - 認証は Bearer token（.env の AUTH_TOKEN）
-- tmux セッションの prefix は `psh_`
+- tmux セッションの prefix は `zen_`
 - テーマは mobile/web 共通の Zen カラートークン（dark/light）
 
 ## 注意事項

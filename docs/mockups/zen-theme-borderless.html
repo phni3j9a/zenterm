@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZenTerm - Borderless Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F5F1E8;
+    --surface: #ECE8DD;
+    --surface-hover: #E4DFD2;
+    --border: #D6CFBF;
+    --border-subtle: #E8E3D8;
+    --hairline: rgba(42, 39, 33, 0.08);
+
+    --text-primary: #2A2721;
+    --text-secondary: #66614F;
+    --text-muted: #958E7E;
+    --text-inverse: #F5F1E8;
+
+    --primary: #7B8B6F;
+    --primary-hover: #6C7C61;
+    --primary-active: #5E6D54;
+    --primary-subtle: #E8EDE4;
+    --primary-muted: #A4B199;
+
+    --success: #7B8B6F;
+    --warning: #B89F56;
+    --error: #B25A5A;
+    --info: #7A96A8;
+
+    --term-bg: #F0ECE1;
+    --term-fg: #2A2721;
+    --term-cursor: #7B8B6F;
+
+    --font-sans: 'Noto Sans JP', -apple-system, sans-serif;
+    --font-serif: 'Noto Serif JP', serif;
+    --font-mono: 'IBM Plex Mono', 'Menlo', monospace;
+  }
+
+  .dark {
+    --bg: #1B1A17;
+    --surface: #242320;
+    --surface-hover: #2E2D29;
+    --border: #3A3832;
+    --border-subtle: #2E2D29;
+    --hairline: rgba(255, 255, 255, 0.06);
+
+    --text-primary: #DBD6C8;
+    --text-secondary: #A5A090;
+    --text-muted: #6D6860;
+    --text-inverse: #1B1A17;
+
+    --primary: #94A687;
+    --primary-hover: #A5B59A;
+    --primary-active: #7B8B6F;
+    --primary-subtle: #262B23;
+    --primary-muted: #4E5746;
+
+    --success: #94A687;
+    --warning: #D4B86A;
+    --error: #C46A6A;
+    --info: #8EB0C4;
+
+    --term-bg: #1B1A17;
+    --term-fg: #DBD6C8;
+    --term-cursor: #94A687;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: #141413;
+    color: #ccc;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  /* ─── Page Chrome ─── */
+  .page-header { text-align: center; margin-bottom: 48px; }
+  .page-header h1 {
+    font-family: var(--font-serif); font-size: 32px; font-weight: 500;
+    letter-spacing: 6px; color: #DBD6C8; margin-bottom: 12px;
+  }
+  .page-header p { font-size: 13px; color: #666; letter-spacing: 1px; }
+  .page-header .zen-mark {
+    display: inline-block; width: 4px; height: 4px;
+    border-radius: 50%; background: #7B8B6F; margin: 16px auto 0;
+  }
+
+  .theme-toggle {
+    display: flex; justify-content: center; gap: 2px;
+    margin-bottom: 48px; background: #222; border-radius: 24px;
+    padding: 3px; width: fit-content; margin-left: auto; margin-right: auto;
+  }
+  .theme-toggle button {
+    font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+    padding: 8px 28px; border: none; border-radius: 20px;
+    background: transparent; color: #888; cursor: pointer;
+    transition: all 0.3s ease; letter-spacing: 0.5px;
+  }
+  .theme-toggle button.active { background: #7B8B6F; color: #fff; }
+
+  .zen-divider {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin: 48px 0 12px; color: #444;
+    font-family: var(--font-serif); font-size: 14px; letter-spacing: 6px;
+  }
+  .zen-divider::before, .zen-divider::after {
+    content: ''; width: 40px; height: 1px; background: #333;
+  }
+  .section-subtitle {
+    text-align: center; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 3px; color: #555; margin-bottom: 32px;
+  }
+
+  .screens-row {
+    display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+  }
+  .phone-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .phone-frame {
+    width: 300px; border-radius: 44px; background: #0a0a0a; padding: 10px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .phone-screen {
+    border-radius: 36px; overflow: hidden; background: var(--bg);
+    height: 660px; display: flex; flex-direction: column;
+  }
+  .screen-label {
+    font-size: 11px; letter-spacing: 2px; color: #555; text-transform: uppercase;
+  }
+
+  /* ─── iOS Status Bar ─── */
+  .ios-sb {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 26px 4px; font-size: 12px; font-weight: 600;
+    color: var(--text-primary); flex-shrink: 0;
+  }
+  .ios-sb-r { display: flex; gap: 4px; align-items: center; font-size: 10px; }
+
+  /* ─── Nav ─── */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px 8px; flex-shrink: 0;
+  }
+  .nav-t {
+    font-family: var(--font-serif); font-size: 18px; font-weight: 500;
+    color: var(--text-primary); letter-spacing: 0.5px;
+  }
+  .nav-a {
+    color: var(--primary); font-size: 17px; font-weight: 300;
+  }
+
+  /* ─── Tab Bar ─── */
+  .tabs {
+    display: flex; padding: 6px 0 20px; background: var(--bg); flex-shrink: 0;
+  }
+  .dark .tabs { background: var(--surface); }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 2px; font-size: 9px; font-weight: 400;
+    color: var(--text-muted); letter-spacing: 0.3px;
+  }
+  .tab.on { color: var(--primary); }
+  .tab svg { width: 16px; height: 16px; }
+
+  /* ─── Scroll ─── */
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ─── Spacers ─── */
+  .hl {
+    height: 0;
+  }
+  .hl-full {
+    height: 0;
+  }
+  /* Section break: generous whitespace only */
+  .sec-break {
+    height: 20px;
+  }
+
+  /* ═══════════════════════════════════
+     Sessions (Borderless)
+     ═══════════════════════════════════ */
+  .s-content { padding: 12px 0 24px; }
+
+  /* New session - just a tappable row */
+  .new-s {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer;
+  }
+  .new-s-dot {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--primary); color: var(--text-inverse);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 300; flex-shrink: 0;
+  }
+  .new-s-label {
+    font-size: 13px; font-weight: 500; color: var(--primary);
+  }
+
+  .s-section-label {
+    font-size: 9px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 20px 20px 6px;
+  }
+
+  /* Session row - no card, just content */
+  .s-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 20px; cursor: pointer;
+    transition: background 0.1s;
+    border-radius: 10px;
+    margin: 0 8px;
+  }
+  .s-row:active { background: var(--surface-hover); }
+  .s-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--success); flex-shrink: 0; opacity: 0.8;
+  }
+  .s-dot.off { background: var(--text-muted); opacity: 0.3; }
+  .s-body { flex: 1; min-width: 0; }
+  .s-name {
+    font-size: 13px; font-weight: 500; color: var(--text-primary);
+  }
+  .s-name.dim { color: var(--text-muted); }
+  .s-path {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted); margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .s-time {
+    font-size: 10px; color: var(--text-muted); flex-shrink: 0;
+  }
+  .s-arr {
+    color: var(--hairline); font-size: 14px; flex-shrink: 0;
+    color: var(--text-muted); opacity: 0.4;
+  }
+
+  /* ═══════════════════════════════════
+     Terminal
+     ═══════════════════════════════════ */
+  .t-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px 6px; background: var(--term-bg); flex-shrink: 0;
+  }
+  .t-back { color: var(--primary); font-size: 18px; cursor: pointer; }
+  .t-title {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+    color: var(--text-primary);
+  }
+  .t-stat {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 9px; color: var(--success);
+  }
+  .t-stat-d {
+    width: 4px; height: 4px; border-radius: 50%; background: var(--success);
+  }
+
+  .term {
+    flex: 1; background: var(--term-bg); padding: 2px 14px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    line-height: 1.65; color: var(--term-fg); overflow: hidden;
+  }
+  .tp { color: var(--primary); font-weight: 500; }
+  .tw { color: var(--warning); }
+  .td { color: var(--text-muted); }
+  .to { color: var(--success); }
+  .tc {
+    display: inline-block; width: 6px; height: 12px;
+    background: var(--term-cursor); animation: bl 1.2s step-end infinite;
+    vertical-align: text-bottom; border-radius: 1px; opacity: 0.9;
+  }
+  @keyframes bl { 50% { opacity: 0; } }
+
+  .pg-dots {
+    display: flex; justify-content: center; gap: 4px;
+    padding: 4px 0; background: var(--term-bg); flex-shrink: 0;
+  }
+  .pg-d {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text-muted); opacity: 0.3;
+  }
+  .pg-d.on { width: 14px; border-radius: 2px; background: var(--primary); opacity: 0.8; }
+
+  .kb {
+    background: var(--term-bg); padding: 4px 12px 8px;
+    display: flex; gap: 4px; overflow-x: auto; flex-shrink: 0;
+  }
+  .kb::-webkit-scrollbar { display: none; }
+  .kk {
+    padding: 5px 10px; border-radius: 6px;
+    background: var(--surface); font-family: var(--font-mono);
+    font-size: 10px; font-weight: 500; color: var(--text-secondary);
+    white-space: nowrap; flex-shrink: 0; border: none; cursor: pointer;
+  }
+  .dark .kk { background: var(--surface-hover); }
+
+  /* ═══════════════════════════════════
+     Files (Borderless)
+     ═══════════════════════════════════ */
+  .bc {
+    display: flex; align-items: center; gap: 3px;
+    padding: 7px 20px; font-size: 10px; color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .bc::-webkit-scrollbar { display: none; }
+  .bc-s { opacity: 0.4; }
+  .bc-c { color: var(--text-primary); font-weight: 500; }
+
+  .f-row {
+    display: flex; align-items: center; padding: 10px 20px; gap: 10px;
+    cursor: pointer; transition: background 0.1s;
+    border-radius: 8px;
+    margin: 0 8px;
+  }
+  .f-row:active { background: var(--surface-hover); }
+  .f-ico {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .f-ico svg { width: 14px; height: 14px; }
+  .f-ico.dir { background: var(--primary-subtle); color: var(--primary); }
+  .f-ico.fil { background: transparent; color: var(--text-muted); }
+  .f-ico.lnk { background: transparent; color: var(--info); }
+  .f-body { flex: 1; min-width: 0; }
+  .f-name {
+    font-size: 12px; font-weight: 400; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .f-meta { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+  .f-sz {
+    font-size: 10px; font-family: var(--font-mono);
+    color: var(--text-muted); flex-shrink: 0;
+  }
+  .f-arr { color: var(--text-muted); font-size: 10px; flex-shrink: 0; opacity: 0.4; }
+  .f-hl { height: 0; }
+
+  /* ═══════════════════════════════════
+     Settings (Borderless)
+     ═══════════════════════════════════ */
+  .st-content { padding: 4px 0 24px; }
+  .st-sec { margin-bottom: 4px; }
+  .st-label {
+    font-size: 9px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 18px 20px 6px;
+  }
+
+  /* Setting row - flat */
+  .st-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; min-height: 42px;
+  }
+  .st-key { font-size: 13px; color: var(--text-primary); }
+  .st-val { font-size: 12px; color: var(--text-secondary); }
+
+  /* Inline theme picker */
+  .st-theme {
+    display: flex; gap: 4px;
+  }
+  .st-th-btn {
+    padding: 6px 16px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+    color: var(--text-secondary); cursor: pointer;
+  }
+  .st-th-btn.sel {
+    background: var(--primary); border-color: var(--primary);
+    color: var(--text-inverse);
+  }
+
+  /* Font stepper inline */
+  .st-font-val {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .st-font-num {
+    font-size: 16px; font-weight: 600; font-family: var(--font-mono);
+    color: var(--text-primary); min-width: 24px; text-align: center;
+  }
+  .st-step {
+    display: flex; gap: 3px;
+  }
+  .st-step-btn {
+    width: 28px; height: 26px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    font-size: 13px; color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Server row */
+  .st-server {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px; cursor: pointer;
+  }
+  .st-server:active { background: var(--surface-hover); }
+  .st-srv-ico {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--primary-subtle); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .st-srv-ico svg { width: 13px; height: 13px; }
+  .st-srv-body { flex: 1; }
+  .st-srv-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .st-srv-url {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted); margin-top: 1px;
+  }
+
+  /* System status inline */
+  .st-sys {
+    display: flex; gap: 0; padding: 6px 20px 12px;
+  }
+  .st-sys-item {
+    flex: 1; text-align: center; position: relative;
+  }
+  .st-sys-item + .st-sys-item::before {
+    content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 1px; background: var(--hairline);
+  }
+  .st-sys-val {
+    font-size: 16px; font-weight: 600; font-family: var(--font-mono);
+    color: var(--text-primary); line-height: 1;
+  }
+  .st-sys-lbl {
+    font-size: 8px; font-weight: 500; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px;
+  }
+
+  /* Danger */
+  .st-danger {
+    padding: 12px 20px;
+  }
+  .st-danger-btn {
+    width: 100%; padding: 10px; border-radius: 8px;
+    border: 1px solid var(--error); background: transparent;
+    color: var(--error); font-family: var(--font-sans);
+    font-size: 11px; font-weight: 500; cursor: pointer;
+  }
+
+  /* Footer */
+  .st-foot {
+    text-align: center; padding: 16px 0 0;
+  }
+  .st-foot-name {
+    font-family: var(--font-serif); font-size: 11px;
+    color: var(--text-muted); letter-spacing: 1px;
+  }
+  .st-foot-ver {
+    font-size: 9px; color: var(--text-muted); margin-top: 1px; opacity: 0.6;
+  }
+
+  /* ─── Palette ─── */
+  .pal-sec { max-width: 1000px; margin: 0 auto; }
+  .pal-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px;
+  }
+  .pl { border-radius: 10px; overflow: hidden; background: #1a1a1a; }
+  .pl-c { height: 48px; }
+  .pl-i { padding: 6px 8px; }
+  .pl-n { font-size: 10px; color: #aaa; font-weight: 500; }
+  .pl-h { font-size: 9px; color: #666; font-family: var(--font-mono); margin-top: 1px; }
+
+  /* ─── Philosophy ─── */
+  .phi {
+    max-width: 640px; margin: 0 auto; color: #888;
+    font-size: 13px; line-height: 2;
+  }
+  .phi strong { color: #bbb; font-weight: 500; }
+  .phi .jp { font-family: var(--font-serif); color: #7B8B6F; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>ZenTerm</h1>
+  <p>Borderless Mockup -- カードレス版</p>
+  <div class="zen-mark"></div>
+</div>
+
+<div class="theme-toggle">
+  <button class="active" onclick="setTheme('light')">Light</button>
+  <button onclick="setTheme('dark')">Dark</button>
+</div>
+
+<div id="root">
+
+<div class="zen-divider">壱</div>
+<div class="section-subtitle">Screens</div>
+
+<div class="screens-row">
+
+<!-- ═══ 1. Sessions ═══ -->
+<div class="phone-wrap">
+<div class="phone-frame"><div class="phone-screen">
+  <div class="ios-sb"><span>9:41</span><span class="ios-sb-r">
+    <svg width="14" height="10" viewBox="0 0 16 12" fill="currentColor" opacity="0.6"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+    <svg width="20" height="10" viewBox="0 0 22 11" fill="currentColor" opacity="0.6"><rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="2" y="2" width="14" height="7" rx="1"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/></svg>
+  </span></div>
+  <div class="nav">
+    <span class="nav-t">Sessions</span>
+    <span class="nav-a">+</span>
+  </div>
+  <div class="scroll">
+    <div class="s-content">
+      <div class="new-s">
+        <div class="new-s-dot">+</div>
+        <span class="new-s-label">新しいセッション</span>
+      </div>
+
+      <div class="s-section-label">Active</div>
+
+      <div class="s-row">
+        <div class="s-dot"></div>
+        <div class="s-body">
+          <div class="s-name">deploy</div>
+          <div class="s-path">~/projects/zenterm</div>
+        </div>
+        <div class="s-time">14:30</div>
+        <div class="s-arr">&#8250;</div>
+      </div>
+      <div class="s-row">
+        <div class="s-dot"></div>
+        <div class="s-body">
+          <div class="s-name">monitoring</div>
+          <div class="s-path">~/projects/family-nas</div>
+        </div>
+        <div class="s-time">10:15</div>
+        <div class="s-arr">&#8250;</div>
+      </div>
+      <div class="s-row">
+        <div class="s-dot"></div>
+        <div class="s-body">
+          <div class="s-name">scratch</div>
+          <div class="s-path">~</div>
+        </div>
+        <div class="s-time">昨日</div>
+        <div class="s-arr">&#8250;</div>
+      </div>
+      <div class="s-row">
+        <div class="s-dot"></div>
+        <div class="s-body">
+          <div class="s-name">codex</div>
+          <div class="s-path">~/projects/zenterm</div>
+        </div>
+        <div class="s-time">3/23</div>
+        <div class="s-arr">&#8250;</div>
+      </div>
+
+      <div class="s-section-label">Recent</div>
+
+      <div class="s-row">
+        <div class="s-dot off"></div>
+        <div class="s-body">
+          <div class="s-name dim">old-debug</div>
+          <div class="s-path">~/projects/ccpocket</div>
+        </div>
+        <div class="s-time" style="opacity:0.5">3/20</div>
+        <div class="s-arr">&#8250;</div>
+      </div>
+      <div class="s-row">
+        <div class="s-dot off"></div>
+        <div class="s-body">
+          <div class="s-name dim">backup-test</div>
+          <div class="s-path">~/backups</div>
+        </div>
+        <div class="s-time" style="opacity:0.5">3/18</div>
+        <div class="s-arr">&#8250;</div>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>Sessions</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><span>Files</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>Settings</span></div>
+  </div>
+</div></div>
+<div class="screen-label">Sessions</div>
+</div>
+
+<!-- ═══ 2. Terminal ═══ -->
+<div class="phone-wrap">
+<div class="phone-frame"><div class="phone-screen">
+  <div class="ios-sb" style="background:var(--term-bg)"><span>9:41</span><span class="ios-sb-r">
+    <svg width="14" height="10" viewBox="0 0 16 12" fill="currentColor" opacity="0.6"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+    <svg width="20" height="10" viewBox="0 0 22 11" fill="currentColor" opacity="0.6"><rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="2" y="2" width="14" height="7" rx="1"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/></svg>
+  </span></div>
+  <div class="t-nav">
+    <span class="t-back">&#8249;</span>
+    <span class="t-title">deploy</span>
+    <span class="t-stat"><span class="t-stat-d"></span>接続中</span>
+  </div>
+  <div class="term">
+    <div><span class="tp">raspi5</span>:<span class="tw">~/projects/zenterm</span>$ git log --oneline -3</div>
+    <div class="td">a09722e chore: app.config + privacy link</div>
+    <div class="td">d37512b revert: session card restore</div>
+    <div class="td">35afa38 fix: gesture-handler downgrade</div>
+    <div>&nbsp;</div>
+    <div><span class="tp">raspi5</span>:<span class="tw">~/projects/zenterm</span>$ npm run dev:gateway</div>
+    <div>&nbsp;</div>
+    <div class="td">&gt; zenterm@0.1.0 dev:gateway</div>
+    <div class="td">&gt; cd packages/gateway &amp;&amp; npm run dev</div>
+    <div>&nbsp;</div>
+    <div class="to">&#10003; Gateway listening on :8765</div>
+    <div class="to">&#10003; WebSocket ready</div>
+    <div class="td">&#10003; Auth token verified</div>
+    <div>&nbsp;</div>
+    <div><span class="tp">raspi5</span>:<span class="tw">~/projects/zenterm</span>$ htop</div>
+    <div>&nbsp;</div>
+    <div class="td">  PID  CPU%  MEM%  COMMAND</div>
+    <div class="td"> 1284  12.3   4.2  node gateway</div>
+    <div class="td"> 1102   3.1   8.7  couchdb</div>
+    <div class="td">  891   0.4   2.1  sshd</div>
+    <div>&nbsp;</div>
+    <div><span class="tp">raspi5</span>:<span class="tw">~/projects/zenterm</span>$ <span class="tc"></span></div>
+  </div>
+  <div class="pg-dots">
+    <div class="pg-d on"></div><div class="pg-d"></div><div class="pg-d"></div>
+  </div>
+  <div class="kb">
+    <span class="kk">Esc</span><span class="kk">Tab</span><span class="kk">Ctrl</span>
+    <span class="kk">&#8592;</span><span class="kk">&#8593;</span><span class="kk">&#8595;</span><span class="kk">&#8594;</span>
+    <span class="kk">&#8629;</span><span class="kk">Paste</span><span class="kk">Image</span>
+  </div>
+</div></div>
+<div class="screen-label">Terminal</div>
+</div>
+
+<!-- ═══ 3. Files ═══ -->
+<div class="phone-wrap">
+<div class="phone-frame"><div class="phone-screen">
+  <div class="ios-sb"><span>9:41</span><span class="ios-sb-r">
+    <svg width="14" height="10" viewBox="0 0 16 12" fill="currentColor" opacity="0.6"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+    <svg width="20" height="10" viewBox="0 0 22 11" fill="currentColor" opacity="0.6"><rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="2" y="2" width="14" height="7" rx="1"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/></svg>
+  </span></div>
+  <div class="nav">
+    <span class="nav-t">Files</span>
+    <span class="nav-a" style="display:flex;gap:6px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
+    </span>
+  </div>
+  <div class="bc">
+    <span style="font-size:12px">&#8962;</span>
+    <span class="bc-s">&#8250;</span><span>home</span>
+    <span class="bc-s">&#8250;</span><span class="bc-c">raspi5</span>
+  </div>
+
+  <div class="scroll">
+    <div class="f-row"><div class="f-ico dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div><div class="f-body"><div class="f-name">backups</div></div><div class="f-arr">&#8250;</div></div>
+
+    <div class="f-row"><div class="f-ico dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div><div class="f-body"><div class="f-name">dotfiles</div></div><div class="f-arr">&#8250;</div></div>
+
+    <div class="f-row"><div class="f-ico dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div><div class="f-body"><div class="f-name">Downloads</div></div><div class="f-arr">&#8250;</div></div>
+
+    <div class="f-row"><div class="f-ico dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div><div class="f-body"><div class="f-name">obsidian-vault</div></div><div class="f-arr">&#8250;</div></div>
+
+    <div class="f-row"><div class="f-ico dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div><div class="f-body"><div class="f-name">projects</div></div><div class="f-arr">&#8250;</div></div>
+
+    <div class="f-row"><div class="f-ico dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div><div class="f-body"><div class="f-name">shared</div></div><div class="f-arr">&#8250;</div></div>
+
+    <div class="f-row"><div class="f-ico dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div><div class="f-body"><div class="f-name">uploads</div></div><div class="f-arr">&#8250;</div></div>
+
+    <div class="f-row"><div class="f-ico lnk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div><div class="f-body"><div class="f-name">CLAUDE.md</div><div class="f-meta">&#8594; shared/instructions/AGENTS.md</div></div></div>
+
+    <div class="f-row"><div class="f-ico fil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="f-body"><div class="f-name">.bashrc</div><div class="f-meta">2026/03/15</div></div><div class="f-sz">2.1 KB</div></div>
+
+    <div class="f-row"><div class="f-ico fil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="f-body"><div class="f-name">.zshrc</div><div class="f-meta">2026/03/22</div></div><div class="f-sz">1.4 KB</div></div>
+  </div>
+  <div class="tabs">
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>Sessions</span></div>
+    <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><span>Files</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>Settings</span></div>
+  </div>
+</div></div>
+<div class="screen-label">Files</div>
+</div>
+
+<!-- ═══ 4. Settings ═══ -->
+<div class="phone-wrap">
+<div class="phone-frame"><div class="phone-screen">
+  <div class="ios-sb"><span>9:41</span><span class="ios-sb-r">
+    <svg width="14" height="10" viewBox="0 0 16 12" fill="currentColor" opacity="0.6"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+    <svg width="20" height="10" viewBox="0 0 22 11" fill="currentColor" opacity="0.6"><rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="2" y="2" width="14" height="7" rx="1"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/></svg>
+  </span></div>
+  <div class="nav">
+    <span class="nav-t">Settings</span>
+    <span></span>
+  </div>
+
+  <div class="scroll">
+    <div class="st-content">
+
+      <div class="st-sec">
+        <div class="st-label">外観</div>
+        <div class="st-row">
+          <span class="st-key">テーマ</span>
+          <div class="st-theme">
+            <div class="st-th-btn sel" data-theme="light">&#9788; ライト</div>
+            <div class="st-th-btn" data-theme="dark">&#9789; ダーク</div>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="st-sec">
+        <div class="st-label">ターミナル</div>
+        <div class="st-row">
+          <span class="st-key">フォントサイズ</span>
+          <div class="st-font-val">
+            <span class="st-font-num">10</span>
+            <div class="st-step">
+              <div class="st-step-btn">-</div>
+              <div class="st-step-btn">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="st-sec">
+        <div class="st-label">サーバー</div>
+        <div class="st-server">
+          <div class="st-srv-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1" fill="currentColor"/><circle cx="6" cy="18" r="1" fill="currentColor"/></svg>
+          </div>
+          <div class="st-srv-body">
+            <div class="st-srv-name">raspi5</div>
+            <div class="st-srv-url">100.80.218.99:18765</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:14px;opacity:0.4">&#8250;</span>
+        </div>
+        <div class="st-sys">
+          <div class="st-sys-item">
+            <div class="st-sys-val">22<span style="font-size:10px;font-weight:400">%</span></div>
+            <div class="st-sys-lbl">CPU</div>
+          </div>
+          <div class="st-sys-item">
+            <div class="st-sys-val">37<span style="font-size:10px;font-weight:400">%</span></div>
+            <div class="st-sys-lbl">Memory</div>
+          </div>
+          <div class="st-sys-item">
+            <div class="st-sys-val">14<span style="font-size:10px;font-weight:400">%</span></div>
+            <div class="st-sys-lbl">Disk</div>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="st-sec">
+        <div class="st-label">データ</div>
+        <div class="st-danger">
+          <button class="st-danger-btn">全データ削除</button>
+        </div>
+      </div>
+
+      <div class="st-foot">
+        <div class="st-foot-name">ZenTerm</div>
+        <div class="st-foot-ver">v1.0.0</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>Sessions</span></div>
+    <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg><span>Files</span></div>
+    <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>Settings</span></div>
+  </div>
+</div></div>
+<div class="screen-label">Settings</div>
+</div>
+
+</div>
+
+<!-- ━━━ Philosophy ━━━ -->
+<div class="pal-sec" style="margin-top:56px; padding-bottom:40px">
+  <div class="zen-divider">弐</div>
+  <div class="section-subtitle">Borderless Philosophy</div>
+
+  <div class="phi">
+    <p><span class="jp">無</span> -- <strong>線を消す。</strong>カードもヘアラインも廃止。セクションラベルの上に広い余白を取ることで、線なしでもグルーピングが伝わる。近接の原則だけで構造化する。</p>
+    <br>
+    <p><span class="jp">列</span> -- <strong>行の力。</strong>セッション・ファイル・設定をすべて同じ行コンポーネントで表現。dot + テキスト + 右端アクセサリの統一レイアウト。行にhover時だけ背景色が浮かぶ。</p>
+    <br>
+    <p><span class="jp">区</span> -- <strong>余白でセクションを区切る。</strong>Active / Recent のラベル上に大きなマージンを設け、視覚的な「段落」を作る。線に頼らない上質な構造化。</p>
+    <br>
+    <p><span class="jp">数</span> -- <strong>System Status は数字だけ。</strong>バーチャートやカード枠を省き、22% / 37% / 14% の数字を縦区切りで並べる。一瞥で読める。</p>
+    <br>
+    <p><span class="jp">余</span> -- <strong>引き算の極致。</strong>カード・線・影をすべて取り去った先に残るのは、テキストと余白だけ。「何もない」が最も禅的なUI。</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+function setTheme(mode) {
+  const root = document.getElementById('root');
+  const btns = document.querySelectorAll('.theme-toggle button');
+  const segs = root.querySelectorAll('.st-th-btn');
+  if (mode === 'dark') {
+    root.classList.add('dark');
+    btns[0].classList.remove('active'); btns[1].classList.add('active');
+    if (segs[0]) { segs[0].classList.remove('sel'); segs[1].classList.add('sel'); }
+  } else {
+    root.classList.remove('dark');
+    btns[0].classList.add('active'); btns[1].classList.remove('active');
+    if (segs[0]) { segs[0].classList.add('sel'); segs[1].classList.remove('sel'); }
+  }
+}
+</script>
+</body>
+</html>

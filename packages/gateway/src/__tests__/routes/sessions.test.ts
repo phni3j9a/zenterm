@@ -60,7 +60,7 @@ describe('session routes', () => {
   it('GET /api/sessions: セッション一覧を返す', async () => {
     tmuxMocks.listSessions.mockReturnValue([
       {
-        name: 'psh_1',
+        name: 'zen_1',
         displayName: '1',
         created: 1710000000000,
         cwd: '/home/testuser',
@@ -78,7 +78,7 @@ describe('session routes', () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual([
       {
-        name: 'psh_1',
+        name: 'zen_1',
         displayName: '1',
         created: 1710000000000,
         cwd: '/home/testuser',
@@ -89,7 +89,7 @@ describe('session routes', () => {
 
   it('POST /api/sessions: セッションを作成する', async () => {
     tmuxMocks.createSession.mockReturnValue({
-      name: 'psh_dev',
+      name: 'zen_dev',
       displayName: 'dev',
       created: 1710000000000,
       cwd: '/home/testuser',
@@ -108,7 +108,7 @@ describe('session routes', () => {
 
     expect(response.statusCode).toBe(201);
     expect(JSON.parse(response.body)).toEqual({
-      name: 'psh_dev',
+      name: 'zen_dev',
       displayName: 'dev',
       created: 1710000000000,
       cwd: '/home/testuser',
@@ -134,7 +134,7 @@ describe('session routes', () => {
 
   it('PATCH /api/sessions/:sessionId: リネーム成功', async () => {
     tmuxMocks.renameSession.mockReturnValue({
-      name: 'psh_renamed',
+      name: 'zen_renamed',
       displayName: 'renamed',
       created: 1710000000000,
       cwd: '/home/testuser',
@@ -153,7 +153,7 @@ describe('session routes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({
-      name: 'psh_renamed',
+      name: 'zen_renamed',
       displayName: 'renamed',
       created: 1710000000000,
       cwd: '/home/testuser',

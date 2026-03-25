@@ -2,17 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
 import { Stack, useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useMemo, type ComponentProps } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SystemStatus } from '@/src/components/SystemStatus';
-import { Button } from '@/src/components/ui';
 import { useServersStore } from '@/src/stores/servers';
 import { useSettingsStore } from '@/src/stores/settings';
 import { useTheme, type ThemeMode } from '@/src/theme';
 
-const STORAGE_KEY = 'zenterm_servers';
 const MIN_FONT_SIZE = 6;
 const MAX_FONT_SIZE = 20;
 
@@ -31,8 +28,6 @@ export default function SettingsScreen() {
   const { colors, radii, spacing, typography } = useTheme();
   const router = useRouter();
   const server = useServersStore((state) => state.getDefaultServer());
-  const clear = useServersStore((state) => state.clear);
-  const resetSettings = useSettingsStore((state) => state.reset);
   const fontSize = useSettingsStore((state) => state.settings.fontSize);
   const themeMode = useSettingsStore((state) => state.settings.themeMode);
   const updateSettings = useSettingsStore((state) => state.updateSettings);
@@ -68,7 +63,7 @@ export default function SettingsScreen() {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingVertical: spacing.lg,
+          paddingVertical: spacing.md,
           paddingHorizontal: spacing.xl,
           minHeight: 48,
         },
@@ -78,7 +73,7 @@ export default function SettingsScreen() {
         },
         themeRow: {
           flexDirection: 'row',
-          gap: spacing.xs,
+          gap: spacing.sm,
         },
         themeButton: {
           paddingVertical: 8,
@@ -96,7 +91,7 @@ export default function SettingsScreen() {
         fontVal: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: spacing.sm,
+          gap: spacing.md,
         },
         fontNum: {
           fontSize: 18,
@@ -108,11 +103,11 @@ export default function SettingsScreen() {
         },
         stepRow: {
           flexDirection: 'row',
-          gap: 3,
+          gap: spacing.xs,
         },
         stepButton: {
-          width: 34,
-          height: 32,
+          width: 40,
+          height: 36,
           borderRadius: radii.sm,
           borderWidth: 1,
           borderColor: colors.border,
@@ -121,14 +116,15 @@ export default function SettingsScreen() {
           justifyContent: 'center',
         },
         stepButtonText: {
-          fontSize: 15,
+          fontSize: 17,
+          fontWeight: '500',
           color: colors.textSecondary,
         },
         serverRow: {
           flexDirection: 'row',
           alignItems: 'center',
           gap: spacing.md,
-          paddingVertical: spacing.lg,
+          paddingVertical: spacing.md,
           paddingHorizontal: spacing.xl,
         },
         serverIcon: {
@@ -157,12 +153,8 @@ export default function SettingsScreen() {
           color: colors.textMuted,
           fontStyle: 'italic',
         },
-        dangerSection: {
-          paddingVertical: spacing.md,
-          paddingHorizontal: spacing.xl,
-        },
         footer: {
-          paddingTop: spacing.lg,
+          paddingTop: spacing['2xl'],
           alignItems: 'center',
           gap: 1,
         },
@@ -181,23 +173,6 @@ export default function SettingsScreen() {
       }),
     [colors, radii, spacing, typography],
   );
-
-  const confirmReset = () => {
-    Alert.alert('Reset All Data', 'Delete all saved servers and settings?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            await SecureStore.deleteItemAsync(STORAGE_KEY);
-            clear();
-            await resetSettings();
-          })();
-        },
-      },
-    ]);
-  };
 
   const adjustFontSize = (delta: number) => {
     const next = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, fontSize + delta));
@@ -300,13 +275,6 @@ export default function SettingsScreen() {
             <Ionicons color={colors.textMuted} name="chevron-forward" size={16} style={{ opacity: 0.4 }} />
           </Pressable>
           {server && <SystemStatus server={server} />}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Data</Text>
-          <View style={styles.dangerSection}>
-            <Button label="Reset All Data" size="md" variant="danger" onPress={confirmReset} />
-          </View>
         </View>
 
         <View style={styles.footer}>

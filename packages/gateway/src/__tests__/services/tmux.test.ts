@@ -45,7 +45,7 @@ beforeEach(() => {
   vi.resetModules();
   process.env.HOME = '/home/testuser';
   process.env.AUTH_TOKEN = 'test-token';
-  process.env.SESSION_PREFIX = 'psh_';
+  process.env.SESSION_PREFIX = 'zen_';
   process.env.LOG_LEVEL = 'error';
 });
 
@@ -87,21 +87,21 @@ describe('tmux service', () => {
       ]);
 
       return [
-        'psh_1|1710000000|/home/raspi5',
-        'psh_work|1710000100|/srv/project',
+        'zen_1|1710000000|/home/raspi5',
+        'zen_work|1710000100|/srv/project',
         'other_ignored|1710000200|/tmp',
       ].join('\n');
     });
 
     expect(listSessions()).toEqual([
       {
-        name: 'psh_1',
+        name: 'zen_1',
         displayName: '1',
         created: 1710000000000,
         cwd: '/home/raspi5',
       },
       {
-        name: 'psh_work',
+        name: 'zen_work',
         displayName: 'work',
         created: 1710000100000,
         cwd: '/srv/project',
@@ -132,21 +132,21 @@ describe('tmux service', () => {
         case 'set-window-option':
           return '';
         case 'list-sessions':
-          return 'psh_dev|1710000000|/home/testuser';
+          return 'zen_dev|1710000000|/home/testuser';
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
       }
     });
 
     expect(createSession('dev')).toEqual({
-      name: 'psh_dev',
+      name: 'zen_dev',
       displayName: 'dev',
       created: 1710000000000,
       cwd: '/home/testuser',
     });
     expect(execFileSyncMock).toHaveBeenCalledWith(
       'tmux',
-      ['new-session', '-d', '-s', 'psh_dev', '-c', '/home/testuser'],
+      ['new-session', '-d', '-s', 'zen_dev', '-c', '/home/testuser'],
       expect.any(Object)
     );
   });
@@ -160,8 +160,8 @@ describe('tmux service', () => {
         case 'list-sessions':
           listCalls += 1;
           return listCalls === 1
-            ? ['psh_1|1710000000|/home/testuser', 'psh_2|1710000050|/home/testuser'].join('\n')
-            : 'psh_3|1710000100|/home/testuser';
+            ? ['zen_1|1710000000|/home/testuser', 'zen_2|1710000050|/home/testuser'].join('\n')
+            : 'zen_3|1710000100|/home/testuser';
         case 'has-session':
           throw createTmuxCommandError("can't find session");
         case 'new-session':
@@ -174,14 +174,14 @@ describe('tmux service', () => {
     });
 
     expect(createSession()).toEqual({
-      name: 'psh_3',
+      name: 'zen_3',
       displayName: '3',
       created: 1710000100000,
       cwd: '/home/testuser',
     });
     expect(execFileSyncMock).toHaveBeenCalledWith(
       'tmux',
-      ['new-session', '-d', '-s', 'psh_3', '-c', '/home/testuser'],
+      ['new-session', '-d', '-s', 'zen_3', '-c', '/home/testuser'],
       expect.any(Object)
     );
   });
@@ -223,7 +223,7 @@ describe('tmux service', () => {
     expect(() => killSession('cleanup')).not.toThrow();
     expect(execFileSyncMock).toHaveBeenCalledWith(
       'tmux',
-      ['kill-session', '-t', '=psh_cleanup'],
+      ['kill-session', '-t', '=zen_cleanup'],
       expect.any(Object)
     );
   });
@@ -253,11 +253,11 @@ describe('tmux service', () => {
     const { renameSession } = await loadTmuxModule();
 
     installExecMock((args) => {
-      if (args[0] === 'has-session' && args[2] === '=psh_old') {
+      if (args[0] === 'has-session' && args[2] === '=zen_old') {
         return '';
       }
 
-      if (args[0] === 'has-session' && args[2] === '=psh_new') {
+      if (args[0] === 'has-session' && args[2] === '=zen_new') {
         throw createTmuxCommandError("can't find session");
       }
 
@@ -267,21 +267,21 @@ describe('tmux service', () => {
         case 'set-window-option':
           return '';
         case 'list-sessions':
-          return 'psh_new|1710000000|/home/testuser';
+          return 'zen_new|1710000000|/home/testuser';
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
       }
     });
 
     expect(renameSession('old', 'new')).toEqual({
-      name: 'psh_new',
+      name: 'zen_new',
       displayName: 'new',
       created: 1710000000000,
       cwd: '/home/testuser',
     });
     expect(execFileSyncMock).toHaveBeenCalledWith(
       'tmux',
-      ['rename-session', '-t', '=psh_old', 'psh_new'],
+      ['rename-session', '-t', '=zen_old', 'zen_new'],
       expect.any(Object)
     );
   });
@@ -294,7 +294,7 @@ describe('tmux service', () => {
         case 'has-session':
           return '';
         case 'list-sessions':
-          return 'psh_same|1710000000|/home/testuser';
+          return 'zen_same|1710000000|/home/testuser';
         case 'rename-session':
           throw new Error('rename-session should not be called');
         default:
@@ -303,7 +303,7 @@ describe('tmux service', () => {
     });
 
     expect(renameSession('same', 'same')).toEqual({
-      name: 'psh_same',
+      name: 'zen_same',
       displayName: 'same',
       created: 1710000000000,
       cwd: '/home/testuser',

@@ -97,7 +97,7 @@ npm run dev:gateway
 | `AUTH_TOKEN` | (必須) | Bearer 認証トークン |
 | `PORT` | `18765` | リッスンポート |
 | `HOST` | `0.0.0.0` | バインドホスト |
-| `SESSION_PREFIX` | `psh_` | tmux セッション名プレフィックス |
+| `SESSION_PREFIX` | `zen_` | tmux セッション名プレフィックス |
 | `LOG_LEVEL` | `info` | ログレベル (debug/info/warn/error) |
 | `UPLOAD_DIR` | `~/uploads/zenterm` | アップロード保存先 |
 | `UPLOAD_MAX_SIZE` | `10485760` | アップロード上限 (bytes, デフォルト 10MB) |
@@ -133,7 +133,7 @@ npm run dev:gateway
 
 ```json
 { "type": "output",      "data": "..." }
-{ "type": "sessionInfo", "session": { "id": "psh_abc", "name": "main", ... } }
+{ "type": "sessionInfo", "session": { "id": "zen_abc", "name": "main", ... } }
 { "type": "exit",        "code": 0 }
 { "type": "error",       "message": "..." }
 ```

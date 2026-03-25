@@ -36,7 +36,7 @@ export function Sidebar() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm(`Delete session "${id.replace(/^psh_/, '')}"?`)) {
+    if (window.confirm(`Delete session "${id.replace(/^zen_/, '')}"?`)) {
       await deleteSession(id);
     }
   };

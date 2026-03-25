@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZenTerm - Zen Theme Mockup v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F5F1E8;
+    --surface: #ECE8DD;
+    --surface-hover: #E4DFD2;
+    --border: #D6CFBF;
+    --border-subtle: #E4DFD2;
+
+    --text-primary: #2A2721;
+    --text-secondary: #66614F;
+    --text-muted: #958E7E;
+    --text-inverse: #F5F1E8;
+
+    --primary: #7B8B6F;
+    --primary-hover: #6C7C61;
+    --primary-active: #5E6D54;
+    --primary-subtle: #E8EDE4;
+    --primary-muted: #A4B199;
+
+    --success: #7B8B6F;
+    --warning: #B89F56;
+    --error: #B25A5A;
+    --info: #7A96A8;
+
+    --term-bg: #F0ECE1;
+    --term-fg: #2A2721;
+    --term-cursor: #7B8B6F;
+
+    --shadow-color: rgba(42, 39, 33, 0.04);
+    --shadow-md: rgba(42, 39, 33, 0.07);
+
+    --font-sans: 'Noto Sans JP', -apple-system, sans-serif;
+    --font-serif: 'Noto Serif JP', serif;
+    --font-mono: 'IBM Plex Mono', 'Menlo', monospace;
+  }
+
+  .dark {
+    --bg: #1B1A17;
+    --surface: #242320;
+    --surface-hover: #2E2D29;
+    --border: #3A3832;
+    --border-subtle: #2E2D29;
+
+    --text-primary: #DBD6C8;
+    --text-secondary: #A5A090;
+    --text-muted: #6D6860;
+    --text-inverse: #1B1A17;
+
+    --primary: #94A687;
+    --primary-hover: #A5B59A;
+    --primary-active: #7B8B6F;
+    --primary-subtle: #262B23;
+    --primary-muted: #4E5746;
+
+    --success: #94A687;
+    --warning: #D4B86A;
+    --error: #C46A6A;
+    --info: #8EB0C4;
+
+    --term-bg: #1B1A17;
+    --term-fg: #DBD6C8;
+    --term-cursor: #94A687;
+
+    --shadow-color: transparent;
+    --shadow-md: transparent;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: #141413;
+    color: #ccc;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  /* ─── Page Header ─── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .page-header h1 {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: 6px;
+    color: #DBD6C8;
+    margin-bottom: 12px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 1px;
+  }
+  .page-header .zen-mark {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #7B8B6F;
+    margin: 16px auto 0;
+  }
+
+  /* ─── Theme Toggle ─── */
+  .theme-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin-bottom: 48px;
+    background: #222;
+    border-radius: 24px;
+    padding: 3px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .theme-toggle button {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 28px;
+    border: none;
+    border-radius: 20px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+  }
+  .theme-toggle button.active {
+    background: #7B8B6F;
+    color: #fff;
+  }
+
+  /* ─── Section Dividers ─── */
+  .zen-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 48px 0 12px;
+    color: #444;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    letter-spacing: 6px;
+  }
+  .zen-divider::before,
+  .zen-divider::after {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: #333;
+  }
+  .section-subtitle {
+    text-align: center;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #555;
+    margin-bottom: 32px;
+  }
+
+  /* ─── Phone Grid ─── */
+  .screens-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ─── iPhone Frame ─── */
+  .phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .phone-frame {
+    width: 300px;
+    border-radius: 44px;
+    background: #0a0a0a;
+    padding: 10px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .phone-screen {
+    border-radius: 36px;
+    overflow: hidden;
+    background: var(--bg);
+    height: 660px;
+    display: flex;
+    flex-direction: column;
+  }
+  .screen-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #555;
+    text-transform: uppercase;
+  }
+
+  /* ─── iOS Status Bar ─── */
+  .ios-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 26px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  .ios-status-right {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    font-size: 10px;
+  }
+
+  /* ─── Navigation ─── */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0px 20px 10px;
+    flex-shrink: 0;
+  }
+  .nav-title {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+  }
+  .nav-action {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 17px;
+    font-weight: 300;
+  }
+
+  /* ─── Tab Bar ─── */
+  .tab-bar {
+    display: flex;
+    padding: 6px 0 20px;
+    background: var(--bg);
+    flex-shrink: 0;
+  }
+  .dark .tab-bar {
+    background: var(--surface);
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+  .tab-item.active { color: var(--primary); }
+  .tab-icon { font-size: 16px; line-height: 1; }
+  .tab-icon svg { width: 16px; height: 16px; }
+  .tab-badge {
+    position: relative;
+  }
+  .tab-badge::after {
+    content: attr(data-count);
+    position: absolute;
+    top: -3px;
+    right: -9px;
+    font-size: 8px;
+    font-weight: 600;
+    min-width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background: var(--primary);
+    color: var(--text-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 2px;
+  }
+
+  /* ─── Scroll Content ─── */
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ═══════════════════════════════════════
+     Sessions Screen
+     ═══════════════════════════════════════ */
+  .sessions-content {
+    padding: 6px 14px 24px;
+  }
+
+  /* New Session - Minimal */
+  .new-session {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--primary-subtle);
+    margin-bottom: 18px;
+    cursor: pointer;
+  }
+  .new-session-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: var(--text-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 300;
+    flex-shrink: 0;
+  }
+  .new-session-text {
+    flex: 1;
+  }
+  .new-session-text h3 {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 1px;
+  }
+  .new-session-text p {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* Session Items - Clean list style */
+  .session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .session-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: background 0.15s;
+    gap: 10px;
+  }
+  .session-item:hover { background: var(--surface-hover); }
+  .session-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+  .session-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .session-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.1px;
+  }
+  .session-path {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .session-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .session-chevron {
+    color: var(--border);
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-left: -4px;
+  }
+
+  /* Empty state between session items */
+  .session-gap {
+    height: 4px;
+  }
+
+  /* ═══════════════════════════════════════
+     Terminal Screen
+     ═══════════════════════════════════════ */
+  .term-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0px 18px 6px;
+    background: var(--term-bg);
+    flex-shrink: 0;
+  }
+  .term-back {
+    color: var(--primary);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .term-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+  }
+  .term-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    color: var(--success);
+    letter-spacing: 0.3px;
+  }
+  .term-status-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  .terminal {
+    flex: 1;
+    background: var(--term-bg);
+    padding: 2px 14px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 1.65;
+    color: var(--term-fg);
+    overflow: hidden;
+  }
+  .t-prompt { color: var(--primary); font-weight: 500; }
+  .t-path { color: var(--warning); }
+  .t-dim { color: var(--text-muted); }
+  .t-ok { color: var(--success); }
+  .t-cursor {
+    display: inline-block;
+    width: 6px;
+    height: 12px;
+    background: var(--term-cursor);
+    animation: blink 1.2s step-end infinite;
+    vertical-align: text-bottom;
+    border-radius: 1px;
+    opacity: 0.9;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .page-dots {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 0;
+    background: var(--term-bg);
+    flex-shrink: 0;
+  }
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    opacity: 0.3;
+  }
+  .dot.active {
+    width: 14px;
+    border-radius: 2px;
+    background: var(--primary);
+    opacity: 0.8;
+  }
+
+  /* Key Bar - Stone-like buttons */
+  .key-bar {
+    background: var(--term-bg);
+    padding: 4px 12px 8px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    flex-shrink: 0;
+  }
+  .key-bar::-webkit-scrollbar { display: none; }
+  .k {
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: none;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .dark .k {
+    background: var(--surface-hover);
+  }
+  .k:active { background: var(--surface-hover); }
+  .k.accent {
+    background: var(--primary);
+    color: var(--text-inverse);
+  }
+
+  /* ═══════════════════════════════════════
+     Files Screen
+     ═══════════════════════════════════════ */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 7px 16px;
+    font-size: 10px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .breadcrumb::-webkit-scrollbar { display: none; }
+  .bc-sep { opacity: 0.4; }
+  .bc-current { color: var(--text-primary); font-weight: 500; }
+  .bc-home { font-size: 12px; }
+
+  .file-list {
+    padding: 2px 0;
+  }
+  .file-row {
+    display: flex;
+    align-items: center;
+    padding: 9px 16px;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .file-row:active { background: var(--surface-hover); }
+  .file-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .file-icon svg { width: 15px; height: 15px; }
+  .file-icon.folder {
+    background: var(--primary-subtle);
+    color: var(--primary);
+  }
+  .file-icon.file {
+    background: var(--surface);
+    color: var(--text-muted);
+  }
+  .file-icon.link {
+    background: var(--surface);
+    color: var(--info);
+  }
+  .file-details {
+    flex: 1;
+    min-width: 0;
+  }
+  .file-name {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .file-chevron {
+    color: var(--border);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .file-size {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .file-divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0 16px 0 56px;
+  }
+
+  /* ═══════════════════════════════════════
+     Settings Screen
+     ═══════════════════════════════════════ */
+  .settings-content {
+    padding: 4px 14px 24px;
+  }
+  .settings-section {
+    margin-bottom: 18px;
+  }
+  .s-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    padding-left: 4px;
+  }
+  .s-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .s-card + .s-card { margin-top: 4px; }
+
+  .s-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .s-key {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .s-val {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Theme Picker in Settings */
+  .theme-picker {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .theme-opt {
+    flex: 1;
+    height: 34px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .theme-opt.sel {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-inverse);
+  }
+
+  /* Font Stepper */
+  .font-display {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .font-big {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+    font-family: var(--font-mono);
+  }
+  .font-unit {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+  .stepper {
+    display: flex;
+    gap: 3px;
+  }
+  .step-btn {
+    width: 30px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Server Card */
+  .server-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .server-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--primary-subtle);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .server-icon svg { width: 14px; height: 14px; }
+  .server-details { flex: 1; }
+  .server-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .server-url {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  /* System Status */
+  .sys-status {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .sys-item {
+    padding: 8px;
+    border-radius: 8px;
+    background: var(--surface);
+    text-align: center;
+  }
+  .sys-metric-label {
+    font-size: 8px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .sys-bar {
+    height: 2px;
+    border-radius: 1px;
+    background: var(--border-subtle);
+    margin: 3px 0 4px;
+    overflow: hidden;
+  }
+  .sys-fill {
+    height: 100%;
+    border-radius: 1px;
+  }
+  .sys-value {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .sys-sub {
+    font-size: 8px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Danger button */
+  .danger-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--error);
+    background: transparent;
+    color: var(--error);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .danger-btn:hover {
+    background: var(--error);
+    color: var(--text-inverse);
+  }
+
+  /* App Footer */
+  .app-foot {
+    text-align: center;
+    padding-top: 4px;
+  }
+  .app-foot .name {
+    font-family: var(--font-serif);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+  .app-foot .ver {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 1px;
+    opacity: 0.6;
+  }
+
+  /* ─── Palette Section ─── */
+  .palette-section {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .pal {
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1a1a1a;
+  }
+  .pal-color { height: 48px; }
+  .pal-info { padding: 6px 8px; }
+  .pal-name { font-size: 10px; color: #aaa; font-weight: 500; }
+  .pal-hex { font-size: 9px; color: #666; font-family: var(--font-mono); margin-top: 1px; }
+
+  /* ─── Design Philosophy ─── */
+  .philosophy {
+    max-width: 640px;
+    margin: 0 auto;
+    color: #888;
+    font-size: 13px;
+    line-height: 2;
+  }
+  .philosophy strong {
+    color: #bbb;
+    font-weight: 500;
+  }
+  .philosophy .jp {
+    font-family: var(--font-serif);
+    color: #7B8B6F;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ━━━ Page Header ━━━ -->
+<div class="page-header">
+  <h1>ZenTerm</h1>
+  <p>Zen Theme Mockup v2</p>
+  <div class="zen-mark"></div>
+</div>
+
+<div class="theme-toggle">
+  <button class="active" onclick="setTheme('light')">Light</button>
+  <button onclick="setTheme('dark')">Dark</button>
+</div>
+
+<div id="theme-root">
+
+<div class="zen-divider">壱</div>
+<div class="section-subtitle">Screens</div>
+
+<div class="screens-row">
+
+  <!-- ════════════════════════════════
+       1. Sessions
+       ════════════════════════════════ -->
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="ios-status">
+          <span>9:41</span>
+          <span class="ios-status-right">
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" opacity="0.7">
+              <rect x="0" y="8" width="3" height="4" rx="0.5"/>
+              <rect x="4.5" y="5" width="3" height="7" rx="0.5"/>
+              <rect x="9" y="2" width="3" height="10" rx="0.5"/>
+              <rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/>
+            </svg>
+            <svg width="22" height="11" viewBox="0 0 22 11" fill="currentColor" opacity="0.7">
+              <rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/>
+              <rect x="2" y="2" width="14" height="7" rx="1"/>
+              <rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/>
+            </svg>
+          </span>
+        </div>
+        <div class="nav-bar">
+          <span class="nav-title">Sessions</span>
+          <span class="nav-action">+</span>
+        </div>
+        <div class="scroll">
+          <div class="sessions-content">
+            <div class="new-session">
+              <div class="new-session-icon">+</div>
+              <div class="new-session-text">
+                <h3>新しいセッション</h3>
+                <p>ターミナルを開いて作業を始める</p>
+              </div>
+            </div>
+
+            <div class="session-list">
+              <div class="session-item">
+                <div class="session-indicator"></div>
+                <div class="session-info">
+                  <div class="session-name">deploy</div>
+                  <div class="session-path">~/projects/zenterm</div>
+                </div>
+                <div class="session-time">14:30</div>
+                <div class="session-chevron">&#8250;</div>
+              </div>
+              <div class="session-gap"></div>
+              <div class="session-item">
+                <div class="session-indicator"></div>
+                <div class="session-info">
+                  <div class="session-name">monitoring</div>
+                  <div class="session-path">~/projects/family-nas</div>
+                </div>
+                <div class="session-time">10:15</div>
+                <div class="session-chevron">&#8250;</div>
+              </div>
+              <div class="session-gap"></div>
+              <div class="session-item">
+                <div class="session-indicator"></div>
+                <div class="session-info">
+                  <div class="session-name">scratch</div>
+                  <div class="session-path">~</div>
+                </div>
+                <div class="session-time">昨日</div>
+                <div class="session-chevron">&#8250;</div>
+              </div>
+              <div class="session-gap"></div>
+              <div class="session-item">
+                <div class="session-indicator" style="background:var(--text-muted); opacity:0.3"></div>
+                <div class="session-info">
+                  <div class="session-name" style="color:var(--text-muted)">old-debug</div>
+                  <div class="session-path">~/projects/ccpocket</div>
+                </div>
+                <div class="session-time" style="opacity:0.5">3/20</div>
+                <div class="session-chevron">&#8250;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item active">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </span>
+            <span class="tab-badge" data-count="3">Sessions</span>
+          </div>
+          <div class="tab-item">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+              </svg>
+            </span>
+            <span>Files</span>
+          </div>
+          <div class="tab-item">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+              </svg>
+            </span>
+            <span>Settings</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Sessions</div>
+  </div>
+
+  <!-- ════════════════════════════════
+       2. Terminal
+       ════════════════════════════════ -->
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="ios-status" style="background:var(--term-bg)">
+          <span>9:41</span>
+          <span class="ios-status-right">
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" opacity="0.7"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+            <svg width="22" height="11" viewBox="0 0 22 11" fill="currentColor" opacity="0.7"><rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="2" y="2" width="14" height="7" rx="1"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/></svg>
+          </span>
+        </div>
+        <div class="term-nav">
+          <span class="term-back">&#8249;</span>
+          <span class="term-title">deploy</span>
+          <span class="term-status">
+            <span class="term-status-dot"></span>
+            接続中
+          </span>
+        </div>
+        <div class="terminal">
+          <div><span class="t-prompt">raspi5</span>:<span class="t-path">~/projects/zenterm</span>$ git log --oneline -3</div>
+          <div class="t-dim">a09722e chore: app.config + privacy link</div>
+          <div class="t-dim">d37512b revert: session card restore</div>
+          <div class="t-dim">35afa38 fix: gesture-handler downgrade</div>
+          <div>&nbsp;</div>
+          <div><span class="t-prompt">raspi5</span>:<span class="t-path">~/projects/zenterm</span>$ npm run dev:gateway</div>
+          <div>&nbsp;</div>
+          <div class="t-dim">&gt; zenterm@0.1.0 dev:gateway</div>
+          <div class="t-dim">&gt; cd packages/gateway &amp;&amp; npm run dev</div>
+          <div>&nbsp;</div>
+          <div class="t-ok">&#10003; Gateway listening on :8765</div>
+          <div class="t-ok">&#10003; WebSocket ready</div>
+          <div class="t-dim">&#10003; Auth token verified</div>
+          <div>&nbsp;</div>
+          <div><span class="t-prompt">raspi5</span>:<span class="t-path">~/projects/zenterm</span>$ htop</div>
+          <div>&nbsp;</div>
+          <div class="t-dim">  PID  CPU%  MEM%  COMMAND</div>
+          <div class="t-dim"> 1284  12.3   4.2  node gateway</div>
+          <div class="t-dim"> 1102   3.1   8.7  couchdb</div>
+          <div class="t-dim">  891   0.4   2.1  sshd</div>
+          <div>&nbsp;</div>
+          <div><span class="t-prompt">raspi5</span>:<span class="t-path">~/projects/zenterm</span>$ <span class="t-cursor"></span></div>
+        </div>
+        <div class="page-dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="key-bar">
+          <span class="k">Esc</span>
+          <span class="k">Tab</span>
+          <span class="k">Ctrl</span>
+          <span class="k">&#8592;</span>
+          <span class="k">&#8593;</span>
+          <span class="k">&#8595;</span>
+          <span class="k">&#8594;</span>
+          <span class="k">&#8629;</span>
+          <span class="k">Paste</span>
+          <span class="k">Image</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Terminal</div>
+  </div>
+
+  <!-- ════════════════════════════════
+       3. Files
+       ════════════════════════════════ -->
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="ios-status">
+          <span>9:41</span>
+          <span class="ios-status-right">
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" opacity="0.7"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+            <svg width="22" height="11" viewBox="0 0 22 11" fill="currentColor" opacity="0.7"><rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="2" y="2" width="14" height="7" rx="1"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/></svg>
+          </span>
+        </div>
+        <div class="nav-bar">
+          <span class="nav-title">Files</span>
+          <span class="nav-action" style="gap:6px;width:auto;display:flex">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
+          </span>
+        </div>
+        <div class="breadcrumb">
+          <span class="bc-home">&#8962;</span>
+          <span class="bc-sep">&#8250;</span>
+          <span>home</span>
+          <span class="bc-sep">&#8250;</span>
+          <span class="bc-current">raspi5</span>
+        </div>
+        <div class="scroll">
+          <div class="file-list">
+            <div class="file-row">
+              <div class="file-icon folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+              <div class="file-details"><div class="file-name">backups</div></div>
+              <div class="file-chevron">&#8250;</div>
+            </div>
+            <div class="file-divider"></div>
+            <div class="file-row">
+              <div class="file-icon folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+              <div class="file-details"><div class="file-name">dotfiles</div></div>
+              <div class="file-chevron">&#8250;</div>
+            </div>
+            <div class="file-divider"></div>
+            <div class="file-row">
+              <div class="file-icon folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+              <div class="file-details"><div class="file-name">obsidian-vault</div></div>
+              <div class="file-chevron">&#8250;</div>
+            </div>
+            <div class="file-divider"></div>
+            <div class="file-row">
+              <div class="file-icon folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+              <div class="file-details"><div class="file-name">projects</div></div>
+              <div class="file-chevron">&#8250;</div>
+            </div>
+            <div class="file-divider"></div>
+            <div class="file-row">
+              <div class="file-icon folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+              <div class="file-details"><div class="file-name">shared</div></div>
+              <div class="file-chevron">&#8250;</div>
+            </div>
+            <div class="file-divider"></div>
+            <div class="file-row">
+              <div class="file-icon folder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
+              <div class="file-details"><div class="file-name">uploads</div></div>
+              <div class="file-chevron">&#8250;</div>
+            </div>
+            <div class="file-divider"></div>
+            <div class="file-row">
+              <div class="file-icon link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+              <div class="file-details">
+                <div class="file-name">CLAUDE.md</div>
+                <div class="file-meta">&#8594; shared/instructions/AGENTS.md</div>
+              </div>
+            </div>
+            <div class="file-divider"></div>
+            <div class="file-row">
+              <div class="file-icon file"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div class="file-details">
+                <div class="file-name">.bashrc</div>
+                <div class="file-meta">2026/03/15</div>
+              </div>
+              <div class="file-size">2.1 KB</div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </span>
+            <span>Sessions</span>
+          </div>
+          <div class="tab-item active">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+            </span>
+            <span>Files</span>
+          </div>
+          <div class="tab-item">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            </span>
+            <span>Settings</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Files</div>
+  </div>
+
+  <!-- ════════════════════════════════
+       4. Settings
+       ════════════════════════════════ -->
+  <div class="phone-wrap">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="ios-status">
+          <span>9:41</span>
+          <span class="ios-status-right">
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" opacity="0.7"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+            <svg width="22" height="11" viewBox="0 0 22 11" fill="currentColor" opacity="0.7"><rect x="0" y="0" width="20" height="11" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><rect x="2" y="2" width="14" height="7" rx="1"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5"/></svg>
+          </span>
+        </div>
+        <div class="nav-bar">
+          <span class="nav-title">Settings</span>
+          <span></span>
+        </div>
+        <div class="scroll">
+          <div class="settings-content">
+
+            <div class="settings-section">
+              <div class="s-label">外観</div>
+              <div class="s-card">
+                <div class="s-key">テーマ</div>
+                <div class="theme-picker">
+                  <div class="theme-opt sel" data-theme="light">&#9788; ライト</div>
+                  <div class="theme-opt" data-theme="dark">&#9789; ダーク</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="s-label">ターミナル</div>
+              <div class="s-card">
+                <div class="s-key" style="margin-bottom:8px">フォントサイズ</div>
+                <div class="s-row">
+                  <div class="font-display">
+                    <span class="font-big">10</span>
+                    <span class="font-unit">pt</span>
+                  </div>
+                  <div class="stepper">
+                    <div class="step-btn">-</div>
+                    <div class="step-btn">+</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="s-label">サーバー</div>
+              <div class="s-card" style="cursor:pointer">
+                <div class="server-row">
+                  <div class="server-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1" fill="currentColor"/><circle cx="6" cy="18" r="1" fill="currentColor"/></svg>
+                  </div>
+                  <div class="server-details">
+                    <div class="server-name">raspi5</div>
+                    <div class="server-url">100.80.218.99:18765</div>
+                  </div>
+                  <span style="color:var(--text-muted);font-size:14px">&#8250;</span>
+                </div>
+              </div>
+              <div class="sys-status">
+                <div class="sys-item">
+                  <div class="sys-metric-label">CPU</div>
+                  <div class="sys-bar"><div class="sys-fill" style="width:22%;background:var(--success)"></div></div>
+                  <div class="sys-value">22%</div>
+                  <div class="sys-sub">4 cores</div>
+                </div>
+                <div class="sys-item">
+                  <div class="sys-metric-label">Memory</div>
+                  <div class="sys-bar"><div class="sys-fill" style="width:37%;background:var(--primary)"></div></div>
+                  <div class="sys-value">37%</div>
+                  <div class="sys-sub">2.9/7.9 GB</div>
+                </div>
+                <div class="sys-item">
+                  <div class="sys-metric-label">Disk</div>
+                  <div class="sys-bar"><div class="sys-fill" style="width:14%;background:var(--info)"></div></div>
+                  <div class="sys-value">14%</div>
+                  <div class="sys-sub">31.9/233 GB</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="s-label">データ</div>
+              <div class="s-card">
+                <button class="danger-btn">全データ削除</button>
+              </div>
+            </div>
+
+            <div class="app-foot">
+              <div class="name">ZenTerm</div>
+              <div class="ver">v1.0.0</div>
+            </div>
+
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab-item">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </span>
+            <span>Sessions</span>
+          </div>
+          <div class="tab-item">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+            </span>
+            <span>Files</span>
+          </div>
+          <div class="tab-item active">
+            <span class="tab-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            </span>
+            <span>Settings</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Settings</div>
+  </div>
+
+</div>
+
+<!-- ━━━ Color Palette ━━━ -->
+<div class="palette-section">
+  <div class="zen-divider">弐</div>
+  <div class="section-subtitle">Palette</div>
+
+  <div id="pal-light" class="palette-grid">
+    <div class="pal"><div class="pal-color" style="background:#F5F1E8"></div><div class="pal-info"><div class="pal-name">bg (和紙)</div><div class="pal-hex">#F5F1E8</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#ECE8DD"></div><div class="pal-info"><div class="pal-name">surface</div><div class="pal-hex">#ECE8DD</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#D6CFB"></div><div class="pal-info"><div class="pal-name">border</div><div class="pal-hex">#D6CFBF</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#2A2721"></div><div class="pal-info"><div class="pal-name">text (墨)</div><div class="pal-hex">#2A2721</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#66614F"></div><div class="pal-info"><div class="pal-name">secondary</div><div class="pal-hex">#66614F</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#958E7E"></div><div class="pal-info"><div class="pal-name">muted</div><div class="pal-hex">#958E7E</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#7B8B6F"></div><div class="pal-info"><div class="pal-name">primary (苔)</div><div class="pal-hex">#7B8B6F</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#5E6D54"></div><div class="pal-info"><div class="pal-name">primary-active</div><div class="pal-hex">#5E6D54</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#E8EDE4"></div><div class="pal-info"><div class="pal-name">primary-subtle</div><div class="pal-hex">#E8EDE4</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#B89F56"></div><div class="pal-info"><div class="pal-name">warning (金)</div><div class="pal-hex">#B89F56</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#B25A5A"></div><div class="pal-info"><div class="pal-name">error (朱)</div><div class="pal-hex">#B25A5A</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#7A96A8"></div><div class="pal-info"><div class="pal-name">info (霧)</div><div class="pal-hex">#7A96A8</div></div></div>
+  </div>
+
+  <div id="pal-dark" class="palette-grid" style="display:none">
+    <div class="pal"><div class="pal-color" style="background:#1B1A17"></div><div class="pal-info"><div class="pal-name">bg (墨)</div><div class="pal-hex">#1B1A17</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#242320"></div><div class="pal-info"><div class="pal-name">surface</div><div class="pal-hex">#242320</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#3A3832"></div><div class="pal-info"><div class="pal-name">border</div><div class="pal-hex">#3A3832</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#DBD6C8"></div><div class="pal-info"><div class="pal-name">text (白墨)</div><div class="pal-hex">#DBD6C8</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#A5A090"></div><div class="pal-info"><div class="pal-name">secondary</div><div class="pal-hex">#A5A090</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#6D6860"></div><div class="pal-info"><div class="pal-name">muted</div><div class="pal-hex">#6D6860</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#94A687"></div><div class="pal-info"><div class="pal-name">primary (苔)</div><div class="pal-hex">#94A687</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#7B8B6F"></div><div class="pal-info"><div class="pal-name">primary-active</div><div class="pal-hex">#7B8B6F</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#262B23"></div><div class="pal-info"><div class="pal-name">primary-subtle</div><div class="pal-hex">#262B23</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#D4B86A"></div><div class="pal-info"><div class="pal-name">warning (金)</div><div class="pal-hex">#D4B86A</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#C46A6A"></div><div class="pal-info"><div class="pal-name">error (朱)</div><div class="pal-hex">#C46A6A</div></div></div>
+    <div class="pal"><div class="pal-color" style="background:#8EB0C4"></div><div class="pal-info"><div class="pal-name">info (霧)</div><div class="pal-hex">#8EB0C4</div></div></div>
+  </div>
+</div>
+
+<!-- ━━━ Design Philosophy ━━━ -->
+<div class="palette-section" style="margin-top: 48px; padding-bottom: 40px;">
+  <div class="zen-divider">参</div>
+  <div class="section-subtitle">Design Philosophy</div>
+
+  <div class="philosophy">
+    <p><span class="jp">間</span> -- <strong>余白で語る。</strong>セッションカードは情報量を絞り、名前・パス・時刻の三要素だけ。「タップで接続」「スワイプで操作」のヒントテキストを廃止し、静寂を保つ。</p>
+    <br>
+    <p><span class="jp">苔</span> -- <strong>Primary は苔色。</strong>テラコッタ橙から苔色 #7B8B6F へ。ターミナルアプリの「自然体で使う道具」感を表現。カーソルも苔色で呼吸するように明滅する。</p>
+    <br>
+    <p><span class="jp">素</span> -- <strong>ボーダーレス。</strong>カードの枠線を廃止し、背景色の濃淡だけで面を区切る。ファイル一覧はリスト行の間にヘアラインだけ。影も最小限。</p>
+    <br>
+    <p><span class="jp">和</span> -- <strong>和紙と墨。</strong>ライトモードの背景は和紙 #F5F1E8、ダークモードは墨 #1B1A17。どちらもニュートラルな暖色系で目に優しい。画面タイトルには Serif 書体で和の風格を添える。</p>
+    <br>
+    <p><span class="jp">質</span> -- <strong>削除ボタンはアウトライン。</strong>危険な操作は塗りではなくアウトラインで表現。普段は目立たず、hover で塗りに変化。禅の「引き算の美」。</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+function setTheme(mode) {
+  const root = document.getElementById('theme-root');
+  const btns = document.querySelectorAll('.theme-toggle button');
+  const palL = document.getElementById('pal-light');
+  const palD = document.getElementById('pal-dark');
+  const segs = root.querySelectorAll('.theme-opt');
+
+  if (mode === 'dark') {
+    root.classList.add('dark');
+    btns[0].classList.remove('active');
+    btns[1].classList.add('active');
+    palL.style.display = 'none';
+    palD.style.display = 'grid';
+    if (segs[0]) { segs[0].classList.remove('sel'); segs[1].classList.add('sel'); }
+  } else {
+    root.classList.remove('dark');
+    btns[0].classList.add('active');
+    btns[1].classList.remove('active');
+    palL.style.display = 'grid';
+    palD.style.display = 'none';
+    if (segs[0]) { segs[0].classList.add('sel'); segs[1].classList.remove('sel'); }
+  }
+}
+</script>
+</body>
+</html>

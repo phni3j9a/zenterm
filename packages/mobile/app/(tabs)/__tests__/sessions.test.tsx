@@ -125,13 +125,13 @@ const mockServer = {
 
 const sampleSessions: TmuxSession[] = [
   {
-    name: 'psh_work',
+    name: 'zen_work',
     displayName: 'work',
     created: 1710576600,
     cwd: '/home/user/projects/myapp',
   },
   {
-    name: 'psh_deploy',
+    name: 'zen_deploy',
     displayName: 'deploy',
     created: 1710580200,
     cwd: '/home/user/projects/deploy',

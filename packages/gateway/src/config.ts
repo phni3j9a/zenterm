@@ -46,7 +46,7 @@ const configSchema = z.object({
   AUTH_TOKEN: z.string().min(1, 'AUTH_TOKEN is required'),
   PORT: z.coerce.number().int().positive().default(18765),
   HOST: z.string().min(1).default('0.0.0.0'),
-  SESSION_PREFIX: z.string().min(1).default('psh_'),
+  SESSION_PREFIX: z.string().min(1).default('zen_'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   UPLOAD_DIR: z
     .string()

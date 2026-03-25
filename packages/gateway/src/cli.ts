@@ -52,7 +52,7 @@ if (!existsSync(envPath)) {
     `AUTH_TOKEN=${token}`,
     'PORT=18765',
     'HOST=0.0.0.0',
-    'SESSION_PREFIX=psh_',
+    'SESSION_PREFIX=zen_',
     'LOG_LEVEL=info',
     '',
   ].join('\n');

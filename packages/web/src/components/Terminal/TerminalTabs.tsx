@@ -11,7 +11,7 @@ export function TerminalTabs() {
 
   const getDisplayName = (id: string) => {
     const session = sessions.find((s) => s.name === id);
-    return session?.displayName ?? id.replace(/^psh_/, '');
+    return session?.displayName ?? id.replace(/^zen_/, '');
   };
 
   return (

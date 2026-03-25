@@ -417,7 +417,7 @@
     // ── Terminal ──
     function openTerminal(sessionName) {
       currentSession = sessionName;
-      var displayName = sessionName.replace(/^psh_/, '');
+      var displayName = sessionName.replace(/^zen_/, '');
       termTitle.textContent = displayName;
       showView('terminal');
       initTerminal(sessionName);

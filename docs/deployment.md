@@ -87,7 +87,7 @@ launchctl unload ~/Library/LaunchAgents/com.zenterm.gateway.plist
 AUTH_TOKEN=your-secret-token-here   # install.sh で自動生成
 PORT=18765
 HOST=0.0.0.0
-SESSION_PREFIX=psh_
+SESSION_PREFIX=zen_
 LOG_LEVEL=info
 
 # Upload settings
