@@ -5,9 +5,11 @@ node_modules/
 dist/
 packages/gateway/public/app/
 
-# env
+# env / secrets
 .env
 .env*.local
+.npmrc
+eas.json
 
 # debug
 npm-debug.*
