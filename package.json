@@ -5,12 +5,10 @@
   "workspaces": [
     "packages/shared",
     "packages/gateway",
-    "packages/mobile",
     "packages/web"
   ],
   "scripts": {
     "dev:gateway": "npm run dev -w packages/gateway",
-    "dev:mobile": "npm run start -w packages/mobile",
     "dev:web": "npm run dev -w packages/web",
     "build:gateway": "npm run build -w packages/gateway",
     "build:web": "npm run build -w packages/web",

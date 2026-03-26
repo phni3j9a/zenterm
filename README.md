@@ -39,15 +39,17 @@ iPhone (ZenTerm App)           Raspberry Pi / Linux Server
 ```
 packages/
 ├── gateway/    Fastify + WebSocket + node-pty ターミナルゲートウェイ
-├── mobile/     Expo (SDK 54) / React Native モバイルクライアント
+├── web/        React + Vite PC向け Web クライアント
 └── shared/     WebSocket メッセージ型・共通型定義
 ```
 
 | パッケージ | 技術スタック |
 |-----------|-------------|
 | **gateway** | Node.js, TypeScript, Fastify 5, ws, node-pty, tmux, zod |
-| **mobile** | Expo SDK 54, React Native, expo-router, react-native-webview, zustand, zod |
+| **web** | React 19, Vite, React Router, zustand, xterm.js, CSS Modules |
 | **shared** | TypeScript (型定義のみ) |
+
+> モバイルアプリ (ZenTerm App) は App Store からダウンロードできます。
 
 ## 必要環境
 
@@ -144,25 +146,12 @@ npm run dev:gateway
 # Gateway 開発サーバー（ホットリロード）
 npm run dev:gateway
 
-# モバイル開発サーバー（Expo）
-npm run dev:mobile
+# Web 開発サーバー
+npm run dev:web
 
 # Gateway テスト
 cd packages/gateway && npx vitest
-
-# モバイルテスト
-cd packages/mobile && npm test
 ```
-
-### モバイルアプリの画面構成
-
-| 画面 | ルート | 説明 |
-|------|--------|------|
-| セッション一覧 | `/(tabs)/sessions` | tmux セッションの管理 |
-| ターミナル | `/(tabs)/terminal/[sessionId]` | xterm.js WebView |
-| ファイル | `/(tabs)/files` | ファイルブラウザ |
-| 設定 | `/(tabs)/settings` | テーマ・フォントサイズなど |
-| サーバー管理 | `/servers` | 接続先の追加・切替 |
 
 ## デプロイ・運用
 
@@ -190,15 +179,6 @@ launchctl list | grep zenterm
 
 # ログ確認
 tail -f ~/Library/Logs/zenterm-gateway.log
-```
-
-## モバイルアプリのビルド
-
-開発ビルドは EAS Build を使用。詳細は [docs/eas-setup.md](docs/eas-setup.md) を参照。
-
-```bash
-# 開発ビルド (iOS)
-cd packages/mobile && eas build --profile development --platform ios
 ```
 
 ## ドキュメント

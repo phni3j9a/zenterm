@@ -9,32 +9,8 @@ packages/gateway/public/app/
 .env
 .env*.local
 
-# EAS (contains Apple credentials)
-eas.json
-
-# Expo
-.expo/
-web-build/
-expo-env.d.ts
-
-# Native (iOS/Android)
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-/ios
-/android
-
-# Metro
-.metro-health-check*
-
 # debug
 npm-debug.*
-yarn-debug.*
-yarn-error.*
 
 # OS
 .DS_Store
