@@ -20,16 +20,25 @@ Gateway サーバーが tmux セッションを管理し、WebSocket で iPhone 
 
 ## Screenshots
 
-<table>
-  <tr>
-    <td align="center"><strong>Web ログイン</strong></td>
-    <td align="center"><strong>Web ダッシュボード</strong></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/web-login.png" alt="Login" width="400"></td>
-    <td><img src="docs/screenshots/web-dashboard.png" alt="Dashboard" width="400"></td>
-  </tr>
-</table>
+### Mobile App (iOS)
+
+<p align="center">
+  <img src="docs/screenshots/app-terminal.png" alt="Terminal" width="180">
+  &nbsp;
+  <img src="docs/screenshots/app-sessions.png" alt="Sessions" width="180">
+  &nbsp;
+  <img src="docs/screenshots/app-files.png" alt="Files" width="180">
+  &nbsp;
+  <img src="docs/screenshots/app-dark.png" alt="Dark Theme" width="180">
+</p>
+
+### Web Dashboard
+
+<p align="center">
+  <img src="docs/screenshots/web-login.png" alt="Web Login" width="400">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/web-dashboard.png" alt="Web Dashboard" width="400">
+</p>
 
 ## Features
 
