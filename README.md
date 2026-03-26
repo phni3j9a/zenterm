@@ -186,7 +186,6 @@ tail -f ~/Library/Logs/zenterm-gateway.log
 | ファイル | 内容 |
 |---------|------|
 | [docs/deployment.md](docs/deployment.md) | デプロイ手順の詳細 |
-| [docs/eas-setup.md](docs/eas-setup.md) | EAS Build セットアップ |
 | [CLAUDE.md](CLAUDE.md) | エージェント向け開発指示 |
 
 ## ライセンス
