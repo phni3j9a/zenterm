@@ -18,6 +18,8 @@
 
 Gateway サーバーが tmux セッションを管理し、WebSocket で iPhone アプリや PC ブラウザからリアルタイム接続。xterm.js による本格ターミナル描画、ファイルブラウザ、システムモニタリングを備えます。
 
+自宅の Raspberry Pi や Linux サーバーに LAN / VPN 経由でどこからでもアクセスできるセルフホスト型ターミナルシステムです。サーバーを 1 台セットアップするだけで、iPhone の QR ペアリングですぐに使い始められます。
+
 ## Screenshots
 
 <p align="center">
@@ -32,6 +34,8 @@ Gateway サーバーが tmux セッションを管理し、WebSocket で iPhone 
   <img src="docs/screenshots/app-dark.png" alt="Dark Theme" width="180">
 </p>
 
+> 上記はモバイルアプリのスクリーンショットです。Web UI のスクリーンショットは今後追加予定です。
+
 ## Features
 
 | | 機能 | 説明 |
@@ -42,7 +46,7 @@ Gateway サーバーが tmux セッションを管理し、WebSocket で iPhone 
 | **Monitor** | システムモニタリング | CPU / メモリ / ディスク / 温度 / 稼働時間をリアルタイム表示 |
 | **QR** | QR ペアリング | Gateway 起動時に QR を表示、アプリでスキャンして即接続 |
 | **Web** | Web ダッシュボード | モバイルアプリなしでもブラウザからアクセス可能 |
-| **Reconnect** | 自動再接続 | 指数バックオフで最大 20 回リトライ |
+| **Reconnect** | 自動再接続 | 埋め込み / モバイル端末で指数バックオフ再接続 (最大 20 回)、サーバー側 ping/pong (30 秒) |
 | **Install** | ワンライナー | systemd / launchd サービスとして自動登録 |
 
 ## Architecture
@@ -53,16 +57,17 @@ Gateway サーバーが tmux セッションを管理し、WebSocket で iPhone 
 │                     │          │  zenterm-gateway (Fastify)        │
 │  ┌───────────────┐  │   WS    │  ┌─────────────┐  ┌───────────┐  │
 │  │ WebView       │◄─┼────────►│  │ /ws/terminal │──│ node-pty  │  │
-│  │ (xterm.js)    │  │         │  └─────────────┘  └─────┬─────┘  │
-│  └───────────────┘  │         │                         │        │
-│                     │  REST   │  ┌─────────────┐  ┌─────▼─────┐  │
+│  │ (xterm.js)    │  │  embed  │  └─────────────┘  └─────┬─────┘  │
+│  └───────┬───────┘  │         │                         │        │
+│  GET /embed/terminal │  REST   │  ┌─────────────┐  ┌─────▼─────┐  │
 │  ┌───────────────┐  │         │  │ /api/*      │  │   tmux    │  │
 │  │ Native UI     │◄─┼────────►│  │ sessions    │  └───────────┘  │
 │  │ (Sessions,    │  │         │  │ files       │                  │
 │  │  Files, etc.) │  │         │  │ system      │  ┌───────────┐  │
 │  └───────────────┘  │         │  │ upload      │  │ /app/*    │  │
 │                     │         │  └─────────────┘  │ Web SPA   │  │
-└─────────────────────┘         └───────────────────┴───────────┘──┘
+└─────────────────────┘         │                   │ /embed/*  │  │
+                                └───────────────────┴───────────┘──┘
 
  PC Browser (Web Client)
 ┌─────────────────────┐
@@ -91,6 +96,9 @@ packages/
 - **Node.js** >= 20
 - **tmux** (セッション管理に必須)
 - **npm** (workspaces 対応)
+- **ビルドツール** (node-pty のネイティブコンパイルに必要)
+  - Linux: `build-essential` (`make`, `gcc`), `python3`
+  - macOS: Xcode Command Line Tools (`xcode-select --install`)
 
 ## Quick Start
 
@@ -143,22 +151,25 @@ npm run dev:gateway
 
 ## API Reference
 
-すべての API は Bearer トークン認証が必要です (`/health` を除く)。
+すべての API は Bearer トークン認証が必要です (`/health`, `/embed/terminal`, `/app/*` を除く)。
 
 ### REST Endpoints
 
 | メソッド | パス | 説明 |
 |---------|------|------|
-| `GET` | `/health` | ヘルスチェック |
+| `GET` | `/health` | ヘルスチェック (認証不要) |
 | `POST` | `/api/auth/verify` | トークン検証 |
 | `GET` | `/api/sessions` | tmux セッション一覧 |
 | `POST` | `/api/sessions` | セッション作成 |
+| `PATCH` | `/api/sessions/:sessionId` | セッションリネーム (`{ "name": "..." }`) |
 | `DELETE` | `/api/sessions/:id` | セッション削除 |
-| `GET` | `/api/system` | システムステータス |
+| `GET` | `/api/system/status` | システムステータス (CPU / メモリ / ディスク / 温度 / 稼働時間) |
 | `GET` | `/api/files` | ファイル一覧 (`?path=`) |
-| `GET` | `/api/files/content` | ファイル内容取得 (`?path=`) |
+| `GET` | `/api/files/content` | ファイル内容取得 (`?path=`, 512 KB 以下) |
+| `GET` | `/api/files/raw` | ファイルストリーム配信 (`?path=`, 20 MB 以下) |
 | `PUT` | `/api/files/content` | ファイル内容書き込み |
-| `POST` | `/api/upload` | ファイルアップロード (multipart) |
+| `POST` | `/api/upload` | ファイルアップロード (multipart, 10 MB 以下) |
+| `GET` | `/embed/terminal` | 埋め込みターミナル HTML (認証不要、モバイル WebView 用) |
 
 ### WebSocket
 
@@ -176,6 +187,18 @@ npm run dev:gateway
 { "type": "exit",        "code": 0 }
 { "type": "error",       "message": "..." }
 ```
+
+## Security
+
+| 対策 | 詳細 |
+|------|------|
+| Bearer トークン認証 | すべての API / WebSocket に `Authorization: Bearer <token>` が必要 (`/health`, `/embed/terminal`, `/app/*` を除く) |
+| タイミングセーフ比較 | `crypto.timingSafeEqual` によるトークン検証でタイミング攻撃を防止 |
+| パストラバーサル防止 | ファイル操作はホームディレクトリ内に制限、`..` を含むパスを拒否 |
+| シンボリックリンク検証 | symlink 先がホームディレクトリ外の場合はアクセス拒否 |
+| WebSocket フレーム制限 | 最大ペイロード 64 KB (`maxPayload`) |
+| 同時接続数制限 | WebSocket 最大 10 接続 |
+| ファイルサイズ制限 | テキスト読み込み 512 KB / ストリーム配信 20 MB / アップロード 10 MB |
 
 ## Development
 
@@ -230,6 +253,48 @@ tail -f ~/Library/Logs/zenterm-gateway.log
 
 詳細は [docs/deployment.md](docs/deployment.md) を参照してください。
 
+## Troubleshooting
+
+### node-pty ビルドエラー
+
+`npm install` 時に node-pty のコンパイルが失敗する場合:
+
+```bash
+# Debian / Ubuntu / Raspberry Pi OS
+sudo apt install -y build-essential python3
+
+# macOS
+xcode-select --install
+```
+
+### tmux が見つからない
+
+```bash
+# Debian / Ubuntu / Raspberry Pi OS
+sudo apt install -y tmux
+
+# macOS
+brew install tmux
+```
+
+### ポート競合
+
+デフォルトポート `18765` が使用中の場合、`~/.config/zenterm/.env` の `PORT` を変更してください。
+
+### リバースプロキシ経由で WebSocket が接続できない
+
+Nginx 等のリバースプロキシを使用する場合、WebSocket のアップグレードヘッダーを転送する設定が必要です:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:18765;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+}
+```
+
 ## Roadmap
 
 | Phase | 内容 | 状態 |
@@ -244,8 +309,29 @@ tail -f ~/Library/Logs/zenterm-gateway.log
 
 ## Related
 
-- **ZenTerm App** -- iOS モバイルアプリ (App Store)
+- **ZenTerm App** -- iOS モバイルアプリ (App Store 準備中)
+  - 3 タブ構成: Sessions / Files / Settings
+  - QR コードスキャンでサーバーとペアリング
+  - セッション一覧にインラインターミナルプレビュー
+  - スワイプ削除、画像プレビュー、Markdown レンダリング
+  - ファイルアップロード (Document Picker + Photo Library)
+  - ダーク / ライトテーマ対応
+  - Expo SDK 54 / React Native
 - **[Privacy Policy](PRIVACY_POLICY.md)** -- プライバシーポリシー
+
+## Contributing
+
+バグ報告や機能リクエストは [Issues](https://github.com/phni3j9a/zenterm/issues) からお願いします。
+
+プルリクエストを送る場合:
+
+1. リポジトリをフォーク
+2. フィーチャーブランチを作成 (`git checkout -b feature/your-feature`)
+3. テストを実行 (`cd packages/gateway && npx vitest`)
+4. コミット & プッシュ
+5. プルリクエストを作成
+
+コードスタイルは既存のコードに合わせてください。TypeScript strict モード + Zod バリデーションを使用しています。
 
 ## License
 
