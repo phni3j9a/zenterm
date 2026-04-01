@@ -1,600 +1,1324 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="light">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ZenTerm</title>
-  <link rel="stylesheet" href="/terminal/lib/xterm.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ZenTerm — セルフホスト型モバイルターミナル。iPhone、Android、ブラウザからmacOS/Linuxサーバーを静かに、力強く操作する。">
+  <meta property="og:title" content="ZenTerm — 静寂の中で、サーバーを操る">
+  <meta property="og:description" content="Self-hosted mobile terminal for macOS & Linux. Control your server from iPhone, Android, or any browser.">
+  <meta property="og:type" content="website">
+  <title>ZenTerm — 静寂の中で、サーバーを操る</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    /* ═══════════════════════════════════
+       Design Tokens
+    ═══════════════════════════════════ */
     :root {
-      --bg: #1A1915;
-      --surface: #252320;
-      --surface2: #2E2B27;
-      --border: #3A3733;
-      --primary: #D4713D;
-      --primary-hover: #E07F4A;
-      --primary-subtle: rgba(212,113,61,0.12);
-      --danger: #d45d5d;
-      --danger-hover: #e06b6b;
-      --success: #8cb369;
-      --text: #E8E4DC;
-      --text2: #A09A8F;
-      --text3: #706C63;
-      --text-inv: #1A1915;
-      --radius: 10px;
-      --radius-sm: 6px;
+      --bg:              #F5F4F0;
+      --surface:         #EEEDEA;
+      --surface-hover:   #E7E6E2;
+      --border:          #D8D6D0;
+      --border-subtle:   #EAE9E5;
+      --text-primary:    #2A2721;
+      --text-secondary:  #66614F;
+      --text-muted:      #958E7E;
+      --primary:         #7B8B6F;
+      --primary-hover:   #6C7C61;
+      --primary-subtle:  #E8EDE4;
+      --primary-muted:   #A4B199;
+      --shadow-sm:       0 1px 3px rgba(42,39,33,.06);
+      --shadow-md:       0 4px 12px rgba(42,39,33,.09);
+      --shadow-lg:       0 8px 24px rgba(42,39,33,.12);
+      --shadow-xl:       0 20px 60px rgba(42,39,33,.14);
+      --font-serif:      'Noto Serif JP', 'Georgia', 'Hiragino Mincho ProN', serif;
+      --font-sans:       -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', Helvetica, sans-serif;
+      --font-mono:       'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+      --radius-sm:       6px;
+      --radius-md:       10px;
+      --radius-lg:       14px;
+      --radius-xl:       20px;
+      --nav-h:           60px;
+      --max-w:           1100px;
+      --t-base:          0.2s ease;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
+
+    [data-theme="dark"] {
+      --bg:              #1B1A17;
+      --surface:         #242320;
+      --surface-hover:   #2E2D29;
+      --border:          #3A3832;
+      --border-subtle:   #2E2D29;
+      --text-primary:    #DBD6C8;
+      --text-secondary:  #A5A090;
+      --text-muted:      #6D6860;
+      --primary:         #94A687;
+      --primary-hover:   #A5B59A;
+      --primary-subtle:  #1E251C;
+      --primary-muted:   #4E5746;
+      --shadow-sm:       0 1px 3px rgba(0,0,0,.25);
+      --shadow-md:       0 4px 12px rgba(0,0,0,.35);
+      --shadow-lg:       0 8px 24px rgba(0,0,0,.45);
+      --shadow-xl:       0 20px 60px rgba(0,0,0,.55);
+    }
+
+    /* ═══════════════════════════════════
+       Reset & Base
+    ═══════════════════════════════════ */
+    *, *::before, *::after {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+    }
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100vh; min-height: 100dvh;
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.65;
+      transition: background 0.35s, color 0.35s;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    button {
-      font-family: inherit; cursor: pointer; border: none;
-      font-size: 14px; font-weight: 600; border-radius: var(--radius-sm);
-      transition: background 0.15s, opacity 0.15s;
-    }
-    button:active { opacity: 0.85; }
-    input {
-      font-family: inherit; font-size: 15px;
-      background: var(--surface); color: var(--text);
-      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-      padding: 10px 14px; outline: none; width: 100%;
-      transition: border-color 0.15s;
-    }
-    input:focus { border-color: var(--primary); }
-    input::placeholder { color: var(--text3); }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    ::selection { background: var(--primary-subtle); color: var(--primary); }
 
-    .view { display:none; }
-    .view.active { display:flex; }
+    /* ═══════════════════════════════════
+       Layout
+    ═══════════════════════════════════ */
+    .container {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    @media (max-width: 768px) { .container { padding: 0 24px; } }
 
-    /* ── Login ── */
-    #login-view {
-      flex-direction:column; align-items:center; justify-content:center;
-      min-height:100vh; min-height:100dvh; padding:24px;
+    /* ═══════════════════════════════════
+       Navigation
+    ═══════════════════════════════════ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid transparent;
+      transition:
+        background 0.35s,
+        border-color 0.35s,
+        backdrop-filter 0.35s;
     }
-    .login-card {
-      width:100%; max-width:380px;
-      background:var(--surface); border-radius:var(--radius);
-      padding:40px 32px; text-align:center;
+    nav.scrolled {
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom-color: var(--border-subtle);
     }
-    .login-logo {
-      font-size:28px; font-weight:700; color:var(--primary);
-      margin-bottom:4px; letter-spacing:-0.5px;
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
     }
-    .login-sub { color:var(--text2); font-size:13px; margin-bottom:28px; }
-    .login-field { margin-bottom:14px; text-align:left; }
-    .login-field label { display:block; font-size:12px; font-weight:600; color:var(--text2); margin-bottom:6px; }
-    .login-btn {
-      width:100%; padding:12px; margin-top:8px;
-      background:var(--primary); color:var(--text-inv); font-size:15px;
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      transition: opacity var(--t-base);
     }
-    .login-btn:hover { background:var(--primary-hover); }
-    .login-error {
-      color:var(--danger); font-size:13px; margin-top:12px;
-      min-height:20px;
+    .nav-logo:hover { opacity: 0.7; }
+    .logo-icon-wrap {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
     }
-
-    /* ── Dashboard ── */
-    #dashboard-view {
-      flex-direction:column; min-height:100vh; min-height:100dvh;
+    .logo-icon-wrap img { width: 100%; height: 100%; object-fit: contain; }
+    /* Theme-switching icons */
+    .icon-light { display: block; }
+    .icon-dark  { display: none;  }
+    [data-theme="dark"] .icon-light { display: none;  }
+    [data-theme="dark"] .icon-dark  { display: block; }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .topbar {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 20px; border-bottom:1px solid var(--border);
-      background:var(--surface);
+    #theme-toggle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: var(--text-muted);
+      transition: background var(--t-base), color var(--t-base);
     }
-    .topbar-brand { font-size:18px; font-weight:700; color:var(--primary); }
-    .topbar-actions { display:flex; gap:8px; align-items:center; }
-    .btn-ghost {
-      background:transparent; color:var(--text2); padding:6px 12px;
-      font-size:13px;
+    #theme-toggle:hover {
+      background: var(--surface);
+      color: var(--text-primary);
     }
-    .btn-ghost:hover { color:var(--text); background:var(--surface2); }
-    .dashboard-body {
-      flex:1; padding:20px; overflow-y:auto;
-      max-width:800px; width:100%; margin:0 auto;
-    }
-    .section { margin-bottom:28px; }
-    .section-header {
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:12px;
-    }
-    .section-title { font-size:15px; font-weight:700; color:var(--text2); }
     .btn-primary {
-      background:var(--primary); color:var(--text-inv); padding:8px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 9px 18px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: background var(--t-base), transform 0.15s, box-shadow 0.15s;
     }
-    .btn-primary:hover { background:var(--primary-hover); }
-    .btn-danger {
-      background:transparent; color:var(--danger); padding:6px 10px; font-size:12px;
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(123,139,111,0.35);
     }
-    .btn-danger:hover { background:rgba(212,93,93,0.12); }
-    .empty-state {
-      text-align:center; padding:40px 20px; color:var(--text3); font-size:14px;
-    }
-    .session-list { display:flex; flex-direction:column; gap:8px; }
-    .session-card {
-      display:flex; align-items:center; justify-content:space-between;
-      background:var(--surface); border-radius:var(--radius-sm);
-      padding:14px 16px; cursor:pointer;
-      border:1px solid transparent;
-      transition:border-color 0.15s, background 0.15s;
-    }
-    .session-card:hover { border-color:var(--border); background:var(--surface2); }
-    .session-name { font-weight:600; font-size:15px; }
-    .session-meta { font-size:12px; color:var(--text3); margin-top:2px; }
-    .session-actions { display:flex; gap:6px; align-items:center; }
+    .btn-primary svg { width: 13px; height: 13px; }
+    @media (max-width: 480px) { .hide-xs { display: none !important; } }
 
-    .stats-grid {
-      display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
-      gap:10px;
+    /* ═══════════════════════════════════
+       Hero
+    ═══════════════════════════════════ */
+    #hero {
+      min-height: calc(100vh - var(--nav-h));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 40px 100px;
+      position: relative;
+      overflow: hidden;
     }
-    .stat-card {
-      background:var(--surface); border-radius:var(--radius-sm);
-      padding:14px 16px;
+    /* Atmospheric radial glow */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse 80% 65% at 50% 55%,
+        rgba(123,139,111,.065) 0%,
+        transparent 68%
+      );
+      pointer-events: none;
     }
-    .stat-label { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; }
-    .stat-value { font-size:22px; font-weight:700; margin-top:4px; }
-    .stat-detail { font-size:12px; color:var(--text2); margin-top:2px; }
-    .stat-bar { height:4px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; }
-    .stat-bar-fill { height:100%; border-radius:2px; background:var(--primary); transition:width 0.3s; }
+    /* Faint large enso in background */
+    .bg-enso {
+      position: absolute;
+      width: min(680px, 110vw);
+      height: min(680px, 110vw);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: .025;
+      pointer-events: none;
+    }
+    [data-theme="dark"] .bg-enso { opacity: .035; }
 
-    /* ── Terminal ── */
-    #terminal-view {
-      flex-direction:column; height:100vh; height:100dvh;
+    /* Hero icon (real PNG, theme-switching) */
+    .hero-icon-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 44px;
     }
-    .term-header {
-      display:flex; align-items:center; gap:12px;
-      padding:10px 16px; background:var(--surface);
-      border-bottom:1px solid var(--border);
-      flex-shrink:0;
+    .hero-icon {
+      width: 280px;
+      height: 280px;
+      object-fit: contain;
+      opacity: 0;
+      animation: hero-icon-in 1.1s cubic-bezier(.2,.8,.3,1) .25s forwards;
     }
-    .btn-back {
-      background:transparent; color:var(--text2); padding:6px 10px;
-      font-size:14px;
+    @keyframes hero-icon-in {
+      from { opacity: 0; transform: scale(.88); }
+      to   { opacity: 1; transform: scale(1); }
     }
-    .btn-back:hover { color:var(--text); }
-    .term-title { font-weight:600; font-size:14px; flex:1; }
-    .term-status {
-      width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .term-status.connected { background:var(--success); }
-    .term-status.disconnected { background:var(--danger); }
-    .term-status.connecting { background:var(--primary); animation:pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    #web-terminal { flex:1; overflow:hidden; background:var(--bg); }
 
-    /* ── Responsive ── */
-    @media (max-width:480px) {
-      .login-card { padding:32px 20px; }
-      .dashboard-body { padding:16px; }
-      .stats-grid { grid-template-columns:1fr 1fr; }
+    .hero-product {
+      font-family: var(--font-serif);
+      font-size: clamp(46px, 8vw, 76px);
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      line-height: 1;
+      color: var(--text-primary);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: rise .75s ease 1.1s forwards;
+    }
+    .hero-tagline {
+      font-family: var(--font-serif);
+      font-size: clamp(17px, 3vw, 23px);
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: .06em;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      opacity: 0;
+      animation: rise .75s ease 1.3s forwards;
+    }
+    .hero-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      letter-spacing: .04em;
+      margin-bottom: 52px;
+      opacity: 0;
+      animation: rise .75s ease 1.4s forwards;
+    }
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 15px 36px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      transition: background var(--t-base), transform .18s, box-shadow .18s;
+      opacity: 0;
+      animation: rise .75s ease 1.55s forwards;
+    }
+    .hero-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 32px rgba(123,139,111,.32);
+    }
+    .hero-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* Scroll whisker */
+    .scroll-whisk {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      opacity: 0;
+      animation: rise .5s ease 2.2s forwards;
+    }
+    .whisk-dot {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    .whisk-line {
+      width: 1px;
+      height: 36px;
+      background: linear-gradient(to bottom, var(--text-muted) 0%, transparent 100%);
+      animation: whisk-anim 2.2s ease-in-out 3.1s infinite;
+    }
+    @keyframes whisk-anim {
+      0%,100% { transform: scaleY(1); opacity: .5; }
+      50%      { transform: scaleY(.6) translateY(8px); opacity: 1; }
+    }
+
+    /* ═══════════════════════════════════
+       Scroll Animations
+    ═══════════════════════════════════ */
+    .aos {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .aos.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .aos[data-d="1"] { transition-delay: .08s; }
+    .aos[data-d="2"] { transition-delay: .18s; }
+    .aos[data-d="3"] { transition-delay: .28s; }
+    .aos[data-d="4"] { transition-delay: .38s; }
+    .aos[data-d="5"] { transition-delay: .48s; }
+
+    /* ═══════════════════════════════════
+       Section Common
+    ═══════════════════════════════════ */
+    section { padding: 120px 0; }
+
+    .sec-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 18px;
+    }
+    .sec-eyebrow::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--primary);
+      opacity: .7;
+      flex-shrink: 0;
+    }
+    .sec-eyebrow.centered::before { display: none; }
+
+    .sec-title {
+      font-family: var(--font-serif);
+      font-size: clamp(28px, 4.5vw, 46px);
+      font-weight: 600;
+      line-height: 1.18;
+      color: var(--text-primary);
+      letter-spacing: .025em;
+      margin-bottom: 18px;
+    }
+    .sec-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+    }
+
+    /* ═══════════════════════════════════
+       Values (Why ZenTerm)
+    ═══════════════════════════════════ */
+    #values {
+      border-top: 1px solid var(--border-subtle);
+    }
+    .val-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 64px 72px;
+    }
+    @media (max-width: 900px)  { .val-grid { grid-template-columns: 1fr; gap: 48px; } }
+    @media (max-width: 1024px) { .val-grid { gap: 48px 48px; } }
+
+    .val-item { display: flex; flex-direction: column; gap: 18px; }
+    .val-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--t-base), transform var(--t-base);
+    }
+    .val-icon svg { width: 22px; height: 22px; }
+    .val-item:hover .val-icon {
+      background: color-mix(in srgb, var(--primary-subtle) 80%, var(--primary));
+      transform: translateY(-2px);
+    }
+    .val-accent {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: .6;
+    }
+    .val-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: .03em;
+    }
+    .val-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+    }
+
+    /* ═══════════════════════════════════
+       Screenshots
+    ═══════════════════════════════════ */
+    #screenshots {
+      background: var(--surface);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+    .ss-head {
+      text-align: center;
+      margin-bottom: 72px;
+    }
+    .ss-head .sec-desc { max-width: 480px; margin: 0 auto; }
+
+    .phones {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (max-width: 1080px) {
+      .phones {
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding: 8px 24px 24px;
+        scrollbar-width: none;
+        gap: 20px;
+      }
+      .phones::-webkit-scrollbar { display: none; }
+    }
+
+    .phone-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      flex-shrink: 0;
+      scroll-snap-align: center;
+      transition: transform .3s ease;
+    }
+    .phone-wrap.feat { transform: scale(1.055); }
+    .phone-wrap:hover { transform: scale(1.025) translateY(-5px); }
+    .phone-wrap.feat:hover { transform: scale(1.08) translateY(-5px); }
+
+    .phone-frame {
+      width: 258px;
+      border-radius: 50px;
+      /* iPhone 15 Black — titanium-finish frame */
+      background: linear-gradient(158deg, #3a3a3a 0%, #1e1e1e 38%, #262626 68%, #1a1a1a 100%);
+      padding: 12px 10px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.07),
+        0 0 0 2px #0e0e0e,
+        0 36px 90px rgba(0,0,0,.52),
+        0 12px 30px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.55);
+      position: relative;
+    }
+    /* Side buttons — left: Action button (top) + Volume Up + Volume Down */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      left: -3px;
+      top: 78px;
+      width: 3px;
+      height: 28px;
+      background: #282828;
+      border-radius: 3px 0 0 3px;
+      /* box-shadow simulates volume buttons below */
+      box-shadow:
+        0 44px 0 0 #282828,
+        0 78px 0 0 #282828;
+    }
+    /* Side button — right: Power / Sleep-Wake */
+    .phone-frame::after {
+      content: '';
+      position: absolute;
+      right: -3px;
+      top: 102px;
+      width: 3px;
+      height: 76px;
+      background: #282828;
+      border-radius: 0 3px 3px 0;
+    }
+    .phone-screen {
+      border-radius: 40px;
+      overflow: hidden;
+      height: 558px;
+      background: #000;
+      position: relative;
+    }
+    /* Dynamic Island — pill cutout at top-center of screen */
+    .phone-screen::before {
+      content: '';
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 78px;
+      height: 21px;
+      background: #040404;
+      border-radius: 50px;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .phone-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+    .phone-cap { text-align: center; }
+    .phone-cap-ja {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: .06em;
+      color: var(--text-primary);
+    }
+    .phone-cap-en {
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ═══════════════════════════════════
+       Features
+    ═══════════════════════════════════ */
+    #features { border-top: 1px solid var(--border-subtle); }
+    .feat-head { margin-bottom: 60px; }
+    .feat-title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .feat-title-ja {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: .06em;
+      margin-bottom: 0;
+    }
+
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 18px;
+    }
+    @media (max-width: 1024px) { .feat-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 600px)  { .feat-grid { grid-template-columns: 1fr; } }
+
+    .feat-card {
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 28px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      cursor: default;
+      transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .22s ease,
+        background .22s ease;
+    }
+    .feat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border);
+      background: var(--surface-hover);
+    }
+    .feat-icon {
+      width: 38px; height: 38px;
+      color: var(--primary);
+      flex-shrink: 0;
+      transition: transform .22s ease, color .22s ease;
+    }
+    .feat-card:hover .feat-icon {
+      transform: scale(1.08);
+      color: var(--primary-hover);
+    }
+    .feat-name {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: .03em;
+    }
+    .feat-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ═══════════════════════════════════
+       Install / Get Started
+    ═══════════════════════════════════ */
+    #install {
+      background: var(--surface);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .inst-head { text-align: center; margin-bottom: 80px; }
+    .inst-head .sec-desc { max-width: 460px; margin: 0 auto; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 48px 56px;
+      position: relative;
+    }
+    /* Connecting line between step numbers */
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 24px;
+      left: calc(16.66% + 24px);
+      right: calc(16.66% + 24px);
+      height: 1px;
+      background: linear-gradient(to right, var(--primary), var(--primary));
+      opacity: .18;
+      pointer-events: none;
+    }
+    @media (max-width: 800px) {
+      .steps { grid-template-columns: 1fr; gap: 52px; }
+      .steps::before { display: none; }
+    }
+
+    .step { display: flex; flex-direction: column; gap: 20px; position: relative; }
+
+    .step-num {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(123,139,111,.3);
+      position: relative;
+      z-index: 1;
+    }
+    .step-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: .03em;
+    }
+    .step-desc {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* Terminal block */
+    .term-block {
+      border-radius: var(--radius-md);
+      background: #141211;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .term-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .term-dot.r { background: #FF5F57; }
+    .term-dot.y { background: #FEBC2E; }
+    .term-dot.g { background: #28C840; }
+    .term-body {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .term-line {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .term-ps  { color: #7B8B6F; }
+    .term-cmd { color: #DBD6C8; }
+    .copy-btn {
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: .05em;
+      padding: 5px 11px;
+      border-radius: var(--radius-sm);
+      background: rgba(123,139,111,.18);
+      color: #94A687;
+      flex-shrink: 0;
+      transition: background .15s, color .15s, transform .12s;
+    }
+    .copy-btn:hover {
+      background: rgba(123,139,111,.32);
+      color: #A5B59A;
+      transform: translateY(-1px);
+    }
+
+    /* Step icon */
+    .step-icon {
+      width: 76px; height: 76px;
+      border-radius: var(--radius-lg);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .22s ease;
+    }
+    .step-icon svg { width: 38px; height: 38px; }
+    .step:hover .step-icon { transform: scale(1.05) rotate(1deg); }
+
+    /* ═══════════════════════════════════
+       Footer
+    ═══════════════════════════════════ */
+    footer {
+      padding: 64px 0 44px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .foot-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .foot-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--text-primary);
+      opacity: .9;
+      transition: opacity var(--t-base);
+    }
+    .foot-logo:hover { opacity: 1; }
+    .foot-logo .logo-icon-wrap { width: 26px; height: 26px; }
+    .foot-logo .logo-icon-wrap img { width: 26px; height: 26px; }
+
+    .foot-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .foot-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      letter-spacing: .02em;
+      transition: color var(--t-base), transform .15s;
+    }
+    .foot-link:hover { color: var(--primary); transform: translateY(-1px); }
+    .foot-link svg { width: 16px; height: 16px; }
+
+    .foot-copy {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: .05em;
+    }
+
+    .zen-footer-mark {
+      display: flex;
+      justify-content: center;
+      margin-top: 44px;
+    }
+    .zen-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: .45;
+    }
+
+    /* ═══════════════════════════════════
+       Responsive: hide phones on small mobile
+    ═══════════════════════════════════ */
+    @media (max-width: 500px) {
+      .phone-frame { width: 224px; }
+      .phone-screen { height: 484px; }
+    }
+
+    /* ═══════════════════════════════════
+       Prefers reduced motion
+    ═══════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      .hero-icon, .hero-product, .hero-tagline, .hero-sub, .hero-btn,
+      .scroll-whisk { opacity: 1; transform: none; }
     }
   </style>
 </head>
 <body>
-  <!-- Login View -->
-  <div id="login-view" class="view active">
-    <div class="login-card">
-      <div class="login-logo">ZenTerm</div>
-      <div class="login-sub">Terminal Gateway</div>
-      <div class="login-field">
-        <label>Token</label>
-        <input id="token-input" type="password" placeholder="AUTH_TOKEN を入力" autocomplete="off">
-      </div>
-      <button class="login-btn" id="login-btn">接続</button>
-      <div class="login-error" id="login-error"></div>
+
+<!-- ═══════════════════════════════════
+     Navigation
+═══════════════════════════════════ -->
+<nav id="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo" aria-label="ZenTerm ホームへ">
+      <span class="logo-icon-wrap" aria-hidden="true">
+        <img class="icon-light" src="lp/icon-light.png" alt="" width="30" height="30">
+        <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="30" height="30">
+      </span>
+      ZenTerm
+    </a>
+    <div class="nav-actions">
+      <button id="theme-toggle" aria-label="テーマを切り替える">🌙</button>
+      <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="btn-primary" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="14" height="14">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+        <span class="hide-xs">App Store</span>
+      </a>
     </div>
   </div>
+</nav>
 
-  <!-- Dashboard View -->
-  <div id="dashboard-view" class="view">
-    <div class="topbar">
-      <div class="topbar-brand">ZenTerm</div>
-      <div class="topbar-actions">
-        <button class="btn-ghost" id="refresh-btn">更新</button>
-        <button class="btn-ghost" id="logout-btn">ログアウト</button>
-      </div>
-    </div>
-    <div class="dashboard-body">
-      <div class="section">
-        <div class="section-header">
-          <span class="section-title">Sessions</span>
-          <button class="btn-primary" id="new-session-btn">+ 新規セッション</button>
-        </div>
-        <div id="session-list" class="session-list">
-          <div class="empty-state">セッションがありません</div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-header">
-          <span class="section-title">System</span>
-        </div>
-        <div id="system-stats" class="stats-grid"></div>
-      </div>
-    </div>
+<!-- ═══════════════════════════════════
+     Hero
+═══════════════════════════════════ -->
+<section id="hero" aria-label="ヒーローセクション">
+
+  <!-- Faint background circle -->
+  <svg class="bg-enso" viewBox="0 0 500 500" fill="none" aria-hidden="true">
+    <path d="M254 28 C354 22,472 110,472 250 C472 390,360 472,250 472 C130 472,28 378,28 250 C28 130,115 32,245 28"
+      stroke="currentColor" stroke-width="28" stroke-linecap="round" color="var(--text-primary)"/>
+  </svg>
+
+  <!-- App icon (real artwork, theme-switching) -->
+  <div class="hero-icon-wrap" role="img" aria-label="ZenTerm 円相ロゴ">
+    <img class="icon-light hero-icon" src="lp/icon-light.png" alt="" width="280" height="280">
+    <img class="icon-dark  hero-icon" src="lp/icon-dark.png"  alt="" width="280" height="280">
   </div>
 
-  <!-- Terminal View -->
-  <div id="terminal-view" class="view">
-    <div class="term-header">
-      <button class="btn-back" id="term-back-btn">&larr; 戻る</button>
-      <span class="term-title" id="term-title"></span>
-      <span class="term-status" id="term-status"></span>
-    </div>
-    <div id="web-terminal"></div>
+  <h1 class="hero-product">ZenTerm</h1>
+  <p class="hero-tagline">静寂の中で、サーバーを操る</p>
+  <p class="hero-sub">Self-hosted mobile terminal for macOS &amp; Linux</p>
+
+  <a href="#install" class="hero-btn" aria-label="始め方を見る">
+    Get Started
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 2v12M3 9l5 5 5-5"/>
+    </svg>
+  </a>
+
+  <div class="scroll-whisk" aria-hidden="true">
+    <div class="whisk-dot"></div>
+    <div class="whisk-line"></div>
   </div>
+</section>
 
-  <script src="/terminal/lib/xterm.min.js"></script>
-  <script src="/terminal/lib/addon-fit.min.js"></script>
-  <script src="/terminal/lib/addon-unicode11.min.js"></script>
-  <script>
-  (function() {
-    'use strict';
+<!-- ═══════════════════════════════════
+     Values
+═══════════════════════════════════ -->
+<section id="values" aria-label="ZenTermの特長">
+  <div class="container">
+    <div class="val-grid">
 
-    // ── State ──
-    var token = localStorage.getItem('ZenTerm_token') || '';
-    var currentSession = null;
-    var term = null;
-    var fitAddon = null;
-    var ws = null;
-    var reconnectTimer = null;
-    var reconnectAttempt = 0;
-    var reconnectDelay = 1000;
-    var systemPollTimer = null;
+      <div class="val-item aos" data-d="1">
+        <div class="val-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+            <path d="M6 8l3.5 3.5L6 15"/><path d="M13 15h5"/>
+          </svg>
+        </div>
+        <div class="val-accent"></div>
+        <div>
+          <div class="val-title">セルフホスト</div>
+          <div class="val-desc">データはあなたのサーバーだけに。クラウドには一切送信されない、完全なプライバシーと自由。</div>
+        </div>
+      </div>
 
-    // ── DOM ──
-    var views = {
-      login: document.getElementById('login-view'),
-      dashboard: document.getElementById('dashboard-view'),
-      terminal: document.getElementById('terminal-view'),
-    };
-    var tokenInput = document.getElementById('token-input');
-    var loginBtn = document.getElementById('login-btn');
-    var loginError = document.getElementById('login-error');
-    var logoutBtn = document.getElementById('logout-btn');
-    var refreshBtn = document.getElementById('refresh-btn');
-    var newSessionBtn = document.getElementById('new-session-btn');
-    var sessionList = document.getElementById('session-list');
-    var systemStats = document.getElementById('system-stats');
-    var termBackBtn = document.getElementById('term-back-btn');
-    var termTitle = document.getElementById('term-title');
-    var termStatus = document.getElementById('term-status');
-    var webTerminal = document.getElementById('web-terminal');
+      <div class="val-item aos" data-d="2">
+        <div class="val-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="val-accent"></div>
+        <div>
+          <div class="val-title">どこからでも</div>
+          <div class="val-desc">iPhone、Android、ブラウザ。どのデバイスからでも、いつでもサーバーにアクセスできる。</div>
+        </div>
+      </div>
 
-    // ── Navigation ──
-    function showView(name) {
-      for (var k in views) {
-        views[k].classList.toggle('active', k === name);
+      <div class="val-item aos" data-d="3">
+        <div class="val-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx=".5"/>
+            <rect x="3" y="14" width="7" height="7" rx=".5"/>
+            <rect x="14" y="3" width="7" height="7" rx=".5"/>
+            <path d="M14 17h2v2h-2zM20 14h1M14 20v1M20 17v3h-3"/>
+          </svg>
+        </div>
+        <div class="val-accent"></div>
+        <div>
+          <div class="val-title">即時接続</div>
+          <div class="val-desc">QRコードをスキャンするだけで接続設定が完了。複雑な手順は一切不要。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Screenshots
+═══════════════════════════════════ -->
+<section id="screenshots" aria-label="スクリーンショット">
+  <div class="container">
+    <div class="ss-head aos">
+      <div class="sec-eyebrow centered">Screenshots</div>
+      <h2 class="sec-title">美しいインターフェース</h2>
+      <p class="sec-desc">Zenテーマの落ち着いたカラーパレットと直感的なUI。ライトとダークを自由に切り替えられる。</p>
+    </div>
+
+    <div class="phones" role="list">
+
+      <div class="phone-wrap aos" data-d="1" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/01-sessions.png" alt="セッション一覧：複数のtmuxセッションを管理" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">セッション管理</div>
+          <div class="phone-cap-en">Persistent Sessions</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap feat aos" data-d="2" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ターミナル</div>
+          <div class="phone-cap-en">Full Terminal</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="3" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/03-terminal-dark.png" alt="ターミナル：ダークテーマ" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ダークテーマ</div>
+          <div class="phone-cap-en">Dark Theme</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="4" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/04-files.png" alt="ファイルブラウザ" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ファイル管理</div>
+          <div class="phone-cap-en">Remote File Browser</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="5" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/05-setup.png" alt="セットアップガイド" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">かんたん設定</div>
+          <div class="phone-cap-en">3-Step Setup</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Features
+═══════════════════════════════════ -->
+<section id="features" aria-label="機能一覧">
+  <div class="container">
+    <div class="feat-head aos">
+      <div class="sec-eyebrow">Features</div>
+      <div class="feat-title-row">
+        <h2 class="sec-title" style="margin-bottom:0">主な機能</h2>
+        <span class="feat-title-ja">— 必要なものが、すべて揃っている</span>
+      </div>
+    </div>
+
+    <div class="feat-grid">
+
+      <div class="feat-card aos" data-d="1">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="7" width="32" height="24" rx="3"/>
+          <path d="M10 15l5.5 4.5L10 24"/>
+          <path d="M20 24h8"/>
+        </svg>
+        <div class="feat-name">Full Terminal</div>
+        <div class="feat-desc">xterm.jsによる完全なターミナルエミュレーション。CJK/Unicode対応、5000行スクロールバック。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="2">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="9" width="28" height="20" rx="3"/>
+          <path d="M12 9V6M26 9V6"/>
+          <path d="M5 17h28"/>
+          <circle cx="13" cy="24" r="1.5" fill="currentColor" stroke="none"/>
+          <circle cx="19" cy="24" r="1.5" fill="currentColor" stroke="none"/>
+          <circle cx="25" cy="24" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+        <div class="feat-name">tmux Sessions</div>
+        <div class="feat-desc">セッション永続化で、接続が切れても作業は続く。複数セッションを同時に切り替え管理。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="3">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 30V12a3 3 0 0 1 3-3h20a3 3 0 0 1 3 3v18"/>
+          <path d="M3 30h32"/>
+          <path d="M14 20h10M14 25h7"/>
+          <path d="M14 15l4 0"/>
+        </svg>
+        <div class="feat-name">File Browser</div>
+        <div class="feat-desc">GUIでリモートファイルを閲覧・編集・アップロード・ダウンロード。Markdownプレビュー対応。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="1">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 30V22"/>
+          <path d="M13 30V16"/>
+          <path d="M19 30V10"/>
+          <path d="M25 30V18"/>
+          <path d="M31 30V24"/>
+        </svg>
+        <div class="feat-name">System Monitor</div>
+        <div class="feat-desc">CPU・メモリ・ディスク・温度をリアルタイム表示。サーバーの状態を常に把握できる。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="2">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="12" height="12" rx="1.2"/>
+          <rect x="4" y="22" width="12" height="12" rx="1.2"/>
+          <rect x="22" y="4" width="12" height="12" rx="1.2"/>
+          <rect x="6.5" y="6.5" width="7" height="7"/>
+          <rect x="6.5" y="24.5" width="7" height="7"/>
+          <rect x="24.5" y="6.5" width="7" height="7"/>
+          <path d="M22 25h3v3h-3zM29 22h5M22 31v5M29 29h5v5M29 22v5"/>
+        </svg>
+        <div class="feat-name">QR Pairing</div>
+        <div class="feat-desc">起動時に表示されるQRコードをスキャンするだけで接続設定が自動入力される。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="3">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="9" width="30" height="20" rx="3"/>
+          <path d="M10 19l4-4 4 4 8-6"/>
+          <circle cx="19" cy="31" r="1.2" fill="currentColor" stroke="none"/>
+        </svg>
+        <div class="feat-name">One-command Setup</div>
+        <div class="feat-desc">npx一行でセットアップ完了。systemd/launchd へのサービス登録も自動で行う。</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Install / Get Started
+═══════════════════════════════════ -->
+<section id="install" aria-label="始め方">
+  <div class="container">
+    <div class="inst-head aos">
+      <div class="sec-eyebrow centered">Get Started</div>
+      <h2 class="sec-title">3ステップで始める</h2>
+      <p class="sec-desc">複雑な設定は不要。数分でiPhoneからサーバーを操作できるようになる。</p>
+    </div>
+
+    <div class="steps">
+
+      <!-- Step 1 -->
+      <div class="step aos" data-d="1">
+        <div class="step-num" aria-hidden="true">1</div>
+        <div>
+          <div class="step-title">Gateway を起動</div>
+          <div class="step-desc">macOS または Linux のサーバーで実行。トークン生成からサービス登録まで自動で完了する。</div>
+        </div>
+        <div class="term-block" role="region" aria-label="インストールコマンド">
+          <div class="term-bar" aria-hidden="true">
+            <div class="term-dot r"></div>
+            <div class="term-dot y"></div>
+            <div class="term-dot g"></div>
+          </div>
+          <div class="term-body">
+            <div class="term-line">
+              <span class="term-ps">$ </span><span class="term-cmd">npx zenterm-gateway</span>
+            </div>
+            <button class="copy-btn" data-copy="npx zenterm-gateway" aria-label="コマンドをコピー">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step aos" data-d="2">
+        <div class="step-num" aria-hidden="true">2</div>
+        <div>
+          <div class="step-title">QRコードをスキャン</div>
+          <div class="step-desc">起動時にターミナルへ表示されるQRコードをアプリでスキャン。接続情報が自動入力される。</div>
+        </div>
+        <div class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="6" width="14" height="14" rx="1.5"/>
+            <rect x="6" y="28" width="14" height="14" rx="1.5"/>
+            <rect x="28" y="6" width="14" height="14" rx="1.5"/>
+            <rect x="9" y="9" width="8" height="8"/>
+            <rect x="9" y="31" width="8" height="8"/>
+            <rect x="31" y="9" width="8" height="8"/>
+            <path d="M28 28h4v4h-4zM36 28h6M28 36v6M36 36h6v6M36 28v4"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step aos" data-d="3">
+        <div class="step-num" aria-hidden="true">3</div>
+        <div>
+          <div class="step-title">接続完了</div>
+          <div class="step-desc">iPhone、Android、またはブラウザからサーバーのターミナルを操作。どこからでも作業できる。</div>
+        </div>
+        <div class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 36V16a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H16l-8 4V36z"/>
+            <path d="M15 23l4 4 14-9"/>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Footer
+═══════════════════════════════════ -->
+<footer role="contentinfo">
+  <div class="container">
+    <div class="foot-inner">
+
+      <a href="/" class="foot-logo" aria-label="ZenTerm トップへ">
+        <span class="logo-icon-wrap" aria-hidden="true">
+          <img class="icon-light" src="lp/icon-light.png" alt="" width="26" height="26">
+          <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="26" height="26">
+        </span>
+        ZenTerm
+      </a>
+
+      <div class="foot-links">
+        <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="foot-link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          App Store
+        </a>
+        <a href="https://github.com/phni3j9a/zenterm" class="foot-link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+          GitHub
+        </a>
+        <a href="support.html" class="foot-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+          </svg>
+          サポート
+        </a>
+      </div>
+
+      <div class="foot-copy">© 2025 ZenTerm</div>
+    </div>
+
+    <div class="zen-footer-mark" aria-hidden="true">
+      <div class="zen-dot"></div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════
+     JavaScript (< 60 lines)
+═══════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  const html    = document.documentElement;
+  const toggle  = document.getElementById('theme-toggle');
+  const navbar  = document.getElementById('nav');
+
+  /* ── Theme ── */
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    toggle.textContent = dark ? '☀️' : '🌙';
+    toggle.setAttribute('aria-label', dark ? 'ライトモードに切り替え' : 'ダークモードに切り替え');
+  }
+
+  // Initial: follow OS preference
+  applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  toggle.addEventListener('click', function () {
+    applyTheme(html.getAttribute('data-theme') !== 'dark');
+  });
+
+  /* ── Sticky nav frost ── */
+  window.addEventListener('scroll', function () {
+    navbar.classList.toggle('scrolled', window.scrollY > 36);
+  }, { passive: true });
+
+  /* ── Scroll-triggered animations ── */
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        observer.unobserve(e.target);
       }
-      if (name === 'dashboard') {
-        loadDashboard();
-        startSystemPoll();
-      } else {
-        stopSystemPoll();
-      }
-    }
-
-    // ── API ──
-    function api(method, path, body) {
-      var headers = { 'Authorization': 'Bearer ' + token };
-      if (body !== undefined) headers['Content-Type'] = 'application/json';
-      var opts = {
-        method: method,
-        headers: headers,
-      };
-      if (body !== undefined) opts.body = JSON.stringify(body);
-      return fetch(path, opts).then(function(res) {
-        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
-        return res.json();
-      });
-    }
-
-    // ── Login ──
-    function attemptLogin() {
-      var val = tokenInput.value.trim();
-      if (!val) { loginError.textContent = 'Token を入力してください'; return; }
-      loginError.textContent = '';
-      loginBtn.disabled = true;
-      loginBtn.textContent = '接続中...';
-
-      token = val;
-      api('POST', '/api/auth/verify').then(function() {
-        localStorage.setItem('ZenTerm_token', token);
-        showView('dashboard');
-      }).catch(function() {
-        loginError.textContent = '認証に失敗しました。Token を確認してください。';
-        token = '';
-      }).finally(function() {
-        loginBtn.disabled = false;
-        loginBtn.textContent = '接続';
-      });
-    }
-
-    loginBtn.addEventListener('click', attemptLogin);
-    tokenInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') attemptLogin(); });
-    logoutBtn.addEventListener('click', function() {
-      localStorage.removeItem('ZenTerm_token');
-      token = '';
-      tokenInput.value = '';
-      showView('login');
     });
+  }, { threshold: 0.12 });
 
-    // ── Dashboard ──
-    function loadDashboard() {
-      loadSessions();
-      loadSystem();
-    }
+  document.querySelectorAll('.aos').forEach(function (el) {
+    observer.observe(el);
+  });
 
-    refreshBtn.addEventListener('click', loadDashboard);
-
-    function loadSessions() {
-      api('GET', '/api/sessions').then(function(data) {
-        renderSessions(data.sessions || []);
-      }).catch(function() {
-        sessionList.innerHTML = '<div class="empty-state">取得に失敗しました</div>';
-      });
-    }
-
-    function renderSessions(sessions) {
-      if (!sessions.length) {
-        sessionList.innerHTML = '<div class="empty-state">セッションがありません</div>';
-        return;
-      }
-      sessionList.innerHTML = '';
-      sessions.forEach(function(s) {
-        var card = document.createElement('div');
-        card.className = 'session-card';
-        var info = document.createElement('div');
-        info.innerHTML = '<div class="session-name">' + escHtml(s.displayName) + '</div>' +
-          '<div class="session-meta">' + formatTime(s.created) + '</div>';
-        var actions = document.createElement('div');
-        actions.className = 'session-actions';
-        var delBtn = document.createElement('button');
-        delBtn.className = 'btn-danger';
-        delBtn.textContent = '削除';
-        delBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (confirm(s.displayName + ' を削除しますか？')) {
-            api('DELETE', '/api/sessions/' + encodeURIComponent(s.name)).then(loadSessions);
-          }
-        });
-        actions.appendChild(delBtn);
-        card.appendChild(info);
-        card.appendChild(actions);
-        card.addEventListener('click', function() { openTerminal(s.name); });
-        sessionList.appendChild(card);
-      });
-    }
-
-    newSessionBtn.addEventListener('click', function() {
-      api('POST', '/api/sessions').then(function(data) {
-        openTerminal(data.session.name);
-      }).catch(function(err) { alert('セッション作成に失敗: ' + err.message); });
-    });
-
-    function loadSystem() {
-      api('GET', '/api/system/status').then(function(data) {
-        renderSystem(data);
-      }).catch(function() {
-        systemStats.innerHTML = '<div class="empty-state">取得に失敗しました</div>';
-      });
-    }
-
-    function renderSystem(s) {
-      var cards = [];
-      cards.push(statCard('CPU', s.cpu.usage.toFixed(0) + '%', s.cpu.model, s.cpu.usage));
-      cards.push(statCard('メモリ', formatBytes(s.memory.used) + ' / ' + formatBytes(s.memory.total), s.memory.percent.toFixed(0) + '% 使用中', s.memory.percent));
-      cards.push(statCard('ディスク', formatBytes(s.disk.used) + ' / ' + formatBytes(s.disk.total), s.disk.percent.toFixed(0) + '% 使用中', s.disk.percent));
-      if (s.temperature !== null) {
-        cards.push(statCard('温度', s.temperature.toFixed(1) + '°C', '', null));
-      }
-      cards.push(statCard('稼働時間', formatUptime(s.uptime), '', null));
-      systemStats.innerHTML = cards.join('');
-    }
-
-    function statCard(label, value, detail, percent) {
-      var bar = '';
-      if (percent !== null && percent !== undefined) {
-        var color = percent > 80 ? 'var(--danger)' : percent > 60 ? '#e0a458' : 'var(--primary)';
-        bar = '<div class="stat-bar"><div class="stat-bar-fill" style="width:' + percent + '%;background:' + color + '"></div></div>';
-      }
-      return '<div class="stat-card"><div class="stat-label">' + escHtml(label) + '</div>' +
-        '<div class="stat-value">' + escHtml(value) + '</div>' +
-        (detail ? '<div class="stat-detail">' + escHtml(detail) + '</div>' : '') +
-        bar + '</div>';
-    }
-
-    function startSystemPoll() {
-      stopSystemPoll();
-      systemPollTimer = setInterval(loadSystem, 10000);
-    }
-    function stopSystemPoll() {
-      if (systemPollTimer) { clearInterval(systemPollTimer); systemPollTimer = null; }
-    }
-
-    // ── Terminal ──
-    function openTerminal(sessionName) {
-      currentSession = sessionName;
-      var displayName = sessionName.replace(/^zen_/, '');
-      termTitle.textContent = displayName;
-      showView('terminal');
-      initTerminal(sessionName);
-    }
-
-    termBackBtn.addEventListener('click', function() {
-      closeTerminal();
-      showView('dashboard');
-    });
-
-    function initTerminal(sessionName) {
-      cleanupTerminal();
-
-      term = new Terminal({
-        allowProposedApi: true,
-        fontFamily: '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", "Fira Code", "Cascadia Code", monospace',
-        fontSize: 14,
-        cursorBlink: true,
-        cursorStyle: 'block',
-        scrollback: 5000,
-        theme: {
-          background: '#1a1915',
-          foreground: '#e8e4dc',
-          cursor: '#d97757',
-          cursorAccent: '#1a1915',
-          selectionBackground: 'rgba(217,119,87,0.25)',
-          black: '#1a1915', red: '#d45d5d', green: '#8cb369', yellow: '#e0a458',
-          blue: '#6fa3cc', magenta: '#b585b8', cyan: '#6fb5b5', white: '#c8c3b8',
-          brightBlack: '#7a7268', brightRed: '#e87f7f', brightGreen: '#a4c785',
-          brightYellow: '#f0bc70', brightBlue: '#8db9dd', brightMagenta: '#cda0d0',
-          brightCyan: '#88cccc', brightWhite: '#f5f2eb',
-        },
-      });
-
-      fitAddon = new FitAddon.FitAddon();
-      term.loadAddon(fitAddon);
-      var unicode11 = new Unicode11Addon.Unicode11Addon();
-      term.loadAddon(unicode11);
-      term.unicode.activeVersion = '11';
-
-      term.open(webTerminal);
-      fitAddon.fit();
-
-      term.onData(function(data) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'input', data: data }));
-        }
-      });
-
-      connectWs(sessionName);
-
-      window.addEventListener('resize', onResize);
-    }
-
-    function onResize() {
-      if (fitAddon) { fitAddon.fit(); sendResize(); }
-    }
-
-    function sendResize() {
-      if (!ws || ws.readyState !== WebSocket.OPEN || !term) return;
-      ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
-    }
-
-    function connectWs(sessionName) {
-      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
-
-      var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      var params = new URLSearchParams();
-      params.set('sessionId', sessionName);
-      params.set('token', token);
-      var url = proto + '//' + location.host + '/ws/terminal?' + params.toString();
-
-      setTermStatus('connecting');
-
+  /* ── Copy buttons ── */
+  document.querySelectorAll('.copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var text = btn.dataset.copy;
       try {
-        ws = new WebSocket(url);
-      } catch (e) {
-        setTermStatus('disconnected');
-        scheduleReconnect(sessionName);
-        return;
-      }
+        await navigator.clipboard.writeText(text);
+        var prev = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = prev; }, 2200);
+      } catch (_) {}
+    });
+  });
 
-      ws.onopen = function() {
-        reconnectAttempt = 0;
-        reconnectDelay = 1000;
-        setTermStatus('connected');
-        term.reset();
-        fitAddon.fit();
-        sendResize();
-        term.focus();
-      };
-
-      ws.onmessage = function(ev) {
-        var msg = JSON.parse(ev.data);
-        if (msg.type === 'output') { term.write(msg.data); }
-      };
-
-      ws.onclose = function(ev) {
-        ws = null;
-        setTermStatus('disconnected');
-        if (ev.code !== 1000 && ev.code !== 1008 && currentSession === sessionName) {
-          scheduleReconnect(sessionName);
-        }
-      };
-
-      ws.onerror = function() {};
-    }
-
-    function scheduleReconnect(sessionName) {
-      if (reconnectAttempt >= 20) return;
-      reconnectAttempt++;
-      var delay = reconnectDelay;
-      reconnectDelay = Math.min(reconnectDelay * 2, 30000);
-      setTermStatus('connecting');
-      clearTimeout(reconnectTimer);
-      reconnectTimer = setTimeout(function() { connectWs(sessionName); }, delay);
-    }
-
-    function setTermStatus(status) {
-      termStatus.className = 'term-status ' + status;
-    }
-
-    function cleanupTerminal() {
-      window.removeEventListener('resize', onResize);
-      clearTimeout(reconnectTimer);
-      reconnectAttempt = 0;
-      reconnectDelay = 1000;
-      if (ws) { try { ws.close(); } catch(e){} ws = null; }
-      if (term) { term.dispose(); term = null; fitAddon = null; }
-      webTerminal.innerHTML = '';
-    }
-
-    function closeTerminal() {
-      cleanupTerminal();
-      currentSession = null;
-    }
-
-    // ── Helpers ──
-    function escHtml(s) {
-      var d = document.createElement('div');
-      d.textContent = s;
-      return d.innerHTML;
-    }
-
-    function formatTime(ts) {
-      if (!ts) return '';
-      var d = new Date(typeof ts === 'number' && ts < 1e12 ? ts * 1000 : ts);
-      return d.toLocaleString('ja-JP', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-    }
-
-    function formatBytes(b) {
-      if (b < 1024) return b + ' B';
-      if (b < 1048576) return (b / 1024).toFixed(0) + ' KB';
-      if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB';
-      return (b / 1073741824).toFixed(1) + ' GB';
-    }
-
-    function formatUptime(sec) {
-      var d = Math.floor(sec / 86400);
-      var h = Math.floor((sec % 86400) / 3600);
-      var m = Math.floor((sec % 3600) / 60);
-      if (d > 0) return d + '日 ' + h + '時間';
-      if (h > 0) return h + '時間 ' + m + '分';
-      return m + '分';
-    }
-
-    // ── Init ──
-    if (token) {
-      api('POST', '/api/auth/verify').then(function() {
-        showView('dashboard');
-      }).catch(function() {
-        localStorage.removeItem('ZenTerm_token');
-        token = '';
-        showView('login');
-      });
-    }
-  })();
-  </script>
+})();
+</script>
 </body>
 </html>
