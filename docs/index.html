@@ -349,6 +349,11 @@
       opacity: 1;
       transform: translateY(0);
     }
+    /* Preserve feat scale after scroll animation completes */
+    .phone-wrap.feat.aos.in { transform: scale(1.055); }
+    @media (max-width: 1080px) {
+      .phone-wrap.feat.aos.in { transform: none; }
+    }
     .aos[data-d="1"] { transition-delay: .08s; }
     .aos[data-d="2"] { transition-delay: .18s; }
     .aos[data-d="3"] { transition-delay: .28s; }
@@ -359,6 +364,7 @@
        Section Common
     ═══════════════════════════════════ */
     section { padding: 120px 0; }
+    @media (max-width: 768px) { section { padding: 80px 0; } }
 
     .sec-eyebrow {
       display: flex;
@@ -457,7 +463,10 @@
       text-align: center;
       margin-bottom: 72px;
     }
+    @media (max-width: 768px) { .ss-head { margin-bottom: 40px; } }
     .ss-head .sec-desc { max-width: 480px; margin: 0 auto; }
+
+    .phones-outer { position: relative; }
 
     .phones {
       display: flex;
@@ -490,6 +499,30 @@
     .phone-wrap.feat { transform: scale(1.055); }
     .phone-wrap:hover { transform: scale(1.025) translateY(-5px); }
     .phone-wrap.feat:hover { transform: scale(1.08) translateY(-5px); }
+    @media (max-width: 1080px) {
+      .phone-wrap.feat { transform: none; }
+      .phone-wrap.feat:hover { transform: scale(1.025) translateY(-5px); }
+    }
+
+    /* Scroll indicator dots (mobile carousel) */
+    .scroll-dots {
+      display: none;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 28px;
+    }
+    @media (max-width: 1080px) { .scroll-dots { display: flex; } }
+    .scroll-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .25s, transform .25s;
+    }
+    .scroll-dot.active {
+      background: var(--primary);
+      transform: scale(1.35);
+    }
 
     .phone-frame {
       width: 258px;
@@ -867,11 +900,20 @@
     }
 
     /* ═══════════════════════════════════
-       Responsive: hide phones on small mobile
+       Responsive: phone sizing
     ═══════════════════════════════════ */
+    @media (max-width: 768px) {
+      .phone-frame { width: 230px; border-radius: 44px; padding: 10px 9px; }
+      .phone-screen { height: 500px; border-radius: 36px; }
+      .phone-screen::before { width: 68px; height: 18px; top: 10px; }
+    }
     @media (max-width: 500px) {
-      .phone-frame { width: 224px; }
-      .phone-screen { height: 484px; }
+      .phone-frame { width: 200px; border-radius: 40px; padding: 9px 8px; }
+      .phone-screen { height: 434px; border-radius: 32px; }
+      .phone-screen::before { width: 60px; height: 16px; top: 9px; }
+      .phones { gap: 16px; padding: 8px 20px 16px; }
+      .phone-cap-ja { font-size: 13px; }
+      .phone-cap-en { font-size: 10px; }
     }
 
     /* ═══════════════════════════════════
@@ -1011,6 +1053,7 @@
       <p class="sec-desc">Zenテーマの落ち着いたカラーパレットと直感的なUI。ライトとダークを自由に切り替えられる。</p>
     </div>
 
+    <div class="phones-outer">
     <div class="phones" role="list">
 
       <div class="phone-wrap aos" data-d="1" role="listitem">
@@ -1073,6 +1116,14 @@
         </div>
       </div>
 
+    </div>
+    <div class="scroll-dots" aria-hidden="true">
+      <div class="scroll-dot active"></div>
+      <div class="scroll-dot"></div>
+      <div class="scroll-dot"></div>
+      <div class="scroll-dot"></div>
+      <div class="scroll-dot"></div>
+    </div>
     </div>
   </div>
 </section>
@@ -1342,6 +1393,29 @@
       } catch (_) {}
     });
   });
+
+  /* ── Screenshot carousel scroll dots ── */
+  var phonesEl = document.querySelector('.phones');
+  var dots = document.querySelectorAll('.scroll-dot');
+  if (phonesEl && dots.length) {
+    var updateDots = function () {
+      var items = phonesEl.querySelectorAll('.phone-wrap');
+      var scrollLeft = phonesEl.scrollLeft;
+      var containerW = phonesEl.offsetWidth;
+      var closest = 0;
+      var closestDist = Infinity;
+      items.forEach(function (item, i) {
+        var center = item.offsetLeft + item.offsetWidth / 2 - scrollLeft;
+        var dist = Math.abs(center - containerW / 2);
+        if (dist < closestDist) { closestDist = dist; closest = i; }
+      });
+      dots.forEach(function (d, i) {
+        d.classList.toggle('active', i === closest);
+      });
+    };
+    phonesEl.addEventListener('scroll', updateDots, { passive: true });
+    updateDots();
+  }
 
 })();
 </script>
