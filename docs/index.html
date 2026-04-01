@@ -1,1981 +1,1324 @@
 <!DOCTYPE html>
-<html lang="ja" class="no-js" data-theme="light">
+<html lang="ja" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ZenTerm — iPhone やブラウザから macOS / Linux サーバーを操作するセルフホスト型ターミナル。tmux、ファイルブラウザ、QR ペアリング対応。">
-  <meta name="theme-color" content="#f4f1ea">
-  <meta property="og:title" content="ZenTerm — 静かに、深く、自分のサーバーへ。">
-  <meta property="og:description" content="Self-hosted mobile terminal for macOS & Linux. Open your own server from iPhone, iPad, or any browser.">
+  <meta name="description" content="ZenTerm — セルフホスト型モバイルターミナル。iPhone、Android、ブラウザからmacOS/Linuxサーバーを静かに、力強く操作する。">
+  <meta property="og:title" content="ZenTerm — 静寂の中で、サーバーを操る">
+  <meta property="og:description" content="Self-hosted mobile terminal for macOS & Linux. Control your server from iPhone, Android, or any browser.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://phni3j9a.github.io/zenterm/">
-  <meta property="og:image" content="https://phni3j9a.github.io/zenterm/lp/icon-light.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ZenTerm — 静かに、深く、自分のサーバーへ。">
-  <meta name="twitter:description" content="Self-hosted mobile terminal for macOS & Linux. Open your own server from iPhone, iPad, or any browser.">
-  <meta name="twitter:image" content="https://phni3j9a.github.io/zenterm/lp/icon-light.png">
-  <link rel="canonical" href="https://phni3j9a.github.io/zenterm/">
-  <link rel="icon" href="lp/icon-light.png" type="image/png">
-  <title>ZenTerm — 静かに、深く、自分のサーバーへ。</title>
+  <title>ZenTerm — 静寂の中で、サーバーを操る</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Zen+Old+Mincho:wght@500;700&display=swap" rel="stylesheet">
-  <script>
-    (function () {
-      var root = document.documentElement;
-      root.classList.remove('no-js');
-      root.classList.add('js');
-      try {
-        var stored = localStorage.getItem('zenterm-theme');
-        var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.setAttribute('data-theme', dark ? 'dark' : 'light');
-      } catch (_) {}
-    })();
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    /* ═══════════════════════════════════
+       Design Tokens
+    ═══════════════════════════════════ */
     :root {
-      color-scheme: light;
-      --bg: #f4f1ea;
-      --bg-alt: #ece8df;
-      --surface: rgba(255, 252, 246, 0.78);
-      --surface-strong: rgba(255, 250, 242, 0.92);
-      --surface-muted: rgba(123, 139, 111, 0.08);
-      --line: rgba(59, 51, 39, 0.12);
-      --line-strong: rgba(59, 51, 39, 0.18);
-      --text: #231f1a;
-      --text-soft: #6b6458;
-      --text-faint: #9a9181;
-      --accent: #778866;
-      --accent-deep: #5f6f51;
-      --accent-soft: rgba(119, 136, 102, 0.14);
-      --accent-gold: #b69a65;
-      --shadow-sm: 0 10px 28px rgba(34, 28, 19, 0.06);
-      --shadow-md: 0 26px 70px rgba(34, 28, 19, 0.11);
-      --shadow-lg: 0 40px 100px rgba(34, 28, 19, 0.15);
-      --radius-sm: 14px;
-      --radius-md: 22px;
-      --radius-lg: 30px;
-      --nav-h: 76px;
-      --max-w: 1180px;
-      --font-display: 'Zen Old Mincho', 'Hiragino Mincho ProN', serif;
-      --font-sans: 'IBM Plex Sans JP', 'Hiragino Sans', sans-serif;
-      --font-mono: 'JetBrains Mono', 'SFMono-Regular', monospace;
-      --ease: 260ms ease;
+      --bg:              #F5F4F0;
+      --surface:         #EEEDEA;
+      --surface-hover:   #E7E6E2;
+      --border:          #D8D6D0;
+      --border-subtle:   #EAE9E5;
+      --text-primary:    #2A2721;
+      --text-secondary:  #66614F;
+      --text-muted:      #958E7E;
+      --primary:         #7B8B6F;
+      --primary-hover:   #6C7C61;
+      --primary-subtle:  #E8EDE4;
+      --primary-muted:   #A4B199;
+      --shadow-sm:       0 1px 3px rgba(42,39,33,.06);
+      --shadow-md:       0 4px 12px rgba(42,39,33,.09);
+      --shadow-lg:       0 8px 24px rgba(42,39,33,.12);
+      --shadow-xl:       0 20px 60px rgba(42,39,33,.14);
+      --font-serif:      'Noto Serif JP', 'Georgia', 'Hiragino Mincho ProN', serif;
+      --font-sans:       -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', Helvetica, sans-serif;
+      --font-mono:       'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+      --radius-sm:       6px;
+      --radius-md:       10px;
+      --radius-lg:       14px;
+      --radius-xl:       20px;
+      --nav-h:           60px;
+      --max-w:           1100px;
+      --t-base:          0.2s ease;
     }
 
     [data-theme="dark"] {
-      color-scheme: dark;
-      --bg: #161411;
-      --bg-alt: #1d1a16;
-      --surface: rgba(31, 28, 24, 0.8);
-      --surface-strong: rgba(38, 34, 29, 0.92);
-      --surface-muted: rgba(148, 166, 135, 0.1);
-      --line: rgba(228, 221, 206, 0.12);
-      --line-strong: rgba(228, 221, 206, 0.18);
-      --text: #ece4d2;
-      --text-soft: #b6ad9d;
-      --text-faint: #857d70;
-      --accent: #9aac8d;
-      --accent-deep: #b0bea6;
-      --accent-soft: rgba(154, 172, 141, 0.14);
-      --accent-gold: #cbb17d;
-      --shadow-sm: 0 14px 34px rgba(0, 0, 0, 0.24);
-      --shadow-md: 0 26px 70px rgba(0, 0, 0, 0.32);
-      --shadow-lg: 0 42px 110px rgba(0, 0, 0, 0.45);
+      --bg:              #1B1A17;
+      --surface:         #242320;
+      --surface-hover:   #2E2D29;
+      --border:          #3A3832;
+      --border-subtle:   #2E2D29;
+      --text-primary:    #DBD6C8;
+      --text-secondary:  #A5A090;
+      --text-muted:      #6D6860;
+      --primary:         #94A687;
+      --primary-hover:   #A5B59A;
+      --primary-subtle:  #1E251C;
+      --primary-muted:   #4E5746;
+      --shadow-sm:       0 1px 3px rgba(0,0,0,.25);
+      --shadow-md:       0 4px 12px rgba(0,0,0,.35);
+      --shadow-lg:       0 8px 24px rgba(0,0,0,.45);
+      --shadow-xl:       0 20px 60px rgba(0,0,0,.55);
     }
 
+    /* ═══════════════════════════════════
+       Reset & Base
+    ═══════════════════════════════════ */
     *, *::before, *::after {
+      margin: 0; padding: 0;
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
-
     html {
       scroll-behavior: smooth;
       -webkit-text-size-adjust: 100%;
     }
-
     body {
-      min-height: 100vh;
       font-family: var(--font-sans);
-      color: var(--text);
-      background:
-        radial-gradient(circle at top right, rgba(119, 136, 102, 0.18), transparent 28%),
-        radial-gradient(circle at left 12% top 20%, rgba(182, 154, 101, 0.08), transparent 24%),
-        linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 18%, var(--bg) 100%);
-      line-height: 1.75;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.65;
+      transition: background 0.35s, color 0.35s;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    ::selection { background: var(--primary-subtle); color: var(--primary); }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(to right, rgba(127, 118, 102, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(127, 118, 102, 0.05) 1px, transparent 1px);
-      background-size: 72px 72px;
-      mask-image: radial-gradient(circle at center, black 18%, transparent 82%);
-      opacity: 0.28;
-    }
-
-    img {
-      display: block;
-      max-width: 100%;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    button {
-      font: inherit;
-      border: 0;
-      background: none;
-      cursor: pointer;
-      color: inherit;
-    }
-
-    ::selection {
-      background: var(--accent-soft);
-      color: var(--accent-deep);
-    }
-
+    /* ═══════════════════════════════════
+       Layout
+    ═══════════════════════════════════ */
     .container {
-      width: min(var(--max-w), calc(100% - 40px));
+      max-width: var(--max-w);
       margin: 0 auto;
+      padding: 0 48px;
     }
+    @media (max-width: 768px) { .container { padding: 0 24px; } }
 
-    section {
-      padding: 112px 0;
-      scroll-margin-top: calc(var(--nav-h) + 24px);
-    }
-
-    .site-nav {
+    /* ═══════════════════════════════════
+       Navigation
+    ═══════════════════════════════════ */
+    nav {
       position: sticky;
       top: 0;
-      z-index: 50;
+      z-index: 100;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
       border-bottom: 1px solid transparent;
-      transition: background var(--ease), border-color var(--ease), backdrop-filter var(--ease);
+      transition:
+        background 0.35s,
+        border-color 0.35s,
+        backdrop-filter 0.35s;
     }
-
-    .site-nav.scrolled {
-      background: color-mix(in srgb, var(--bg) 82%, transparent);
-      backdrop-filter: blur(18px) saturate(1.35);
-      -webkit-backdrop-filter: blur(18px) saturate(1.35);
-      border-bottom-color: var(--line);
+    nav.scrolled {
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom-color: var(--border-subtle);
     }
-
     .nav-inner {
-      min-height: var(--nav-h);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 18px;
+      width: 100%;
     }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-family: var(--font-display);
-      font-size: 1.18rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-    }
-
-    .brand-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      background: color-mix(in srgb, var(--surface-strong) 86%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-    }
-
-    .brand-icon img {
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
-    }
-
-    .icon-light { display: block; }
-    .icon-dark { display: none; }
-    [data-theme="dark"] .icon-light { display: none; }
-    [data-theme="dark"] .icon-dark { display: block; }
-
-    .nav-links {
+    .nav-logo {
       display: flex;
       align-items: center;
-      gap: 18px;
-      color: var(--text-soft);
-      font-size: 0.94rem;
+      gap: 10px;
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      transition: opacity var(--t-base);
     }
-
-    .nav-link {
-      position: relative;
-      padding: 6px 0;
-      transition: color var(--ease);
+    .nav-logo:hover { opacity: 0.7; }
+    .logo-icon-wrap {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
     }
-
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      bottom: -2px;
-      width: 100%;
-      height: 1px;
-      background: currentColor;
-      transform: scaleX(0);
-      transform-origin: left center;
-      transition: transform var(--ease);
-      opacity: 0.65;
-    }
-
-    .nav-link:hover {
-      color: var(--text);
-    }
-
-    .nav-link:hover::after {
-      transform: scaleX(1);
-    }
-
+    .logo-icon-wrap img { width: 100%; height: 100%; object-fit: contain; }
+    /* Theme-switching icons */
+    .icon-light { display: block; }
+    .icon-dark  { display: none;  }
+    [data-theme="dark"] .icon-light { display: none;  }
+    [data-theme="dark"] .icon-dark  { display: block; }
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
     }
-
-    .theme-toggle {
-      width: 42px;
-      height: 42px;
-      display: grid;
-      place-items: center;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
-      color: var(--accent-gold);
-      box-shadow: var(--shadow-sm);
-      transition: transform var(--ease), background var(--ease), color var(--ease);
-    }
-
-    .theme-toggle:hover {
-      transform: translateY(-1px);
-      background: var(--surface-strong);
-      color: var(--accent-deep);
-    }
-
-    .btn-primary,
-    .btn-secondary {
-      display: inline-flex;
+    #theme-toggle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      min-height: 48px;
-      padding: 0 18px;
-      border-radius: 999px;
-      font-size: 0.92rem;
-      font-weight: 600;
-      transition: transform var(--ease), box-shadow var(--ease), background var(--ease), color var(--ease), border-color var(--ease);
-      white-space: nowrap;
+      font-size: 15px;
+      color: var(--text-muted);
+      transition: background var(--t-base), color var(--t-base);
     }
-
+    #theme-toggle:hover {
+      background: var(--surface);
+      color: var(--text-primary);
+    }
     .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 14px 28px rgba(119, 136, 102, 0.25);
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-deep);
-      transform: translateY(-2px);
-      box-shadow: 0 18px 36px rgba(119, 136, 102, 0.32);
-    }
-
-    .btn-secondary {
-      background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
-      color: var(--text);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .btn-secondary:hover {
-      transform: translateY(-2px);
-      border-color: var(--line-strong);
-      background: var(--surface-strong);
-    }
-
-    .btn-primary svg,
-    .btn-secondary svg {
-      width: 15px;
-      height: 15px;
-      flex-shrink: 0;
-    }
-
-    .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      font-size: 0.76rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--accent);
+      gap: 5px;
+      padding: 9px 18px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: background var(--t-base), transform 0.15s, box-shadow 0.15s;
     }
-
-    .eyebrow::before {
-      content: '';
-      width: 28px;
-      height: 1px;
-      background: currentColor;
-      opacity: 0.65;
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(123,139,111,0.35);
     }
+    .btn-primary svg { width: 13px; height: 13px; }
+    @media (max-width: 480px) { .hide-xs { display: none !important; } }
 
-    .section-head {
-      display: grid;
-      gap: 22px 40px;
-      align-items: end;
-      margin-bottom: 52px;
-    }
-
-    .section-head.split {
-      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-    }
-
-    .section-title {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 4vw, 3.4rem);
-      line-height: 1.18;
-      letter-spacing: 0.03em;
-    }
-
-    .section-desc {
-      color: var(--text-soft);
-      font-size: 1rem;
-      max-width: 40rem;
-    }
-
+    /* ═══════════════════════════════════
+       Hero
+    ═══════════════════════════════════ */
     #hero {
-      padding-top: 44px;
-      padding-bottom: 88px;
-    }
-
-    .hero-shell {
-      display: grid;
-      grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
-      gap: 54px;
+      min-height: calc(100vh - var(--nav-h));
+      display: flex;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 40px 100px;
       position: relative;
+      overflow: hidden;
     }
+    /* Atmospheric radial glow */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse 80% 65% at 50% 55%,
+        rgba(123,139,111,.065) 0%,
+        transparent 68%
+      );
+      pointer-events: none;
+    }
+    /* Faint large enso in background */
+    .bg-enso {
+      position: absolute;
+      width: min(680px, 110vw);
+      height: min(680px, 110vw);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: .025;
+      pointer-events: none;
+    }
+    [data-theme="dark"] .bg-enso { opacity: .035; }
 
-    .hero-copy {
+    /* Hero icon (real PNG, theme-switching) */
+    .hero-icon-wrap {
       position: relative;
-      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 44px;
+    }
+    .hero-icon {
+      width: 280px;
+      height: 280px;
+      object-fit: contain;
+      opacity: 0;
+      animation: hero-icon-in 1.1s cubic-bezier(.2,.8,.3,1) .25s forwards;
+    }
+    @keyframes hero-icon-in {
+      from { opacity: 0; transform: scale(.88); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .hero-product {
-      margin-top: 22px;
-      font-family: var(--font-display);
-      font-size: clamp(3.8rem, 10vw, 6.6rem);
-      line-height: 0.92;
-      letter-spacing: 0.12em;
-    }
-
-    .hero-tagline {
-      margin-top: 20px;
-      font-family: var(--font-display);
-      font-size: clamp(1.38rem, 3vw, 2.16rem);
-      line-height: 1.48;
-      letter-spacing: 0.04em;
-    }
-
-    .hero-sub {
-      margin-top: 20px;
-      max-width: 39rem;
-      color: var(--text-soft);
-      font-size: 1.02rem;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 30px;
-    }
-
-    .hero-trust {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 24px;
-    }
-
-    .hero-pill {
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
-      border: 1px solid var(--line);
-      color: var(--text-soft);
-      font-size: 0.84rem;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .hero-band {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 28px;
-    }
-
-    .hero-band-item {
-      padding: 18px;
-      border-radius: var(--radius-md);
-      background: color-mix(in srgb, var(--surface-strong) 86%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .hero-band-label {
-      display: block;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 10px;
-    }
-
-    .hero-band-title {
-      display: block;
-      font-size: 1rem;
+      font-family: var(--font-serif);
+      font-size: clamp(46px, 8vw, 76px);
       font-weight: 600;
-      margin-bottom: 6px;
+      letter-spacing: 0.22em;
+      line-height: 1;
+      color: var(--text-primary);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: rise .75s ease 1.1s forwards;
     }
-
-    .hero-band-text {
-      color: var(--text-soft);
-      font-size: 0.9rem;
-      line-height: 1.68;
+    .hero-tagline {
+      font-family: var(--font-serif);
+      font-size: clamp(17px, 3vw, 23px);
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: .06em;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      opacity: 0;
+      animation: rise .75s ease 1.3s forwards;
     }
-
-    .hero-visual {
-      position: relative;
-      min-height: 620px;
-      isolation: isolate;
+    .hero-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      letter-spacing: .04em;
+      margin-bottom: 52px;
+      opacity: 0;
+      animation: rise .75s ease 1.4s forwards;
     }
-
-    .hero-orb {
-      position: absolute;
-      inset: 64px 7% 72px 13%;
-      border-radius: 36px;
-      background:
-        linear-gradient(135deg, rgba(119, 136, 102, 0.18), transparent 40%),
-        color-mix(in srgb, var(--surface-strong) 90%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-lg);
-      transform: rotate(-5deg);
-    }
-
-    .bg-enso {
-      position: absolute;
-      inset: 12px auto auto 48px;
-      width: min(520px, 90%);
-      height: auto;
-      color: color-mix(in srgb, var(--text) 12%, transparent);
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    [data-theme="dark"] .bg-enso {
-      color: color-mix(in srgb, var(--text) 18%, transparent);
-      opacity: 0.7;
-    }
-
-    .hero-float {
-      position: absolute;
-      z-index: 3;
-      padding: 18px 18px 16px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: color-mix(in srgb, var(--surface-strong) 86%, transparent);
-      backdrop-filter: blur(18px) saturate(1.2);
-      -webkit-backdrop-filter: blur(18px) saturate(1.2);
-      box-shadow: var(--shadow-md);
-    }
-
-    .hero-float-label {
+    .hero-btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 10px;
+      gap: 9px;
+      padding: 15px 36px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      transition: background var(--t-base), transform .18s, box-shadow .18s;
+      opacity: 0;
+      animation: rise .75s ease 1.55s forwards;
     }
-
-    .hero-float-label::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: 0.75;
+    .hero-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 32px rgba(123,139,111,.32);
     }
+    .hero-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-    .hero-float-command {
-      top: 0;
-      left: 0;
-      width: min(270px, 62%);
-    }
-
-    .hero-float-proof {
-      right: 0;
-      bottom: 38px;
-      width: min(264px, 62%);
-    }
-
-    .hero-float-proof strong {
-      display: block;
-      font-family: var(--font-display);
-      font-size: 1.05rem;
-      line-height: 1.5;
-      margin-bottom: 8px;
-    }
-
-    .hero-float-proof p {
-      color: var(--text-soft);
-      font-size: 0.88rem;
-      line-height: 1.7;
-    }
-
-    .term-mini {
-      border-radius: 16px;
-      overflow: hidden;
-      background: #151311;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-    }
-
-    .term-mini-bar {
+    /* Scroll whisker */
+    .scroll-whisk {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      gap: 6px;
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      opacity: 0;
+      animation: rise .5s ease 2.2s forwards;
+    }
+    .whisk-dot {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    .whisk-line {
+      width: 1px;
+      height: 36px;
+      background: linear-gradient(to bottom, var(--text-muted) 0%, transparent 100%);
+      animation: whisk-anim 2.2s ease-in-out 3.1s infinite;
+    }
+    @keyframes whisk-anim {
+      0%,100% { transform: scaleY(1); opacity: .5; }
+      50%      { transform: scaleY(.6) translateY(8px); opacity: 1; }
     }
 
-    .term-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
+    /* ═══════════════════════════════════
+       Scroll Animations
+    ═══════════════════════════════════ */
+    .aos {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .7s ease, transform .7s ease;
     }
+    .aos.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .aos[data-d="1"] { transition-delay: .08s; }
+    .aos[data-d="2"] { transition-delay: .18s; }
+    .aos[data-d="3"] { transition-delay: .28s; }
+    .aos[data-d="4"] { transition-delay: .38s; }
+    .aos[data-d="5"] { transition-delay: .48s; }
 
-    .term-dot.r { background: #ff5f57; }
-    .term-dot.y { background: #febc2e; }
-    .term-dot.g { background: #28c840; }
+    /* ═══════════════════════════════════
+       Section Common
+    ═══════════════════════════════════ */
+    section { padding: 120px 0; }
 
-    .term-mini-body {
-      padding: 13px 14px;
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      color: #e7decf;
+    .sec-eyebrow {
       display: flex;
       align-items: center;
       gap: 10px;
-      line-height: 1.6;
-      word-break: break-all;
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 18px;
     }
-
-    .term-ps {
-      color: #8da07d;
+    .sec-eyebrow::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--primary);
+      opacity: .7;
       flex-shrink: 0;
     }
+    .sec-eyebrow.centered::before { display: none; }
 
-    .hero-device {
-      position: absolute;
-      z-index: 2;
+    .sec-title {
+      font-family: var(--font-serif);
+      font-size: clamp(28px, 4.5vw, 46px);
+      font-weight: 600;
+      line-height: 1.18;
+      color: var(--text-primary);
+      letter-spacing: .025em;
+      margin-bottom: 18px;
+    }
+    .sec-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.75;
     }
 
-    .hero-device-main {
-      left: 27%;
-      top: 92px;
-      transform: rotate(-3deg);
+    /* ═══════════════════════════════════
+       Values (Why ZenTerm)
+    ═══════════════════════════════════ */
+    #values {
+      border-top: 1px solid var(--border-subtle);
+    }
+    .val-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 64px 72px;
+    }
+    @media (max-width: 900px)  { .val-grid { grid-template-columns: 1fr; gap: 48px; } }
+    @media (max-width: 1024px) { .val-grid { gap: 48px 48px; } }
+
+    .val-item { display: flex; flex-direction: column; gap: 18px; }
+    .val-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--t-base), transform var(--t-base);
+    }
+    .val-icon svg { width: 22px; height: 22px; }
+    .val-item:hover .val-icon {
+      background: color-mix(in srgb, var(--primary-subtle) 80%, var(--primary));
+      transform: translateY(-2px);
+    }
+    .val-accent {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: .6;
+    }
+    .val-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: .03em;
+    }
+    .val-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.75;
     }
 
-    .hero-device-side {
-      right: 9%;
-      bottom: 92px;
-      transform: rotate(9deg);
+    /* ═══════════════════════════════════
+       Screenshots
+    ═══════════════════════════════════ */
+    #screenshots {
+      background: var(--surface);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      overflow: hidden;
     }
+    .ss-head {
+      text-align: center;
+      margin-bottom: 72px;
+    }
+    .ss-head .sec-desc { max-width: 480px; margin: 0 auto; }
+
+    .phones {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (max-width: 1080px) {
+      .phones {
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding: 8px 24px 24px;
+        scrollbar-width: none;
+        gap: 20px;
+      }
+      .phones::-webkit-scrollbar { display: none; }
+    }
+
+    .phone-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      flex-shrink: 0;
+      scroll-snap-align: center;
+      transition: transform .3s ease;
+    }
+    .phone-wrap.feat { transform: scale(1.055); }
+    .phone-wrap:hover { transform: scale(1.025) translateY(-5px); }
+    .phone-wrap.feat:hover { transform: scale(1.08) translateY(-5px); }
 
     .phone-frame {
-      width: 292px;
+      width: 258px;
+      border-radius: 50px;
+      /* iPhone 15 Black — titanium-finish frame */
+      background: linear-gradient(158deg, #3a3a3a 0%, #1e1e1e 38%, #262626 68%, #1a1a1a 100%);
       padding: 12px 10px;
-      border-radius: 46px;
-      background: linear-gradient(158deg, #3c3c3c 0%, #1f1f1f 38%, #292929 68%, #191919 100%);
       box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.08),
-        0 0 0 2px #0f0f0f,
-        0 36px 90px rgba(0, 0, 0, 0.42),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.55);
+        0 0 0 1px rgba(255,255,255,0.07),
+        0 0 0 2px #0e0e0e,
+        0 36px 90px rgba(0,0,0,.52),
+        0 12px 30px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.55);
       position: relative;
     }
-
-    .phone-frame::before,
+    /* Side buttons — left: Action button (top) + Volume Up + Volume Down */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      left: -3px;
+      top: 78px;
+      width: 3px;
+      height: 28px;
+      background: #282828;
+      border-radius: 3px 0 0 3px;
+      /* box-shadow simulates volume buttons below */
+      box-shadow:
+        0 44px 0 0 #282828,
+        0 78px 0 0 #282828;
+    }
+    /* Side button — right: Power / Sleep-Wake */
     .phone-frame::after {
       content: '';
       position: absolute;
-      background: #2d2d2d;
-    }
-
-    .phone-frame::before {
-      left: -3px;
-      top: 80px;
-      width: 3px;
-      height: 28px;
-      border-radius: 3px 0 0 3px;
-      box-shadow: 0 44px 0 0 #2d2d2d, 0 78px 0 0 #2d2d2d;
-    }
-
-    .phone-frame::after {
       right: -3px;
-      top: 106px;
+      top: 102px;
       width: 3px;
-      height: 78px;
+      height: 76px;
+      background: #282828;
       border-radius: 0 3px 3px 0;
     }
-
     .phone-screen {
-      position: relative;
-      border-radius: 36px;
+      border-radius: 40px;
       overflow: hidden;
-      aspect-ratio: 9 / 19.5;
+      height: 558px;
       background: #000;
+      position: relative;
     }
-
+    /* Dynamic Island — pill cutout at top-center of screen */
     .phone-screen::before {
       content: '';
       position: absolute;
-      top: 10px;
+      top: 11px;
       left: 50%;
       transform: translateX(-50%);
       width: 78px;
-      height: 20px;
-      border-radius: 999px;
-      background: #060606;
-      z-index: 2;
+      height: 21px;
+      background: #040404;
+      border-radius: 50px;
+      z-index: 5;
       pointer-events: none;
     }
-
     .phone-screen img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: top;
-    }
-
-    .hero-device-side .phone-frame {
-      width: 210px;
-    }
-
-    #values {
-      padding-top: 30px;
-    }
-
-    .val-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .val-item {
-      padding: 28px;
-      border-radius: var(--radius-md);
-      background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .val-icon {
-      width: 52px;
-      height: 52px;
-      display: grid;
-      place-items: center;
-      border-radius: 16px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      margin-bottom: 18px;
-    }
-
-    .val-icon svg {
-      width: 24px;
-      height: 24px;
-    }
-
-    .val-title {
-      font-family: var(--font-display);
-      font-size: 1.32rem;
-      line-height: 1.5;
-      margin-bottom: 10px;
-    }
-
-    .val-desc {
-      color: var(--text-soft);
-      font-size: 0.95rem;
-    }
-
-    #screenshots {
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      background:
-        linear-gradient(180deg, color-mix(in srgb, var(--surface) 72%, transparent), color-mix(in srgb, var(--bg) 92%, transparent));
-    }
-
-    .ss-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 34px;
-    }
-
-    .ss-note {
-      padding: 18px 20px;
-      border-radius: 18px;
-      background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .ss-note strong {
       display: block;
-      font-size: 0.94rem;
-      margin-bottom: 4px;
     }
-
-    .ss-note span {
-      color: var(--text-soft);
-      font-size: 0.88rem;
-      line-height: 1.7;
+    .phone-cap { text-align: center; }
+    .phone-cap-ja {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: .06em;
+      color: var(--text-primary);
     }
-
-    .phones {
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-      gap: 18px;
-    }
-
-    .phone-wrap {
-      width: 210px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 18px;
-      transition: transform var(--ease);
-    }
-
-    .phone-wrap.featured {
-      transform: translateY(-10px);
-    }
-
-    .phone-wrap:hover {
-      transform: translateY(-6px);
-    }
-
-    .phone-wrap.featured:hover {
-      transform: translateY(-14px);
-    }
-
-    .phone-wrap.featured .phone-frame {
-      width: 226px;
-    }
-
-    .phone-caption {
-      text-align: center;
-    }
-
-    .phone-caption-ja {
-      font-family: var(--font-display);
-      font-size: 1rem;
-      line-height: 1.5;
-      margin-bottom: 4px;
-    }
-
-    .phone-caption-en {
-      font-size: 0.74rem;
-      color: var(--text-faint);
+    .phone-cap-en {
+      font-size: 11px;
+      letter-spacing: .1em;
       text-transform: uppercase;
-      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ═══════════════════════════════════
+       Features
+    ═══════════════════════════════════ */
+    #features { border-top: 1px solid var(--border-subtle); }
+    .feat-head { margin-bottom: 60px; }
+    .feat-title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .feat-title-ja {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: .06em;
+      margin-bottom: 0;
     }
 
     .feat-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3,1fr);
       gap: 18px;
     }
+    @media (max-width: 1024px) { .feat-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 600px)  { .feat-grid { grid-template-columns: 1fr; } }
 
     .feat-card {
-      padding: 26px;
-      border-radius: var(--radius-md);
-      background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-      transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+      background: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 28px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      cursor: default;
+      transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .22s ease,
+        background .22s ease;
     }
-
     .feat-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--line-strong);
+      transform: translateY(-3px);
       box-shadow: var(--shadow-md);
+      border-color: var(--border);
+      background: var(--surface-hover);
     }
-
-    .feat-card-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
     .feat-icon {
-      width: 40px;
-      height: 40px;
-      color: var(--accent);
+      width: 38px; height: 38px;
+      color: var(--primary);
       flex-shrink: 0;
+      transition: transform .22s ease, color .22s ease;
     }
-
-    .feat-tag {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 30px;
-      padding: 0 12px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-      background: var(--accent-soft);
+    .feat-card:hover .feat-icon {
+      transform: scale(1.08);
+      color: var(--primary-hover);
     }
-
     .feat-name {
-      font-family: var(--font-display);
-      font-size: 1.22rem;
-      line-height: 1.52;
-      margin-bottom: 10px;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: .03em;
     }
-
     .feat-desc {
-      color: var(--text-soft);
-      font-size: 0.93rem;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
     }
 
+    /* ═══════════════════════════════════
+       Install / Get Started
+    ═══════════════════════════════════ */
     #install {
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      background:
-        radial-gradient(circle at top right, rgba(119, 136, 102, 0.12), transparent 34%),
-        color-mix(in srgb, var(--surface) 68%, transparent);
+      background: var(--surface);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
     }
-
-    .inst-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .inst-badge {
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
-      color: var(--text-soft);
-      font-size: 0.82rem;
-      box-shadow: var(--shadow-sm);
-    }
+    .inst-head { text-align: center; margin-bottom: 80px; }
+    .inst-head .sec-desc { max-width: 460px; margin: 0 auto; }
 
     .steps {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(3,1fr);
+      gap: 48px 56px;
+      position: relative;
+    }
+    /* Connecting line between step numbers */
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 24px;
+      left: calc(16.66% + 24px);
+      right: calc(16.66% + 24px);
+      height: 1px;
+      background: linear-gradient(to right, var(--primary), var(--primary));
+      opacity: .18;
+      pointer-events: none;
+    }
+    @media (max-width: 800px) {
+      .steps { grid-template-columns: 1fr; gap: 52px; }
+      .steps::before { display: none; }
     }
 
-    .step {
-      padding: 28px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--line);
-      background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      min-height: 100%;
-    }
+    .step { display: flex; flex-direction: column; gap: 20px; position: relative; }
 
     .step-num {
-      width: 48px;
-      height: 48px;
-      display: grid;
-      place-items: center;
-      border-radius: 999px;
-      background: var(--accent);
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
       color: #fff;
-      font-family: var(--font-display);
-      font-size: 1.32rem;
-      box-shadow: 0 10px 22px rgba(119, 136, 102, 0.28);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(123,139,111,.3);
+      position: relative;
+      z-index: 1;
     }
-
     .step-title {
-      font-family: var(--font-display);
-      font-size: 1.42rem;
-      line-height: 1.45;
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: .03em;
     }
-
     .step-desc {
-      color: var(--text-soft);
-      font-size: 0.94rem;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.7;
     }
 
+    /* Terminal block */
     .term-block {
-      margin-top: auto;
-      border-radius: 18px;
+      border-radius: var(--radius-md);
+      background: #141211;
       overflow: hidden;
-      background: #151311;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 4px 20px rgba(0,0,0,.3), inset 0 0 0 1px rgba(255,255,255,.04);
     }
-
     .term-bar {
       display: flex;
       align-items: center;
       gap: 6px;
       padding: 10px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid rgba(255,255,255,.05);
     }
-
+    .term-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .term-dot.r { background: #FF5F57; }
+    .term-dot.y { background: #FEBC2E; }
+    .term-dot.g { background: #28C840; }
     .term-body {
       padding: 14px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-    }
-
-    .term-line {
-      font-family: var(--font-mono);
-      font-size: 0.84rem;
-      color: #e7decf;
-      word-break: break-all;
-      line-height: 1.6;
-    }
-
-    .copy-btn {
-      flex-shrink: 0;
-      min-height: 32px;
-      padding: 0 12px;
-      border-radius: 999px;
-      background: rgba(119, 136, 102, 0.2);
-      color: #9aac8d;
-      font-size: 0.74rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      transition: transform var(--ease), background var(--ease), color var(--ease);
-    }
-
-    .copy-btn:hover {
-      transform: translateY(-1px);
-      background: rgba(119, 136, 102, 0.32);
-      color: #c8d6be;
-    }
-
-    .step-icon {
-      width: 82px;
-      height: 82px;
-      display: grid;
-      place-items: center;
-      border-radius: 24px;
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .step-icon svg {
-      width: 38px;
-      height: 38px;
-    }
-
-    .install-notes {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-      margin-top: 18px;
-    }
-
-    .install-note {
-      padding: 22px 24px;
-      border-radius: 20px;
-      background: color-mix(in srgb, var(--surface-strong) 84%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .install-note-title {
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-
-    .install-note p {
-      color: var(--text-soft);
-      font-size: 0.92rem;
-    }
-
-    #cta {
-      padding-top: 34px;
-    }
-
-    .cta-card {
-      position: relative;
-      overflow: hidden;
-      padding: 38px;
-      border-radius: 34px;
-      border: 1px solid var(--line);
-      background:
-        radial-gradient(circle at top right, rgba(182, 154, 101, 0.12), transparent 32%),
-        linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 92%, transparent), color-mix(in srgb, var(--surface) 82%, transparent));
-      box-shadow: var(--shadow-lg);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 28px;
-      align-items: center;
-    }
-
-    .cta-card::after {
-      content: '';
-      position: absolute;
-      right: -82px;
-      top: -82px;
-      width: 240px;
-      height: 240px;
-      border-radius: 50%;
-      border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-      opacity: 0.6;
-      pointer-events: none;
-    }
-
-    .cta-actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
       gap: 12px;
     }
-
-    footer {
-      padding: 56px 0 42px;
-      border-top: 1px solid var(--line);
+    .term-line {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .term-ps  { color: #7B8B6F; }
+    .term-cmd { color: #DBD6C8; }
+    .copy-btn {
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: .05em;
+      padding: 5px 11px;
+      border-radius: var(--radius-sm);
+      background: rgba(123,139,111,.18);
+      color: #94A687;
+      flex-shrink: 0;
+      transition: background .15s, color .15s, transform .12s;
+    }
+    .copy-btn:hover {
+      background: rgba(123,139,111,.32);
+      color: #A5B59A;
+      transform: translateY(-1px);
     }
 
+    /* Step icon */
+    .step-icon {
+      width: 76px; height: 76px;
+      border-radius: var(--radius-lg);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .22s ease;
+    }
+    .step-icon svg { width: 38px; height: 38px; }
+    .step:hover .step-icon { transform: scale(1.05) rotate(1deg); }
+
+    /* ═══════════════════════════════════
+       Footer
+    ═══════════════════════════════════ */
+    footer {
+      padding: 64px 0 44px;
+      border-top: 1px solid var(--border-subtle);
+    }
     .foot-inner {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
       gap: 24px;
     }
+    .foot-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--text-primary);
+      opacity: .9;
+      transition: opacity var(--t-base);
+    }
+    .foot-logo:hover { opacity: 1; }
+    .foot-logo .logo-icon-wrap { width: 26px; height: 26px; }
+    .foot-logo .logo-icon-wrap img { width: 26px; height: 26px; }
 
     .foot-links {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 18px;
-      color: var(--text-soft);
-      font-size: 0.9rem;
-    }
-
-    .foot-link {
-      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      transition: color var(--ease), transform var(--ease);
+      gap: 28px;
     }
-
-    .foot-link:hover {
-      color: var(--text);
-      transform: translateY(-1px);
+    .foot-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      letter-spacing: .02em;
+      transition: color var(--t-base), transform .15s;
     }
-
-    .foot-link svg {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-    }
+    .foot-link:hover { color: var(--primary); transform: translateY(-1px); }
+    .foot-link svg { width: 16px; height: 16px; }
 
     .foot-copy {
-      color: var(--text-faint);
-      font-size: 0.82rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: .05em;
     }
 
-    .aos {
-      opacity: 1;
-      transform: none;
+    .zen-footer-mark {
+      display: flex;
+      justify-content: center;
+      margin-top: 44px;
+    }
+    .zen-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: .45;
     }
 
-    .js .aos {
-      opacity: 1;
-      transform: translateY(18px);
-      transition: transform 0.58s ease;
+    /* ═══════════════════════════════════
+       Responsive: hide phones on small mobile
+    ═══════════════════════════════════ */
+    @media (max-width: 500px) {
+      .phone-frame { width: 224px; }
+      .phone-screen { height: 484px; }
     }
 
-    .js .aos.in {
-      transform: translateY(0);
-    }
-
-    .js .aos[data-d="1"] { transition-delay: 0.08s; }
-    .js .aos[data-d="2"] { transition-delay: 0.16s; }
-    .js .aos[data-d="3"] { transition-delay: 0.24s; }
-    .js .aos[data-d="4"] { transition-delay: 0.32s; }
-    .js .aos[data-d="5"] { transition-delay: 0.4s; }
-
-    @media (max-width: 1120px) {
-      .hero-shell,
-      .section-head.split,
-      .cta-card {
-        grid-template-columns: 1fr;
-      }
-
-      .hero-band,
-      .val-grid,
-      .steps,
-      .feat-grid,
-      .install-notes,
-      .ss-strip {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .hero-visual {
-        min-height: 540px;
-      }
-
-      .hero-device-main {
-        left: 18%;
-      }
-
-      .phones {
-        justify-content: flex-start;
-        overflow-x: auto;
-        padding-bottom: 18px;
-        scroll-snap-type: x mandatory;
-      }
-
-      .phones::-webkit-scrollbar {
-        display: none;
-      }
-
-      .phone-wrap {
-        scroll-snap-align: center;
-      }
-
-      .cta-actions {
-        justify-content: flex-start;
-      }
-
-      .foot-inner {
-        grid-template-columns: 1fr;
-        justify-items: start;
-      }
-
-      .foot-links {
-        justify-content: flex-start;
-      }
-    }
-
-    @media (max-width: 900px) {
-      .nav-links {
-        display: none;
-      }
-
-      .hero-visual {
-        min-height: 500px;
-      }
-
-      .hero-orb {
-        inset: 64px 8% 52px 10%;
-      }
-
-      .hero-device-main {
-        left: 14%;
-        top: 108px;
-      }
-
-      .hero-device-side {
-        right: 0;
-        bottom: 42px;
-      }
-    }
-
-    @media (max-width: 680px) {
-      section {
-        padding: 88px 0;
-      }
-
-      .container {
-        width: min(var(--max-w), calc(100% - 28px));
-      }
-
-      .nav-inner {
-        min-height: 68px;
-      }
-
-      .btn-primary,
-      .btn-secondary {
-        min-height: 46px;
-        padding: 0 16px;
-      }
-
-      .hero-product {
-        font-size: clamp(3.1rem, 17vw, 4.6rem);
-      }
-
-      .hero-band,
-      .val-grid,
-      .steps,
-      .feat-grid,
-      .install-notes,
-      .ss-strip {
-        grid-template-columns: 1fr;
-      }
-
-      .hero-visual {
-        min-height: 430px;
-      }
-
-      .bg-enso {
-        left: 14px;
-        width: min(440px, 96%);
-      }
-
-      .hero-orb {
-        inset: 68px 5% 34px;
-        border-radius: 28px;
-      }
-
-      .hero-float-command {
-        top: 2px;
-        width: min(248px, 74%);
-      }
-
-      .hero-float-proof {
-        display: none;
-      }
-
-      .hero-device-main {
-        left: 50%;
-        top: 116px;
-        transform: translateX(-50%) rotate(-2deg);
-      }
-
-      .hero-device-side {
-        display: none;
-      }
-
-      .phone-frame,
-      .hero-device-main .phone-frame {
-        width: 236px;
-        border-radius: 40px;
-      }
-
-      .phone-screen {
-        border-radius: 32px;
-      }
-
-      .phone-wrap,
-      .phone-wrap.featured {
-        width: 202px;
-        transform: none;
-      }
-
-      .phone-wrap.featured .phone-frame {
-        width: 214px;
-      }
-
-      .term-body {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .copy-btn {
-        align-self: flex-end;
-      }
-
-      .cta-card {
-        padding: 28px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      #hero {
-        padding-top: 28px;
-      }
-
-      .brand {
-        font-size: 1.04rem;
-      }
-
-      .btn-secondary.hide-xs,
-      .hide-xs {
-        display: none;
-      }
-
-      .theme-toggle {
-        width: 40px;
-        height: 40px;
-      }
-
-      .hero-tagline {
-        font-size: 1.2rem;
-      }
-    }
-
+    /* ═══════════════════════════════════
+       Prefers reduced motion
+    ═══════════════════════════════════ */
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation: none !important;
-        transition: none !important;
-        scroll-behavior: auto !important;
-      }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      .hero-icon, .hero-product, .hero-tagline, .hero-sub, .hero-btn,
+      .scroll-whisk { opacity: 1; transform: none; }
     }
   </style>
 </head>
 <body>
-  <nav class="site-nav" id="nav" aria-label="メインナビゲーション">
-    <div class="container nav-inner">
-      <a href="#hero" class="brand" aria-label="ZenTerm トップへ">
-        <span class="brand-icon" aria-hidden="true">
-          <img class="icon-light" src="lp/icon-light.png" alt="" width="22" height="22">
-          <img class="icon-dark" src="lp/icon-dark.png" alt="" width="22" height="22">
-        </span>
-        <span>ZenTerm</span>
-      </a>
 
-      <div class="nav-links">
-        <a href="#values" class="nav-link">Overview</a>
-        <a href="#screenshots" class="nav-link">Screens</a>
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#install" class="nav-link">Install</a>
+<!-- ═══════════════════════════════════
+     Navigation
+═══════════════════════════════════ -->
+<nav id="nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo" aria-label="ZenTerm ホームへ">
+      <span class="logo-icon-wrap" aria-hidden="true">
+        <img class="icon-light" src="lp/icon-light.png" alt="" width="30" height="30">
+        <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="30" height="30">
+      </span>
+      ZenTerm
+    </a>
+    <div class="nav-actions">
+      <button id="theme-toggle" aria-label="テーマを切り替える">🌙</button>
+      <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="btn-primary" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="14" height="14">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+        <span class="hide-xs">App Store</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════
+     Hero
+═══════════════════════════════════ -->
+<section id="hero" aria-label="ヒーローセクション">
+
+  <!-- Faint background circle -->
+  <svg class="bg-enso" viewBox="0 0 500 500" fill="none" aria-hidden="true">
+    <path d="M254 28 C354 22,472 110,472 250 C472 390,360 472,250 472 C130 472,28 378,28 250 C28 130,115 32,245 28"
+      stroke="currentColor" stroke-width="28" stroke-linecap="round" color="var(--text-primary)"/>
+  </svg>
+
+  <!-- App icon (real artwork, theme-switching) -->
+  <div class="hero-icon-wrap" role="img" aria-label="ZenTerm 円相ロゴ">
+    <img class="icon-light hero-icon" src="lp/icon-light.png" alt="" width="280" height="280">
+    <img class="icon-dark  hero-icon" src="lp/icon-dark.png"  alt="" width="280" height="280">
+  </div>
+
+  <h1 class="hero-product">ZenTerm</h1>
+  <p class="hero-tagline">静寂の中で、サーバーを操る</p>
+  <p class="hero-sub">Self-hosted mobile terminal for macOS &amp; Linux</p>
+
+  <a href="#install" class="hero-btn" aria-label="始め方を見る">
+    Get Started
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 2v12M3 9l5 5 5-5"/>
+    </svg>
+  </a>
+
+  <div class="scroll-whisk" aria-hidden="true">
+    <div class="whisk-dot"></div>
+    <div class="whisk-line"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Values
+═══════════════════════════════════ -->
+<section id="values" aria-label="ZenTermの特長">
+  <div class="container">
+    <div class="val-grid">
+
+      <div class="val-item aos" data-d="1">
+        <div class="val-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <path d="M8 21h8M12 17v4"/>
+            <path d="M6 8l3.5 3.5L6 15"/><path d="M13 15h5"/>
+          </svg>
+        </div>
+        <div class="val-accent"></div>
+        <div>
+          <div class="val-title">セルフホスト</div>
+          <div class="val-desc">データはあなたのサーバーだけに。クラウドには一切送信されない、完全なプライバシーと自由。</div>
+        </div>
       </div>
 
-      <div class="nav-actions">
-        <button id="theme-toggle" class="theme-toggle" aria-label="ダークモードに切り替え">☾</button>
-        <a href="https://github.com/phni3j9a/zenterm" class="btn-secondary hide-xs" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="btn-primary" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+      <div class="val-item aos" data-d="2">
+        <div class="val-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
           </svg>
-          <span>App Store</span>
-        </a>
+        </div>
+        <div class="val-accent"></div>
+        <div>
+          <div class="val-title">どこからでも</div>
+          <div class="val-desc">iPhone、Android、ブラウザ。どのデバイスからでも、いつでもサーバーにアクセスできる。</div>
+        </div>
+      </div>
+
+      <div class="val-item aos" data-d="3">
+        <div class="val-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx=".5"/>
+            <rect x="3" y="14" width="7" height="7" rx=".5"/>
+            <rect x="14" y="3" width="7" height="7" rx=".5"/>
+            <path d="M14 17h2v2h-2zM20 14h1M14 20v1M20 17v3h-3"/>
+          </svg>
+        </div>
+        <div class="val-accent"></div>
+        <div>
+          <div class="val-title">即時接続</div>
+          <div class="val-desc">QRコードをスキャンするだけで接続設定が完了。複雑な手順は一切不要。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Screenshots
+═══════════════════════════════════ -->
+<section id="screenshots" aria-label="スクリーンショット">
+  <div class="container">
+    <div class="ss-head aos">
+      <div class="sec-eyebrow centered">Screenshots</div>
+      <h2 class="sec-title">美しいインターフェース</h2>
+      <p class="sec-desc">Zenテーマの落ち着いたカラーパレットと直感的なUI。ライトとダークを自由に切り替えられる。</p>
+    </div>
+
+    <div class="phones" role="list">
+
+      <div class="phone-wrap aos" data-d="1" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/01-sessions.png" alt="セッション一覧：複数のtmuxセッションを管理" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">セッション管理</div>
+          <div class="phone-cap-en">Persistent Sessions</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap feat aos" data-d="2" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ターミナル</div>
+          <div class="phone-cap-en">Full Terminal</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="3" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/03-terminal-dark.png" alt="ターミナル：ダークテーマ" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ダークテーマ</div>
+          <div class="phone-cap-en">Dark Theme</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="4" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/04-files.png" alt="ファイルブラウザ" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ファイル管理</div>
+          <div class="phone-cap-en">Remote File Browser</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="5" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img src="lp/screenshots/05-setup.png" alt="セットアップガイド" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">かんたん設定</div>
+          <div class="phone-cap-en">3-Step Setup</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Features
+═══════════════════════════════════ -->
+<section id="features" aria-label="機能一覧">
+  <div class="container">
+    <div class="feat-head aos">
+      <div class="sec-eyebrow">Features</div>
+      <div class="feat-title-row">
+        <h2 class="sec-title" style="margin-bottom:0">主な機能</h2>
+        <span class="feat-title-ja">— 必要なものが、すべて揃っている</span>
       </div>
     </div>
-  </nav>
 
-  <main>
-    <section id="hero" aria-label="ヒーローセクション">
-      <div class="container hero-shell">
-        <div class="hero-copy">
-          <div class="eyebrow">Self-hosted terminal, files, status</div>
-          <h1 class="hero-product">ZenTerm</h1>
-          <p class="hero-tagline">iPhoneから、ブラウザから。<br>自分のサーバーを静かに握る。</p>
-          <p class="hero-sub">
-            tmux セッション、ファイル操作、システム状態の確認まで。Mac mini、Raspberry Pi、Linux サーバーを、クラウドを通さずそのまま扱えるセルフホスト型モバイルターミナルです。
-          </p>
+    <div class="feat-grid">
 
-          <div class="hero-actions">
-            <a href="#install" class="btn-primary">
-              Install Guide
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M8 2v12M3 9l5 5 5-5"/>
-              </svg>
-            </a>
-            <a href="https://github.com/phni3j9a/zenterm" class="btn-secondary" target="_blank" rel="noopener noreferrer">Open Source</a>
+      <div class="feat-card aos" data-d="1">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="7" width="32" height="24" rx="3"/>
+          <path d="M10 15l5.5 4.5L10 24"/>
+          <path d="M20 24h8"/>
+        </svg>
+        <div class="feat-name">Full Terminal</div>
+        <div class="feat-desc">xterm.jsによる完全なターミナルエミュレーション。CJK/Unicode対応、5000行スクロールバック。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="2">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="9" width="28" height="20" rx="3"/>
+          <path d="M12 9V6M26 9V6"/>
+          <path d="M5 17h28"/>
+          <circle cx="13" cy="24" r="1.5" fill="currentColor" stroke="none"/>
+          <circle cx="19" cy="24" r="1.5" fill="currentColor" stroke="none"/>
+          <circle cx="25" cy="24" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+        <div class="feat-name">tmux Sessions</div>
+        <div class="feat-desc">セッション永続化で、接続が切れても作業は続く。複数セッションを同時に切り替え管理。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="3">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 30V12a3 3 0 0 1 3-3h20a3 3 0 0 1 3 3v18"/>
+          <path d="M3 30h32"/>
+          <path d="M14 20h10M14 25h7"/>
+          <path d="M14 15l4 0"/>
+        </svg>
+        <div class="feat-name">File Browser</div>
+        <div class="feat-desc">GUIでリモートファイルを閲覧・編集・アップロード・ダウンロード。Markdownプレビュー対応。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="1">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 30V22"/>
+          <path d="M13 30V16"/>
+          <path d="M19 30V10"/>
+          <path d="M25 30V18"/>
+          <path d="M31 30V24"/>
+        </svg>
+        <div class="feat-name">System Monitor</div>
+        <div class="feat-desc">CPU・メモリ・ディスク・温度をリアルタイム表示。サーバーの状態を常に把握できる。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="2">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="12" height="12" rx="1.2"/>
+          <rect x="4" y="22" width="12" height="12" rx="1.2"/>
+          <rect x="22" y="4" width="12" height="12" rx="1.2"/>
+          <rect x="6.5" y="6.5" width="7" height="7"/>
+          <rect x="6.5" y="24.5" width="7" height="7"/>
+          <rect x="24.5" y="6.5" width="7" height="7"/>
+          <path d="M22 25h3v3h-3zM29 22h5M22 31v5M29 29h5v5M29 22v5"/>
+        </svg>
+        <div class="feat-name">QR Pairing</div>
+        <div class="feat-desc">起動時に表示されるQRコードをスキャンするだけで接続設定が自動入力される。</div>
+      </div>
+
+      <div class="feat-card aos" data-d="3">
+        <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="9" width="30" height="20" rx="3"/>
+          <path d="M10 19l4-4 4 4 8-6"/>
+          <circle cx="19" cy="31" r="1.2" fill="currentColor" stroke="none"/>
+        </svg>
+        <div class="feat-name">One-command Setup</div>
+        <div class="feat-desc">npx一行でセットアップ完了。systemd/launchd へのサービス登録も自動で行う。</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Install / Get Started
+═══════════════════════════════════ -->
+<section id="install" aria-label="始め方">
+  <div class="container">
+    <div class="inst-head aos">
+      <div class="sec-eyebrow centered">Get Started</div>
+      <h2 class="sec-title">3ステップで始める</h2>
+      <p class="sec-desc">複雑な設定は不要。数分でiPhoneからサーバーを操作できるようになる。</p>
+    </div>
+
+    <div class="steps">
+
+      <!-- Step 1 -->
+      <div class="step aos" data-d="1">
+        <div class="step-num" aria-hidden="true">1</div>
+        <div>
+          <div class="step-title">Gateway を起動</div>
+          <div class="step-desc">macOS または Linux のサーバーで実行。トークン生成からサービス登録まで自動で完了する。</div>
+        </div>
+        <div class="term-block" role="region" aria-label="インストールコマンド">
+          <div class="term-bar" aria-hidden="true">
+            <div class="term-dot r"></div>
+            <div class="term-dot y"></div>
+            <div class="term-dot g"></div>
           </div>
-
-          <div class="hero-trust" role="list" aria-label="ZenTerm の特徴">
-            <span class="hero-pill" role="listitem">No account</span>
-            <span class="hero-pill" role="listitem">No cloud relay</span>
-            <span class="hero-pill" role="listitem">No tracking</span>
-          </div>
-
-          <div class="hero-band">
-            <div class="hero-band-item">
-              <span class="hero-band-label">Private by design</span>
-              <strong class="hero-band-title">自分のネットワークで完結</strong>
-              <p class="hero-band-text">端末と Gateway が直接通信。サーバーのデータは手元から出ません。</p>
+          <div class="term-body">
+            <div class="term-line">
+              <span class="term-ps">$ </span><span class="term-cmd">npx zenterm-gateway</span>
             </div>
-            <div class="hero-band-item">
-              <span class="hero-band-label">Built for continuity</span>
-              <strong class="hero-band-title">tmux で作業を切らさない</strong>
-              <p class="hero-band-text">移動中でも再接続後にそのまま戻れる、落ち着いた運用のための構成です。</p>
-            </div>
-            <div class="hero-band-item">
-              <span class="hero-band-label">Ready in minutes</span>
-              <strong class="hero-band-title">ワンコマンド + QR 接続</strong>
-              <p class="hero-band-text">起動して QR を読むだけ。Mac でも Linux でも短い手順で始められます。</p>
-            </div>
+            <button class="copy-btn" data-copy="npx zenterm-gateway" aria-label="コマンドをコピー">Copy</button>
           </div>
         </div>
+      </div>
 
-        <div class="hero-visual aos" data-d="2" aria-hidden="true">
-          <svg class="bg-enso" viewBox="0 0 500 500" fill="none">
-            <path d="M254 28 C354 22,472 110,472 250 C472 390,360 472,250 472 C130 472,28 378,28 250 C28 130,115 32,245 28" stroke="currentColor" stroke-width="28" stroke-linecap="round"/>
+      <!-- Step 2 -->
+      <div class="step aos" data-d="2">
+        <div class="step-num" aria-hidden="true">2</div>
+        <div>
+          <div class="step-title">QRコードをスキャン</div>
+          <div class="step-desc">起動時にターミナルへ表示されるQRコードをアプリでスキャン。接続情報が自動入力される。</div>
+        </div>
+        <div class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="6" width="14" height="14" rx="1.5"/>
+            <rect x="6" y="28" width="14" height="14" rx="1.5"/>
+            <rect x="28" y="6" width="14" height="14" rx="1.5"/>
+            <rect x="9" y="9" width="8" height="8"/>
+            <rect x="9" y="31" width="8" height="8"/>
+            <rect x="31" y="9" width="8" height="8"/>
+            <path d="M28 28h4v4h-4zM36 28h6M28 36v6M36 36h6v6M36 28v4"/>
           </svg>
-          <div class="hero-orb"></div>
-
-          <div class="hero-float hero-float-command">
-            <div class="hero-float-label">One command</div>
-            <div class="term-mini">
-              <div class="term-mini-bar">
-                <span class="term-dot r"></span>
-                <span class="term-dot y"></span>
-                <span class="term-dot g"></span>
-              </div>
-              <div class="term-mini-body">
-                <span class="term-ps">$</span>
-                <span>npx zenterm-gateway</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="hero-float hero-float-proof">
-            <div class="hero-float-label">Why it feels better</div>
-            <strong>tmux keeps your work alive.</strong>
-            <p>通信が切れてもセッションは残るので、iPhone とブラウザをまたいで落ち着いて続きから戻れます。</p>
-          </div>
-
-          <div class="hero-device hero-device-main">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img src="lp/screenshots/02-terminal.png" alt="ZenTerm ターミナル画面" width="292" height="632">
-              </div>
-            </div>
-          </div>
-
-          <div class="hero-device hero-device-side">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img src="lp/screenshots/04-files.png" alt="ZenTerm ファイルブラウザ画面" width="210" height="455">
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-    </section>
 
-    <section id="values" aria-label="ZenTerm の価値">
-      <div class="container">
-        <div class="section-head split aos">
-          <div>
-            <div class="eyebrow">Why ZenTerm</div>
-            <h2 class="section-title">SSH クライアントより静かで、<br>運用画面より身軽。</h2>
-          </div>
-          <p class="section-desc">
-            ZenTerm は「接続できること」だけでなく、「作業を続けやすいこと」を重視した LP に組み直しました。自分のサーバーを、自分の手触りのまま持ち歩くための設計です。
-          </p>
+      <!-- Step 3 -->
+      <div class="step aos" data-d="3">
+        <div class="step-num" aria-hidden="true">3</div>
+        <div>
+          <div class="step-title">接続完了</div>
+          <div class="step-desc">iPhone、Android、またはブラウザからサーバーのターミナルを操作。どこからでも作業できる。</div>
         </div>
-
-        <div class="val-grid">
-          <article class="val-item aos" data-d="1">
-            <div class="val-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 11V7a2 2 0 0 1 2-2h2"/>
-                <path d="M20 11V7a2 2 0 0 0-2-2h-2"/>
-                <path d="M4 13v4a2 2 0 0 0 2 2h2"/>
-                <path d="M20 13v4a2 2 0 0 1-2 2h-2"/>
-                <path d="M9 12h6"/>
-                <circle cx="12" cy="12" r="8"/>
-              </svg>
-            </div>
-            <h3 class="val-title">クラウドなしでつながる</h3>
-            <p class="val-desc">アカウント登録も中継サーバーも不要。ZenTerm はあなたのサーバーに直接つながり、データはそのまま自宅や VPS 側に残ります。</p>
-          </article>
-
-          <article class="val-item aos" data-d="2">
-            <div class="val-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="14" rx="2"/>
-                <path d="M8 21h8"/>
-                <path d="M12 18v3"/>
-                <path d="M8 10l3 3-3 3"/>
-                <path d="M14 16h3"/>
-              </svg>
-            </div>
-            <h3 class="val-title">作業が途中で切れない</h3>
-            <p class="val-desc">tmux セッションでタスクを保持し、再接続後も作業が残る設計。AI エージェントの実行や長いビルドとも相性が良い構成です。</p>
-          </article>
-
-          <article class="val-item aos" data-d="3">
-            <div class="val-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="0.8"/>
-                <rect x="3" y="14" width="7" height="7" rx="0.8"/>
-                <rect x="14" y="3" width="7" height="7" rx="0.8"/>
-                <path d="M14 17h2v2h-2zM20 14h1M14 20v1M20 17v3h-3"/>
-              </svg>
-            </div>
-            <h3 class="val-title">導入が短く、迷いにくい</h3>
-            <p class="val-desc">ワンコマンドで Gateway を起動して、表示された QR を読むだけ。Raspberry Pi でも Mac mini でも、最初の一歩をできるだけ短くしています。</p>
-          </article>
+        <div class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 36V16a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H16l-8 4V36z"/>
+            <path d="M15 23l4 4 14-9"/>
+          </svg>
         </div>
       </div>
-    </section>
 
-    <section id="screenshots" aria-label="スクリーンショット">
-      <div class="container">
-        <div class="section-head split aos">
-          <div>
-            <div class="eyebrow">Interface</div>
-            <h2 class="section-title">触っていて落ち着く、<br>でも作業には鋭い。</h2>
-          </div>
-          <p class="section-desc">
-            セッション管理、フルスクリーンターミナル、ファイルブラウザ、セットアップガイドまでを 1 本の体験にまとめています。ライト / ダークもその場で切り替えできます。
-          </p>
-        </div>
+    </div>
+  </div>
+</section>
 
-        <div class="ss-strip">
-          <div class="ss-note aos" data-d="1">
-            <strong>Session-first</strong>
-            <span>複数の tmux セッションを切り替え、長い処理や AI 実行を持ち歩けます。</span>
-          </div>
-          <div class="ss-note aos" data-d="2">
-            <strong>Files included</strong>
-            <span>GUI でファイルを開き、編集し、アップロードやダウンロードまでまとめて行えます。</span>
-          </div>
-          <div class="ss-note aos" data-d="3">
-            <strong>Theme aware</strong>
-            <span>Zen カラーをベースに、明るい環境でも深夜の運用でも見やすいコントラストに整えています。</span>
-          </div>
-        </div>
+<!-- ═══════════════════════════════════
+     Footer
+═══════════════════════════════════ -->
+<footer role="contentinfo">
+  <div class="container">
+    <div class="foot-inner">
 
-        <div class="phones" role="list">
-          <div class="phone-wrap aos" data-d="1" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img src="lp/screenshots/01-sessions.png" alt="複数の tmux セッションを一覧で管理する画面" loading="lazy" width="210" height="455">
-              </div>
-            </div>
-            <div class="phone-caption">
-              <div class="phone-caption-ja">セッション一覧</div>
-              <div class="phone-caption-en">Persistent Sessions</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap featured aos" data-d="2" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル画面" loading="lazy" width="226" height="489">
-              </div>
-            </div>
-            <div class="phone-caption">
-              <div class="phone-caption-ja">フルターミナル</div>
-              <div class="phone-caption-en">Full Terminal</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap aos" data-d="3" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img src="lp/screenshots/03-terminal-dark.png" alt="ダークテーマのターミナル画面" loading="lazy" width="210" height="455">
-              </div>
-            </div>
-            <div class="phone-caption">
-              <div class="phone-caption-ja">ダークテーマ</div>
-              <div class="phone-caption-en">Dark Theme</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap aos" data-d="4" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img src="lp/screenshots/04-files.png" alt="リモートファイルブラウザ画面" loading="lazy" width="210" height="455">
-              </div>
-            </div>
-            <div class="phone-caption">
-              <div class="phone-caption-ja">ファイルブラウザ</div>
-              <div class="phone-caption-en">Remote Files</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap aos" data-d="5" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img src="lp/screenshots/05-setup.png" alt="接続セットアップガイド画面" loading="lazy" width="210" height="455">
-              </div>
-            </div>
-            <div class="phone-caption">
-              <div class="phone-caption-ja">かんたん接続</div>
-              <div class="phone-caption-en">3-Step Setup</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="features" aria-label="主な機能">
-      <div class="container">
-        <div class="section-head split aos">
-          <div>
-            <div class="eyebrow">Features</div>
-            <h2 class="section-title">必要なものを、<br>一枚の操作面へ。</h2>
-          </div>
-          <p class="section-desc">
-            「ただつながるだけ」ではなく、実際の運用で頻繁に触る操作を 1 か所にまとめています。ターミナル、セッション、ファイル、監視、ペアリング、ブラウザアクセスまでを連続した体験にしました。
-          </p>
-        </div>
-
-        <div class="feat-grid">
-          <article class="feat-card aos" data-d="1">
-            <div class="feat-card-top">
-              <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="7" width="32" height="24" rx="3"/>
-                <path d="M10 15l5.5 4.5L10 24"/>
-                <path d="M20 24h8"/>
-              </svg>
-              <span class="feat-tag">Terminal</span>
-            </div>
-            <h3 class="feat-name">フルターミナル</h3>
-            <p class="feat-desc">xterm.js ベースの本格描画。CJK / Unicode 対応、5,000 行スクロールバックで、軽い確認からしっかりした作業まで扱えます。</p>
-          </article>
-
-          <article class="feat-card aos" data-d="2">
-            <div class="feat-card-top">
-              <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="5" y="9" width="28" height="20" rx="3"/>
-                <path d="M12 9V6M26 9V6"/>
-                <path d="M5 17h28"/>
-                <circle cx="13" cy="24" r="1.5" fill="currentColor" stroke="none"/>
-                <circle cx="19" cy="24" r="1.5" fill="currentColor" stroke="none"/>
-                <circle cx="25" cy="24" r="1.5" fill="currentColor" stroke="none"/>
-              </svg>
-              <span class="feat-tag">Sessions</span>
-            </div>
-            <h3 class="feat-name">tmux セッション管理</h3>
-            <p class="feat-desc">セッションの作成・切り替え・削除を UI から操作。接続が切れても作業を保ち、複数のタスクを並行して持ち歩けます。</p>
-          </article>
-
-          <article class="feat-card aos" data-d="3">
-            <div class="feat-card-top">
-              <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 30V12a3 3 0 0 1 3-3h20a3 3 0 0 1 3 3v18"/>
-                <path d="M3 30h32"/>
-                <path d="M14 20h10M14 25h7"/>
-                <path d="M14 15l4 0"/>
-              </svg>
-              <span class="feat-tag">Files</span>
-            </div>
-            <h3 class="feat-name">ファイルブラウザ</h3>
-            <p class="feat-desc">リモートのディレクトリを閲覧し、テキスト編集やアップロードも GUI で完結。ターミナルと行き来しやすい導線にしています。</p>
-          </article>
-
-          <article class="feat-card aos" data-d="1">
-            <div class="feat-card-top">
-              <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 30V22"/>
-                <path d="M13 30V16"/>
-                <path d="M19 30V10"/>
-                <path d="M25 30V18"/>
-                <path d="M31 30V24"/>
-              </svg>
-              <span class="feat-tag">Status</span>
-            </div>
-            <h3 class="feat-name">システム監視</h3>
-            <p class="feat-desc">CPU、メモリ、ディスク、温度、稼働時間を確認。外出先からの軽いヘルスチェックやホームサーバーの見守りにも向いています。</p>
-          </article>
-
-          <article class="feat-card aos" data-d="2">
-            <div class="feat-card-top">
-              <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="4" width="12" height="12" rx="1.2"/>
-                <rect x="4" y="22" width="12" height="12" rx="1.2"/>
-                <rect x="22" y="4" width="12" height="12" rx="1.2"/>
-                <rect x="6.5" y="6.5" width="7" height="7"/>
-                <rect x="6.5" y="24.5" width="7" height="7"/>
-                <rect x="24.5" y="6.5" width="7" height="7"/>
-                <path d="M22 25h3v3h-3zM29 22h5M22 31v5M29 29h5v5M29 22v5"/>
-              </svg>
-              <span class="feat-tag">Pairing</span>
-            </div>
-            <h3 class="feat-name">QR ペアリング</h3>
-            <p class="feat-desc">Gateway 起動時に表示される QR をスキャンするだけで接続情報を入力。トークンや URL の手打ちを最小限に抑えます。</p>
-          </article>
-
-          <article class="feat-card aos" data-d="3">
-            <div class="feat-card-top">
-              <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="9" width="30" height="20" rx="3"/>
-                <path d="M10 19l4-4 4 4 8-6"/>
-                <circle cx="19" cy="31" r="1.2" fill="currentColor" stroke="none"/>
-              </svg>
-              <span class="feat-tag">Browser</span>
-            </div>
-            <h3 class="feat-name">ブラウザでも開ける</h3>
-            <p class="feat-desc">モバイルアプリが手元にない場面でも、PC ブラウザからそのままアクセス可能。運用先や端末を選ばず同じ Gateway を使えます。</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="install" aria-label="始め方">
-      <div class="container">
-        <div class="section-head split aos">
-          <div>
-            <div class="eyebrow">Get Started</div>
-            <h2 class="section-title">3 ステップで、<br>自分のサーバーへ戻れるようにする。</h2>
-          </div>
-          <div>
-            <p class="section-desc">導入手順は短く、日々の運用では迷いにくく。LP からそのまま始められるように、前提条件と起動後の流れも 1 画面にまとめました。</p>
-            <div class="inst-badges" aria-label="前提条件">
-              <span class="inst-badge">Node.js 20+</span>
-              <span class="inst-badge">tmux</span>
-              <span class="inst-badge">macOS / Linux</span>
-              <span class="inst-badge">systemd / launchd</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="steps">
-          <article class="step aos" data-d="1">
-            <div class="step-num" aria-hidden="true">1</div>
-            <div>
-              <h3 class="step-title">Gateway を起動</h3>
-              <p class="step-desc">サーバー側で実行すると、初回セットアップからサービス登録まで案内されます。Mac mini、Raspberry Pi、Linux VPS などで動かせます。</p>
-            </div>
-            <div class="term-block" role="region" aria-label="起動コマンド">
-              <div class="term-bar" aria-hidden="true">
-                <span class="term-dot r"></span>
-                <span class="term-dot y"></span>
-                <span class="term-dot g"></span>
-              </div>
-              <div class="term-body">
-                <div class="term-line">
-                  <span class="term-ps">$ </span><span>npx zenterm-gateway</span>
-                </div>
-                <button class="copy-btn" data-copy="npx zenterm-gateway" aria-label="起動コマンドをコピー">Copy</button>
-              </div>
-            </div>
-          </article>
-
-          <article class="step aos" data-d="2">
-            <div class="step-num" aria-hidden="true">2</div>
-            <div>
-              <h3 class="step-title">QR を読む</h3>
-              <p class="step-desc">起動直後のターミナルに表示される QR コードをアプリでスキャン。URL とトークンが自動で入り、接続時の迷いを減らします。</p>
-            </div>
-            <div class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="6" width="14" height="14" rx="1.5"/>
-                <rect x="6" y="28" width="14" height="14" rx="1.5"/>
-                <rect x="28" y="6" width="14" height="14" rx="1.5"/>
-                <rect x="9" y="9" width="8" height="8"/>
-                <rect x="9" y="31" width="8" height="8"/>
-                <rect x="31" y="9" width="8" height="8"/>
-                <path d="M28 28h4v4h-4zM36 28h6M28 36v6M36 36h6v6M36 28v4"/>
-              </svg>
-            </div>
-          </article>
-
-          <article class="step aos" data-d="3">
-            <div class="step-num" aria-hidden="true">3</div>
-            <div>
-              <h3 class="step-title">どこからでも戻る</h3>
-              <p class="step-desc">iPhone、iPad、またはブラウザから同じ Gateway にアクセス。セッションやファイル、状態確認をひと続きの操作として扱えます。</p>
-            </div>
-            <div class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 36V16a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H16l-8 4V36z"/>
-                <path d="M15 23l4 4 14-9"/>
-              </svg>
-            </div>
-          </article>
-        </div>
-
-        <div class="install-notes">
-          <div class="install-note aos" data-d="1">
-            <div class="install-note-title">Server side</div>
-            <p>前提は Node.js と tmux。Raspberry Pi 5 のようなホームサーバーから、Mac mini、Linux マシン、VPS まで同じ流れで導入できます。</p>
-          </div>
-          <div class="install-note aos" data-d="2">
-            <div class="install-note-title">After setup</div>
-            <p>ターミナル、セッション、ファイル、システム状態をまとめて触れるので、「確認のために SSH、編集のために別ツール」と分断しなくて済みます。</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="cta" aria-label="最終 CTA">
-      <div class="container">
-        <div class="cta-card aos">
-          <div>
-            <div class="eyebrow">Ready</div>
-            <h2 class="section-title">次のセッションを、<br>机の外へ持ち出す。</h2>
-            <p class="section-desc">ZenTerm は、いま使っているサーバーから始められます。まずは Gateway を起動して、最初の QR を読んでください。</p>
-          </div>
-          <div class="cta-actions">
-            <a href="#install" class="btn-primary">Install Guide</a>
-            <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="btn-secondary" target="_blank" rel="noopener noreferrer">App Store</a>
-            <a href="support.html" class="btn-secondary">Support</a>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container foot-inner">
-      <a href="#hero" class="brand" aria-label="ZenTerm トップへ">
-        <span class="brand-icon" aria-hidden="true">
-          <img class="icon-light" src="lp/icon-light.png" alt="" width="22" height="22">
-          <img class="icon-dark" src="lp/icon-dark.png" alt="" width="22" height="22">
+      <a href="/" class="foot-logo" aria-label="ZenTerm トップへ">
+        <span class="logo-icon-wrap" aria-hidden="true">
+          <img class="icon-light" src="lp/icon-light.png" alt="" width="26" height="26">
+          <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="26" height="26">
         </span>
-        <span>ZenTerm</span>
+        ZenTerm
       </a>
 
       <div class="foot-links">
-        <a href="https://github.com/phni3j9a/zenterm" class="foot-link" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-          </svg>
-          GitHub
-        </a>
         <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="foot-link" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
           </svg>
           App Store
         </a>
+        <a href="https://github.com/phni3j9a/zenterm" class="foot-link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+          GitHub
+        </a>
         <a href="support.html" class="foot-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"/>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-            <path d="M12 17h.01"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
           </svg>
-          Support
+          サポート
         </a>
       </div>
 
-      <div class="foot-copy">© <span id="year">2026</span> ZenTerm</div>
+      <div class="foot-copy">© 2025 ZenTerm</div>
     </div>
-  </footer>
 
-  <script>
-    (function () {
-      'use strict';
+    <div class="zen-footer-mark" aria-hidden="true">
+      <div class="zen-dot"></div>
+    </div>
+  </div>
+</footer>
 
-      var html = document.documentElement;
-      var toggle = document.getElementById('theme-toggle');
-      var navbar = document.getElementById('nav');
-      var themeMeta = document.querySelector('meta[name="theme-color"]');
-      var storageKey = 'zenterm-theme';
+<!-- ═══════════════════════════════════
+     JavaScript (< 60 lines)
+═══════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
 
-      function applyTheme(theme) {
-        var dark = theme === 'dark';
-        html.setAttribute('data-theme', dark ? 'dark' : 'light');
-        toggle.textContent = dark ? '☀︎' : '☾';
-        toggle.setAttribute('aria-label', dark ? 'ライトモードに切り替え' : 'ダークモードに切り替え');
-        if (themeMeta) {
-          themeMeta.setAttribute('content', dark ? '#161411' : '#f4f1ea');
-        }
+  const html    = document.documentElement;
+  const toggle  = document.getElementById('theme-toggle');
+  const navbar  = document.getElementById('nav');
+
+  /* ── Theme ── */
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    toggle.textContent = dark ? '☀️' : '🌙';
+    toggle.setAttribute('aria-label', dark ? 'ライトモードに切り替え' : 'ダークモードに切り替え');
+  }
+
+  // Initial: follow OS preference
+  applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  toggle.addEventListener('click', function () {
+    applyTheme(html.getAttribute('data-theme') !== 'dark');
+  });
+
+  /* ── Sticky nav frost ── */
+  window.addEventListener('scroll', function () {
+    navbar.classList.toggle('scrolled', window.scrollY > 36);
+  }, { passive: true });
+
+  /* ── Scroll-triggered animations ── */
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        observer.unobserve(e.target);
       }
+    });
+  }, { threshold: 0.12 });
 
-      function readPreferredTheme() {
-        try {
-          var stored = localStorage.getItem(storageKey);
-          if (stored === 'light' || stored === 'dark') {
-            return stored;
-          }
-        } catch (_) {}
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
+  document.querySelectorAll('.aos').forEach(function (el) {
+    observer.observe(el);
+  });
 
-      applyTheme(readPreferredTheme());
+  /* ── Copy buttons ── */
+  document.querySelectorAll('.copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var text = btn.dataset.copy;
+      try {
+        await navigator.clipboard.writeText(text);
+        var prev = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = prev; }, 2200);
+      } catch (_) {}
+    });
+  });
 
-      toggle.addEventListener('click', function () {
-        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        applyTheme(next);
-        try {
-          localStorage.setItem(storageKey, next);
-        } catch (_) {}
-      });
-
-      var colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
-      if (colorScheme.addEventListener) {
-        colorScheme.addEventListener('change', function (event) {
-          try {
-            if (!localStorage.getItem(storageKey)) {
-              applyTheme(event.matches ? 'dark' : 'light');
-            }
-          } catch (_) {
-            applyTheme(event.matches ? 'dark' : 'light');
-          }
-        });
-      }
-
-      function syncNav() {
-        navbar.classList.toggle('scrolled', window.scrollY > 12);
-      }
-
-      syncNav();
-      window.addEventListener('scroll', syncNav, { passive: true });
-
-      var revealTargets = document.querySelectorAll('.aos');
-      if ('IntersectionObserver' in window) {
-        var observer = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('in');
-              observer.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
-
-        revealTargets.forEach(function (target) {
-          observer.observe(target);
-        });
-      } else {
-        revealTargets.forEach(function (target) {
-          target.classList.add('in');
-        });
-      }
-
-      document.querySelectorAll('.copy-btn').forEach(function (button) {
-        button.addEventListener('click', async function () {
-          var text = button.getAttribute('data-copy') || '';
-          var previous = button.textContent;
-          try {
-            await navigator.clipboard.writeText(text);
-            button.textContent = 'Copied';
-            setTimeout(function () {
-              button.textContent = previous;
-            }, 1800);
-          } catch (_) {}
-        });
-      });
-
-      var year = document.getElementById('year');
-      if (year) {
-        year.textContent = String(new Date().getFullYear());
-      }
-    })();
-  </script>
+})();
+</script>
 </body>
 </html>
