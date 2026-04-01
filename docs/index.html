@@ -605,19 +605,11 @@
       z-index: 3;
     }
     .phone-shot {
-      --shot-scale: 1.03;
-      transform-origin: center top;
-      transform: scale(var(--shot-scale));
       transition: transform .3s ease;
     }
     .phone-wrap:hover .phone-shot {
-      transform: scale(calc(var(--shot-scale) + 0.012));
+      transform: scale(1.012);
     }
-    .phone-shot.sessions { --shot-scale: 1.035; }
-    .phone-shot.terminal { --shot-scale: 1.055; }
-    .phone-shot.dark     { --shot-scale: 1.045; }
-    .phone-shot.files    { --shot-scale: 1.04; }
-    .phone-shot.setup    { --shot-scale: 1.05; }
     .phone-cap { text-align: center; }
     .phone-cap-ja {
       font-family: var(--font-serif);
