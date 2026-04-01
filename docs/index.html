@@ -448,163 +448,30 @@
        Screenshots
     ═══════════════════════════════════ */
     #screenshots {
-      background:
-        radial-gradient(circle at 50% 12%, rgba(123,139,111,.07), transparent 30%),
-        linear-gradient(180deg, color-mix(in srgb, var(--surface) 86%, white 14%), var(--surface));
+      background: var(--surface);
       border-top: 1px solid var(--border-subtle);
       border-bottom: 1px solid var(--border-subtle);
       overflow: hidden;
     }
-    .ss-shell {
-      display: grid;
-      gap: 42px;
-    }
-    .ss-top {
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr);
-      gap: 36px;
-      align-items: end;
-    }
     .ss-head {
-      text-align: left;
-      margin-bottom: 0;
+      text-align: center;
+      margin-bottom: 72px;
     }
-    .ss-head .sec-desc { max-width: 560px; }
-    .ss-facts {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .ss-fact {
-      min-height: 100%;
-      padding: 18px 16px 16px;
-      background: color-mix(in srgb, var(--bg) 62%, var(--surface));
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-    }
-    .ss-fact-num {
-      display: block;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--primary);
-      margin-bottom: 10px;
-    }
-    .ss-fact-title {
-      font-family: var(--font-serif);
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-primary);
-      line-height: 1.5;
-      margin-bottom: 8px;
-    }
-    .ss-fact-desc {
-      font-size: 12.5px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-    }
-    .ss-stage {
-      position: relative;
-      padding: 34px 34px 30px;
-      border-radius: 34px;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(123,139,111,.11), transparent 40%),
-        linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.16));
-      border: 1px solid rgba(216,214,208,.9);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
-    }
-    .ss-stage::before {
-      content: '';
-      position: absolute;
-      inset: auto 14% 48px;
-      height: 120px;
-      border-radius: 999px;
-      background: radial-gradient(circle, rgba(42,39,33,.16) 0%, rgba(42,39,33,0) 72%);
-      filter: blur(22px);
-      pointer-events: none;
-    }
-    .ss-stage::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(90deg, rgba(245,244,240,.82), rgba(245,244,240,0) 12%, rgba(245,244,240,0) 88%, rgba(245,244,240,.82)),
-        linear-gradient(180deg, rgba(245,244,240,.3), rgba(245,244,240,0) 16%, rgba(245,244,240,0) 84%, rgba(245,244,240,.3));
-      pointer-events: none;
-    }
-    [data-theme="dark"] .ss-stage {
-      background:
-        radial-gradient(circle at 50% 0%, rgba(148,166,135,.12), transparent 42%),
-        linear-gradient(180deg, rgba(36,35,32,.72), rgba(30,29,27,.92));
-      border-color: rgba(58,56,50,.95);
-    }
-    [data-theme="dark"] .ss-stage::after {
-      background:
-        linear-gradient(90deg, rgba(27,26,23,.86), rgba(27,26,23,0) 12%, rgba(27,26,23,0) 88%, rgba(27,26,23,.86)),
-        linear-gradient(180deg, rgba(27,26,23,.24), rgba(27,26,23,0) 14%, rgba(27,26,23,0) 86%, rgba(27,26,23,.24));
-    }
-    .ss-stage-head {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 18px;
-      margin-bottom: 26px;
-    }
-    .ss-kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-    .ss-kicker::before {
-      content: '';
-      width: 18px;
-      height: 1px;
-      background: currentColor;
-      opacity: .7;
-    }
-    .ss-caption {
-      font-size: 13px;
-      color: var(--text-secondary);
-      text-align: right;
-      max-width: 320px;
-      line-height: 1.7;
-    }
+    .ss-head .sec-desc { max-width: 480px; margin: 0 auto; }
 
     .phones {
       display: flex;
-      gap: 18px;
-      align-items: flex-end;
+      gap: 28px;
+      align-items: center;
       justify-content: center;
-      position: relative;
-      z-index: 1;
     }
     @media (max-width: 1080px) {
-      .ss-top {
-        grid-template-columns: 1fr;
-      }
-      .ss-facts {
-        grid-template-columns: repeat(3, minmax(220px, 1fr));
-        overflow-x: auto;
-        padding-bottom: 4px;
-        scrollbar-width: none;
-      }
-      .ss-facts::-webkit-scrollbar { display: none; }
       .phones {
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         justify-content: flex-start;
-        padding: 8px max(24px, calc(50vw - 140px)) 24px;
+        padding: 8px 24px 24px;
         scrollbar-width: none;
         gap: 20px;
       }
@@ -615,22 +482,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 18px;
+      gap: 22px;
       flex-shrink: 0;
       scroll-snap-align: center;
       transition: transform .3s ease;
     }
-    .phone-wrap:nth-child(1),
-    .phone-wrap:nth-child(5) {
-      transform: translateY(20px) scale(.94);
-    }
-    .phone-wrap:nth-child(2),
-    .phone-wrap:nth-child(4) {
-      transform: translateY(8px) scale(.985);
-    }
-    .phone-wrap.feat { transform: translateY(-2px) scale(1.055); }
-    .phone-wrap:hover { transform: translateY(-2px) scale(1.02); }
-    .phone-wrap.feat:hover { transform: translateY(-6px) scale(1.075); }
+    .phone-wrap.feat { transform: scale(1.055); }
+    .phone-wrap:hover { transform: scale(1.025) translateY(-5px); }
+    .phone-wrap.feat:hover { transform: scale(1.08) translateY(-5px); }
 
     .phone-frame {
       width: 258px;
@@ -740,30 +599,6 @@
       text-transform: uppercase;
       color: var(--text-muted);
       margin-top: 4px;
-    }
-    .ss-foot {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-    .ss-note {
-      padding: 18px 20px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-subtle);
-      background: color-mix(in srgb, var(--bg) 66%, var(--surface));
-      box-shadow: var(--shadow-sm);
-    }
-    .ss-note-title {
-      font-family: var(--font-serif);
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 6px;
-    }
-    .ss-note-desc {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.7;
     }
 
     /* ═══════════════════════════════════
@@ -1035,43 +870,6 @@
        Responsive: hide phones on small mobile
     ═══════════════════════════════════ */
     @media (max-width: 500px) {
-      .ss-facts {
-        grid-template-columns: 1fr;
-        overflow: visible;
-        padding-bottom: 0;
-      }
-      .ss-stage {
-        padding: 24px 0 22px;
-        border-radius: 26px;
-      }
-      .ss-stage-head {
-        padding: 0 20px;
-        margin-bottom: 18px;
-        align-items: flex-start;
-        flex-direction: column;
-      }
-      .ss-caption {
-        text-align: left;
-        max-width: none;
-      }
-      .phones {
-        padding: 8px calc(50vw - 118px) 20px;
-      }
-      .phone-wrap,
-      .phone-wrap:nth-child(1),
-      .phone-wrap:nth-child(2),
-      .phone-wrap:nth-child(4),
-      .phone-wrap:nth-child(5),
-      .phone-wrap.feat {
-        transform: none;
-      }
-      .phone-wrap:hover,
-      .phone-wrap.feat:hover {
-        transform: none;
-      }
-      .ss-foot {
-        grid-template-columns: 1fr;
-      }
       .phone-frame { width: 224px; }
       .phone-screen { height: 484px; }
     }
@@ -1207,117 +1005,72 @@
 ═══════════════════════════════════ -->
 <section id="screenshots" aria-label="スクリーンショット">
   <div class="container">
-    <div class="ss-shell">
-      <div class="ss-top">
-        <div class="ss-head aos">
-          <div class="sec-eyebrow">Screenshots</div>
-          <h2 class="sec-title">美しいだけでなく、<br>いま何を触れるかがすぐ分かる。</h2>
-          <p class="sec-desc">ターミナル、セッション、ファイル、初期設定までを、1つのトーンで見せるスクリーンショット群に整理しました。操作感の違いがひと目で伝わるよう、ギャラリー全体も詰めています。</p>
-        </div>
+    <div class="ss-head aos">
+      <div class="sec-eyebrow centered">Screenshots</div>
+      <h2 class="sec-title">美しいインターフェース</h2>
+      <p class="sec-desc">Zenテーマの落ち着いたカラーパレットと直感的なUI。ライトとダークを自由に切り替えられる。</p>
+    </div>
 
-        <div class="ss-facts aos" data-d="1">
-          <article class="ss-fact">
-            <span class="ss-fact-num">01 Session Flow</span>
-            <div class="ss-fact-title">複数セッションを持ち歩ける</div>
-            <div class="ss-fact-desc">一覧画面から tmux の状態が把握しやすく、途中の作業へすぐ戻れます。</div>
-          </article>
-          <article class="ss-fact">
-            <span class="ss-fact-num">02 Terminal Focus</span>
-            <div class="ss-fact-title">コマンド実行に集中できる</div>
-            <div class="ss-fact-desc">フルターミナルとダークテーマで、長い出力や AI 実行も見やすく保ちます。</div>
-          </article>
-          <article class="ss-fact">
-            <span class="ss-fact-num">03 File Access</span>
-            <div class="ss-fact-title">ターミナル外の操作も途切れない</div>
-            <div class="ss-fact-desc">ファイル管理とセットアップを並べて、導入から日常運用までの流れを見せます。</div>
-          </article>
+    <div class="phones" role="list">
+
+      <div class="phone-wrap aos" data-d="1" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img class="phone-shot sessions" src="lp/screenshots/01-sessions.png" alt="セッション一覧：複数のtmuxセッションを管理" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">セッション管理</div>
+          <div class="phone-cap-en">Persistent Sessions</div>
         </div>
       </div>
 
-      <div class="ss-stage aos" data-d="2">
-        <div class="ss-stage-head">
-          <div class="ss-kicker">ZenTerm on iPhone</div>
-          <div class="ss-caption">中央にターミナルを据えて、左右に一覧・ファイル・セットアップを配置。画面ごとの役割が流れとして読める並びです。</div>
-        </div>
-
-        <div class="phones" role="list">
-
-          <div class="phone-wrap aos" data-d="1" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img class="phone-shot sessions" src="lp/screenshots/01-sessions.png" alt="セッション一覧：複数のtmuxセッションを管理" loading="lazy" width="258" height="558">
-              </div>
-            </div>
-            <div class="phone-cap">
-              <div class="phone-cap-ja">セッション管理</div>
-              <div class="phone-cap-en">Persistent Sessions</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap feat aos" data-d="2" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img class="phone-shot terminal" src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル" loading="lazy" width="258" height="558">
-              </div>
-            </div>
-            <div class="phone-cap">
-              <div class="phone-cap-ja">ターミナル</div>
-              <div class="phone-cap-en">Full Terminal</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap aos" data-d="3" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img class="phone-shot dark" src="lp/screenshots/03-terminal-dark.png" alt="ターミナル：ダークテーマ" loading="lazy" width="258" height="558">
-              </div>
-            </div>
-            <div class="phone-cap">
-              <div class="phone-cap-ja">ダークテーマ</div>
-              <div class="phone-cap-en">Dark Theme</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap aos" data-d="4" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img class="phone-shot files" src="lp/screenshots/04-files.png" alt="ファイルブラウザ" loading="lazy" width="258" height="558">
-              </div>
-            </div>
-            <div class="phone-cap">
-              <div class="phone-cap-ja">ファイル管理</div>
-              <div class="phone-cap-en">Remote File Browser</div>
-            </div>
-          </div>
-
-          <div class="phone-wrap aos" data-d="5" role="listitem">
-            <div class="phone-frame">
-              <div class="phone-screen">
-                <img class="phone-shot setup" src="lp/screenshots/05-setup.png" alt="セットアップガイド" loading="lazy" width="258" height="558">
-              </div>
-            </div>
-            <div class="phone-cap">
-              <div class="phone-cap-ja">かんたん設定</div>
-              <div class="phone-cap-en">3-Step Setup</div>
-            </div>
+      <div class="phone-wrap feat aos" data-d="2" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img class="phone-shot terminal" src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル" loading="lazy" width="258" height="558">
           </div>
         </div>
-
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ターミナル</div>
+          <div class="phone-cap-en">Full Terminal</div>
+        </div>
       </div>
 
-      <div class="ss-foot">
-        <article class="ss-note aos" data-d="1">
-          <div class="ss-note-title">セッション起点で迷わない</div>
-          <div class="ss-note-desc">最初に一覧、その先にターミナル。どこから戻るかが自然に伝わる並びです。</div>
-        </article>
-        <article class="ss-note aos" data-d="2">
-          <div class="ss-note-title">テーマ差も読みやすい</div>
-          <div class="ss-note-desc">ライトとダークを別画面で見せて、Zen カラーの印象差が分かるようにしています。</div>
-        </article>
-        <article class="ss-note aos" data-d="3">
-          <div class="ss-note-title">導入と運用を1セットで見せる</div>
-          <div class="ss-note-desc">ファイル管理とセットアップ画面を並べて、「入れて終わりではない」体験を補強します。</div>
-        </article>
+      <div class="phone-wrap aos" data-d="3" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img class="phone-shot dark" src="lp/screenshots/03-terminal-dark.png" alt="ターミナル：ダークテーマ" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ダークテーマ</div>
+          <div class="phone-cap-en">Dark Theme</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="4" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img class="phone-shot files" src="lp/screenshots/04-files.png" alt="ファイルブラウザ" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">ファイル管理</div>
+          <div class="phone-cap-en">Remote File Browser</div>
+        </div>
+      </div>
+
+      <div class="phone-wrap aos" data-d="5" role="listitem">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <img class="phone-shot setup" src="lp/screenshots/05-setup.png" alt="セットアップガイド" loading="lazy" width="258" height="558">
+          </div>
+        </div>
+        <div class="phone-cap">
+          <div class="phone-cap-ja">かんたん設定</div>
+          <div class="phone-cap-en">3-Step Setup</div>
+        </div>
       </div>
 
     </div>
