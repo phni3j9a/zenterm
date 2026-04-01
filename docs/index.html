@@ -560,6 +560,31 @@
       object-position: top;
       display: block;
     }
+    .phone-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.08),
+        inset 0 -28px 44px rgba(0,0,0,.04);
+      pointer-events: none;
+      z-index: 3;
+    }
+    .phone-shot {
+      --shot-scale: 1.03;
+      transform-origin: center top;
+      transform: scale(var(--shot-scale));
+      transition: transform .3s ease;
+    }
+    .phone-wrap:hover .phone-shot {
+      transform: scale(calc(var(--shot-scale) + 0.012));
+    }
+    .phone-shot.sessions { --shot-scale: 1.035; }
+    .phone-shot.terminal { --shot-scale: 1.055; }
+    .phone-shot.dark     { --shot-scale: 1.045; }
+    .phone-shot.files    { --shot-scale: 1.04; }
+    .phone-shot.setup    { --shot-scale: 1.05; }
     .phone-cap { text-align: center; }
     .phone-cap-ja {
       font-family: var(--font-serif);
@@ -991,7 +1016,7 @@
       <div class="phone-wrap aos" data-d="1" role="listitem">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img src="lp/screenshots/01-sessions.png" alt="セッション一覧：複数のtmuxセッションを管理" loading="lazy" width="258" height="558">
+            <img class="phone-shot sessions" src="lp/screenshots/01-sessions.png" alt="セッション一覧：複数のtmuxセッションを管理" loading="lazy" width="258" height="558">
           </div>
         </div>
         <div class="phone-cap">
@@ -1003,7 +1028,7 @@
       <div class="phone-wrap feat aos" data-d="2" role="listitem">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル" loading="lazy" width="258" height="558">
+            <img class="phone-shot terminal" src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル" loading="lazy" width="258" height="558">
           </div>
         </div>
         <div class="phone-cap">
@@ -1015,7 +1040,7 @@
       <div class="phone-wrap aos" data-d="3" role="listitem">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img src="lp/screenshots/03-terminal-dark.png" alt="ターミナル：ダークテーマ" loading="lazy" width="258" height="558">
+            <img class="phone-shot dark" src="lp/screenshots/03-terminal-dark.png" alt="ターミナル：ダークテーマ" loading="lazy" width="258" height="558">
           </div>
         </div>
         <div class="phone-cap">
@@ -1027,7 +1052,7 @@
       <div class="phone-wrap aos" data-d="4" role="listitem">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img src="lp/screenshots/04-files.png" alt="ファイルブラウザ" loading="lazy" width="258" height="558">
+            <img class="phone-shot files" src="lp/screenshots/04-files.png" alt="ファイルブラウザ" loading="lazy" width="258" height="558">
           </div>
         </div>
         <div class="phone-cap">
@@ -1039,7 +1064,7 @@
       <div class="phone-wrap aos" data-d="5" role="listitem">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img src="lp/screenshots/05-setup.png" alt="セットアップガイド" loading="lazy" width="258" height="558">
+            <img class="phone-shot setup" src="lp/screenshots/05-setup.png" alt="セットアップガイド" loading="lazy" width="258" height="558">
           </div>
         </div>
         <div class="phone-cap">
