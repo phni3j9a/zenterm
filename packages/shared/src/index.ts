@@ -46,6 +46,7 @@ export interface SystemStatus {
 export interface FileEntry {
   name: string;
   type: 'file' | 'directory' | 'symlink' | 'other';
+  resolvedType?: 'file' | 'directory' | 'other';
   size: number;
   modified: number;
   permissions: string;
@@ -77,4 +78,32 @@ export interface FileUploadResponse {
   filename: string;
   size: number;
   mimetype: string;
+}
+
+/** ファイル削除レスポンス */
+export interface FileDeleteResponse {
+  path: string;
+  deleted: boolean;
+}
+
+/** ファイルリネームレスポンス */
+export interface FileRenameResponse {
+  oldPath: string;
+  newPath: string;
+}
+
+/** ファイルコピーレスポンス */
+export interface FileCopyResponse {
+  copied: { source: string; destination: string }[];
+}
+
+/** ファイル移動レスポンス */
+export interface FileMoveResponse {
+  moved: { source: string; destination: string }[];
+}
+
+/** ディレクトリ作成レスポンス */
+export interface FileMkdirResponse {
+  path: string;
+  created: boolean;
 }

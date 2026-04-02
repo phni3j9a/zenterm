@@ -8,5 +8,10 @@ export type {
   FileListResponse,
   FileContentResponse,
   FileWriteResponse,
-  FileUploadResponse
+  FileUploadResponse,
+  FileDeleteResponse,
+  FileRenameResponse,
+  FileCopyResponse,
+  FileMoveResponse,
+  FileMkdirResponse,
 } from '@zenterm/shared';

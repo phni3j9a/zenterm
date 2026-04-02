@@ -95,10 +95,11 @@ const terminalRoutes: FastifyPluginAsync = async (fastify) => {
         return;
       }
 
+      // tmux detach (Ctrl-B d) to gracefully leave the session alive
       try {
-        ptyProcess.kill();
+        ptyProcess.write('\x02d');
       } catch (error) {
-        request.log.debug({ err: error, session: currentSession?.name }, 'pty cleanup skipped');
+        request.log.debug({ err: error, session: currentSession?.name }, 'pty detach skipped');
       } finally {
         ptyProcess = null;
       }

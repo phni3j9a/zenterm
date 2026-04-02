@@ -1,6 +1,6 @@
-import { createReadStream, type ReadStream, type Stats, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, extname, resolve } from 'node:path';
-import type { FileContentResponse, FileEntry, FileListResponse, FileWriteResponse } from '../types/index.js';
+import { createReadStream, cpSync, mkdirSync, renameSync, rmSync, type ReadStream, type Stats, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, extname, resolve } from 'node:path';
+import type { FileContentResponse, FileCopyResponse, FileDeleteResponse, FileEntry, FileListResponse, FileMkdirResponse, FileMoveResponse, FileRenameResponse, FileWriteResponse } from '../types/index.js';
 
 const homeDir = process.env.HOME ?? process.cwd();
 const homeDirPrefix = homeDir + '/';
@@ -119,11 +119,31 @@ function getFileType(stats: Stats): FileEntry['type'] {
   return 'other';
 }
 
+function getResolvedType(stats: Stats): FileEntry['resolvedType'] {
+  if (stats.isDirectory()) return 'directory';
+  if (stats.isFile()) return 'file';
+  return 'other';
+}
+
+function applySymlinkMetadata(entry: FileEntry, dirPath: string, fullPath: string): void {
+  try {
+    const target = readlinkSync(fullPath);
+    entry.symlinkTarget = target;
+    const realStats = statSync(fullPath);
+    entry.size = realStats.size;
+    entry.resolvedType = getResolvedType(realStats);
+    const resolvedTarget = resolve(dirPath, target);
+    if (isWithinHome(resolvedTarget)) return;
+    entry.symlinkTarget = target + ' (outside home)';
+  } catch {
+    entry.symlinkTarget = '(broken)';
+  }
+}
+
 function buildFileEntry(dirPath: string, name: string): FileEntry {
   const fullPath = resolve(dirPath, name);
   const lstats = lstatSync(fullPath);
   const type = getFileType(lstats);
-
   const entry: FileEntry = {
     name,
     type,
@@ -131,26 +151,8 @@ function buildFileEntry(dirPath: string, name: string): FileEntry {
     modified: lstats.mtimeMs,
     permissions: formatPermissions(lstats.mode)
   };
-
-  if (type === 'symlink') {
-    try {
-      const target = readlinkSync(fullPath);
-      entry.symlinkTarget = target;
-
-      // Resolve real target and use its stats for size
-      const realStats = statSync(fullPath);
-      entry.size = realStats.size;
-
-      // Validate symlink target is within HOME
-      const resolvedTarget = resolve(dirPath, target);
-      if (!isWithinHome(resolvedTarget)) {
-        entry.symlinkTarget = target + ' (outside home)';
-      }
-    } catch {
-      entry.symlinkTarget = '(broken)';
-    }
-  }
-
+  if (type !== 'symlink') return entry;
+  applySymlinkMetadata(entry, dirPath, fullPath);
   return entry;
 }
 
@@ -352,4 +354,148 @@ export function readFileRaw(inputPath: string): RawFileInfo {
     mimeType: getMimeType(filePath),
     filename: getFilename(filePath)
   };
+}
+
+export function deleteItem(inputPath: string): FileDeleteResponse {
+  const targetPath = validatePath(inputPath);
+  getExistingStats(targetPath, inputPath);
+  try {
+    rmSync(targetPath, { recursive: true, force: true });
+  } catch (error) {
+    throw new FilesystemError(
+      `削除に失敗しました: ${inputPath}`,
+      403,
+      'DELETE_DENIED',
+      { cause: error }
+    );
+  }
+  return { path: targetPath, deleted: true };
+}
+
+export function renameItem(inputPath: string, newName: string): FileRenameResponse {
+  if (!newName || newName.includes('/') || newName.includes('\\')) {
+    throw new FilesystemError('無効なファイル名です。', 400, 'INVALID_NAME');
+  }
+  const oldPath = validatePath(inputPath);
+  getExistingStats(oldPath, inputPath);
+  const newPath = resolve(dirname(oldPath), newName);
+  assertPathWithinHome(newPath);
+  try {
+    statSync(newPath);
+    throw new FilesystemError(
+      `同名のファイルまたはディレクトリが既に存在します: ${newName}`,
+      409,
+      'ALREADY_EXISTS'
+    );
+  } catch (error) {
+    if (error instanceof FilesystemError) throw error;
+  }
+  try {
+    renameSync(oldPath, newPath);
+  } catch (error) {
+    throw new FilesystemError(
+      `名前の変更に失敗しました: ${inputPath}`,
+      403,
+      'RENAME_DENIED',
+      { cause: error }
+    );
+  }
+  return { oldPath, newPath };
+}
+
+export function copyItems(sources: string[], destination: string): FileCopyResponse {
+  const destPath = validatePath(destination);
+  const destStats = getExistingStats(destPath, destination);
+  assertDirectory(destStats, destination);
+  const copied: { source: string; destination: string }[] = [];
+  for (const src of sources) {
+    const srcPath = validatePath(src);
+    getExistingStats(srcPath, src);
+    const name = basename(srcPath);
+    const targetPath = resolve(destPath, name);
+    assertPathWithinHome(targetPath);
+    try {
+      statSync(targetPath);
+      throw new FilesystemError(
+        `コピー先に同名のファイルが既に存在します: ${name}`,
+        409,
+        'ALREADY_EXISTS'
+      );
+    } catch (error) {
+      if (error instanceof FilesystemError) throw error;
+    }
+    try {
+      cpSync(srcPath, targetPath, { recursive: true });
+    } catch (error) {
+      throw new FilesystemError(
+        `コピーに失敗しました: ${src}`,
+        403,
+        'COPY_DENIED',
+        { cause: error }
+      );
+    }
+    copied.push({ source: srcPath, destination: targetPath });
+  }
+  return { copied };
+}
+
+export function moveItems(sources: string[], destination: string): FileMoveResponse {
+  const destPath = validatePath(destination);
+  const destStats = getExistingStats(destPath, destination);
+  assertDirectory(destStats, destination);
+  const moved: { source: string; destination: string }[] = [];
+  for (const src of sources) {
+    const srcPath = validatePath(src);
+    getExistingStats(srcPath, src);
+    const name = basename(srcPath);
+    const targetPath = resolve(destPath, name);
+    assertPathWithinHome(targetPath);
+    try {
+      statSync(targetPath);
+      throw new FilesystemError(
+        `移動先に同名のファイルが既に存在します: ${name}`,
+        409,
+        'ALREADY_EXISTS'
+      );
+    } catch (error) {
+      if (error instanceof FilesystemError) throw error;
+    }
+    try {
+      renameSync(srcPath, targetPath);
+    } catch (error) {
+      throw new FilesystemError(
+        `移動に失敗しました: ${src}`,
+        403,
+        'MOVE_DENIED',
+        { cause: error }
+      );
+    }
+    moved.push({ source: srcPath, destination: targetPath });
+  }
+  return { moved };
+}
+
+export function createDirectory(inputPath: string): FileMkdirResponse {
+  const dirPath = validatePath(inputPath);
+  try {
+    statSync(dirPath);
+    throw new FilesystemError(
+      `同名のファイルまたはディレクトリが既に存在します: ${inputPath}`,
+      409,
+      'ALREADY_EXISTS'
+    );
+  } catch (error) {
+    if (error instanceof FilesystemError) throw error;
+  }
+  try {
+    mkdirSync(dirPath, { recursive: true });
+  } catch (error) {
+    throw new FilesystemError(
+      `ディレクトリの作成に失敗しました: ${inputPath}`,
+      403,
+      'MKDIR_DENIED',
+      { cause: error }
+    );
+  }
+  return { path: dirPath, created: true };
 }

@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { listDirectory, readFileContent, readFileRaw, writeFileContent } from '../services/filesystem.js';
+import { copyItems, createDirectory, deleteItem, listDirectory, moveItems, readFileContent, readFileRaw, renameItem, writeFileContent } from '../services/filesystem.js';
 
 const listQuerySchema = z.object({
   path: z.string().min(1).default('~'),
@@ -14,6 +14,24 @@ const contentQuerySchema = z.object({
 const writeBodySchema = z.object({
   path: z.string().min(1),
   content: z.string()
+});
+
+const deleteBodySchema = z.object({
+  path: z.string().min(1)
+});
+
+const renameBodySchema = z.object({
+  path: z.string().min(1),
+  newName: z.string().min(1).max(255)
+});
+
+const copyMoveBodySchema = z.object({
+  sources: z.array(z.string().min(1)).min(1),
+  destination: z.string().min(1)
+});
+
+const mkdirBodySchema = z.object({
+  path: z.string().min(1)
 });
 
 const fileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -43,6 +61,31 @@ const fileRoutes: FastifyPluginAsync = async (fastify) => {
       .header('Cache-Control', 'private, max-age=300');
 
     return reply.send(info.stream);
+  });
+
+  fastify.delete('/api/files', async (request) => {
+    const body = deleteBodySchema.parse(request.body);
+    return deleteItem(body.path);
+  });
+
+  fastify.post('/api/files/rename', async (request) => {
+    const body = renameBodySchema.parse(request.body);
+    return renameItem(body.path, body.newName);
+  });
+
+  fastify.post('/api/files/copy', async (request) => {
+    const body = copyMoveBodySchema.parse(request.body);
+    return copyItems(body.sources, body.destination);
+  });
+
+  fastify.post('/api/files/move', async (request) => {
+    const body = copyMoveBodySchema.parse(request.body);
+    return moveItems(body.sources, body.destination);
+  });
+
+  fastify.post('/api/files/mkdir', async (request) => {
+    const body = mkdirBodySchema.parse(request.body);
+    return createDirectory(body.path);
   });
 };
 
