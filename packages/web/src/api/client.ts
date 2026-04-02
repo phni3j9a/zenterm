@@ -6,6 +6,7 @@ import type {
   FileWriteResponse,
   FileUploadResponse,
 } from '@zenterm/shared';
+import { useAuthStore } from '../stores/auth';
 
 const DEFAULT_TIMEOUT = 15_000;
 
@@ -68,6 +69,9 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
         body && typeof body === 'object' && 'message' in body
           ? String(body.message)
           : res.statusText;
+      if (res.status === 401 && path !== '/api/auth/verify') {
+        useAuthStore.getState().logout();
+      }
       throw new ApiError(res.status, message);
     }
 
@@ -122,13 +126,20 @@ export const writeFileContent = (path: string, content: string) =>
     body: JSON.stringify({ path, content }),
   });
 
-export async function uploadFile(file: File, destDir?: string): Promise<FileUploadResponse> {
+export async function uploadFile(
+  file: File,
+  destDir?: string,
+  preserveName = false,
+): Promise<FileUploadResponse> {
   const formData = new FormData();
   formData.append('file', file);
 
   const base = getBaseUrl();
-  const dest = destDir ? `?dest=${encodeURIComponent(destDir)}` : '';
-  const res = await fetch(`${base}/api/upload${dest}`, {
+  const params = new URLSearchParams();
+  if (destDir) params.set('dest', destDir);
+  if (preserveName) params.set('preserveName', 'true');
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(`${base}/api/upload${query}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${getToken()}` },
     body: formData,
@@ -151,6 +162,6 @@ export function getWebSocketUrl(sessionId: string): string {
   const token = getToken();
   const wsBase = base
     ? base.replace(/^http/, 'ws')
-    : `ws://${window.location.host}`;
+    : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
   return `${wsBase}/ws/terminal?sessionId=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(token)}`;
 }

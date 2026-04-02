@@ -23,6 +23,7 @@ const homeDir = process.env.HOME ?? process.cwd();
 const emptyServerMarkers = [
   'no server running',
   'failed to connect to server',
+  'error connecting to',
   'no sessions'
 ];
 const missingSessionMarkers = ["can't find session", 'session not found'];

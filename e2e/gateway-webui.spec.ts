@@ -3,38 +3,30 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 const SCREENSHOT_DIR = path.join(__dirname, '..', 'test-results', 'screenshots');
-const BASE_URL = 'http://localhost:18765';
-const AUTH_TOKEN = '2236';
-const WRONG_TOKEN = '9999';
+const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:18765';
+const AUTH_TOKEN = process.env.E2E_AUTH_TOKEN ?? '2236';
 
-// スクリーンショット保存ディレクトリを作成
 if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 }
 
 // -------------------------------------------------------
-// TC-01: ページ読み込み — ログイン画面が表示されること
+// TC-01: Login page loads correctly
 // -------------------------------------------------------
-test('TC-01: ページ読み込み — ログイン画面が表示される', async ({ page }) => {
+test('TC-01: Login page is displayed', async ({ page }) => {
   const consoleErrors: string[] = [];
-  page.on('console', msg => {
+  page.on('console', (msg) => {
     if (msg.type() === 'error') consoleErrors.push(msg.text());
   });
 
-  await page.goto(BASE_URL + '/');
+  await page.goto(BASE_URL + '/app/login');
 
-  // #login-view が active クラスを持ち表示されている
-  const loginView = page.locator('#login-view');
-  await expect(loginView).toBeVisible();
-  await expect(loginView).toHaveClass(/active/);
+  // Login page should be visible
+  await expect(page.locator('[data-testid="login-page"]')).toBeVisible();
 
-  // #token-input と #login-btn が存在する
-  await expect(page.locator('#token-input')).toBeVisible();
-  await expect(page.locator('#login-btn')).toBeVisible();
-
-  // ダッシュボードは非表示
-  const dashView = page.locator('#dashboard-view');
-  await expect(dashView).not.toHaveClass(/active/);
+  // Token input and submit button should exist
+  await expect(page.locator('input#token')).toBeVisible();
+  await expect(page.locator('button[type="submit"]')).toBeVisible();
 
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, '01-login-page.png') });
 
@@ -44,56 +36,52 @@ test('TC-01: ページ読み込み — ログイン画面が表示される', as
 });
 
 // -------------------------------------------------------
-// TC-02: 間違ったトークンでログイン失敗
+// TC-02: Wrong token shows error
 // -------------------------------------------------------
-test('TC-02: 間違ったトークン — 認証失敗エラーが表示される', async ({ page }) => {
-  await page.goto(BASE_URL + '/');
+test('TC-02: Wrong token shows authentication error', async ({ page }) => {
+  await page.goto(BASE_URL + '/app/login');
 
-  await page.fill('#token-input', WRONG_TOKEN);
-  await page.click('#login-btn');
+  await page.fill('input#token', 'wrong-token');
+  await page.click('button[type="submit"]');
 
-  // エラーメッセージが表示されるまで待つ
-  const loginError = page.locator('#login-error');
-  await expect(loginError).toBeVisible({ timeout: 10_000 });
-  await expect(loginError).toContainText('認証に失敗しました');
+  // Error message should appear
+  const errorEl = page.locator('[data-testid="login-error"]');
+  await expect(errorEl).toBeVisible({ timeout: 10_000 });
+  await expect(errorEl).toContainText('Authentication failed');
 
-  // ログイン画面は継続表示
-  await expect(page.locator('#login-view')).toHaveClass(/active/);
+  // Should still be on login page
+  await expect(page.locator('[data-testid="login-page"]')).toBeVisible();
 
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, '02-login-failure.png') });
 });
 
 // -------------------------------------------------------
-// TC-03: 正しいトークンでログイン成功 — ダッシュボードに遷移
+// TC-03: Correct token navigates to main page
 // -------------------------------------------------------
-test('TC-03: 正しいトークン — ダッシュボード画面に遷移する', async ({ page }) => {
-  await page.goto(BASE_URL + '/');
+test('TC-03: Correct token navigates to main page', async ({ page }) => {
+  await page.goto(BASE_URL + '/app/login');
 
-  await page.fill('#token-input', AUTH_TOKEN);
-  await page.click('#login-btn');
+  await page.fill('input#token', AUTH_TOKEN);
+  await page.click('button[type="submit"]');
 
-  // ダッシュボードが active になるまで待つ
-  const dashView = page.locator('#dashboard-view');
-  await expect(dashView).toHaveClass(/active/, { timeout: 10_000 });
+  // Should navigate to main layout
+  await expect(page.locator('[data-testid="main-layout"]')).toBeVisible({ timeout: 10_000 });
 
-  // ログイン画面は非表示になる
-  const loginView = page.locator('#login-view');
-  await expect(loginView).not.toHaveClass(/active/);
+  // Login page should not be visible
+  await expect(page.locator('[data-testid="login-page"]')).not.toBeVisible();
 
-  await page.screenshot({ path: path.join(SCREENSHOT_DIR, '03-dashboard.png') });
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, '03-main-page.png') });
 });
 
 // -------------------------------------------------------
-// TC-04: 認証API直接テスト
+// TC-04: Auth API direct test
 // -------------------------------------------------------
-test('TC-04: POST /api/auth/verify — Bearer 2236 は 200、wrong は 401', async ({ request }) => {
-  // 正しいトークン → 200
+test('TC-04: POST /api/auth/verify — correct token returns 200, wrong returns 401', async ({ request }) => {
   const okResp = await request.post(BASE_URL + '/api/auth/verify', {
     headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
   });
   expect(okResp.status()).toBe(200);
 
-  // 間違ったトークン → 401
   const ngResp = await request.post(BASE_URL + '/api/auth/verify', {
     headers: { Authorization: 'Bearer wrongtoken' },
   });
@@ -101,12 +89,12 @@ test('TC-04: POST /api/auth/verify — Bearer 2236 は 200、wrong は 401', asy
 });
 
 // -------------------------------------------------------
-// TC-05: health エンドポイント — 認証なしで 200
+// TC-05: Health endpoint
 // -------------------------------------------------------
-test('TC-05: GET /health — トークンなしで 200 が返る', async ({ request }) => {
+test('TC-05: GET /health returns 200 with { ok: true }', async ({ request }) => {
   const resp = await request.get(BASE_URL + '/health');
   expect(resp.status()).toBe(200);
 
   const body = await resp.json();
-  expect(body).toHaveProperty('ok', true);
+  expect(body).toEqual({ ok: true });
 });

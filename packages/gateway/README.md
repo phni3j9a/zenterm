@@ -1,6 +1,6 @@
 # zenterm-gateway
 
-Raspberry Pi 上で動く terminal gateway 用リポジトリ。
+macOS / Linux サーバー上で動く terminal gateway 用リポジトリ。
 
 開始前に以下を参照:
 

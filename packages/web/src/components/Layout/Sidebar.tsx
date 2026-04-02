@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSessionsStore } from '../../stores/sessions';
 import { FileBrowser } from '../FileManager/FileBrowser';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import styles from './Sidebar.module.css';
 
 type SidebarView = 'sessions' | 'files';
@@ -14,13 +15,24 @@ export function Sidebar() {
   const renameSession = useSessionsStore((s) => s.renameSession);
   const fetchSessions = useSessionsStore((s) => s.fetchSessions);
   const loading = useSessionsStore((s) => s.loading);
+  const error = useSessionsStore((s) => s.error);
 
   const [view, setView] = useState<SidebarView>('sessions');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSessions();
+    const interval = setInterval(fetchSessions, 30_000);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchSessions();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [fetchSessions]);
 
   const handleRenameStart = (id: string, displayName: string) => {
@@ -35,10 +47,14 @@ export function Sidebar() {
     setRenamingId(null);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm(`Delete session "${id.replace(/^zen_/, '')}"?`)) {
-      await deleteSession(id);
-    }
+  const handleDeleteRequest = (id: string) => {
+    setDeletingId(id);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingId) return;
+    await deleteSession(deletingId);
+    setDeletingId(null);
   };
 
   return (
@@ -79,6 +95,9 @@ export function Sidebar() {
             {!loading && sessions.length === 0 && (
               <div className={styles.empty}>No sessions</div>
             )}
+            {error && (
+              <div className={styles.error}>{error}</div>
+            )}
             {sessions.map((session) => (
               <div
                 key={session.name}
@@ -115,7 +134,7 @@ export function Sidebar() {
                       className={styles.deleteBtn}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(session.name);
+                        handleDeleteRequest(session.name);
                       }}
                       aria-label="Delete session"
                     >
@@ -130,6 +149,16 @@ export function Sidebar() {
       )}
 
       {view === 'files' && <FileBrowser />}
+      {deletingId && (
+        <ConfirmDialog
+          title="Delete Session"
+          message={`Are you sure you want to delete "${deletingId.replace(/^zen_/, '')}"?`}
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeletingId(null)}
+        />
+      )}
     </aside>
   );
 }

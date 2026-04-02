@@ -24,8 +24,11 @@
     "gateway",
     "ssh",
     "tmux",
+    "macos",
+    "linux",
     "raspberry-pi",
-    "mobile"
+    "mobile",
+    "self-hosted"
   ],
   "license": "MIT",
   "dependencies": {

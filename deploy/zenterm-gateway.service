@@ -7,13 +7,13 @@ StartLimitBurst=5
 
 [Service]
 Type=simple
-User=raspi5
-Group=raspi5
-WorkingDirectory=/home/raspi5/projects/zenterm/server/packages/gateway
+User=__USER__
+Group=__USER__
+WorkingDirectory=__PROJECT_DIR__/packages/gateway
 ExecStart=/usr/bin/node dist/index.js
 Restart=always
 RestartSec=5
-EnvironmentFile=/home/raspi5/projects/zenterm/server/packages/gateway/.env
+EnvironmentFile=__PROJECT_DIR__/packages/gateway/.env
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=zenterm-gateway

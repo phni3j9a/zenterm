@@ -62,6 +62,12 @@
   font-weight: 500;
 }
 
+.truncatedWarning {
+  font-size: 11px;
+  color: var(--warning);
+  font-weight: 500;
+}
+
 .saveBtn {
   padding: var(--sp-xs) var(--sp-md);
   font-size: 12px;

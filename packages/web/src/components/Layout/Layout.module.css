@@ -11,6 +11,13 @@
   min-height: 0;
 }
 
+.body[data-sidebar-open="false"] > :first-child {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
 .main {
   flex: 1;
   display: flex;

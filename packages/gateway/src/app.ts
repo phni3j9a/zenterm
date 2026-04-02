@@ -108,7 +108,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.get('/health', async () => ({ ok: true }));
 
   app.get('/', async (_request, reply) => {
-    reply.redirect('/app/');
+    reply.type('text/html; charset=utf-8');
+    reply.header('Cache-Control', 'public, max-age=3600');
+    return reply.sendFile('index.html');
   });
 
   // SPA: serve app/index.html for client-side routes (not static assets)

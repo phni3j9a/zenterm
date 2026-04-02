@@ -33,9 +33,10 @@ export function FileBrowser() {
   }, [fetchEntries]);
 
   const navigate = (entry: FileEntry) => {
-    if (entry.type === 'directory' || entry.type === 'symlink') {
+    const effectiveType = entry.type === 'symlink' ? (entry.resolvedType ?? 'directory') : entry.type;
+    if (effectiveType === 'directory') {
       setCurrentPath(`${currentPath}/${entry.name}`);
-    } else {
+    } else if (effectiveType === 'file') {
       setEditingFile(`${currentPath}/${entry.name}`);
     }
   };

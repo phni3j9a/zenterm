@@ -4,6 +4,8 @@ import { useAuthStore } from '../stores/auth';
 import { verifyAuth } from '../api/client';
 import styles from './LoginPage.module.css';
 
+const AUTH_STORAGE_KEY = 'zenterm_auth';
+
 export function LoginPage() {
   const [token, setToken] = useState('');
   const [gatewayUrl, setGatewayUrl] = useState('');
@@ -17,16 +19,20 @@ export function LoginPage() {
     setError('');
     setLoading(true);
 
-    // Temporarily store for verifyAuth to pick up
     const url = gatewayUrl.trim().replace(/\/+$/, '');
-    setAuth(token.trim(), url);
+    const nextToken = token.trim();
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({ token: nextToken, gatewayUrl: url }),
+    );
 
     try {
       await verifyAuth();
+      setAuth(nextToken, url);
       navigate('/', { replace: true });
     } catch {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
       setError('Authentication failed. Check your token and server URL.');
-      setAuth('', url); // Clear invalid token but keep URL
     } finally {
       setLoading(false);
     }
@@ -36,7 +42,7 @@ export function LoginPage() {
   const showUrlField = needsUrl || gatewayUrl;
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-testid="login-page">
       <div className={styles.card}>
         <div className={styles.logoSection}>
           <div className={styles.logoMark}>Z</div>
@@ -76,7 +82,11 @@ export function LoginPage() {
             />
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <p className={styles.error} data-testid="login-error">
+              {error}
+            </p>
+          )}
 
           <button
             className={styles.submitBtn}

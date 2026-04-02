@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { randomBytes } from 'node:crypto';
-import { createWriteStream, mkdirSync, statSync, unlinkSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, statSync, unlinkSync } from 'node:fs';
 import { dirname, extname, join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { z } from 'zod';
@@ -9,7 +9,8 @@ import { validatePath } from '../services/filesystem.js';
 import type { FileUploadResponse } from '../types/index.js';
 
 const uploadQuerySchema = z.object({
-  dest: z.string().optional()
+  dest: z.string().optional(),
+  preserveName: z.enum(['true', 'false']).optional(),
 });
 
 function createFailureResponse(mimetype = ''): FileUploadResponse {
@@ -29,6 +30,21 @@ function generateFilename(originalName: string): string {
   const rand = randomBytes(4).toString('hex');
   const ext = extname(originalName) || '.bin';
   return `${date}_${time}_${rand}${ext}`;
+}
+
+function sanitizeFilename(originalName: string, dir: string): string {
+  const base = originalName.replace(/[/\\]/g, '_') || 'file';
+  let candidate = base;
+  let counter = 1;
+
+  while (existsSync(join(dir, candidate))) {
+    const ext = extname(base);
+    const stem = base.slice(0, base.length - ext.length);
+    candidate = `${stem}_${counter}${ext}`;
+    counter++;
+  }
+
+  return candidate;
 }
 
 function resolveUploadDir(inputPath: string): string {
@@ -84,7 +100,10 @@ const uploadRoutes: FastifyPluginAsync = async (fastify) => {
     if (!data) return reply.status(400).send(createFailureResponse());
     mkdirSync(uploadDir, { recursive: true });
 
-    const filename = generateFilename(data.filename);
+    const useOriginalName = query.preserveName === 'true';
+    const filename = useOriginalName
+      ? sanitizeFilename(data.filename, uploadDir)
+      : generateFilename(data.filename);
     const destPath = join(uploadDir, filename);
     await pipeline(data.file, createWriteStream(destPath));
 

@@ -93,7 +93,11 @@ else
   SYSTEMD_DIR="/etc/systemd/system"
 
   echo "[3/5] サービスファイル配置..."
-  sudo cp "$SERVICE_FILE" "$SYSTEMD_DIR/zenterm-gateway.service"
+  # テンプレート内のプレースホルダーをユーザー環境に合わせて置換
+  sed \
+    -e "s|__PROJECT_DIR__|$PROJECT_DIR|g" \
+    -e "s|__USER__|$(whoami)|g" \
+    "$SERVICE_FILE" | sudo tee "$SYSTEMD_DIR/zenterm-gateway.service" > /dev/null
 
   echo "[4/5] systemd デーモンリロード..."
   sudo systemctl daemon-reload

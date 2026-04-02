@@ -7,6 +7,10 @@
   <meta property="og:title" content="ZenTerm — 静寂の中で、サーバーを操る">
   <meta property="og:description" content="Self-hosted mobile terminal for macOS & Linux. Control your server from iPhone, Android, or any browser.">
   <meta property="og:type" content="website">
+  <meta property="og:image" content="https://phni3j9a.github.io/zenterm/lp/og-image.png">
+  <meta property="og:url" content="https://phni3j9a.github.io/zenterm/">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>ZenTerm — 静寂の中で、サーバーを操る</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,6 +46,22 @@
       --nav-h:           60px;
       --max-w:           1100px;
       --t-base:          0.2s ease;
+
+      /* Hero background atmospheric layers */
+      --hero-glow-primary:   rgba(123, 139, 111, .065);
+      --hero-glow-warm:      rgba(180, 170, 148, .04);
+      --hero-fade-bottom:    rgba(245, 244, 240, .85);
+
+      /* CTA Section */
+      --cta-bg:              #E8EDE4;
+      --cta-border:          rgba(123, 139, 111, .15);
+      /* Ghost button (secondary CTA) */
+      --btn-ghost-border:    rgba(123, 139, 111, .5);
+      --btn-ghost-text:      #5A6950;
+      --btn-ghost-hover-bg:  rgba(123, 139, 111, .08);
+
+      /* Eyebrow decoration */
+      --eyebrow-line-w:      28px;
     }
 
     [data-theme="dark"] {
@@ -61,6 +81,17 @@
       --shadow-md:       0 4px 12px rgba(0,0,0,.35);
       --shadow-lg:       0 8px 24px rgba(0,0,0,.45);
       --shadow-xl:       0 20px 60px rgba(0,0,0,.55);
+
+      --hero-glow-primary:   rgba(148, 166, 135, .07);
+      --hero-glow-warm:      rgba(140, 130, 110, .04);
+      --hero-fade-bottom:    rgba(27, 26, 23, .85);
+
+      --cta-bg:              #1E251C;
+      --cta-border:          rgba(148, 166, 135, .12);
+
+      --btn-ghost-border:    rgba(148, 166, 135, .45);
+      --btn-ghost-text:      #A5B59A;
+      --btn-ghost-hover-bg:  rgba(148, 166, 135, .1);
     }
 
     /* ═══════════════════════════════════
@@ -203,9 +234,10 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 60px 40px 100px;
+      padding: 80px 40px 120px;
       position: relative;
       overflow: hidden;
+      background-image: linear-gradient(to bottom, transparent 65%, var(--hero-fade-bottom) 100%);
     }
     /* Atmospheric radial glow */
     #hero::before {
@@ -214,12 +246,24 @@
       inset: 0;
       background: radial-gradient(
         ellipse 80% 65% at 50% 55%,
-        rgba(123,139,111,.065) 0%,
+        var(--hero-glow-primary) 0%,
         transparent 68%
       );
       pointer-events: none;
     }
-    /* Faint large enso in background */
+    /* Warm halo layer */
+    #hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse 70% 50% at 50% 40%,
+        var(--hero-glow-warm) 0%,
+        transparent 65%
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
     .bg-enso {
       position: absolute;
       width: min(680px, 110vw);
@@ -308,6 +352,77 @@
     }
     .hero-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
+    /* Hero CTA button group */
+    .hero-btns {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: rise .75s ease 1.55s forwards;
+    }
+    .hero-btns .hero-btn {
+      opacity: 1;
+      animation: none;
+    }
+    .hero-btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 15px 36px;
+      background: transparent;
+      color: var(--btn-ghost-text);
+      border: 1.5px solid var(--btn-ghost-border);
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      transition: background var(--t-base), border-color var(--t-base),
+                  color var(--t-base), transform .18s, box-shadow .18s;
+    }
+    .hero-btn-ghost:hover {
+      background: var(--btn-ghost-hover-bg);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(123, 139, 111, .12);
+    }
+    .hero-btn-ghost svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+    .hero-btn:focus-visible,
+    .hero-btn-ghost:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 3px;
+    }
+    @media (max-width: 480px) {
+      .hero-btns {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      .hero-btns .hero-btn,
+      .hero-btns .hero-btn-ghost {
+        width: 100%;
+        justify-content: center;
+      }
+      #cta { padding: 72px 0; }
+      .cta-btns {
+        flex-direction: column;
+        align-items: center;
+      }
+      .cta-btns .hero-btn,
+      .cta-btns .hero-btn-ghost {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+      }
+    }
+
     /* Scroll whisker */
     .scroll-whisk {
       position: absolute;
@@ -364,7 +479,17 @@
        Section Common
     ═══════════════════════════════════ */
     section { padding: 120px 0; }
-    @media (max-width: 768px) { section { padding: 80px 0; } }
+    #values     { padding: 100px 0; }
+    #install    { padding: 100px 0 120px; }
+    @media (max-width: 768px) {
+      section { padding: 80px 0; }
+      #hero       { padding: 60px 24px 100px; }
+      #values     { padding: 72px 0; }
+      #screenshots { padding: 80px 0; }
+      #features   { padding: 80px 0; }
+      #install    { padding: 72px 0 80px; }
+      #cta        { padding: 72px 0; }
+    }
 
     .sec-eyebrow {
       display: flex;
@@ -380,7 +505,7 @@
     .sec-eyebrow::before {
       content: '';
       display: block;
-      width: 20px;
+      width: var(--eyebrow-line-w);
       height: 1px;
       background: var(--primary);
       opacity: .7;
@@ -891,6 +1016,42 @@
       opacity: .45;
     }
 
+    .foot-tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      letter-spacing: .02em;
+    }
+
+    /* ═══════════════════════════════════
+       CTA Section
+    ═══════════════════════════════════ */
+    #cta {
+      background: var(--cta-bg);
+      border-top: 1px solid var(--cta-border);
+      padding: 100px 0;
+      text-align: center;
+    }
+    .cta-title {
+      margin-bottom: 18px;
+      font-size: clamp(24px, 4vw, 38px);
+      line-height: 1.25;
+    }
+    .cta-desc {
+      max-width: 460px;
+      margin: 0 auto 40px;
+    }
+    .cta-btns {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cta-btns .hero-btn {
+      opacity: 1;
+      animation: none;
+    }
+
     /* ═══════════════════════════════════
        Responsive: phone sizing
     ═══════════════════════════════════ */
@@ -914,7 +1075,7 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
       .hero-icon, .hero-product, .hero-tagline, .hero-sub, .hero-btn,
-      .scroll-whisk { opacity: 1; transform: none; }
+      .hero-btns, .scroll-whisk { opacity: 1; transform: none; }
     }
   </style>
 </head>
@@ -925,7 +1086,7 @@
 ═══════════════════════════════════ -->
 <nav id="nav">
   <div class="container nav-inner">
-    <a href="/" class="nav-logo" aria-label="ZenTerm ホームへ">
+    <a href="/zenterm/" class="nav-logo" aria-label="ZenTerm ホームへ">
       <span class="logo-icon-wrap" aria-hidden="true">
         <img class="icon-light" src="lp/icon-light.png" alt="" width="30" height="30">
         <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="30" height="30">
@@ -934,7 +1095,7 @@
     </a>
     <div class="nav-actions">
       <button id="theme-toggle" aria-label="テーマを切り替える">🌙</button>
-      <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="btn-primary" target="_blank" rel="noopener noreferrer">
+      <a href="https://apps.apple.com/app/zenterm/id6760935103" class="btn-primary" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="14" height="14">
           <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
         </svg>
@@ -965,12 +1126,21 @@
   <p class="hero-tagline">静寂の中で、サーバーを操る</p>
   <p class="hero-sub">Self-hosted mobile terminal for macOS &amp; Linux</p>
 
-  <a href="#install" class="hero-btn" aria-label="始め方を見る">
-    Get Started
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M8 2v12M3 9l5 5 5-5"/>
-    </svg>
-  </a>
+  <div class="hero-btns">
+    <a href="#install" class="hero-btn" aria-label="始め方を見る">
+      Get Started
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M8 2v12M3 9l5 5 5-5"/>
+      </svg>
+    </a>
+    <a href="https://apps.apple.com/app/zenterm/id6760935103"
+       class="hero-btn hero-btn-ghost"
+       target="_blank" rel="noopener noreferrer"
+       aria-label="App Store でダウンロード">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor" width="15" height="15"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+      App Store
+    </a>
+  </div>
 
   <div class="scroll-whisk" aria-hidden="true">
     <div class="whisk-dot"></div>
@@ -996,7 +1166,7 @@
         <div class="val-accent"></div>
         <div>
           <div class="val-title">セルフホスト</div>
-          <div class="val-desc">データはあなたのサーバーだけに。クラウドには一切送信されない、完全なプライバシーと自由。</div>
+          <div class="val-desc">すべてのデータはあなたのサーバーの中。クラウドには何も送信しない。完全なプライバシー。</div>
         </div>
       </div>
 
@@ -1010,7 +1180,7 @@
         <div class="val-accent"></div>
         <div>
           <div class="val-title">どこからでも</div>
-          <div class="val-desc">iPhone、Android、ブラウザ。どのデバイスからでも、いつでもサーバーにアクセスできる。</div>
+          <div class="val-desc">iPhone でも、Android でも、ブラウザでも。場所もデバイスも選ばない。</div>
         </div>
       </div>
 
@@ -1026,7 +1196,7 @@
         <div class="val-accent"></div>
         <div>
           <div class="val-title">即時接続</div>
-          <div class="val-desc">QRコードをスキャンするだけで接続設定が完了。複雑な手順は一切不要。</div>
+          <div class="val-desc">QR コードをスキャンするだけ。複雑な SSH 設定は一切不要。</div>
         </div>
       </div>
 
@@ -1042,7 +1212,7 @@
     <div class="ss-head aos">
       <div class="sec-eyebrow centered">Screenshots</div>
       <h2 class="sec-title">美しいインターフェース</h2>
-      <p class="sec-desc">Zenテーマの落ち着いたカラーパレットと直感的なUI。ライトとダークを自由に切り替えられる。</p>
+      <p class="sec-desc">余計な装飾を削ぎ落とした、禅のインターフェース。ライトとダークを自在に。</p>
     </div>
 
     <div class="phones-outer">
@@ -1142,7 +1312,7 @@
           <path d="M20 24h8"/>
         </svg>
         <div class="feat-name">Full Terminal</div>
-        <div class="feat-desc">xterm.jsによる完全なターミナルエミュレーション。CJK/Unicode対応、5000行スクロールバック。</div>
+        <div class="feat-desc">本格ターミナルをiPhoneに。Vim、top、htop — 何でも動く。</div>
       </div>
 
       <div class="feat-card aos" data-d="2">
@@ -1155,7 +1325,7 @@
           <circle cx="25" cy="24" r="1.5" fill="currentColor" stroke="none"/>
         </svg>
         <div class="feat-name">tmux Sessions</div>
-        <div class="feat-desc">セッション永続化で、接続が切れても作業は続く。複数セッションを同時に切り替え管理。</div>
+        <div class="feat-desc">接続が切れても作業は消えない。後から別のデバイスで続きを再開。</div>
       </div>
 
       <div class="feat-card aos" data-d="3">
@@ -1166,7 +1336,7 @@
           <path d="M14 15l4 0"/>
         </svg>
         <div class="feat-name">File Browser</div>
-        <div class="feat-desc">GUIでリモートファイルを閲覧・編集・アップロード・ダウンロード。Markdownプレビュー対応。</div>
+        <div class="feat-desc">サーバーのファイルをスマホで直感操作。編集もダウンロードもワンタップ。</div>
       </div>
 
       <div class="feat-card aos" data-d="1">
@@ -1178,7 +1348,7 @@
           <path d="M31 30V24"/>
         </svg>
         <div class="feat-name">System Monitor</div>
-        <div class="feat-desc">CPU・メモリ・ディスク・温度をリアルタイム表示。サーバーの状態を常に把握できる。</div>
+        <div class="feat-desc">CPU、メモリ、温度。サーバーの健康状態を一目で確認。</div>
       </div>
 
       <div class="feat-card aos" data-d="2">
@@ -1192,7 +1362,7 @@
           <path d="M22 25h3v3h-3zM29 22h5M22 31v5M29 29h5v5M29 22v5"/>
         </svg>
         <div class="feat-name">QR Pairing</div>
-        <div class="feat-desc">起動時に表示されるQRコードをスキャンするだけで接続設定が自動入力される。</div>
+        <div class="feat-desc">面倒な設定はゼロ。QRコードをかざすだけで接続完了。</div>
       </div>
 
       <div class="feat-card aos" data-d="3">
@@ -1202,7 +1372,7 @@
           <circle cx="19" cy="31" r="1.2" fill="currentColor" stroke="none"/>
         </svg>
         <div class="feat-name">One-command Setup</div>
-        <div class="feat-desc">npx一行でセットアップ完了。systemd/launchd へのサービス登録も自動で行う。</div>
+        <div class="feat-desc">ターミナルに一行コピーするだけ。あとは全自動。</div>
       </div>
 
     </div>
@@ -1217,7 +1387,7 @@
     <div class="inst-head aos">
       <div class="sec-eyebrow centered">Get Started</div>
       <h2 class="sec-title">3ステップで始める</h2>
-      <p class="sec-desc">複雑な設定は不要。数分でiPhoneからサーバーを操作できるようになる。</p>
+      <p class="sec-desc">たった3ステップ、数分で完了。あとは好きなデバイスからサーバーを操るだけ。</p>
     </div>
 
     <div class="steps">
@@ -1284,22 +1454,51 @@
 </section>
 
 <!-- ═══════════════════════════════════
+     CTA
+═══════════════════════════════════ -->
+<section id="cta" aria-label="今すぐ始める">
+  <div class="container">
+    <div class="sec-eyebrow centered aos">Start Now</div>
+    <h2 class="sec-title cta-title aos" data-d="1">
+      あなたのサーバーを、<br>ポケットから操ろう
+    </h2>
+    <p class="sec-desc cta-desc aos" data-d="2">
+      オープンソース。無料。セルフホスト。<br>
+      今日から ZenTerm を始められる。
+    </p>
+    <div class="cta-btns aos" data-d="3">
+      <a href="#install" class="hero-btn" aria-label="始め方を見る">Get Started
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+      </a>
+      <a href="https://apps.apple.com/app/zenterm/id6760935103"
+         class="hero-btn hero-btn-ghost"
+         target="_blank" rel="noopener noreferrer"
+         aria-label="App Store でダウンロード">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor" width="15" height="15"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        App Store
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
      Footer
 ═══════════════════════════════════ -->
 <footer role="contentinfo">
   <div class="container">
     <div class="foot-inner">
 
-      <a href="/" class="foot-logo" aria-label="ZenTerm トップへ">
+      <a href="/zenterm/" class="foot-logo" aria-label="ZenTerm トップへ">
         <span class="logo-icon-wrap" aria-hidden="true">
           <img class="icon-light" src="lp/icon-light.png" alt="" width="26" height="26">
           <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="26" height="26">
         </span>
         ZenTerm
       </a>
+      <p class="foot-tagline">Self-hosted terminal for macOS &amp; Linux</p>
 
       <div class="foot-links">
-        <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="foot-link" target="_blank" rel="noopener noreferrer">
+        <a href="https://apps.apple.com/app/zenterm/id6760935103" class="foot-link" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
           </svg>
@@ -1320,7 +1519,7 @@
         </a>
       </div>
 
-      <div class="foot-copy">© 2025 ZenTerm</div>
+      <div class="foot-copy">© 2025–2026 ZenTerm</div>
     </div>
 
     <div class="zen-footer-mark" aria-hidden="true">

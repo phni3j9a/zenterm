@@ -11,8 +11,12 @@ export function TerminalView({ sessionId, active }: TerminalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
+  const [statusMessage, setStatusMessage] = useState<string>('');
 
-  const onStatusChange = useCallback((s: ConnectionStatus) => setStatus(s), []);
+  const onStatusChange = useCallback((s: ConnectionStatus, message?: string) => {
+    setStatus(s);
+    setStatusMessage(message ?? '');
+  }, []);
   const { attach, focus } = useTerminal({ sessionId, onStatusChange });
 
   useEffect(() => {
@@ -35,9 +39,14 @@ export function TerminalView({ sessionId, active }: TerminalProps) {
         <div className={styles.statusOverlay}>
           <span className={styles.statusDot} data-status={status} />
           <span className={styles.statusText}>
-            {status === 'connecting' && 'Connecting...'}
-            {status === 'disconnected' && 'Disconnected'}
-            {status === 'error' && 'Connection error'}
+            {statusMessage || (
+              <>
+                {status === 'connecting' && 'Connecting...'}
+                {status === 'disconnected' && 'Disconnected'}
+                {status === 'error' && 'Connection error'}
+                {status === 'reconnecting' && 'Reconnecting...'}
+              </>
+            )}
           </span>
         </div>
       )}

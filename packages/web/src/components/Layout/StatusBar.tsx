@@ -8,6 +8,7 @@ export function StatusBar() {
   const activeSessionId = useSessionsStore((s) => s.activeSessionId);
   const sessions = useSessionsStore((s) => s.sessions);
   const [status, setStatus] = useState<SystemStatus | null>(null);
+  const [statusError, setStatusError] = useState(false);
 
   const activeSession = sessions.find((s) => s.name === activeSessionId);
 
@@ -15,8 +16,15 @@ export function StatusBar() {
     const controller = new AbortController();
     const fetchStatus = () => {
       getSystemStatus({ signal: controller.signal })
-        .then(setStatus)
-        .catch(() => {});
+        .then((nextStatus) => {
+          setStatus(nextStatus);
+          setStatusError(false);
+        })
+        .catch(() => {
+          if (controller.signal.aborted) return;
+          setStatus(null);
+          setStatusError(true);
+        });
     };
     fetchStatus();
     const interval = setInterval(fetchStatus, 30_000);
@@ -54,6 +62,9 @@ export function StatusBar() {
               </span>
             )}
           </>
+        )}
+        {!status && statusError && (
+          <span className={styles.metricMuted}>Status unavailable</span>
         )}
       </div>
     </footer>

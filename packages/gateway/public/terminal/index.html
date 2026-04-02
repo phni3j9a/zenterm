@@ -342,8 +342,20 @@
       };
     }
 
+    // IME (日本語入力等) の compositionend + input 二重発火を防止
+    var _imeLastData = '';
+    var _imeLastTime = 0;
+    var _IME_DEDUP_MS = 100;
+
     term.onData(function(data) {
       if (ws && ws.readyState === WebSocket.OPEN) {
+        var now = Date.now();
+        if (data.length > 1 && data.charCodeAt(0) > 0x1f
+            && data === _imeLastData && (now - _imeLastTime) < _IME_DEDUP_MS) {
+          return;
+        }
+        _imeLastData = data;
+        _imeLastTime = now;
         ws.send(JSON.stringify({ type: 'input', data: data }));
       }
     });

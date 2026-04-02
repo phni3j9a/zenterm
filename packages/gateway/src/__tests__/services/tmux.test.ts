@@ -87,7 +87,7 @@ describe('tmux service', () => {
       ]);
 
       return [
-        'zen_1|1710000000|/home/raspi5',
+        'zen_1|1710000000|/home/user',
         'zen_work|1710000100|/srv/project',
         'other_ignored|1710000200|/tmp',
       ].join('\n');
@@ -98,7 +98,7 @@ describe('tmux service', () => {
         name: 'zen_1',
         displayName: '1',
         created: 1710000000000,
-        cwd: '/home/raspi5',
+        cwd: '/home/user',
       },
       {
         name: 'zen_work',

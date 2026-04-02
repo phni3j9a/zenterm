@@ -16,6 +16,9 @@ interface CpuTimes {
 
 let previousCpuTimes: CpuTimes | null = null;
 let previousOsCpuTimes: os.CpuInfo[] | null = null;
+let lastCpuUsage: number = 0;
+let lastCpuMeasuredAt: number = 0;
+const CPU_MIN_INTERVAL_MS = 1000;
 
 function readCpuTimesLinux(): CpuTimes {
   try {
@@ -89,7 +92,14 @@ function calculateCpuUsageDarwin(): number {
 }
 
 function calculateCpuUsage(): number {
-  return platform === 'darwin' ? calculateCpuUsageDarwin() : calculateCpuUsageLinux();
+  const now = Date.now();
+  if (now - lastCpuMeasuredAt < CPU_MIN_INTERVAL_MS) {
+    return lastCpuUsage;
+  }
+  const usage = platform === 'darwin' ? calculateCpuUsageDarwin() : calculateCpuUsageLinux();
+  lastCpuUsage = usage;
+  lastCpuMeasuredAt = now;
+  return usage;
 }
 
 function getCpuModel(): string {

@@ -1,0 +1,13 @@
+services:
+  gateway:
+    build:
+      context: ..
+      dockerfile: demo/Dockerfile
+    container_name: zenterm-demo
+    ports:
+      - "18766:18765"
+    environment:
+      AUTH_TOKEN: "${DEMO_AUTH_TOKEN:-demo1234}"
+    mem_limit: 256m
+    cpus: 0.5
+    restart: unless-stopped

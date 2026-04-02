@@ -14,23 +14,34 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [truncated, setTruncated] = useState(false);
 
   const filename = path.split('/').pop() ?? path;
   const isDirty = content !== originalContent;
+  const canSave = isDirty && !truncated;
+
+  const handleClose = () => {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) return;
+    onClose();
+  };
 
   useEffect(() => {
     setLoading(true);
     setError('');
+    setTruncated(false);
     getFileContent(path)
       .then((res) => {
         setContent(res.content);
         setOriginalContent(res.content);
+        setTruncated(res.truncated);
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false));
   }, [path]);
 
   const handleSave = async () => {
+    if (truncated) return;
+
     setSaving(true);
     setError('');
     try {
@@ -45,25 +56,32 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      handleClose();
+      return;
+    }
+
     if ((e.metaKey || e.ctrlKey) && e.key === 's') {
       e.preventDefault();
-      if (isDirty) handleSave();
-    }
-    if (e.key === 'Escape') {
-      onClose();
+      if (canSave) void handleSave();
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={handleClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <span className={styles.filename}>{filename}</span>
           <span className={styles.path}>{path}</span>
+          {truncated && (
+            <span className={styles.truncatedWarning}>
+              File too large to edit (first 1000 lines shown)
+            </span>
+          )}
           <div className={styles.headerActions}>
             {saved && <span className={styles.savedBadge}>Saved</span>}
-            {isDirty && (
+            {canSave && (
               <button
                 className={styles.saveBtn}
                 onClick={handleSave}
@@ -72,7 +90,7 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
                 {saving ? 'Saving...' : 'Save'}
               </button>
             )}
-            <button className={styles.closeBtn} onClick={onClose}>
+            <button className={styles.closeBtn} onClick={handleClose}>
               &times;
             </button>
           </div>
@@ -86,6 +104,7 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
+              readOnly={truncated}
               spellCheck={false}
               autoFocus
             />

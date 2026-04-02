@@ -2,7 +2,7 @@
 
 ## プロジェクト概要
 マルチ端末ターミナル接続システム（サーバー側）
-iPhone アプリ + PC Web から Raspberry Pi に接続し、tmux セッションを共有する。
+iPhone アプリ + PC Web から macOS / Linux サーバーに接続し、tmux セッションを共有する。
 
 ## パッケージ構成
 | パッケージ | 概要 |

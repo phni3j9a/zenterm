@@ -1,7 +1,7 @@
 # zenterm デプロイメントガイド
 
 ## 前提条件
-- **Linux**: Raspberry Pi OS / Ubuntu / Debian + Node.js 20+ + tmux
+- **Linux**: Ubuntu / Debian / Raspberry Pi OS 等 + Node.js 20+ + tmux
 - **macOS**: macOS 12+ + Homebrew + Node.js 20+ + tmux (`brew install tmux`)
 - npm workspaces 対応済み
 

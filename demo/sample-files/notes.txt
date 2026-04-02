@@ -1,0 +1,4 @@
+ZenTerm - Mobile Terminal
+
+Connect to your server from anywhere.
+Manage tmux sessions, browse files, and monitor system status.

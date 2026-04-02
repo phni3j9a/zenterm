@@ -23,5 +23,12 @@ export default defineConfig(({ command }) => ({
   build: {
     outDir: '../gateway/public/app',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          xterm: ['@xterm/xterm', '@xterm/addon-fit', '@xterm/addon-unicode11'],
+        },
+      },
+    },
   },
 }));

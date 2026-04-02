@@ -20,7 +20,7 @@ export function FileUpload({ currentPath, onClose, onUploaded }: FileUploadProps
     setError('');
     try {
       for (const file of Array.from(files)) {
-        await uploadFile(file, currentPath);
+        await uploadFile(file, currentPath, true);
       }
       onUploaded();
       onClose();

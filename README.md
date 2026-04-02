@@ -5,7 +5,7 @@
 <h1 align="center">ZenTerm</h1>
 
 <p align="center">
-  iPhone / PC から自宅サーバーのターミナルに接続するモバイルターミナルシステム
+  iPhone / PC からサーバーのターミナルに接続するセルフホスト型モバイルターミナル
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@
 
 Gateway サーバーが tmux セッションを管理し、WebSocket で iPhone アプリや PC ブラウザからリアルタイム接続。xterm.js による本格ターミナル描画、ファイルブラウザ、システムモニタリングを備えます。
 
-自宅の Raspberry Pi や Linux サーバーに LAN / VPN 経由でどこからでもアクセスできるセルフホスト型ターミナルシステムです。サーバーを 1 台セットアップするだけで、iPhone の QR ペアリングですぐに使い始められます。
+Mac mini・Raspberry Pi・Linux サーバーなどに LAN / VPN 経由でどこからでもアクセスできるセルフホスト型ターミナルシステムです。macOS でも Linux でも、サーバーを 1 台セットアップするだけで、iPhone の QR ペアリングですぐに使い始められます。
 
 ## Screenshots
 
@@ -200,6 +200,15 @@ npm run dev:gateway
 | 同時接続数制限 | WebSocket 最大 10 接続 |
 | ファイルサイズ制限 | テキスト読み込み 512 KB / ストリーム配信 20 MB / アップロード 10 MB |
 
+## Support
+
+サポートが必要な場合は、まずこの README の `Quick Start` と `Configuration` を確認してください。接続できない場合は、`tmux` の導入、`AUTH_TOKEN` の一致、ファイアウォールや VPN 経路の到達性を見直すと切り分けしやすくなります。
+
+不具合報告や質問は GitHub Issues で受け付けています。App Store サポート窓口としてもこのリポジトリを案内しています。
+
+- https://github.com/phni3j9a/zenterm/issues
+- 報告時は利用端末、サーバー OS、ZenTerm のバージョン、再現手順を添えてください
+
 ## Development
 
 ```bash
@@ -260,7 +269,7 @@ tail -f ~/Library/Logs/zenterm-gateway.log
 `npm install` 時に node-pty のコンパイルが失敗する場合:
 
 ```bash
-# Debian / Ubuntu / Raspberry Pi OS
+# Debian / Ubuntu / Raspberry Pi OS 等
 sudo apt install -y build-essential python3
 
 # macOS
@@ -270,7 +279,7 @@ xcode-select --install
 ### tmux が見つからない
 
 ```bash
-# Debian / Ubuntu / Raspberry Pi OS
+# Debian / Ubuntu / Raspberry Pi OS 等
 sudo apt install -y tmux
 
 # macOS

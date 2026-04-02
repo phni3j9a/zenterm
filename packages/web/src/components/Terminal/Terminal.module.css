@@ -52,6 +52,11 @@
   animation: none;
 }
 
+.statusDot[data-status="reconnecting"] {
+  background: var(--warning);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .statusText {
   font-size: 12px;
   color: var(--text-secondary);
