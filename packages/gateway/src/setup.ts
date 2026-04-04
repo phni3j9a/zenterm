@@ -18,7 +18,7 @@ export async function runSetup(): Promise<void> {
 
   if (!existsSync(envPath)) {
     console.log('.env が見つかりません。');
-    console.log('先に npx zenterm-gateway を実行して初回セットアップを完了してください。');
+    console.log('先に npx -y zenterm-gateway@latest を実行して初回セットアップを完了してください。');
     process.exit(1);
   }
 
