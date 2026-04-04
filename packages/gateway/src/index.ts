@@ -106,6 +106,20 @@ try {
   app.log.info({ address }, 'zenterm-gateway listening');
   showPairingInfo();
 } catch (error) {
-  app.log.error({ err: error }, 'failed to start gateway');
+  const isAddrInUse =
+    error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'EADDRINUSE';
+
+  if (isAddrInUse) {
+    console.error('');
+    console.error(`⚠ ポート ${config.PORT} は既に使用中です。`);
+    console.error('  zenterm-gateway が既に起動している可能性があります。');
+    console.error('');
+    console.error(`  確認:     ss -tlnp | grep ${config.PORT}`);
+    console.error(`  別ポート: zenterm-gateway --port ${config.PORT + 1}`);
+    console.error('');
+  } else {
+    app.log.error({ err: error }, 'failed to start gateway');
+  }
+
   process.exit(1);
 }

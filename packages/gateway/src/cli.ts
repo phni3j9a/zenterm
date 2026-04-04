@@ -1,8 +1,60 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
+import { fileURLToPath } from 'node:url';
+
+// --- CLI flag parser ---
+function parseFlag(name: string): string | undefined {
+  const prefix = `--${name}=`;
+  const prefixArg = `--${name}`;
+  for (let i = 2; i < process.argv.length; i++) {
+    if (process.argv[i].startsWith(prefix)) {
+      return process.argv[i].slice(prefix.length);
+    }
+    if (process.argv[i] === prefixArg && process.argv[i + 1] && !process.argv[i + 1].startsWith('--')) {
+      return process.argv[i + 1];
+    }
+  }
+  return undefined;
+}
+
+// --- --help ---
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`Usage: zenterm-gateway [options] [command]
+
+Commands:
+  setup    サービス登録 (systemd / launchd)
+
+Options:
+  --port <number>   ポート番号 (default: 18765)
+  --host <string>   バインドアドレス (default: 0.0.0.0)
+  -h, --help        ヘルプを表示
+  -v, --version     バージョンを表示
+
+Environment:
+  PORT              ポート番号
+  HOST              バインドアドレス
+  AUTH_TOKEN        認証トークン
+  LOG_LEVEL         ログレベル (debug, info, warn, error)
+`);
+  process.exit(0);
+}
+
+// --- --version ---
+if (process.argv.includes('--version') || process.argv.includes('-v')) {
+  const pkgPath = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'package.json');
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  console.log(`zenterm-gateway v${pkg.version}`);
+  process.exit(0);
+}
+
+// --- CLI flags → env vars (highest priority) ---
+const cliPort = parseFlag('port');
+const cliHost = parseFlag('host');
+if (cliPort) process.env.PORT = cliPort;
+if (cliHost) process.env.HOST = cliHost;
 
 // --- setup subcommand ---
 if (process.argv[2] === 'setup') {
