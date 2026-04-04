@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
+import type { AgentType } from '@zenterm/shared';
 
 // --- CLI flag parser ---
 function parseFlag(name: string): string | undefined {
@@ -25,7 +26,8 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
   console.log(`Usage: zenterm-gateway [options] [command]
 
 Commands:
-  setup    サービス登録 (systemd / launchd)
+  setup        サービス登録 (systemd / launchd)
+  integrate    エージェント hook の管理
 
 Options:
   --port <number>   ポート番号 (default: 18765)
@@ -60,6 +62,95 @@ if (cliHost) process.env.HOST = cliHost;
 if (process.argv[2] === 'setup') {
   const { runSetup } = await import('./setup.js');
   await runSetup();
+  process.exit(0);
+}
+
+// --- integrate subcommand ---
+if (process.argv[2] === 'integrate') {
+  const arg = process.argv[3];
+
+  // --status: show integration status
+  if (arg === '--status' || arg === '-s') {
+    const { loadStore, getIntegrations } = await import('./services/notification-store.js');
+    loadStore();
+    const integrations = getIntegrations();
+    const agents = ['claude-code', 'codex', 'copilot-cli'] as const;
+    console.log('\n連携ステータス:');
+    for (const a of agents) {
+      const s = integrations[a];
+      const status = s?.installed ? '✅ インストール済み' : '❌ 未インストール';
+      const path = s?.configPath ? ` (${s.configPath})` : '';
+      console.log(`  ${a}: ${status}${path}`);
+    }
+    console.log('');
+    process.exit(0);
+  }
+
+  // --remove: uninstall hook
+  if (arg === '--remove' || arg === '-r') {
+    const agent = process.argv[4];
+    if (!agent || !['claude-code', 'codex', 'copilot-cli'].includes(agent)) {
+      console.error('使用法: zenterm-gateway integrate --remove <claude-code|codex|copilot-cli>');
+      process.exit(1);
+    }
+    const installer = await import('./services/integration-installer.js');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await installer.uninstallHook(agent as any);
+    console.log(`${agent} の hook をアンインストールしました`);
+    process.exit(0);
+  }
+
+  // --all: install all agents
+  if (arg === '--all' || arg === '-a') {
+    const installer = await import('./services/integration-installer.js');
+    const { loadStore, setIntegrationStatus } = await import('./services/notification-store.js');
+    loadStore();
+    const agents = ['claude-code', 'codex', 'copilot-cli'] as const;
+    for (const a of agents) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await installer.installHook(a as any);
+        setIntegrationStatus(a, { installed: true, configPath: result.configPath });
+        console.log(`✅ ${a}: インストール完了 (${result.configPath})`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`❌ ${a}: ${msg}`);
+      }
+    }
+    process.exit(0);
+  }
+
+  // Single agent install
+  const agent = arg;
+  if (!agent || !['claude-code', 'codex', 'copilot-cli'].includes(agent)) {
+    console.log(`使用法: zenterm-gateway integrate <エージェント名|--all|--status|--remove>
+
+エージェント名:
+  claude-code    Claude Code の hook をインストール
+  codex          Codex の notify をインストール
+  copilot-cli    Copilot CLI の hook をインストール
+
+オプション:
+  --all, -a      全エージェントにインストール
+  --status, -s   連携ステータスを表示
+  --remove, -r   指定エージェントの hook をアンインストール
+`);
+    process.exit(1);
+  }
+
+  const installer = await import('./services/integration-installer.js');
+  const { loadStore, setIntegrationStatus } = await import('./services/notification-store.js');
+  loadStore();
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await installer.installHook(agent as any);
+    setIntegrationStatus(agent as AgentType, { installed: true, configPath: result.configPath });
+    console.log(`✅ ${agent}: インストール完了 (${result.configPath})`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`❌ ${agent}: ${msg}`);
+    process.exit(1);
+  }
   process.exit(0);
 }
 
