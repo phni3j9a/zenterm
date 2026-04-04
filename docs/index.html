@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ZenTerm — セルフホスト型モバイルターミナル。iPhone、Android、ブラウザからmacOS/Linuxサーバーを静かに、力強く操作する。">
-  <meta property="og:title" content="ZenTerm — 静寂の中で、サーバーを操る">
-  <meta property="og:description" content="Self-hosted mobile terminal for macOS & Linux. Control your server from iPhone, Android, or any browser.">
+  <meta name="description" content="ZenTerm — 自宅サーバーのCoding Agentをスマホから操作。Claude Codeをいつでもどこでも。">
+  <meta property="og:title" content="ZenTerm — Coding Agentをスマホから">
+  <meta property="og:description" content="自宅サーバーの開発環境へスマホから直接つながるモバイルターミナル。セルフホストだから安心。">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="https://phni3j9a.github.io/zenterm/lp/og-image.png">
-  <meta property="og:url" content="https://phni3j9a.github.io/zenterm/">
+  <meta property="og:image" content="lp/og-image.png">
   <link rel="icon" href="favicon.ico" sizes="32x32">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <title>ZenTerm — 静寂の中で、サーバーを操る</title>
+  <title>ZenTerm — Coding Agentをスマホから</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
@@ -46,22 +45,6 @@
       --nav-h:           60px;
       --max-w:           1100px;
       --t-base:          0.2s ease;
-
-      /* Hero background atmospheric layers */
-      --hero-glow-primary:   rgba(123, 139, 111, .065);
-      --hero-glow-warm:      rgba(180, 170, 148, .04);
-      --hero-fade-bottom:    rgba(245, 244, 240, .85);
-
-      /* CTA Section */
-      --cta-bg:              #E8EDE4;
-      --cta-border:          rgba(123, 139, 111, .15);
-      /* Ghost button (secondary CTA) */
-      --btn-ghost-border:    rgba(123, 139, 111, .5);
-      --btn-ghost-text:      #5A6950;
-      --btn-ghost-hover-bg:  rgba(123, 139, 111, .08);
-
-      /* Eyebrow decoration */
-      --eyebrow-line-w:      28px;
     }
 
     [data-theme="dark"] {
@@ -81,17 +64,6 @@
       --shadow-md:       0 4px 12px rgba(0,0,0,.35);
       --shadow-lg:       0 8px 24px rgba(0,0,0,.45);
       --shadow-xl:       0 20px 60px rgba(0,0,0,.55);
-
-      --hero-glow-primary:   rgba(148, 166, 135, .07);
-      --hero-glow-warm:      rgba(140, 130, 110, .04);
-      --hero-fade-bottom:    rgba(27, 26, 23, .85);
-
-      --cta-bg:              #1E251C;
-      --cta-border:          rgba(148, 166, 135, .12);
-
-      --btn-ghost-border:    rgba(148, 166, 135, .45);
-      --btn-ghost-text:      #A5B59A;
-      --btn-ghost-hover-bg:  rgba(148, 166, 135, .1);
     }
 
     /* ═══════════════════════════════════
@@ -228,16 +200,15 @@
        Hero
     ═══════════════════════════════════ */
     #hero {
-      min-height: calc(100vh - var(--nav-h));
+      min-height: 80vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 80px 40px 120px;
+      padding: 80px 40px 80px;
       position: relative;
       overflow: hidden;
-      background-image: linear-gradient(to bottom, transparent 65%, var(--hero-fade-bottom) 100%);
     }
     /* Atmospheric radial glow */
     #hero::before {
@@ -246,24 +217,12 @@
       inset: 0;
       background: radial-gradient(
         ellipse 80% 65% at 50% 55%,
-        var(--hero-glow-primary) 0%,
+        rgba(123,139,111,.065) 0%,
         transparent 68%
       );
       pointer-events: none;
     }
-    /* Warm halo layer */
-    #hero::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(
-        ellipse 70% 50% at 50% 40%,
-        var(--hero-glow-warm) 0%,
-        transparent 65%
-      );
-      pointer-events: none;
-      z-index: 0;
-    }
+    /* Faint large enso in background */
     .bg-enso {
       position: absolute;
       width: min(680px, 110vw);
@@ -276,59 +235,47 @@
     }
     [data-theme="dark"] .bg-enso { opacity: .035; }
 
-    /* Hero icon (real PNG, theme-switching) */
-    .hero-icon-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 44px;
-    }
-    .hero-icon {
-      width: 280px;
-      height: 280px;
-      object-fit: contain;
+    /* Hero catch copy */
+    .hero-catch {
+      font-family: var(--font-serif);
+      font-size: clamp(26px, 5.5vw, 48px);
+      font-weight: 600;
+      line-height: 1.55;
+      color: var(--text-primary);
+      letter-spacing: .04em;
+      margin-bottom: 16px;
       opacity: 0;
-      animation: hero-icon-in 1.1s cubic-bezier(.2,.8,.3,1) .25s forwards;
+      animation: rise .75s ease .3s forwards;
     }
-    @keyframes hero-icon-in {
-      from { opacity: 0; transform: scale(.88); }
-      to   { opacity: 1; transform: scale(1); }
+
+    /* Hero phone frame (larger than demo section) */
+    .hero-phone-wrap {
+      margin: 40px auto 48px;
+      opacity: 0;
+      animation: rise .75s ease .7s forwards;
+    }
+    .hero-phone-wrap .phone-frame {
+      width: 320px;
+    }
+    .hero-phone-wrap .phone-screen {
+      height: 650px;
+    }
+    @media (max-width: 480px) {
+      .hero-phone-wrap .phone-frame { width: 260px; }
+      .hero-phone-wrap .phone-screen { height: 520px; }
     }
     @keyframes rise {
       from { opacity: 0; transform: translateY(22px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .hero-product {
-      font-family: var(--font-serif);
-      font-size: clamp(46px, 8vw, 76px);
-      font-weight: 600;
-      letter-spacing: 0.22em;
-      line-height: 1;
-      color: var(--text-primary);
-      margin-bottom: 28px;
-      opacity: 0;
-      animation: rise .75s ease 1.1s forwards;
-    }
-    .hero-tagline {
-      font-family: var(--font-serif);
-      font-size: clamp(17px, 3vw, 23px);
-      font-weight: 400;
-      color: var(--text-secondary);
-      letter-spacing: .06em;
-      line-height: 1.5;
-      margin-bottom: 14px;
-      opacity: 0;
-      animation: rise .75s ease 1.3s forwards;
-    }
     .hero-sub {
       font-size: 14px;
       color: var(--text-muted);
       letter-spacing: .04em;
-      margin-bottom: 52px;
+      margin-bottom: 0;
       opacity: 0;
-      animation: rise .75s ease 1.4s forwards;
+      animation: rise .75s ease .5s forwards;
     }
     .hero-btn {
       display: inline-flex;
@@ -343,7 +290,7 @@
       letter-spacing: .06em;
       transition: background var(--t-base), transform .18s, box-shadow .18s;
       opacity: 0;
-      animation: rise .75s ease 1.55s forwards;
+      animation: rise .75s ease .9s forwards;
     }
     .hero-btn:hover {
       background: var(--primary-hover);
@@ -351,77 +298,6 @@
       box-shadow: 0 10px 32px rgba(123,139,111,.32);
     }
     .hero-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-    /* Hero CTA button group */
-    .hero-btns {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      opacity: 0;
-      animation: rise .75s ease 1.55s forwards;
-    }
-    .hero-btns .hero-btn {
-      opacity: 1;
-      animation: none;
-    }
-    .hero-btn-ghost {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      padding: 15px 36px;
-      background: transparent;
-      color: var(--btn-ghost-text);
-      border: 1.5px solid var(--btn-ghost-border);
-      border-radius: 9999px;
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: .06em;
-      transition: background var(--t-base), border-color var(--t-base),
-                  color var(--t-base), transform .18s, box-shadow .18s;
-    }
-    .hero-btn-ghost:hover {
-      background: var(--btn-ghost-hover-bg);
-      border-color: var(--primary);
-      color: var(--primary);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(123, 139, 111, .12);
-    }
-    .hero-btn-ghost svg {
-      width: 15px;
-      height: 15px;
-      flex-shrink: 0;
-    }
-    .hero-btn:focus-visible,
-    .hero-btn-ghost:focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 3px;
-    }
-    @media (max-width: 480px) {
-      .hero-btns {
-        flex-direction: column;
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-      }
-      .hero-btns .hero-btn,
-      .hero-btns .hero-btn-ghost {
-        width: 100%;
-        justify-content: center;
-      }
-      #cta { padding: 72px 0; }
-      .cta-btns {
-        flex-direction: column;
-        align-items: center;
-      }
-      .cta-btns .hero-btn,
-      .cta-btns .hero-btn-ghost {
-        width: 100%;
-        max-width: 300px;
-        justify-content: center;
-      }
-    }
 
     /* Scroll whisker */
     .scroll-whisk {
@@ -464,11 +340,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-    /* Preserve feat scale after scroll animation completes */
-    .phone-wrap.feat.aos.in { transform: scale(1.055); }
-    @media (max-width: 1080px) {
-      .phone-wrap.feat.aos.in { transform: none; }
-    }
     .aos[data-d="1"] { transition-delay: .08s; }
     .aos[data-d="2"] { transition-delay: .18s; }
     .aos[data-d="3"] { transition-delay: .28s; }
@@ -479,17 +350,6 @@
        Section Common
     ═══════════════════════════════════ */
     section { padding: 120px 0; }
-    #values     { padding: 100px 0; }
-    #install    { padding: 100px 0 120px; }
-    @media (max-width: 768px) {
-      section { padding: 80px 0; }
-      #hero       { padding: 60px 24px 100px; }
-      #values     { padding: 72px 0; }
-      #screenshots { padding: 80px 0; }
-      #features   { padding: 80px 0; }
-      #install    { padding: 72px 0 80px; }
-      #cta        { padding: 72px 0; }
-    }
 
     .sec-eyebrow {
       display: flex;
@@ -505,7 +365,7 @@
     .sec-eyebrow::before {
       content: '';
       display: block;
-      width: var(--eyebrow-line-w);
+      width: 20px;
       height: 1px;
       background: var(--primary);
       opacity: .7;
@@ -529,56 +389,79 @@
     }
 
     /* ═══════════════════════════════════
-       Values (Why ZenTerm)
+       About (What's ZenTerm?)
     ═══════════════════════════════════ */
-    #values {
+    #about {
       border-top: 1px solid var(--border-subtle);
+      text-align: center;
     }
-    .val-grid {
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: 64px 72px;
+    .about-container { max-width: 720px; }
+    .about-title {
+      font-size: clamp(24px, 4vw, 38px);
+      line-height: 1.6;
+      margin-bottom: 24px;
     }
-    @media (max-width: 900px)  { .val-grid { grid-template-columns: 1fr; gap: 48px; } }
-    @media (max-width: 1024px) { .val-grid { gap: 48px 48px; } }
+    .about-desc {
+      font-size: 16px;
+      line-height: 1.85;
+      max-width: 560px;
+      margin: 0 auto;
+    }
 
-    .val-item { display: flex; flex-direction: column; gap: 18px; }
-    .val-icon {
-      width: 44px; height: 44px;
-      border-radius: var(--radius-md);
-      background: var(--primary-subtle);
+    /* ═══════════════════════════════════
+       Usecases
+    ═══════════════════════════════════ */
+    #usecases {
+      border-top: 1px solid var(--border-subtle);
+      background: var(--surface);
+    }
+    .uc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 48px;
+    }
+    @media (max-width: 700px) {
+      .uc-grid { grid-template-columns: 1fr; gap: 36px; }
+    }
+    .uc-card {
+      background: var(--bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+    .uc-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+    .uc-icon {
+      width: 56px; height: 56px;
       color: var(--primary);
-      display: flex; align-items: center; justify-content: center;
-      transition: background var(--t-base), transform var(--t-base);
     }
-    .val-icon svg { width: 22px; height: 22px; }
-    .val-item:hover .val-icon {
-      background: color-mix(in srgb, var(--primary-subtle) 80%, var(--primary));
-      transform: translateY(-2px);
-    }
-    .val-accent {
-      width: 4px; height: 4px;
-      border-radius: 50%;
-      background: var(--primary);
-      opacity: .6;
-    }
-    .val-title {
+    .uc-icon svg { width: 100%; height: 100%; }
+    .uc-title {
       font-family: var(--font-serif);
-      font-size: 18px;
+      font-size: clamp(18px, 2.5vw, 22px);
       font-weight: 600;
       color: var(--text-primary);
       letter-spacing: .03em;
     }
-    .val-desc {
+    .uc-desc {
       font-size: 14px;
       color: var(--text-secondary);
-      line-height: 1.75;
+      line-height: 1.8;
+    }
+    @media (max-width: 600px) {
+      .uc-card { padding: 32px 24px; }
     }
 
     /* ═══════════════════════════════════
-       Screenshots
+       Demo (Screenshots → Video)
     ═══════════════════════════════════ */
-    #screenshots {
+    #demo {
       background: var(--surface);
       border-top: 1px solid var(--border-subtle);
       border-bottom: 1px solid var(--border-subtle);
@@ -588,10 +471,7 @@
       text-align: center;
       margin-bottom: 72px;
     }
-    @media (max-width: 768px) { .ss-head { margin-bottom: 40px; } }
     .ss-head .sec-desc { max-width: 480px; margin: 0 auto; }
-
-    .phones-outer { position: relative; }
 
     .phones {
       display: flex;
@@ -624,37 +504,13 @@
     .phone-wrap.feat { transform: scale(1.055); }
     .phone-wrap:hover { transform: scale(1.025) translateY(-5px); }
     .phone-wrap.feat:hover { transform: scale(1.08) translateY(-5px); }
-    @media (max-width: 1080px) {
-      .phone-wrap.feat { transform: none; }
-      .phone-wrap.feat:hover { transform: scale(1.025) translateY(-5px); }
-    }
-
-    /* Scroll indicator dots (mobile carousel) */
-    .scroll-dots {
-      display: none;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 28px;
-    }
-    @media (max-width: 1080px) { .scroll-dots { display: flex; } }
-    .scroll-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--border);
-      transition: background .25s, transform .25s;
-    }
-    .scroll-dot.active {
-      background: var(--primary);
-      transform: scale(1.35);
-    }
 
     .phone-frame {
       width: 258px;
       border-radius: 50px;
       /* iPhone 15 Black — titanium-finish frame */
       background: linear-gradient(158deg, #3a3a3a 0%, #1e1e1e 38%, #262626 68%, #1a1a1a 100%);
-      padding: 6px 5px;
+      padding: 12px 10px;
       box-shadow:
         0 0 0 1px rgba(255,255,255,0.07),
         0 0 0 2px #0e0e0e,
@@ -693,47 +549,17 @@
     .phone-screen {
       border-radius: 40px;
       overflow: hidden;
-      height: 558px;
+      height: 516px;
       background: #000;
       position: relative;
     }
-    /* Dynamic Island — pill cutout at top-center of screen */
-    .phone-screen::before {
-      content: '';
-      position: absolute;
-      top: 11px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 78px;
-      height: 21px;
-      background: #040404;
-      border-radius: 50px;
-      z-index: 5;
-      pointer-events: none;
-    }
+
     .phone-screen img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: top;
       display: block;
-    }
-    .phone-screen::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,.08),
-        inset 0 -28px 44px rgba(0,0,0,.04);
-      pointer-events: none;
-      z-index: 3;
-    }
-    .phone-shot {
-      transition: transform .3s ease;
-    }
-    .phone-wrap:hover .phone-shot {
-      transform: scale(1.012);
     }
     .phone-cap { text-align: center; }
     .phone-cap-ja {
@@ -749,6 +575,13 @@
       text-transform: uppercase;
       color: var(--text-muted);
       margin-top: 4px;
+    }
+    .phone-screen video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
     }
 
     /* ═══════════════════════════════════
@@ -1016,57 +849,17 @@
       opacity: .45;
     }
 
-    .foot-tagline {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 6px;
-      letter-spacing: .02em;
-    }
-
     /* ═══════════════════════════════════
-       CTA Section
+       Responsive: phones on small mobile
     ═══════════════════════════════════ */
-    #cta {
-      background: var(--cta-bg);
-      border-top: 1px solid var(--cta-border);
-      padding: 100px 0;
-      text-align: center;
-    }
-    .cta-title {
-      margin-bottom: 18px;
-      font-size: clamp(24px, 4vw, 38px);
-      line-height: 1.25;
-    }
-    .cta-desc {
-      max-width: 460px;
-      margin: 0 auto 40px;
-    }
-    .cta-btns {
-      display: flex;
-      gap: 14px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .cta-btns .hero-btn {
-      opacity: 1;
-      animation: none;
-    }
-
-    /* ═══════════════════════════════════
-       Responsive: phone sizing
-    ═══════════════════════════════════ */
-    @media (max-width: 768px) {
-      .phone-frame { width: 230px; border-radius: 44px; padding: 5px 4px; }
-      .phone-screen { height: 500px; border-radius: 36px; }
-      .phone-screen::before { width: 68px; height: 18px; top: 10px; }
-    }
-    @media (max-width: 500px) {
-      .phone-frame { width: 200px; border-radius: 40px; padding: 5px 4px; }
-      .phone-screen { height: 434px; border-radius: 32px; }
-      .phone-screen::before { width: 60px; height: 16px; top: 9px; }
-      .phones { gap: 16px; padding: 8px 20px 16px; }
-      .phone-cap-ja { font-size: 13px; }
-      .phone-cap-en { font-size: 10px; }
+    @media (max-width: 600px) {
+      .phones {
+        flex-direction: column;
+        align-items: center;
+      }
+      .phone-wrap.feat { transform: none; }
+      .phone-frame { width: 224px; }
+      .phone-screen { height: 442px; }
     }
 
     /* ═══════════════════════════════════
@@ -1074,8 +867,8 @@
     ═══════════════════════════════════ */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-      .hero-icon, .hero-product, .hero-tagline, .hero-sub, .hero-btn,
-      .hero-btns, .scroll-whisk { opacity: 1; transform: none; }
+      .hero-catch, .hero-sub, .hero-btn, .hero-phone-wrap,
+      .scroll-whisk { opacity: 1; transform: none; }
     }
   </style>
 </head>
@@ -1086,7 +879,7 @@
 ═══════════════════════════════════ -->
 <nav id="nav">
   <div class="container nav-inner">
-    <a href="/zenterm/" class="nav-logo" aria-label="ZenTerm ホームへ">
+    <a href="./" class="nav-logo" aria-label="ZenTerm ホームへ">
       <span class="logo-icon-wrap" aria-hidden="true">
         <img class="icon-light" src="lp/icon-light.png" alt="" width="30" height="30">
         <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="30" height="30">
@@ -1095,7 +888,7 @@
     </a>
     <div class="nav-actions">
       <button id="theme-toggle" aria-label="テーマを切り替える">🌙</button>
-      <a href="https://apps.apple.com/app/zenterm/id6760935103" class="btn-primary" target="_blank" rel="noopener noreferrer">
+      <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="btn-primary" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="14" height="14">
           <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
         </svg>
@@ -1116,31 +909,26 @@
       stroke="currentColor" stroke-width="28" stroke-linecap="round" color="var(--text-primary)"/>
   </svg>
 
-  <!-- App icon (real artwork, theme-switching) -->
-  <div class="hero-icon-wrap" role="img" aria-label="ZenTerm 円相ロゴ">
-    <img class="icon-light hero-icon" src="lp/icon-light.png" alt="" width="280" height="280">
-    <img class="icon-dark  hero-icon" src="lp/icon-dark.png"  alt="" width="280" height="280">
+  <h1 class="hero-catch">移動中も、ソファでも。<br>Coding Agentは<wbr>いつでも動いている。</h1>
+  <p class="hero-sub">ZenTerm — スマホから自宅サーバーのターミナルを操作</p>
+
+  <div class="hero-phone-wrap">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <video class="hero-video" autoplay loop muted playsinline preload="metadata"
+               poster="lp/screenshots/02-terminal.png">
+          <source src="lp/movies/hero.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
   </div>
 
-  <h1 class="hero-product">ZenTerm</h1>
-  <p class="hero-tagline">静寂の中で、サーバーを操る</p>
-  <p class="hero-sub">Self-hosted mobile terminal for macOS &amp; Linux</p>
-
-  <div class="hero-btns">
-    <a href="#install" class="hero-btn" aria-label="始め方を見る">
-      Get Started
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M8 2v12M3 9l5 5 5-5"/>
-      </svg>
-    </a>
-    <a href="https://apps.apple.com/app/zenterm/id6760935103"
-       class="hero-btn hero-btn-ghost"
-       target="_blank" rel="noopener noreferrer"
-       aria-label="App Store でダウンロード">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor" width="15" height="15"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-      App Store
-    </a>
-  </div>
+  <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="hero-btn" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="15" height="15">
+      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+    </svg>
+    App Store でダウンロード
+  </a>
 
   <div class="scroll-whisk" aria-hidden="true">
     <div class="whisk-dot"></div>
@@ -1149,55 +937,54 @@
 </section>
 
 <!-- ═══════════════════════════════════
-     Values
+     About (What's ZenTerm?)
 ═══════════════════════════════════ -->
-<section id="values" aria-label="ZenTermの特長">
+<section id="about" aria-label="ZenTermとは">
+  <div class="container about-container">
+    <div class="sec-eyebrow centered aos">What's ZenTerm?</div>
+    <h2 class="sec-title about-title aos" data-d="1">
+      自宅サーバーの開発環境へ、<br>スマホから直接つながる。
+    </h2>
+    <p class="sec-desc about-desc aos" data-d="2">
+      Claude CodeなどのCoding Agentをそのまま操作できるモバイルターミナル。<br>
+      セルフホストだから、データはあなたのサーバーだけに残る。
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     Usecases
+═══════════════════════════════════ -->
+<section id="usecases" aria-label="ユースケース">
   <div class="container">
-    <div class="val-grid">
+    <div class="uc-grid">
 
-      <div class="val-item aos" data-d="1">
-        <div class="val-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2"/>
-            <path d="M8 21h8M12 17v4"/>
-            <path d="M6 8l3.5 3.5L6 15"/><path d="M13 15h5"/>
+      <div class="uc-card aos" data-d="1">
+        <div class="uc-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 28v-8a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v8"/>
+            <path d="M4 28a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v6H4v-6z"/>
+            <path d="M36 28a4 4 0 0 1 4-4h0a4 4 0 0 1 4 4v6h-8v-6z"/>
+            <path d="M4 34h40v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4z"/>
           </svg>
         </div>
-        <div class="val-accent"></div>
-        <div>
-          <div class="val-title">セルフホスト</div>
-          <div class="val-desc">すべてのデータはあなたのサーバーの中。クラウドには何も送信しない。完全なプライバシー。</div>
-        </div>
+        <h3 class="uc-title">ソファで、AIと並走する</h3>
+        <p class="uc-desc">動く結果を見ながら、次の指示を出す。PCの前にいなくても、開発は進められる。</p>
       </div>
 
-      <div class="val-item aos" data-d="2">
-        <div class="val-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="2" width="14" height="20" rx="2"/>
-            <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+      <div class="uc-card aos" data-d="2">
+        <div class="uc-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="10" y="6" width="28" height="32" rx="6"/>
+            <path d="M10 30h28"/>
+            <circle cx="17" cy="36" r="2"/>
+            <circle cx="31" cy="36" r="2"/>
+            <path d="M17 42l-3 4M31 42l3 4"/>
+            <path d="M18 18h12"/>
           </svg>
         </div>
-        <div class="val-accent"></div>
-        <div>
-          <div class="val-title">どこからでも</div>
-          <div class="val-desc">iPhone でも、Android でも、ブラウザでも。場所もデバイスも選ばない。</div>
-        </div>
-      </div>
-
-      <div class="val-item aos" data-d="3">
-        <div class="val-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx=".5"/>
-            <rect x="3" y="14" width="7" height="7" rx=".5"/>
-            <rect x="14" y="3" width="7" height="7" rx=".5"/>
-            <path d="M14 17h2v2h-2zM20 14h1M14 20v1M20 17v3h-3"/>
-          </svg>
-        </div>
-        <div class="val-accent"></div>
-        <div>
-          <div class="val-title">即時接続</div>
-          <div class="val-desc">QR コードをスキャンするだけ。複雑な SSH 設定は一切不要。</div>
-        </div>
+        <h3 class="uc-title">移動中にAIに実装を頼む</h3>
+        <p class="uc-desc">帰宅するころにはコードができている。通勤時間が、開発時間になる。</p>
       </div>
 
     </div>
@@ -1205,87 +992,48 @@
 </section>
 
 <!-- ═══════════════════════════════════
-     Screenshots
+     Demo
 ═══════════════════════════════════ -->
-<section id="screenshots" aria-label="スクリーンショット">
+<section id="demo" aria-label="デモ動画">
   <div class="container">
     <div class="ss-head aos">
-      <div class="sec-eyebrow centered">Screenshots</div>
-      <h2 class="sec-title">美しいインターフェース</h2>
-      <p class="sec-desc">余計な装飾を削ぎ落とした、禅のインターフェース。ライトとダークを自在に。</p>
+      <div class="sec-eyebrow centered">Demo</div>
+      <h2 class="sec-title">触れてわかる操作感</h2>
+      <p class="sec-desc">スワイプでセッション切り替え、スムーズなスクロール。PCと変わらない操作性。</p>
     </div>
 
-    <div class="phones-outer">
     <div class="phones" role="list">
 
-      <div class="phone-wrap aos" data-d="1" role="listitem">
+      <div class="phone-wrap feat aos" data-d="1" role="listitem">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img class="phone-shot sessions" src="lp/screenshots/01-sessions.png" alt="セッション一覧：複数のtmuxセッションを管理" loading="lazy" width="258" height="558">
+            <video autoplay loop muted playsinline preload="metadata"
+                   poster="lp/screenshots/01-sessions.png">
+              <source src="lp/movies/swipe-sessions.mp4" type="video/mp4">
+            </video>
           </div>
         </div>
         <div class="phone-cap">
-          <div class="phone-cap-ja">セッション管理</div>
-          <div class="phone-cap-en">Persistent Sessions</div>
+          <div class="phone-cap-ja">スワイプでセッション切り替え</div>
+          <div class="phone-cap-en">Swipe to Switch Sessions</div>
         </div>
       </div>
 
-      <div class="phone-wrap feat aos" data-d="2" role="listitem">
+      <div class="phone-wrap aos" data-d="2" role="listitem">
         <div class="phone-frame">
           <div class="phone-screen">
-            <img class="phone-shot terminal" src="lp/screenshots/02-terminal.png" alt="フルスクリーンターミナル" loading="lazy" width="258" height="558">
+            <video autoplay loop muted playsinline preload="metadata"
+                   poster="lp/screenshots/02-terminal.png">
+              <source src="lp/movies/scroll.mp4" type="video/mp4">
+            </video>
           </div>
         </div>
         <div class="phone-cap">
-          <div class="phone-cap-ja">ターミナル</div>
-          <div class="phone-cap-en">Full Terminal</div>
+          <div class="phone-cap-ja">なめらかなスクロール</div>
+          <div class="phone-cap-en">Smooth Scrolling</div>
         </div>
       </div>
 
-      <div class="phone-wrap aos" data-d="3" role="listitem">
-        <div class="phone-frame">
-          <div class="phone-screen">
-            <img class="phone-shot dark" src="lp/screenshots/03-terminal-dark.png" alt="ターミナル：ダークテーマ" loading="lazy" width="258" height="558">
-          </div>
-        </div>
-        <div class="phone-cap">
-          <div class="phone-cap-ja">ダークテーマ</div>
-          <div class="phone-cap-en">Dark Theme</div>
-        </div>
-      </div>
-
-      <div class="phone-wrap aos" data-d="4" role="listitem">
-        <div class="phone-frame">
-          <div class="phone-screen">
-            <img class="phone-shot files" src="lp/screenshots/04-files.png" alt="ファイルブラウザ" loading="lazy" width="258" height="558">
-          </div>
-        </div>
-        <div class="phone-cap">
-          <div class="phone-cap-ja">ファイル管理</div>
-          <div class="phone-cap-en">Remote File Browser</div>
-        </div>
-      </div>
-
-      <div class="phone-wrap aos" data-d="5" role="listitem">
-        <div class="phone-frame">
-          <div class="phone-screen">
-            <img class="phone-shot setup" src="lp/screenshots/05-setup.png" alt="セットアップガイド" loading="lazy" width="258" height="558">
-          </div>
-        </div>
-        <div class="phone-cap">
-          <div class="phone-cap-ja">かんたん設定</div>
-          <div class="phone-cap-en">3-Step Setup</div>
-        </div>
-      </div>
-
-    </div>
-    <div class="scroll-dots" aria-hidden="true">
-      <div class="scroll-dot active"></div>
-      <div class="scroll-dot"></div>
-      <div class="scroll-dot"></div>
-      <div class="scroll-dot"></div>
-      <div class="scroll-dot"></div>
-    </div>
     </div>
   </div>
 </section>
@@ -1311,8 +1059,8 @@
           <path d="M10 15l5.5 4.5L10 24"/>
           <path d="M20 24h8"/>
         </svg>
-        <div class="feat-name">Full Terminal</div>
-        <div class="feat-desc">本格ターミナルをiPhoneに。Vim、top、htop — 何でも動く。</div>
+        <div class="feat-name">PCと同じターミナル</div>
+        <div class="feat-desc">フル機能のターミナルをスマホで。日本語入力も、5000行の履歴も、そのまま使える。</div>
       </div>
 
       <div class="feat-card aos" data-d="2">
@@ -1324,8 +1072,8 @@
           <circle cx="19" cy="24" r="1.5" fill="currentColor" stroke="none"/>
           <circle cx="25" cy="24" r="1.5" fill="currentColor" stroke="none"/>
         </svg>
-        <div class="feat-name">tmux Sessions</div>
-        <div class="feat-desc">接続が切れても作業は消えない。後から別のデバイスで続きを再開。</div>
+        <div class="feat-name">切れても続く作業</div>
+        <div class="feat-desc">電波が途切れても、アプリを閉じても、作業はサーバーで動き続ける。再接続すれば元の画面がそのまま。</div>
       </div>
 
       <div class="feat-card aos" data-d="3">
@@ -1335,8 +1083,8 @@
           <path d="M14 20h10M14 25h7"/>
           <path d="M14 15l4 0"/>
         </svg>
-        <div class="feat-name">File Browser</div>
-        <div class="feat-desc">サーバーのファイルをスマホで直感操作。編集もダウンロードもワンタップ。</div>
+        <div class="feat-name">ファイルも直接操作</div>
+        <div class="feat-desc">コードの確認、設定ファイルの編集、ファイルのアップロード。ターミナルを開かなくても操作できる。</div>
       </div>
 
       <div class="feat-card aos" data-d="1">
@@ -1347,8 +1095,8 @@
           <path d="M25 30V18"/>
           <path d="M31 30V24"/>
         </svg>
-        <div class="feat-name">System Monitor</div>
-        <div class="feat-desc">CPU、メモリ、温度。サーバーの健康状態を一目で確認。</div>
+        <div class="feat-name">サーバーの状態が見える</div>
+        <div class="feat-desc">CPU、メモリ、ディスク、温度。サーバーの健康状態をリアルタイムで確認。</div>
       </div>
 
       <div class="feat-card aos" data-d="2">
@@ -1361,8 +1109,8 @@
           <rect x="24.5" y="6.5" width="7" height="7"/>
           <path d="M22 25h3v3h-3zM29 22h5M22 31v5M29 29h5v5M29 22v5"/>
         </svg>
-        <div class="feat-name">QR Pairing</div>
-        <div class="feat-desc">面倒な設定はゼロ。QRコードをかざすだけで接続完了。</div>
+        <div class="feat-name">QRコードで即接続</div>
+        <div class="feat-desc">QRコードをスキャンするだけ。IPアドレスやポート番号を手で入力する必要はない。</div>
       </div>
 
       <div class="feat-card aos" data-d="3">
@@ -1371,8 +1119,8 @@
           <path d="M10 19l4-4 4 4 8-6"/>
           <circle cx="19" cy="31" r="1.2" fill="currentColor" stroke="none"/>
         </svg>
-        <div class="feat-name">One-command Setup</div>
-        <div class="feat-desc">ターミナルに一行コピーするだけ。あとは全自動。</div>
+        <div class="feat-name">1行で準備完了</div>
+        <div class="feat-desc">ターミナルで一行コマンドを実行するだけ。サーバー再起動後も自動で立ち上がる。</div>
       </div>
 
     </div>
@@ -1387,7 +1135,7 @@
     <div class="inst-head aos">
       <div class="sec-eyebrow centered">Get Started</div>
       <h2 class="sec-title">3ステップで始める</h2>
-      <p class="sec-desc">たった3ステップ、数分で完了。あとは好きなデバイスからサーバーを操るだけ。</p>
+      <p class="sec-desc">複雑な設定は不要。数分でiPhoneからサーバーを操作できるようになる。</p>
     </div>
 
     <div class="steps">
@@ -1454,51 +1202,22 @@
 </section>
 
 <!-- ═══════════════════════════════════
-     CTA
-═══════════════════════════════════ -->
-<section id="cta" aria-label="今すぐ始める">
-  <div class="container">
-    <div class="sec-eyebrow centered aos">Start Now</div>
-    <h2 class="sec-title cta-title aos" data-d="1">
-      あなたのサーバーを、<br>ポケットから操ろう
-    </h2>
-    <p class="sec-desc cta-desc aos" data-d="2">
-      オープンソース。無料。セルフホスト。<br>
-      今日から ZenTerm を始められる。
-    </p>
-    <div class="cta-btns aos" data-d="3">
-      <a href="#install" class="hero-btn" aria-label="始め方を見る">Get Started
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-      </a>
-      <a href="https://apps.apple.com/app/zenterm/id6760935103"
-         class="hero-btn hero-btn-ghost"
-         target="_blank" rel="noopener noreferrer"
-         aria-label="App Store でダウンロード">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor" width="15" height="15"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-        App Store
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════
      Footer
 ═══════════════════════════════════ -->
 <footer role="contentinfo">
   <div class="container">
     <div class="foot-inner">
 
-      <a href="/zenterm/" class="foot-logo" aria-label="ZenTerm トップへ">
+      <a href="./" class="foot-logo" aria-label="ZenTerm トップへ">
         <span class="logo-icon-wrap" aria-hidden="true">
           <img class="icon-light" src="lp/icon-light.png" alt="" width="26" height="26">
           <img class="icon-dark"  src="lp/icon-dark.png"  alt="" width="26" height="26">
         </span>
         ZenTerm
       </a>
-      <p class="foot-tagline">Self-hosted terminal for macOS &amp; Linux</p>
 
       <div class="foot-links">
-        <a href="https://apps.apple.com/app/zenterm/id6760935103" class="foot-link" target="_blank" rel="noopener noreferrer">
+        <a href="https://apps.apple.com/jp/app/zenterm/id6760935103" class="foot-link" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
           </svg>
@@ -1519,7 +1238,7 @@
         </a>
       </div>
 
-      <div class="foot-copy">© 2025–2026 ZenTerm</div>
+      <div class="foot-copy">© 2025 ZenTerm</div>
     </div>
 
     <div class="zen-footer-mark" aria-hidden="true">
@@ -1585,28 +1304,26 @@
     });
   });
 
-  /* ── Screenshot carousel scroll dots ── */
-  var phonesEl = document.querySelector('.phones');
-  var dots = document.querySelectorAll('.scroll-dot');
-  if (phonesEl && dots.length) {
-    var updateDots = function () {
-      var items = phonesEl.querySelectorAll('.phone-wrap');
-      var scrollLeft = phonesEl.scrollLeft;
-      var containerW = phonesEl.offsetWidth;
-      var closest = 0;
-      var closestDist = Infinity;
-      items.forEach(function (item, i) {
-        var center = item.offsetLeft + item.offsetWidth / 2 - scrollLeft;
-        var dist = Math.abs(center - containerW / 2);
-        if (dist < closestDist) { closestDist = dist; closest = i; }
-      });
-      dots.forEach(function (d, i) {
-        d.classList.toggle('active', i === closest);
-      });
-    };
-    phonesEl.addEventListener('scroll', updateDots, { passive: true });
-    updateDots();
+  /* ── Hero video 2x playback ── */
+  var heroVideo = document.querySelector('.hero-video');
+  if (heroVideo) {
+    heroVideo.addEventListener('loadedmetadata', function () {
+      heroVideo.playbackRate = 2.0;
+    });
   }
+
+  /* ── Lazy video play/pause ── */
+  var videos = document.querySelectorAll('video[autoplay]');
+  var videoObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.play();
+      } else {
+        entry.target.pause();
+      }
+    });
+  }, { threshold: 0.25 });
+  videos.forEach(function (v) { videoObserver.observe(v); });
 
 })();
 </script>

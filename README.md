@@ -230,6 +230,9 @@ npm run build:web
 
 # Gateway をビルド (Web ビルドも自動実行)
 npm run build:gateway
+
+# GitHub Pages 用の LP を gateway/public から同期
+npm run sync:pages
 ```
 
 ## Deployment
