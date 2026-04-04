@@ -55,8 +55,8 @@ function ensureCleanupTimer(): void {
   }
 }
 
-function isDuplicate(agent: string, type: string): boolean {
-  const key = `${agent}:${type}`;
+function isDuplicate(agent: string, type: string, sessionId?: string): boolean {
+  const key = `${agent}:${type}:${sessionId ?? ''}`;
   const last = lastSentMap.get(key);
   if (last !== undefined && Date.now() - last < DEDUP_WINDOW_MS) {
     return true;
@@ -64,8 +64,8 @@ function isDuplicate(agent: string, type: string): boolean {
   return false;
 }
 
-function recordSent(agent: string, type: string): void {
-  const key = `${agent}:${type}`;
+function recordSent(agent: string, type: string, sessionId?: string): void {
+  const key = `${agent}:${type}:${sessionId ?? ''}`;
   lastSentMap.set(key, Date.now());
   ensureCleanupTimer();
 }
@@ -164,7 +164,7 @@ export async function sendPushNotifications(
     return { sent: 0, failed: 0 };
   }
 
-  if (isDuplicate(event.agent, event.type)) {
+  if (isDuplicate(event.agent, event.type, event.sessionId)) {
     return { sent: 0, failed: 0 };
   }
 
@@ -173,7 +173,7 @@ export async function sendPushNotifications(
   try {
     const tickets = await postToExpo(messages);
     const result = countResults(tickets);
-    recordSent(event.agent, event.type);
+    recordSent(event.agent, event.type, event.sessionId);
     return result;
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);

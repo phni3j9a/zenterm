@@ -44,12 +44,27 @@ const CONFIG_PATHS: Record<AgentType, string> = {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** Directory where source hook scripts live inside the gateway package. */
-const hooksSourceDir = resolve(__dirname, '..', 'hooks');
-
 /** User-local directory where hook scripts are deployed at runtime. */
 export function getHooksDir(): string {
   return join(HOME, '.config', 'zenterm', 'hooks');
+}
+
+/**
+ * Resolve the source hooks directory.
+ * Search order:
+ *   1. <dist>/../src/hooks  (npm-published package: src/hooks is in "files")
+ *   2. <dist>/../hooks      (legacy fallback)
+ *   3. <__dirname>/../../src/hooks (tsx dev: __dirname = src/services)
+ */
+function resolveHooksSourceDir(): string | null {
+  const candidates = [
+    resolve(__dirname, '..', '..', 'src', 'hooks'),  // published package OR tsx dev
+    resolve(__dirname, '..', 'hooks'),                // legacy fallback
+  ];
+  for (const dir of candidates) {
+    if (existsSync(dir)) return dir;
+  }
+  return null;
 }
 
 /** Copy every hook script from the package into the user hooks dir. */
@@ -59,13 +74,8 @@ function deployHookScripts(): void {
     mkdirSync(dest, { recursive: true });
   }
 
-  // In the built output the hooks live next to dist/ as source assets.
-  // Prefer the src/hooks when running via tsx during dev.
-  const sourceDir = existsSync(hooksSourceDir)
-    ? hooksSourceDir
-    : resolve(__dirname, '..', '..', 'src', 'hooks');
-
-  if (!existsSync(sourceDir)) {
+  const sourceDir = resolveHooksSourceDir();
+  if (!sourceDir) {
     return;
   }
 

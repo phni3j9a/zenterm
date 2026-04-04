@@ -8,7 +8,8 @@
   },
   "files": [
     "dist/",
-    "public/"
+    "public/",
+    "src/hooks/"
   ],
   "engines": {
     "node": ">=20.0.0"

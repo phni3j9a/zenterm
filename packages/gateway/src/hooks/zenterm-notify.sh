@@ -8,51 +8,46 @@ EVENT_TYPE="${2:-task.completed}"
 # Read raw payload from stdin
 RAW_PAYLOAD=$(cat)
 
-# Extract summary from different agent formats
-SUMMARY=""
-SESSION_ID=""
-CWD_PATH=""
+# Build JSON safely via python3 to avoid injection from special characters
+JSON_BODY=$(python3 -c "
+import sys, json, time
 
-if [ -n "$RAW_PAYLOAD" ]; then
-  # Try to extract fields using python3 (available on most systems)
-  SUMMARY=$(echo "$RAW_PAYLOAD" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    # Claude Code: stop_reason or last message
-    print(d.get('stop_reason', d.get('summary', '')))
-except:
-    pass
-" 2>/dev/null || true)
-  SESSION_ID=$(echo "$RAW_PAYLOAD" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(d.get('session_id', ''))
-except:
-    pass
-" 2>/dev/null || true)
-  CWD_PATH=$(echo "$RAW_PAYLOAD" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(d.get('cwd', ''))
-except:
-    pass
-" 2>/dev/null || true)
+agent = sys.argv[1]
+event_type = sys.argv[2]
+raw = sys.argv[3] if len(sys.argv) > 3 else ''
+
+summary = ''
+session_id = ''
+cwd = ''
+
+if raw:
+    try:
+        d = json.loads(raw)
+        summary = str(d.get('stop_reason', d.get('summary', '')))[:200]
+        session_id = str(d.get('session_id', ''))
+        cwd = str(d.get('cwd', ''))
+    except Exception:
+        pass
+
+print(json.dumps({
+    'type': event_type,
+    'agent': agent,
+    'sessionId': session_id,
+    'summary': summary,
+    'cwd': cwd,
+    'timestamp': int(time.time() * 1000),
+}))
+" "$AGENT" "$EVENT_TYPE" "$RAW_PAYLOAD" 2>/dev/null)
+
+# Fallback if python3 failed
+if [ -z "$JSON_BODY" ]; then
+  JSON_BODY="{\"type\":\"${EVENT_TYPE}\",\"agent\":\"${AGENT}\",\"timestamp\":$(date +%s)000}"
 fi
 
 # POST to gateway (fire and forget)
 curl -sf -X POST "${GATEWAY_URL}/api/agent-events" \
   -H "Authorization: Bearer ${AUTH_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{
-    \"type\": \"${EVENT_TYPE}\",
-    \"agent\": \"${AGENT}\",
-    \"sessionId\": \"${SESSION_ID}\",
-    \"summary\": \"${SUMMARY}\",
-    \"cwd\": \"${CWD_PATH}\",
-    \"timestamp\": $(date +%s)000
-  }" > /dev/null 2>&1 &
+  -d "$JSON_BODY" > /dev/null 2>&1 &
 
 exit 0

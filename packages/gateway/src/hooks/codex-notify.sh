@@ -18,44 +18,42 @@ AUTH_TOKEN="${ZENTERM_AUTH_TOKEN}"
 
 PAYLOAD="${1:-{}}"
 
-# Extract fields from Codex payload
-SUMMARY=$(python3 -c "
-import sys, json
-try:
-    d = json.loads(sys.argv[1])
-    print(d.get('last-assistant-message', '')[:200])
-except:
-    pass
-" "$PAYLOAD" 2>/dev/null || true)
+# Build JSON safely via python3 to avoid injection from special characters
+JSON_BODY=$(python3 -c "
+import sys, json, time
 
-CWD_PATH=$(python3 -c "
-import sys, json
-try:
-    d = json.loads(sys.argv[1])
-    print(d.get('cwd', ''))
-except:
-    pass
-" "$PAYLOAD" 2>/dev/null || true)
+raw = sys.argv[1] if len(sys.argv) > 1 else '{}'
 
-THREAD_ID=$(python3 -c "
-import sys, json
+summary = ''
+cwd = ''
+thread_id = ''
+
 try:
-    d = json.loads(sys.argv[1])
-    print(d.get('thread-id', ''))
-except:
+    d = json.loads(raw)
+    summary = str(d.get('last-assistant-message', ''))[:200]
+    cwd = str(d.get('cwd', ''))
+    thread_id = str(d.get('thread-id', ''))
+except Exception:
     pass
-" "$PAYLOAD" 2>/dev/null || true)
+
+print(json.dumps({
+    'type': 'task.completed',
+    'agent': 'codex',
+    'sessionId': thread_id,
+    'summary': summary,
+    'cwd': cwd,
+    'timestamp': int(time.time() * 1000),
+}))
+" "$PAYLOAD" 2>/dev/null)
+
+# Fallback if python3 failed
+if [ -z "$JSON_BODY" ]; then
+  JSON_BODY="{\"type\":\"task.completed\",\"agent\":\"codex\",\"timestamp\":$(date +%s)000}"
+fi
 
 curl -sf -X POST "${GATEWAY_URL}/api/agent-events" \
   -H "Authorization: Bearer ${AUTH_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{
-    \"type\": \"task.completed\",
-    \"agent\": \"codex\",
-    \"sessionId\": \"${THREAD_ID}\",
-    \"summary\": \"${SUMMARY}\",
-    \"cwd\": \"${CWD_PATH}\",
-    \"timestamp\": $(date +%s)000
-  }" > /dev/null 2>&1 &
+  -d "$JSON_BODY" > /dev/null 2>&1 &
 
 exit 0
