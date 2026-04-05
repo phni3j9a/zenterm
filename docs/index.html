@@ -1133,13 +1133,22 @@
 
       <div class="feat-card aos" data-d="2">
         <svg class="feat-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="4" width="12" height="12" rx="1.2"/>
-          <rect x="4" y="22" width="12" height="12" rx="1.2"/>
-          <rect x="22" y="4" width="12" height="12" rx="1.2"/>
-          <rect x="6.5" y="6.5" width="7" height="7"/>
-          <rect x="6.5" y="24.5" width="7" height="7"/>
-          <rect x="24.5" y="6.5" width="7" height="7"/>
-          <path d="M22 25h3v3h-3zM29 22h5M22 31v5M29 29h5v5M29 22v5"/>
+          <!-- Viewfinder corners -->
+          <path d="M4 12V7.5A3.5 3.5 0 0 1 7.5 4H12"/>
+          <path d="M26 4h4.5A3.5 3.5 0 0 1 34 7.5V12"/>
+          <path d="M34 26v4.5a3.5 3.5 0 0 1-3.5 3.5H26"/>
+          <path d="M12 34H7.5A3.5 3.5 0 0 1 4 30.5V26"/>
+          <!-- QR finder patterns -->
+          <rect x="9" y="9" width="7.5" height="7.5" rx="1"/>
+          <rect x="11" y="11" width="3.5" height="3.5" rx=".5" fill="currentColor" stroke="none"/>
+          <rect x="21.5" y="9" width="7.5" height="7.5" rx="1"/>
+          <rect x="23.5" y="11" width="3.5" height="3.5" rx=".5" fill="currentColor" stroke="none"/>
+          <rect x="9" y="21.5" width="7.5" height="7.5" rx="1"/>
+          <rect x="11" y="23.5" width="3.5" height="3.5" rx=".5" fill="currentColor" stroke="none"/>
+          <!-- Data modules -->
+          <rect x="22.5" y="22.5" width="2.5" height="2.5" rx=".4" fill="currentColor" stroke="none"/>
+          <rect x="27" y="27" width="2.5" height="2.5" rx=".4" fill="currentColor" stroke="none"/>
+          <rect x="22.5" y="27" width="2.5" height="2.5" rx=".4" fill="currentColor" stroke="none"/>
         </svg>
         <div class="feat-name">QRコードで即接続</div>
         <div class="feat-desc">QRコードをスキャンするだけ。IPアドレスやポート番号を手で入力する必要はない。</div>
@@ -1214,13 +1223,22 @@
         </div>
         <div class="step-icon" aria-hidden="true">
           <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="6" y="6" width="14" height="14" rx="1.5"/>
-            <rect x="6" y="28" width="14" height="14" rx="1.5"/>
-            <rect x="28" y="6" width="14" height="14" rx="1.5"/>
-            <rect x="9" y="9" width="8" height="8"/>
-            <rect x="9" y="31" width="8" height="8"/>
-            <rect x="31" y="9" width="8" height="8"/>
-            <path d="M28 28h4v4h-4zM36 28h6M28 36v6M36 36h6v6M36 28v4"/>
+            <!-- Viewfinder corners -->
+            <path d="M6 15V9a3 3 0 0 1 3-3h6"/>
+            <path d="M33 6h6a3 3 0 0 1 3 3v6"/>
+            <path d="M42 33v6a3 3 0 0 1-3 3h-6"/>
+            <path d="M15 42H9a3 3 0 0 1-3-3v-6"/>
+            <!-- QR finder patterns: outer ring (stroke) + center (fill) -->
+            <rect x="12" y="12" width="9" height="9" rx="1.2"/>
+            <rect x="14.5" y="14.5" width="4" height="4" rx=".6" fill="currentColor" stroke="none"/>
+            <rect x="27" y="12" width="9" height="9" rx="1.2"/>
+            <rect x="29.5" y="14.5" width="4" height="4" rx=".6" fill="currentColor" stroke="none"/>
+            <rect x="12" y="27" width="9" height="9" rx="1.2"/>
+            <rect x="14.5" y="29.5" width="4" height="4" rx=".6" fill="currentColor" stroke="none"/>
+            <!-- Data modules -->
+            <rect x="28" y="28" width="3" height="3" rx=".5" fill="currentColor" stroke="none"/>
+            <rect x="33" y="33" width="3" height="3" rx=".5" fill="currentColor" stroke="none"/>
+            <rect x="28" y="33" width="3" height="3" rx=".5" fill="currentColor" stroke="none"/>
           </svg>
         </div>
       </div>
@@ -1234,8 +1252,18 @@
         </div>
         <div class="step-icon" aria-hidden="true">
           <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 36V16a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H16l-8 4V36z"/>
-            <path d="M15 23l4 4 14-9"/>
+            <!-- Phone frame -->
+            <rect x="10" y="4" width="28" height="40" rx="5"/>
+            <!-- Screen area (subtle fill) -->
+            <rect x="13" y="10" width="22" height="26" rx="1.5" fill="currentColor" stroke="none" opacity=".07"/>
+            <!-- Terminal prompt on screen -->
+            <path d="M17 21l4 3.5-4 3.5" stroke-width="1.8"/>
+            <path d="M25 28h7" stroke-width="1.5"/>
+            <!-- Home indicator -->
+            <path d="M20 40h8" stroke-width="1.5" opacity=".35"/>
+            <!-- Success badge -->
+            <circle cx="36" cy="8" r="5" fill="currentColor" stroke="none"/>
+            <path d="M33.8 8l1.5 1.5 3-3" stroke="#fff" stroke-width="1.4" fill="none"/>
           </svg>
         </div>
       </div>
