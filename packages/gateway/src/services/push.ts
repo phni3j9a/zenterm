@@ -177,7 +177,7 @@ export async function sendPushNotifications(
     return result;
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.warn(`[push] 送信失敗: ${msg}`);
+    console.warn(`[push] send failed: ${msg}`);
     return { sent: 0, failed: tokens.length };
   }
 }
@@ -192,7 +192,7 @@ export async function sendTestNotification(
   const messages: ExpoPushMessage[] = tokens.map((to) => ({
     to,
     title: 'ZenTerm',
-    body: '🔔 テスト通知です',
+    body: '🔔 Test notification',
     data: { type: 'test' },
     sound: 'default' as const,
     priority: 'high' as const,
@@ -203,7 +203,7 @@ export async function sendTestNotification(
     return countResults(tickets);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.warn(`[push] テスト通知送信失敗: ${msg}`);
+    console.warn(`[push] test notification send failed: ${msg}`);
     return { sent: 0, failed: tokens.length };
   }
 }

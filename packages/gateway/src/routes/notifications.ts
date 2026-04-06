@@ -105,6 +105,12 @@ const notificationRoutes: FastifyPluginAsync = async (app) => {
           message: 'token is required',
         });
       }
+      if (!token.startsWith('ExponentPushToken[') && !token.startsWith('ExpoPushToken[')) {
+        return reply.status(400).send({
+          error: 'Bad Request',
+          message: 'token must be a valid Expo push token',
+        });
+      }
       if (platform !== 'ios' && platform !== 'android') {
         return reply.status(400).send({
           error: 'Bad Request',
@@ -172,6 +178,13 @@ const notificationRoutes: FastifyPluginAsync = async (app) => {
         const installer = await getInstaller();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await installer.installHook(agent as any);
+        if (!result.success) {
+          request.log.error({ agent, message: result.message }, 'integration install failed');
+          return reply.status(500).send({
+            error: 'Install Failed',
+            message: result.message,
+          });
+        }
         setIntegrationStatus(agent as AgentType, {
           installed: true,
           configPath: result.configPath,
