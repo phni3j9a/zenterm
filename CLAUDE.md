@@ -37,6 +37,20 @@ npm run build:web           # Web ビルド → gateway/public/app/ に出力
 - tmux セッションの prefix は `zen_`
 - テーマは mobile/web 共通の Zen カラートークン（dark/light）
 
+## Git / ブランチ運用
+- この repo では `main` への直接作業・直接コミットを避け、`main` から `feature/...`、`fix/...`、`chore/...` を切って作業する
+- `app` も同時に変更する場合は、両 repo で同じブランチ名を使う
+- 常設の `develop` ブランチは前提にしない。必要性が明確な場合のみ導入を検討する
+- 未コミット変更がある場合は、勝手に branch 切替や stash をしない
+
+### 運用フロー
+1. 未コミット変更がなければ `main` を最新化してから `git switch -c feature/...`、`fix/...`、`chore/...` を作る
+2. 既に未コミット変更がある場合は、その状態のまま `git switch -c <branch-name>` で作業ブランチへ移す
+3. `app` も同時に変更する場合は、両 repo で同じブランチ名を使う
+4. 作業中のコミットは作業ブランチに積み、`main` には未完成の変更を入れない
+5. 作業完了後は PR またはレビュー可能な差分を作成し、確認後に `main` へマージする
+6. マージ後は不要になった作業ブランチを削除する
+
 ## 注意事項
 - xterm.js v6 では `allowProposedApi: true` が必須
 - Mobile 用 xterm.js は CDN ではなく `public/terminal/lib/` に自前ホスト（iOS WebView の制約）

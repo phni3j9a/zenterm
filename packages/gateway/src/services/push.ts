@@ -80,10 +80,10 @@ const AGENT_DISPLAY_NAMES: Record<AgentType, string> = {
 };
 
 const EVENT_MESSAGES: Record<AgentEventType, string> = {
-  'task.completed': '✅ タスクが完了しました',
-  'task.failed': '❌ タスクが失敗しました',
-  'input.requested': '⏳ 入力を待っています',
-  'session.ended': 'セッションが終了しました',
+  'task.completed': '✅ Task completed',
+  'task.failed': '❌ Task failed',
+  'input.requested': '⏳ Waiting for input',
+  'session.ended': 'Session ended',
 };
 
 function buildTitle(agent: AgentType): string {
