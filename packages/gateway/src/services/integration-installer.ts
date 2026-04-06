@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  renameSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -94,7 +95,11 @@ function deployHookScripts(): void {
 
 function backup(filePath: string): boolean {
   if (!existsSync(filePath)) return false;
-  writeFileSync(`${filePath}.bak`, readFileSync(filePath));
+  const bakPath = `${filePath}.bak`;
+  // Don't overwrite existing backup — preserve the original
+  if (!existsSync(bakPath)) {
+    writeFileSync(bakPath, readFileSync(filePath));
+  }
   return true;
 }
 
@@ -116,7 +121,10 @@ function writeJson(filePath: string, data: unknown): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  // Atomic write: write to temp file then rename to prevent corruption on crash
+  const tmpPath = `${filePath}.tmp`;
+  writeFileSync(tmpPath, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  renameSync(tmpPath, filePath);
 }
 
 // ---------------------------------------------------------------------------
@@ -149,7 +157,7 @@ function installClaudeCode(authToken: string, port: number): InstallResult {
 
   try {
     let data = readJson(configPath);
-    const fileExisted = data !== null;
+    const fileExisted = existsSync(configPath);
 
     if (fileExisted && data === null) {
       return {
@@ -279,8 +287,19 @@ function installCodex(_authToken: string, _port: number): InstallResult {
       lines = [];
     }
 
-    // Remove any existing notify line
-    lines = lines.filter((l) => !/^\s*notify\s*=/u.test(l));
+    // Remove existing zenterm-managed notify line only (preserve other tools' notify)
+    lines = lines.filter((l) => !(l.includes(MARKER) && /^\s*notify\s*=/u.test(l)));
+
+    // If a non-ZenTerm notify line already exists, abort to avoid TOML duplicate key
+    const existingNotify = lines.find((l) => /^\s*notify\s*=/u.test(l));
+    if (existingNotify) {
+      return {
+        success: false,
+        agent: 'codex',
+        configPath,
+        message: 'Existing notify setting found in config.toml — cannot override without losing your configuration',
+      };
+    }
 
     // Insert before the first [section] header so it stays at the top level.
     const notifyLine = buildCodexNotifyLine();
@@ -291,7 +310,9 @@ function installCodex(_authToken: string, _port: number): InstallResult {
       lines.splice(sectionIdx, 0, notifyLine);
     }
 
-    writeFileSync(configPath, lines.join('\n'), 'utf8');
+    const tmpPath = `${configPath}.tmp`;
+    writeFileSync(tmpPath, lines.join('\n'), 'utf8');
+    renameSync(tmpPath, configPath);
 
     return {
       success: true,
@@ -321,7 +342,9 @@ function uninstallCodex(): InstallResult {
     const backedUp = backup(configPath);
     const lines = readFileSync(configPath, 'utf8').split('\n');
     const filtered = lines.filter((l) => !l.includes(MARKER));
-    writeFileSync(configPath, filtered.join('\n'), 'utf8');
+    const tmpPath = `${configPath}.tmp`;
+    writeFileSync(tmpPath, filtered.join('\n'), 'utf8');
+    renameSync(tmpPath, configPath);
 
     return {
       success: true,
