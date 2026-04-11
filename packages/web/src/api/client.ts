@@ -157,6 +157,52 @@ export async function uploadFile(
   return res.json() as Promise<FileUploadResponse>;
 }
 
+// ─── File operations (Phase 3) ───
+
+export const deleteFile = (path: string) =>
+  apiRequest<{ path: string; deleted: boolean }>('/api/files', {
+    method: 'DELETE',
+    body: JSON.stringify({ path }),
+  });
+
+export const renameFile = (path: string, newName: string) =>
+  apiRequest<{ oldPath: string; newPath: string }>('/api/files/rename', {
+    method: 'POST',
+    body: JSON.stringify({ path, newName }),
+  });
+
+export const copyFiles = (sources: string[], destination: string) =>
+  apiRequest<{ copied: { source: string; destination: string }[] }>('/api/files/copy', {
+    method: 'POST',
+    body: JSON.stringify({ sources, destination }),
+  });
+
+export const moveFiles = (sources: string[], destination: string) =>
+  apiRequest<{ moved: { source: string; destination: string }[] }>('/api/files/move', {
+    method: 'POST',
+    body: JSON.stringify({ sources, destination }),
+  });
+
+export const mkdir = (path: string) =>
+  apiRequest<{ path: string; created: boolean }>('/api/files/mkdir', {
+    method: 'POST',
+    body: JSON.stringify({ path }),
+  });
+
+/** Fetch file as blob URL for image preview (auth via header) */
+export async function getFileRawBlobUrl(path: string): Promise<string> {
+  const base = getBaseUrl();
+  const res = await fetch(
+    `${base}/api/files/raw?path=${encodeURIComponent(path)}`,
+    { headers: { Authorization: `Bearer ${getToken()}` } },
+  );
+  if (!res.ok) {
+    throw new ApiError(res.status, res.statusText);
+  }
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
 export function getWebSocketUrl(sessionId: string): string {
   const base = getBaseUrl();
   const token = getToken();

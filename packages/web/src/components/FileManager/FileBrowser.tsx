@@ -1,9 +1,18 @@
 import { useEffect, useState, useCallback } from 'react';
-import { listFiles } from '../../api/client';
+import { listFiles, deleteFile, renameFile, mkdir, writeFileContent } from '../../api/client';
 import type { FileEntry } from '@zenterm/shared';
 import { FileEditor } from './FileEditor';
 import { FileUpload } from './FileUpload';
+import { ImagePreview, isImageFile } from './ImagePreview';
+import { ContextMenu, type MenuItem } from '../ui/ContextMenu';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import styles from './FileBrowser.module.css';
+
+interface ContextMenuState {
+  x: number;
+  y: number;
+  entry: FileEntry;
+}
 
 export function FileBrowser() {
   const [currentPath, setCurrentPath] = useState('~');
@@ -13,6 +22,14 @@ export function FileBrowser() {
   const [showHidden, setShowHidden] = useState(true);
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [deletingPath, setDeletingPath] = useState<string | null>(null);
+  const [renamingEntry, setRenamingEntry] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [creatingType, setCreatingType] = useState<'file' | 'directory' | null>(null);
+  const [createName, setCreateName] = useState('');
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
@@ -32,12 +49,24 @@ export function FileBrowser() {
     fetchEntries();
   }, [fetchEntries]);
 
+  // Reset search and creation when navigating
+  useEffect(() => {
+    setSearchQuery('');
+    setCreatingType(null);
+    setRenamingEntry(null);
+  }, [currentPath]);
+
   const navigate = (entry: FileEntry) => {
     const effectiveType = entry.type === 'symlink' ? (entry.resolvedType ?? 'directory') : entry.type;
+    const fullPath = `${currentPath}/${entry.name}`;
     if (effectiveType === 'directory') {
-      setCurrentPath(`${currentPath}/${entry.name}`);
+      setCurrentPath(fullPath);
     } else if (effectiveType === 'file') {
-      setEditingFile(`${currentPath}/${entry.name}`);
+      if (isImageFile(entry.name)) {
+        setPreviewImage(fullPath);
+      } else {
+        setEditingFile(fullPath);
+      }
     }
   };
 
@@ -61,8 +90,128 @@ export function FileBrowser() {
   const getIcon = (entry: FileEntry) => {
     if (entry.type === 'directory') return '\u{1F4C1}';
     if (entry.type === 'symlink') return '\u{1F517}';
+    if (isImageFile(entry.name)) return '\u{1F5BC}';
     return '\u{1F4C4}';
   };
+
+  const handleContextMenu = (e: React.MouseEvent, entry: FileEntry) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, entry });
+  };
+
+  const buildContextMenuItems = (entry: FileEntry): MenuItem[] => {
+    const fullPath = `${currentPath}/${entry.name}`;
+    const items: MenuItem[] = [
+      {
+        label: 'Open',
+        icon: '↗',
+        action: () => navigate(entry),
+      },
+    ];
+
+    if (entry.type === 'file' && isImageFile(entry.name)) {
+      items.push({
+        label: 'Preview',
+        icon: '🖼',
+        action: () => setPreviewImage(fullPath),
+      });
+    }
+
+    items.push({
+      label: 'Copy Path',
+      icon: '📋',
+      action: () => {
+        const text = fullPath;
+        navigator.clipboard?.writeText(text).catch(() => {
+          // Fallback: no-op on insecure origins
+        });
+      },
+    });
+
+    items.push({
+      label: 'Rename',
+      icon: '✏️',
+      action: () => {
+        setRenamingEntry(entry.name);
+        setRenameValue(entry.name);
+      },
+      divider: true,
+    });
+
+    items.push({
+      label: 'Delete',
+      icon: '🗑',
+      action: () => setDeletingPath(fullPath),
+      variant: 'danger',
+    });
+
+    return items;
+  };
+
+  const handleDelete = async () => {
+    if (!deletingPath) return;
+    try {
+      await deleteFile(deletingPath);
+      setDeletingPath(null);
+      fetchEntries();
+    } catch (e) {
+      setError((e as Error).message);
+      setDeletingPath(null);
+    }
+  };
+
+  const handleRenameSubmit = async () => {
+    if (!renamingEntry || !renameValue.trim()) {
+      setRenamingEntry(null);
+      return;
+    }
+    const trimmed = renameValue.trim();
+    if (trimmed === renamingEntry || trimmed.includes('/')) {
+      setRenamingEntry(null);
+      return;
+    }
+    try {
+      await renameFile(`${currentPath}/${renamingEntry}`, trimmed);
+      setRenamingEntry(null);
+      fetchEntries();
+    } catch (e) {
+      setError((e as Error).message);
+      setRenamingEntry(null);
+    }
+  };
+
+  const handleCreateSubmit = async () => {
+    if (!creatingType || !createName.trim()) {
+      setCreatingType(null);
+      setCreateName('');
+      return;
+    }
+    const name = createName.trim();
+    if (name.includes('/') || name === '.' || name === '..') {
+      setCreatingType(null);
+      setCreateName('');
+      return;
+    }
+    const fullPath = `${currentPath}/${name}`;
+    try {
+      if (creatingType === 'directory') {
+        await mkdir(fullPath);
+      } else {
+        await writeFileContent(fullPath, '');
+      }
+      setCreatingType(null);
+      setCreateName('');
+      fetchEntries();
+    } catch (e) {
+      setError((e as Error).message);
+      setCreatingType(null);
+      setCreateName('');
+    }
+  };
+
+  const filteredEntries = searchQuery
+    ? entries.filter((e) => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : entries;
 
   const pathSegments = currentPath.split('/').filter(Boolean);
 
@@ -79,8 +228,29 @@ export function FileBrowser() {
           .*
         </button>
         <button className={styles.toolBtn} onClick={() => setShowUpload(true)} title="Upload">
-          +
+          ⬆
         </button>
+        <button className={styles.toolBtn} onClick={() => { setCreatingType('file'); setCreateName(''); }} title="New file">
+          +F
+        </button>
+        <button className={styles.toolBtn} onClick={() => { setCreatingType('directory'); setCreateName(''); }} title="New directory">
+          +D
+        </button>
+      </div>
+
+      <div className={styles.searchBar}>
+        <input
+          className={styles.searchInput}
+          type="text"
+          placeholder="Filter..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button className={styles.searchClear} onClick={() => setSearchQuery('')}>
+            &times;
+          </button>
+        )}
       </div>
 
       <div className={styles.breadcrumb}>
@@ -102,24 +272,68 @@ export function FileBrowser() {
           <div className={styles.message}>Loading...</div>
         )}
         {error && <div className={styles.messageError}>{error}</div>}
-        {!loading && !error && entries.length === 0 && (
-          <div className={styles.message}>Empty directory</div>
+        {!loading && !error && filteredEntries.length === 0 && (
+          <div className={styles.message}>
+            {searchQuery ? 'No matches' : 'Empty directory'}
+          </div>
         )}
-        {entries.map((entry) => (
+
+        {creatingType && (
+          <div className={styles.createRow}>
+            <span className={styles.entryIcon}>
+              {creatingType === 'directory' ? '\u{1F4C1}' : '\u{1F4C4}'}
+            </span>
+            <input
+              className={styles.inlineInput}
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              onBlur={handleCreateSubmit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateSubmit();
+                if (e.key === 'Escape') { setCreatingType(null); setCreateName(''); }
+              }}
+              placeholder={creatingType === 'directory' ? 'New directory name' : 'New file name'}
+              autoFocus
+            />
+          </div>
+        )}
+
+        {filteredEntries.map((entry) => (
           <button
             key={entry.name}
             className={styles.entry}
-            onClick={() => navigate(entry)}
+            onClick={() => {
+              if (renamingEntry === entry.name) return;
+              navigate(entry);
+            }}
+            onContextMenu={(e) => handleContextMenu(e, entry)}
           >
             <span className={styles.entryIcon}>{getIcon(entry)}</span>
-            <span className={styles.entryName} data-type={entry.type}>
-              {entry.name}
-              {entry.symlinkTarget && (
-                <span className={styles.symTarget}> &rarr; {entry.symlinkTarget}</span>
-              )}
-            </span>
-            {entry.type === 'file' && (
-              <span className={styles.entrySize}>{formatSize(entry.size)}</span>
+            {renamingEntry === entry.name ? (
+              <input
+                className={styles.inlineInput}
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onBlur={handleRenameSubmit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRenameSubmit();
+                  if (e.key === 'Escape') setRenamingEntry(null);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                autoFocus
+              />
+            ) : (
+              <>
+                <span className={styles.entryName} data-type={entry.type}>
+                  {entry.name}
+                  {entry.symlinkTarget && (
+                    <span className={styles.symTarget}> &rarr; {entry.symlinkTarget}</span>
+                  )}
+                </span>
+                {entry.type === 'file' && (
+                  <span className={styles.entrySize}>{formatSize(entry.size)}</span>
+                )}
+              </>
             )}
           </button>
         ))}
@@ -137,6 +351,33 @@ export function FileBrowser() {
           currentPath={currentPath}
           onClose={() => setShowUpload(false)}
           onUploaded={fetchEntries}
+        />
+      )}
+
+      {previewImage && (
+        <ImagePreview
+          path={previewImage}
+          onClose={() => setPreviewImage(null)}
+        />
+      )}
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={buildContextMenuItems(contextMenu.entry)}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {deletingPath && (
+        <ConfirmDialog
+          title="Delete"
+          message={`Are you sure you want to delete "${deletingPath.split('/').pop()}"?`}
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingPath(null)}
         />
       )}
     </div>

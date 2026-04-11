@@ -140,3 +140,68 @@
   color: var(--error);
   text-align: center;
 }
+
+/* Search bar */
+.searchBar {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-xs) var(--sp-sm);
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.searchInput {
+  flex: 1;
+  padding: var(--sp-xs) var(--sp-sm);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.searchInput:focus {
+  border-color: var(--primary);
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.searchClear {
+  position: absolute;
+  right: var(--sp-md);
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.searchClear:hover {
+  color: var(--text-primary);
+}
+
+/* Inline input for rename / create */
+.inlineInput {
+  flex: 1;
+  padding: 2px var(--sp-xs);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+  min-width: 0;
+}
+
+.createRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-xs) var(--sp-md);
+  background: var(--primary-subtle);
+}

@@ -2,12 +2,15 @@ import { Layout } from '../components/Layout/Layout';
 import { TerminalTabs } from '../components/Terminal/TerminalTabs';
 import { TerminalView } from '../components/Terminal/Terminal';
 import { useSessionsStore } from '../stores/sessions';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import styles from './MainPage.module.css';
 
 export function MainPage() {
   const openTabs = useSessionsStore((s) => s.openTabs);
   const activeSessionId = useSessionsStore((s) => s.activeSessionId);
   const createSession = useSessionsStore((s) => s.createSession);
+
+  useKeyboardShortcuts();
 
   return (
     <Layout>
