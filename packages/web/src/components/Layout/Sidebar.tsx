@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useSessionsStore } from '../../stores/sessions';
 import { FileBrowser } from '../FileManager/FileBrowser';
 import { SystemMonitor } from '../Monitor/SystemMonitor';
+import { ScrollbackPanel } from './ScrollbackPanel';
+import { SshQuickConnect } from './SshQuickConnect';
+import { ServerManager } from './ServerManager';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import styles from './Sidebar.module.css';
 
-type SidebarView = 'sessions' | 'files' | 'monitor';
+type SidebarView = 'sessions' | 'files' | 'monitor' | 'scrollback' | 'ssh' | 'servers';
 
 export function Sidebar() {
   const { t } = useTranslation();
@@ -93,6 +96,27 @@ export function Sidebar() {
         >
           {t('tabs.monitor')}
         </button>
+        <button
+          className={styles.viewBtn}
+          data-active={view === 'scrollback'}
+          onClick={() => setView('scrollback')}
+        >
+          {t('tabs.scrollback')}
+        </button>
+        <button
+          className={styles.viewBtn}
+          data-active={view === 'ssh'}
+          onClick={() => setView('ssh')}
+        >
+          {t('tabs.ssh')}
+        </button>
+        <button
+          className={styles.viewBtn}
+          data-active={view === 'servers'}
+          onClick={() => setView('servers')}
+        >
+          {t('tabs.servers')}
+        </button>
       </div>
 
       {view === 'sessions' && (
@@ -178,6 +202,9 @@ export function Sidebar() {
 
       {view === 'files' && <FileBrowser />}
       {view === 'monitor' && <SystemMonitor visible={true} />}
+      {view === 'scrollback' && <ScrollbackPanel />}
+      {view === 'ssh' && <SshQuickConnect onConnected={() => setView('sessions')} />}
+      {view === 'servers' && <ServerManager />}
       {deletingId && (
         <ConfirmDialog
           title={t('sessions.deleteSessionTitle')}

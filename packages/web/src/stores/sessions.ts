@@ -47,6 +47,30 @@ export const useSessionsStore = create<SessionsState>((set, get) => ({
     try {
       const sessions = await api.listSessions();
       set({ sessions, loading: false });
+      // Restore saved pane layout if no tabs are open yet
+      const { openTabs } = get();
+      if (openTabs.length === 0 && sessions.length > 0) {
+        const panes = usePanesStore.getState();
+        panes.restoreLayout(sessions.map((s) => s.name));
+        // Sync openTabs from restored pane leaves
+        const root = usePanesStore.getState().root;
+        if (root) {
+          const collectLeaves = (node: import('./panes').PaneNode): import('./panes').LeafPane[] => {
+            if (node.type === 'leaf') return [node];
+            return [...collectLeaves(node.children[0]), ...collectLeaves(node.children[1])];
+          };
+          const leaves = collectLeaves(root);
+          const tabIds = [...new Set(leaves.map((l) => l.sessionId))];
+          if (tabIds.length > 0) {
+            const activePane = usePanesStore.getState().activePaneId;
+            const activeLeaf = leaves.find((l) => l.paneId === activePane);
+            set({
+              openTabs: tabIds,
+              activeSessionId: activeLeaf?.sessionId ?? tabIds[0],
+            });
+          }
+        }
+      }
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
     }

@@ -9,19 +9,21 @@ interface SettingsState {
   fontFamily: string;
   language: string;
   notificationsEnabled: boolean;
+  autoCopyOnSelect: boolean;
   setThemeMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
   setFontSize: (size: number) => void;
   setFontFamily: (family: string) => void;
   setLanguage: (lang: string) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
+  setAutoCopyOnSelect: (enabled: boolean) => void;
 }
 
 const STORAGE_KEY = 'zenterm_settings';
 
 const DEFAULT_FONT = "'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'SF Mono', Menlo, monospace";
 
-function loadSettings(): { themeMode: ThemeMode; fontSize: number; fontFamily: string; language: string; notificationsEnabled: boolean } {
+function loadSettings(): { themeMode: ThemeMode; fontSize: number; fontFamily: string; language: string; notificationsEnabled: boolean; autoCopyOnSelect: boolean } {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -32,13 +34,14 @@ function loadSettings(): { themeMode: ThemeMode; fontSize: number; fontFamily: s
         fontFamily: parsed.fontFamily ?? DEFAULT_FONT,
         language: parsed.language ?? 'en',
         notificationsEnabled: parsed.notificationsEnabled ?? false,
+        autoCopyOnSelect: parsed.autoCopyOnSelect ?? false,
       };
     }
   } catch { /* ignore */ }
-  return { themeMode: 'dark', fontSize: 14, fontFamily: DEFAULT_FONT, language: 'en', notificationsEnabled: false };
+  return { themeMode: 'dark', fontSize: 14, fontFamily: DEFAULT_FONT, language: 'en', notificationsEnabled: false, autoCopyOnSelect: false };
 }
 
-function saveSettings(state: { themeMode: ThemeMode; fontSize: number; fontFamily: string; language: string; notificationsEnabled: boolean }) {
+function saveSettings(state: { themeMode: ThemeMode; fontSize: number; fontFamily: string; language: string; notificationsEnabled: boolean; autoCopyOnSelect: boolean }) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -90,6 +93,13 @@ export const useSettingsStore = create<SettingsState>((set) => {
     setNotificationsEnabled: (enabled) => {
       set((s) => {
         const next = { ...s, notificationsEnabled: enabled };
+        saveSettings(next);
+        return next;
+      });
+    },
+    setAutoCopyOnSelect: (enabled) => {
+      set((s) => {
+        const next = { ...s, autoCopyOnSelect: enabled };
         saveSettings(next);
         return next;
       });

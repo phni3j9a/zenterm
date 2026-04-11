@@ -111,6 +111,9 @@ export const deleteSession = (id: string) =>
     method: 'DELETE',
   });
 
+export const getScrollback = (id: string) =>
+  apiRequest<{ content: string }>(`/api/sessions/${encodeURIComponent(id)}/scrollback`);
+
 export const getSystemStatus = (options?: { signal?: AbortSignal }) =>
   apiRequest<SystemStatus>('/api/system/status', options?.signal ? { signal: options.signal } : undefined);
 

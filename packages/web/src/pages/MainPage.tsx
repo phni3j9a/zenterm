@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout/Layout';
 import { TerminalTabs } from '../components/Terminal/TerminalTabs';
@@ -5,6 +6,7 @@ import { TerminalView } from '../components/Terminal/Terminal';
 import { PaneLayout } from '../components/Terminal/PaneLayout';
 import { useSessionsStore } from '../stores/sessions';
 import { usePanesStore } from '../stores/panes';
+import { useServersStore } from '../stores/servers';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import styles from './MainPage.module.css';
 
@@ -16,6 +18,11 @@ export function MainPage() {
   const root = usePanesStore((s) => s.root);
 
   useKeyboardShortcuts();
+
+  // Auto-import current auth as a server profile on first load
+  useEffect(() => {
+    useServersStore.getState().syncFromAuth();
+  }, []);
 
   const hasTabs = openTabs.length > 0;
   const hasPanes = root !== null && root.type === 'split';

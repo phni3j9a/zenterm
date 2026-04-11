@@ -42,6 +42,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
   const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
+  const autoCopyOnSelect = useSettingsStore((s) => s.autoCopyOnSelect);
+  const setAutoCopyOnSelect = useSettingsStore((s) => s.setAutoCopyOnSelect);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -123,6 +125,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <span className={styles.label}>{t('settings.notifications')}</span>
         <button className={styles.value} onClick={handleNotificationToggle}>
           {notificationsEnabled ? 'ON' : 'OFF'}
+        </button>
+      </div>
+      <div className={styles.item}>
+        <span className={styles.label}>{t('settings.autoCopy')}</span>
+        <button className={styles.value} onClick={() => setAutoCopyOnSelect(!autoCopyOnSelect)}>
+          {autoCopyOnSelect ? 'ON' : 'OFF'}
         </button>
       </div>
     </div>

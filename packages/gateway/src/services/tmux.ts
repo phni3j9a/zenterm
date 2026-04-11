@@ -297,3 +297,18 @@ export function renameSession(currentName: string, nextName: string): TmuxSessio
 
   return getSession(normalizedNext) ?? buildFallbackSession(normalizedNext);
 }
+
+export function captureScrollback(input: string, lines = 1000): string {
+  const displayName = normalizeSessionName(input);
+
+  if (!sessionExists(displayName)) {
+    throw new TmuxServiceError(`セッション "${displayName}" が見つかりません。`, 404, 'SESSION_NOT_FOUND');
+  }
+
+  return runTmux([
+    'capture-pane',
+    '-t', getExactTmuxTarget(displayName),
+    '-p',
+    '-S', `-${lines}`,
+  ]);
+}

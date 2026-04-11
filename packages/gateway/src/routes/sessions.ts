@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { createSession, killSession, listSessions, renameSession } from '../services/tmux.js';
+import { createSession, killSession, listSessions, renameSession, captureScrollback } from '../services/tmux.js';
 
 const createSessionSchema = z
   .object({
@@ -44,6 +44,12 @@ const sessionRoutes: FastifyPluginAsync = async (fastify) => {
 
     request.log.info({ session: params.sessionId }, 'tmux session deleted');
     return { ok: true };
+  });
+
+  fastify.get('/api/sessions/:sessionId/scrollback', async (request) => {
+    const params = sessionParamsSchema.parse(request.params);
+    const content = captureScrollback(params.sessionId);
+    return { content };
   });
 };
 

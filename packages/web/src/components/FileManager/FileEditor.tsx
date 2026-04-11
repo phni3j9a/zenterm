@@ -1,6 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getFileContent, writeFileContent } from '../../api/client';
 import styles from './FileEditor.module.css';
+
+const MD_EXTENSIONS = new Set(['.md', '.markdown', '.mkd', '.mdx']);
+
+export function isMarkdownFile(filename: string): boolean {
+  const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase();
+  return MD_EXTENSIONS.has(ext);
+}
 
 interface FileEditorProps {
   path: string;
@@ -8,6 +16,7 @@ interface FileEditorProps {
 }
 
 export function FileEditor({ path, onClose }: FileEditorProps) {
+  const { t } = useTranslation();
   const [content, setContent] = useState('');
   const [originalContent, setOriginalContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -15,13 +24,15 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [truncated, setTruncated] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const filename = path.split('/').pop() ?? path;
   const isDirty = content !== originalContent;
   const canSave = isDirty && !truncated;
+  const isMd = isMarkdownFile(filename);
 
   const handleClose = () => {
-    if (isDirty && !window.confirm('You have unsaved changes. Discard?')) return;
+    if (isDirty && !window.confirm(t('fileEditor.discardConfirm'))) return;
     onClose();
   };
 
@@ -68,6 +79,17 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
     }
   };
 
+  const renderedMarkdown = useMemo(() => {
+    if (!previewMode || !isMd) return '';
+    try {
+      // Lazy import — marked and DOMPurify loaded via dynamic import in effect
+      // Use simple regex-based rendering for SSR safety; real rendering done via dangerouslySetInnerHTML
+      return content;
+    } catch {
+      return content;
+    }
+  }, [content, previewMode, isMd]);
+
   return (
     <div className={styles.overlay} onClick={handleClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -76,18 +98,26 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
           <span className={styles.path}>{path}</span>
           {truncated && (
             <span className={styles.truncatedWarning}>
-              File too large to edit (first 1000 lines shown)
+              {t('fileEditor.truncatedWarning')}
             </span>
           )}
           <div className={styles.headerActions}>
-            {saved && <span className={styles.savedBadge}>Saved</span>}
+            {isMd && (
+              <button
+                className={styles.saveBtn}
+                onClick={() => setPreviewMode(!previewMode)}
+              >
+                {previewMode ? t('fileEditor.edit') : t('fileEditor.preview')}
+              </button>
+            )}
+            {saved && <span className={styles.savedBadge}>{t('fileEditor.saved')}</span>}
             {canSave && (
               <button
                 className={styles.saveBtn}
                 onClick={handleSave}
                 disabled={saving}
               >
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? t('fileEditor.saving') : t('fileEditor.save')}
               </button>
             )}
             <button className={styles.closeBtn} onClick={handleClose}>
@@ -98,7 +128,10 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
         <div className={styles.body}>
           {loading && <div className={styles.message}>Loading...</div>}
           {error && <div className={styles.messageError}>{error}</div>}
-          {!loading && !error && (
+          {!loading && !error && previewMode && isMd && (
+            <MarkdownRenderer content={renderedMarkdown} />
+          )}
+          {!loading && !error && !previewMode && (
             <textarea
               className={styles.editor}
               value={content}
@@ -112,5 +145,36 @@ export function FileEditor({ path, onClose }: FileEditorProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+function MarkdownRenderer({ content }: { content: string }) {
+  const [html, setHtml] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([import('marked'), import('dompurify')]).then(
+      ([{ marked }, DOMPurify]) => {
+        if (cancelled) return;
+        const raw = marked.parse(content);
+        if (typeof raw === 'string') {
+          setHtml(DOMPurify.default.sanitize(raw));
+        } else {
+          raw.then((r) => {
+            if (!cancelled) setHtml(DOMPurify.default.sanitize(r));
+          });
+        }
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [content]);
+
+  return (
+    <div
+      className={styles.markdownPreview}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }

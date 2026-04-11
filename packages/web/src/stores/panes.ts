@@ -36,10 +36,13 @@ interface PanesState {
   setPaneSession: (paneId: string, sessionId: string) => void;
   /** Get session ID of active pane */
   getActiveSessionId: () => string | null;
+  /** Restore layout from localStorage */
+  restoreLayout: (availableSessionIds: string[]) => void;
 }
 
 const MIN_RATIO = 0.15;
 const MAX_RATIO = 0.85;
+const LAYOUT_STORAGE_KEY = 'zenterm_pane_layout';
 
 let nextPaneId = 1;
 function genPaneId(): string {
@@ -48,6 +51,41 @@ function genPaneId(): string {
 
 function clampRatio(r: number): number {
   return Math.min(MAX_RATIO, Math.max(MIN_RATIO, r));
+}
+
+// ─── Persistence ───
+
+function getMaxPaneId(node: PaneNode): number {
+  if (node.type === 'leaf') {
+    const match = node.paneId.match(/^pane-(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+  return Math.max(getMaxPaneId(node.children[0]), getMaxPaneId(node.children[1]));
+}
+
+function saveLayout(root: PaneNode | null, activePaneId: string | null): void {
+  try {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify({ root, activePaneId }));
+  } catch { /* ignore */ }
+}
+
+function loadLayout(): { root: PaneNode | null; activePaneId: string | null } | null {
+  try {
+    const stored = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function filterTree(node: PaneNode, validIds: Set<string>): PaneNode | null {
+  if (node.type === 'leaf') {
+    return validIds.has(node.sessionId) ? node : null;
+  }
+  const left = filterTree(node.children[0], validIds);
+  const right = filterTree(node.children[1], validIds);
+  if (!left) return right;
+  if (!right) return left;
+  return { ...node, children: [left, right] };
 }
 
 // ─── Tree operations ───
@@ -150,7 +188,9 @@ export const usePanesStore = create<PanesState>((set, get) => ({
     const paneId = genPaneId();
     const { root } = get();
     if (!root) {
-      set({ root: { type: 'leaf', paneId, sessionId }, activePaneId: paneId });
+      const newRoot: LeafPane = { type: 'leaf', paneId, sessionId };
+      set({ root: newRoot, activePaneId: paneId });
+      saveLayout(newRoot, paneId);
       return;
     }
     // If a leaf with this session already exists, just focus it
@@ -158,16 +198,16 @@ export const usePanesStore = create<PanesState>((set, get) => ({
     const existing = leaves.find((l) => l.sessionId === sessionId);
     if (existing) {
       set({ activePaneId: existing.paneId });
+      saveLayout(root, existing.paneId);
       return;
     }
     // Otherwise add as new leaf (split active pane horizontally)
     const { activePaneId } = get();
     if (activePaneId) {
       const newLeaf: LeafPane = { type: 'leaf', paneId, sessionId };
-      set({
-        root: splitLeaf(root, activePaneId, 'horizontal', newLeaf),
-        activePaneId: paneId,
-      });
+      const newRoot = splitLeaf(root, activePaneId, 'horizontal', newLeaf);
+      set({ root: newRoot, activePaneId: paneId });
+      saveLayout(newRoot, paneId);
     }
   },
 
@@ -176,10 +216,9 @@ export const usePanesStore = create<PanesState>((set, get) => ({
     if (!root || !activePaneId) return;
     const newPaneId = genPaneId();
     const newLeaf: LeafPane = { type: 'leaf', paneId: newPaneId, sessionId: newSessionId };
-    set({
-      root: splitLeaf(root, activePaneId, direction, newLeaf),
-      activePaneId: newPaneId,
-    });
+    const newRoot = splitLeaf(root, activePaneId, direction, newLeaf);
+    set({ root: newRoot, activePaneId: newPaneId });
+    saveLayout(newRoot, newPaneId);
   },
 
   closePane: (paneId) => {
@@ -188,21 +227,26 @@ export const usePanesStore = create<PanesState>((set, get) => ({
     const newRoot = removeLeaf(root, paneId);
     if (!newRoot) {
       set({ root: null, activePaneId: null });
+      saveLayout(null, null);
       return;
     }
     const wasActive = activePaneId === paneId;
     const newActive = wasActive ? getFirstLeaf(newRoot).paneId : activePaneId;
     set({ root: newRoot, activePaneId: newActive });
+    saveLayout(newRoot, newActive);
   },
 
   resizePane: (paneId, delta) => {
     const { root } = get();
     if (!root) return;
-    set({ root: updateParentRatio(root, paneId, delta) });
+    const newRoot = updateParentRatio(root, paneId, delta);
+    set({ root: newRoot });
+    saveLayout(newRoot, get().activePaneId);
   },
 
   setActivePane: (paneId) => {
     set({ activePaneId: paneId });
+    saveLayout(get().root, paneId);
   },
 
   setPaneSession: (paneId, sessionId) => {
@@ -217,7 +261,9 @@ export const usePanesStore = create<PanesState>((set, get) => ({
         children: [updateSession(node.children[0]), updateSession(node.children[1])],
       };
     };
-    set({ root: updateSession(root) });
+    const newRoot = updateSession(root);
+    set({ root: newRoot });
+    saveLayout(newRoot, get().activePaneId);
   },
 
   getActiveSessionId: () => {
@@ -225,5 +271,20 @@ export const usePanesStore = create<PanesState>((set, get) => ({
     if (!root || !activePaneId) return null;
     const leaf = findLeaf(root, activePaneId);
     return leaf?.sessionId ?? null;
+  },
+
+  restoreLayout: (availableSessionIds) => {
+    const saved = loadLayout();
+    if (!saved?.root) return;
+    const validIds = new Set(availableSessionIds);
+    const filtered = filterTree(saved.root, validIds);
+    if (!filtered) return;
+    // Rehydrate nextPaneId to avoid collisions
+    const maxId = getMaxPaneId(filtered);
+    if (maxId >= nextPaneId) nextPaneId = maxId + 1;
+    const activePaneId = saved.activePaneId && findLeaf(filtered, saved.activePaneId)
+      ? saved.activePaneId
+      : getFirstLeaf(filtered).paneId;
+    set({ root: filtered, activePaneId });
   },
 }));

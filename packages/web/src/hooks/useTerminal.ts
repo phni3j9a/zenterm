@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, type MutableRefObject } from 'react';
 import type { FitAddon as FitAddonType } from '@xterm/addon-fit';
+import type { SearchAddon as SearchAddonType } from '@xterm/addon-search';
 import type { Terminal as TerminalType, ITerminalOptions } from '@xterm/xterm';
 import { getWebSocketUrl } from '../api/client';
 import { useSettingsStore } from '../stores/settings';
@@ -9,6 +10,7 @@ export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'er
 interface UseTerminalOptions {
   sessionId: string;
   onStatusChange?: (status: ConnectionStatus, message?: string) => void;
+  onOutput?: (data: string) => void;
 }
 
 interface TerminalSocketMessage {
@@ -29,11 +31,13 @@ interface XtermModules {
   Terminal: typeof import('@xterm/xterm').Terminal;
   FitAddon: typeof import('@xterm/addon-fit').FitAddon;
   Unicode11Addon: typeof import('@xterm/addon-unicode11').Unicode11Addon;
+  SearchAddon: typeof import('@xterm/addon-search').SearchAddon;
 }
 
 interface TerminalBindings {
   term: TerminalType;
   fit: FitAddonType;
+  search: SearchAddonType;
 }
 
 interface RuntimeState {
@@ -52,8 +56,10 @@ interface SessionOptions {
   fontFamily: string;
   getTheme: () => TerminalTheme;
   onStatusChange?: (status: ConnectionStatus, message?: string) => void;
+  onOutput?: (data: string) => void;
   termRef: MutableRefObject<TerminalType | null>;
   fitRef: MutableRefObject<FitAddonType | null>;
+  searchRef: MutableRefObject<SearchAddonType | null>;
   wsRef: MutableRefObject<WebSocket | null>;
 }
 
@@ -92,12 +98,14 @@ function createTerminalBindings(
   const term = new modules.Terminal(createTerminalOptions(fontSize, fontFamily, getTheme()));
   const fit = new modules.FitAddon();
   const unicode = new modules.Unicode11Addon();
+  const search = new modules.SearchAddon();
   term.loadAddon(fit);
   term.loadAddon(unicode);
+  term.loadAddon(search);
   term.unicode.activeVersion = '11';
   term.open(container);
   fit.fit();
-  return { term, fit };
+  return { term, fit, search };
 }
 
 function createRuntimeState(): RuntimeState {
@@ -120,10 +128,15 @@ function handleMessage(
   term: TerminalType,
   state: RuntimeState,
   onStatusChange?: (status: ConnectionStatus, message?: string) => void,
+  onOutput?: (data: string) => void,
 ): void {
   try {
     const msg = JSON.parse(event.data) as TerminalSocketMessage;
-    if (msg.type === 'output') return void term.write(msg.data ?? '');
+    if (msg.type === 'output') {
+      term.write(msg.data ?? '');
+      onOutput?.(msg.data ?? '');
+      return;
+    }
     if (msg.type === 'exit') {
       state.intentionalClose = true;
       onStatusChange?.('disconnected', msg.message ?? 'Session ended');
@@ -151,6 +164,7 @@ function scheduleReconnect(
 
 function handleSocketOpen(
   ws: WebSocket,
+  sessionId: string,
   term: TerminalType,
   state: RuntimeState,
   onStatusChange?: (status: ConnectionStatus, message?: string) => void,
@@ -158,6 +172,13 @@ function handleSocketOpen(
   state.reconnectAttempt = 0;
   onStatusChange?.('connected');
   sendSocketMessage(ws, { type: 'resize', cols: term.cols, rows: term.rows });
+  // SSH quick connect: send stored command if present
+  const sshKey = `zenterm_ssh_cmd_${sessionId}`;
+  const sshCmd = sessionStorage.getItem(sshKey);
+  if (sshCmd) {
+    sessionStorage.removeItem(sshKey);
+    setTimeout(() => sendSocketMessage(ws, { type: 'input', data: sshCmd }), 300);
+  }
 }
 
 function handleSocketClose(
@@ -178,6 +199,7 @@ function connectSocket(
   wsRef: MutableRefObject<WebSocket | null>,
   state: RuntimeState,
   onStatusChange: UseTerminalOptions['onStatusChange'],
+  onOutput: UseTerminalOptions['onOutput'],
   reconnect: () => void,
 ): void {
   state.reconnectTimer = null;
@@ -185,8 +207,8 @@ function connectSocket(
   onStatusChange?.(status, getReconnectMessage(state.reconnectAttempt));
   const ws = new WebSocket(getWebSocketUrl(sessionId));
   wsRef.current = ws;
-  ws.onopen = () => handleSocketOpen(ws, term, state, onStatusChange);
-  ws.onmessage = (event) => handleMessage(event, term, state, onStatusChange);
+  ws.onopen = () => handleSocketOpen(ws, sessionId, term, state, onStatusChange);
+  ws.onmessage = (event) => handleMessage(event, term, state, onStatusChange, onOutput);
   ws.onclose = () => handleSocketClose(ws, wsRef, state, onStatusChange, reconnect);
   ws.onerror = () => undefined;
 }
@@ -202,6 +224,7 @@ function bindTerminalEvents(
   term: TerminalType,
   wsRef: MutableRefObject<WebSocket | null>,
   state: RuntimeState,
+  container: HTMLDivElement,
 ): void {
   term.onData((data) => {
     const ws = wsRef.current;
@@ -214,6 +237,31 @@ function bindTerminalEvents(
   });
   term.onResize(({ cols, rows }) => {
     sendSocketMessage(wsRef.current, { type: 'resize', cols, rows });
+  });
+
+  // Auto-copy on selection (opt-in via settings)
+  term.onSelectionChange(() => {
+    const selection = term.getSelection();
+    if (!selection) return;
+    try {
+      const settings = JSON.parse(localStorage.getItem('zenterm_settings') ?? '{}');
+      if (settings.autoCopyOnSelect) {
+        navigator.clipboard.writeText(selection).catch(() => {});
+      }
+    } catch { /* ignore */ }
+  });
+
+  // Right-click paste
+  container.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    navigator.clipboard.readText().then((text) => {
+      if (text) {
+        const ws = wsRef.current;
+        if (ws?.readyState === WebSocket.OPEN) {
+          sendSocketMessage(ws, { type: 'input', data: text });
+        }
+      }
+    }).catch(() => {});
   });
 }
 
@@ -232,6 +280,7 @@ function cleanupSession(
   term: TerminalType,
   termRef: MutableRefObject<TerminalType | null>,
   fitRef: MutableRefObject<FitAddonType | null>,
+  searchRef: MutableRefObject<SearchAddonType | null>,
 ): void {
   state.intentionalClose = true;
   if (state.reconnectTimer) clearTimeout(state.reconnectTimer);
@@ -240,25 +289,28 @@ function cleanupSession(
   term.dispose();
   termRef.current = null;
   fitRef.current = null;
+  searchRef.current = null;
   wsRef.current = null;
 }
 
 function createSession(options: SessionOptions): () => void {
-  const { container, sessionId, modules, fontSize, fontFamily, getTheme, onStatusChange, termRef, fitRef, wsRef } = options;
+  const { container, sessionId, modules, fontSize, fontFamily, getTheme, onStatusChange, onOutput, termRef, fitRef, searchRef, wsRef } = options;
   const state = createRuntimeState();
-  const { term, fit } = createTerminalBindings(container, modules, fontSize, fontFamily, getTheme);
+  const { term, fit, search } = createTerminalBindings(container, modules, fontSize, fontFamily, getTheme);
   termRef.current = term;
   fitRef.current = fit;
-  bindTerminalEvents(term, wsRef, state);
-  const connect = () => connectSocket(sessionId, term, wsRef, state, onStatusChange, connect);
+  searchRef.current = search;
+  bindTerminalEvents(term, wsRef, state, container);
+  const connect = () => connectSocket(sessionId, term, wsRef, state, onStatusChange, onOutput, connect);
   connect();
   const resizeObserver = observeTerminalResize(container, fit);
-  return () => cleanupSession(state, resizeObserver, wsRef, term, termRef, fitRef);
+  return () => cleanupSession(state, resizeObserver, wsRef, term, termRef, fitRef, searchRef);
 }
 
-export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
+export function useTerminal({ sessionId, onStatusChange, onOutput }: UseTerminalOptions) {
   const termRef = useRef<TerminalType | null>(null);
   const fitRef = useRef<FitAddonType | null>(null);
+  const searchRef = useRef<SearchAddonType | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const xtermLoaded = useRef(false);
@@ -281,12 +333,13 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
 
   const loadXtermModules = useCallback(async (): Promise<XtermModules> => {
     if (xtermLoaded.current && xtermModulesRef.current) return xtermModulesRef.current;
-    const [{ Terminal }, { FitAddon }, { Unicode11Addon }] = await Promise.all([
+    const [{ Terminal }, { FitAddon }, { Unicode11Addon }, { SearchAddon }] = await Promise.all([
       import('@xterm/xterm'),
       import('@xterm/addon-fit'),
       import('@xterm/addon-unicode11'),
+      import('@xterm/addon-search'),
     ]);
-    const modules = { Terminal, FitAddon, Unicode11Addon };
+    const modules = { Terminal, FitAddon, Unicode11Addon, SearchAddon };
     xtermModulesRef.current = modules;
     xtermLoaded.current = true;
     return modules;
@@ -309,8 +362,10 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
         fontFamily,
         getTheme,
         onStatusChange,
+        onOutput,
         termRef,
         fitRef,
+        searchRef,
         wsRef,
       });
     };
@@ -323,7 +378,7 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
       cancelled = true;
       cleanup?.();
     };
-  }, [fontSize, fontFamily, getTheme, loadXtermModules, onStatusChange, sessionId]);
+  }, [fontSize, fontFamily, getTheme, loadXtermModules, onStatusChange, onOutput, sessionId]);
 
   // Update theme on change
   useEffect(() => {
@@ -352,5 +407,5 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
     termRef.current?.focus();
   }, []);
 
-  return { attach, focus, termRef, wsRef };
+  return { attach, focus, termRef, searchRef, wsRef };
 }

@@ -4,6 +4,7 @@ import type { FileEntry } from '@zenterm/shared';
 import { FileEditor } from './FileEditor';
 import { FileUpload } from './FileUpload';
 import { ImagePreview, isImageFile } from './ImagePreview';
+import { PdfPreview, isPdfFile } from './PdfPreview';
 import { ContextMenu, type MenuItem } from '../ui/ContextMenu';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import styles from './FileBrowser.module.css';
@@ -23,6 +24,7 @@ export function FileBrowser() {
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewPdf, setPreviewPdf] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [deletingPath, setDeletingPath] = useState<string | null>(null);
@@ -64,6 +66,8 @@ export function FileBrowser() {
     } else if (effectiveType === 'file') {
       if (isImageFile(entry.name)) {
         setPreviewImage(fullPath);
+      } else if (isPdfFile(entry.name)) {
+        setPreviewPdf(fullPath);
       } else {
         setEditingFile(fullPath);
       }
@@ -91,6 +95,7 @@ export function FileBrowser() {
     if (entry.type === 'directory') return '\u{1F4C1}';
     if (entry.type === 'symlink') return '\u{1F517}';
     if (isImageFile(entry.name)) return '\u{1F5BC}';
+    if (isPdfFile(entry.name)) return '\u{1F4D1}';
     return '\u{1F4C4}';
   };
 
@@ -302,6 +307,13 @@ export function FileBrowser() {
           <button
             key={entry.name}
             className={styles.entry}
+            draggable
+            onDragStart={(e) => {
+              const fullPath = `${currentPath}/${entry.name}`;
+              e.dataTransfer.setData('application/x-zenterm-path', fullPath);
+              e.dataTransfer.setData('text/plain', fullPath);
+              e.dataTransfer.effectAllowed = 'copy';
+            }}
             onClick={() => {
               if (renamingEntry === entry.name) return;
               navigate(entry);
@@ -358,6 +370,13 @@ export function FileBrowser() {
         <ImagePreview
           path={previewImage}
           onClose={() => setPreviewImage(null)}
+        />
+      )}
+
+      {previewPdf && (
+        <PdfPreview
+          path={previewPdf}
+          onClose={() => setPreviewPdf(null)}
         />
       )}
 
