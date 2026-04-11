@@ -18,6 +18,7 @@
   display: flex;
   gap: 2px;
   min-width: 0;
+  flex: 1;
 }
 
 .tab {
@@ -66,6 +67,32 @@
 .tabClose:hover {
   color: var(--error);
   background: var(--error-subtle);
+}
+
+.tabActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.splitBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+  letter-spacing: -2px;
+}
+
+.splitBtn:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
 }
 
 .newTab {

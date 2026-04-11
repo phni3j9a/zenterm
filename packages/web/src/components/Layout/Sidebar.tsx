@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSessionsStore } from '../../stores/sessions';
 import { FileBrowser } from '../FileManager/FileBrowser';
+import { SystemMonitor } from '../Monitor/SystemMonitor';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import styles from './Sidebar.module.css';
 
-type SidebarView = 'sessions' | 'files';
+type SidebarView = 'sessions' | 'files' | 'monitor';
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const sessions = useSessionsStore((s) => s.sessions);
   const activeSessionId = useSessionsStore((s) => s.activeSessionId);
   const openTab = useSessionsStore((s) => s.openTab);
@@ -16,6 +19,15 @@ export function Sidebar() {
   const fetchSessions = useSessionsStore((s) => s.fetchSessions);
   const loading = useSessionsStore((s) => s.loading);
   const error = useSessionsStore((s) => s.error);
+  const bookmarked = useSessionsStore((s) => s.bookmarked);
+  const toggleBookmark = useSessionsStore((s) => s.toggleBookmark);
+
+  // Sort bookmarked sessions to top
+  const sortedSessions = [...sessions].sort((a, b) => {
+    const aBookmarked = bookmarked.has(a.name) ? 0 : 1;
+    const bBookmarked = bookmarked.has(b.name) ? 0 : 1;
+    return aBookmarked - bBookmarked;
+  });
 
   const [view, setView] = useState<SidebarView>('sessions');
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -65,21 +77,28 @@ export function Sidebar() {
           data-active={view === 'sessions'}
           onClick={() => setView('sessions')}
         >
-          Sessions
+          {t('tabs.sessions')}
         </button>
         <button
           className={styles.viewBtn}
           data-active={view === 'files'}
           onClick={() => setView('files')}
         >
-          Files
+          {t('tabs.files')}
+        </button>
+        <button
+          className={styles.viewBtn}
+          data-active={view === 'monitor'}
+          onClick={() => setView('monitor')}
+        >
+          {t('tabs.monitor')}
         </button>
       </div>
 
       {view === 'sessions' && (
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>Sessions</span>
+            <span className={styles.sectionTitle}>{t('sessions.title')}</span>
             <button
               className={styles.addBtn}
               onClick={() => createSession()}
@@ -90,15 +109,15 @@ export function Sidebar() {
           </div>
           <div className={styles.list}>
             {loading && sessions.length === 0 && (
-              <div className={styles.empty}>Loading...</div>
+              <div className={styles.empty}>{t('common.loading')}</div>
             )}
             {!loading && sessions.length === 0 && (
-              <div className={styles.empty}>No sessions</div>
+              <div className={styles.empty}>{t('sessions.noSessionsTitle')}</div>
             )}
             {error && (
               <div className={styles.error}>{error}</div>
             )}
-            {sessions.map((session) => (
+            {sortedSessions.map((session) => (
               <div
                 key={session.name}
                 className={styles.item}
@@ -120,7 +139,16 @@ export function Sidebar() {
                   />
                 ) : (
                   <>
-                    <span className={styles.itemIcon}>&#9654;</span>
+                    <button
+                      className={styles.bookmarkBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleBookmark(session.name);
+                      }}
+                      aria-label={bookmarked.has(session.name) ? t('sessions.unbookmark') : t('sessions.bookmark')}
+                    >
+                      {bookmarked.has(session.name) ? '★' : '☆'}
+                    </button>
                     <span
                       className={styles.itemLabel}
                       onDoubleClick={(e) => {
@@ -136,7 +164,7 @@ export function Sidebar() {
                         e.stopPropagation();
                         handleDeleteRequest(session.name);
                       }}
-                      aria-label="Delete session"
+                      aria-label={t('common.delete')}
                     >
                       &times;
                     </button>
@@ -149,11 +177,12 @@ export function Sidebar() {
       )}
 
       {view === 'files' && <FileBrowser />}
+      {view === 'monitor' && <SystemMonitor visible={true} />}
       {deletingId && (
         <ConfirmDialog
-          title="Delete Session"
-          message={`Are you sure you want to delete "${deletingId.replace(/^zen_/, '')}"?`}
-          confirmLabel="Delete"
+          title={t('sessions.deleteSessionTitle')}
+          message={t('sessions.deleteSessionConfirm', { name: deletingId?.replace(/^zen_/, '') })}
+          confirmLabel={t('common.delete')}
           variant="danger"
           onConfirm={handleDeleteConfirm}
           onCancel={() => setDeletingId(null)}

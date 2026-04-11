@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth';
 import { SettingsPanel } from './SettingsPanel';
 import styles from './Header.module.css';
@@ -10,6 +11,7 @@ interface HeaderProps {
 }
 
 export function Header({ sidebarOpen, onToggleSidebar, onOpenSettings }: HeaderProps) {
+  const { t } = useTranslation();
   const logout = useAuthStore((s) => s.logout);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -39,8 +41,8 @@ export function Header({ sidebarOpen, onToggleSidebar, onOpenSettings }: HeaderP
           <button
             className={styles.iconBtn}
             onClick={toggleSettings}
-            aria-label="Settings"
-            title="Settings"
+            aria-label={t('settings.title')}
+            title={t('settings.title')}
           >
             {'\u2699'}
           </button>

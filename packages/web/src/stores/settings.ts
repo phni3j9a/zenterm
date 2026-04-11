@@ -1,18 +1,27 @@
 import { create } from 'zustand';
+import i18n from '../i18n';
 
 type ThemeMode = 'light' | 'dark';
 
 interface SettingsState {
   themeMode: ThemeMode;
   fontSize: number;
+  fontFamily: string;
+  language: string;
+  notificationsEnabled: boolean;
   setThemeMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
   setFontSize: (size: number) => void;
+  setFontFamily: (family: string) => void;
+  setLanguage: (lang: string) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
 }
 
 const STORAGE_KEY = 'zenterm_settings';
 
-function loadSettings(): { themeMode: ThemeMode; fontSize: number } {
+const DEFAULT_FONT = "'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'SF Mono', Menlo, monospace";
+
+function loadSettings(): { themeMode: ThemeMode; fontSize: number; fontFamily: string; language: string; notificationsEnabled: boolean } {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -20,13 +29,16 @@ function loadSettings(): { themeMode: ThemeMode; fontSize: number } {
       return {
         themeMode: parsed.themeMode ?? 'dark',
         fontSize: parsed.fontSize ?? 14,
+        fontFamily: parsed.fontFamily ?? DEFAULT_FONT,
+        language: parsed.language ?? 'en',
+        notificationsEnabled: parsed.notificationsEnabled ?? false,
       };
     }
   } catch { /* ignore */ }
-  return { themeMode: 'dark', fontSize: 14 };
+  return { themeMode: 'dark', fontSize: 14, fontFamily: DEFAULT_FONT, language: 'en', notificationsEnabled: false };
 }
 
-function saveSettings(state: { themeMode: ThemeMode; fontSize: number }) {
+function saveSettings(state: { themeMode: ThemeMode; fontSize: number; fontFamily: string; language: string; notificationsEnabled: boolean }) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -48,7 +60,7 @@ export const useSettingsStore = create<SettingsState>((set) => {
       set((s) => {
         const mode: ThemeMode = s.themeMode === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', mode);
-        const next = { themeMode: mode, fontSize: s.fontSize };
+        const next = { ...s, themeMode: mode };
         saveSettings(next);
         return next;
       });
@@ -56,6 +68,28 @@ export const useSettingsStore = create<SettingsState>((set) => {
     setFontSize: (size) => {
       set((s) => {
         const next = { ...s, fontSize: size };
+        saveSettings(next);
+        return next;
+      });
+    },
+    setFontFamily: (family) => {
+      set((s) => {
+        const next = { ...s, fontFamily: family };
+        saveSettings(next);
+        return next;
+      });
+    },
+    setLanguage: (lang) => {
+      i18n.changeLanguage(lang);
+      set((s) => {
+        const next = { ...s, language: lang };
+        saveSettings(next);
+        return next;
+      });
+    },
+    setNotificationsEnabled: (enabled) => {
+      set((s) => {
+        const next = { ...s, notificationsEnabled: enabled };
         saveSettings(next);
         return next;
       });

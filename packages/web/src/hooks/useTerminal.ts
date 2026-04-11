@@ -49,6 +49,7 @@ interface SessionOptions {
   sessionId: string;
   modules: XtermModules;
   fontSize: number;
+  fontFamily: string;
   getTheme: () => TerminalTheme;
   onStatusChange?: (status: ConnectionStatus, message?: string) => void;
   termRef: MutableRefObject<TerminalType | null>;
@@ -68,11 +69,11 @@ function sendSocketMessage(ws: WebSocket | null, payload: object): void {
   ws.send(JSON.stringify(payload));
 }
 
-function createTerminalOptions(fontSize: number, theme: TerminalTheme): ITerminalOptions {
+function createTerminalOptions(fontSize: number, fontFamily: string, theme: TerminalTheme): ITerminalOptions {
   return {
     allowProposedApi: true,
     fontSize,
-    fontFamily: "'Menlo', 'Consolas', 'Liberation Mono', monospace",
+    fontFamily,
     theme,
     cursorBlink: true,
     cursorStyle: 'block',
@@ -85,9 +86,10 @@ function createTerminalBindings(
   container: HTMLDivElement,
   modules: XtermModules,
   fontSize: number,
+  fontFamily: string,
   getTheme: () => TerminalTheme,
 ): TerminalBindings {
-  const term = new modules.Terminal(createTerminalOptions(fontSize, getTheme()));
+  const term = new modules.Terminal(createTerminalOptions(fontSize, fontFamily, getTheme()));
   const fit = new modules.FitAddon();
   const unicode = new modules.Unicode11Addon();
   term.loadAddon(fit);
@@ -242,9 +244,9 @@ function cleanupSession(
 }
 
 function createSession(options: SessionOptions): () => void {
-  const { container, sessionId, modules, fontSize, getTheme, onStatusChange, termRef, fitRef, wsRef } = options;
+  const { container, sessionId, modules, fontSize, fontFamily, getTheme, onStatusChange, termRef, fitRef, wsRef } = options;
   const state = createRuntimeState();
-  const { term, fit } = createTerminalBindings(container, modules, fontSize, getTheme);
+  const { term, fit } = createTerminalBindings(container, modules, fontSize, fontFamily, getTheme);
   termRef.current = term;
   fitRef.current = fit;
   bindTerminalEvents(term, wsRef, state);
@@ -262,6 +264,7 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
   const xtermLoaded = useRef(false);
   const xtermModulesRef = useRef<XtermModules | null>(null);
   const fontSize = useSettingsStore((s) => s.fontSize);
+  const fontFamily = useSettingsStore((s) => s.fontFamily);
   const themeMode = useSettingsStore((s) => s.themeMode);
 
   const getTheme = useCallback(() => {
@@ -303,6 +306,7 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
         sessionId,
         modules,
         fontSize,
+        fontFamily,
         getTheme,
         onStatusChange,
         termRef,
@@ -319,7 +323,7 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
       cancelled = true;
       cleanup?.();
     };
-  }, [fontSize, getTheme, loadXtermModules, onStatusChange, sessionId]);
+  }, [fontSize, fontFamily, getTheme, loadXtermModules, onStatusChange, sessionId]);
 
   // Update theme on change
   useEffect(() => {
@@ -335,6 +339,14 @@ export function useTerminal({ sessionId, onStatusChange }: UseTerminalOptions) {
       fitRef.current.fit();
     }
   }, [fontSize]);
+
+  // Update font family on change
+  useEffect(() => {
+    if (termRef.current && fitRef.current) {
+      termRef.current.options.fontFamily = fontFamily;
+      fitRef.current.fit();
+    }
+  }, [fontFamily]);
 
   const focus = useCallback(() => {
     termRef.current?.focus();

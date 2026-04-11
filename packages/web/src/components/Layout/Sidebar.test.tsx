@@ -76,10 +76,11 @@ describe('Sidebar', () => {
     });
     render(<Sidebar />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete session' }));
-    expect(screen.getByText('Delete Session')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'common.delete' }));
+    expect(screen.getByText('sessions.deleteSessionTitle')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const deleteButtons = screen.getAllByRole('button', { name: 'common.delete' });
+    fireEvent.click(deleteButtons[deleteButtons.length - 1]);
     await waitFor(() => {
       expect(deleteSession).toHaveBeenCalledWith('zen_demo');
     });

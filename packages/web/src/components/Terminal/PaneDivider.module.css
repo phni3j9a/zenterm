@@ -1,0 +1,21 @@
+.divider {
+  flex-shrink: 0;
+  background: var(--border);
+  transition: background 0.15s ease;
+  z-index: 5;
+}
+
+.divider:hover,
+.divider:active {
+  background: var(--primary);
+}
+
+.divider[data-direction="horizontal"] {
+  width: 4px;
+  cursor: col-resize;
+}
+
+.divider[data-direction="vertical"] {
+  height: 4px;
+  cursor: row-resize;
+}
