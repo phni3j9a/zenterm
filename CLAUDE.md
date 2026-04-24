@@ -29,7 +29,8 @@ npm run build:web           # Web ビルド → gateway/public/app/ に出力
 - **開発時**: Vite dev (5173) → proxy → Gateway (18765)
 - **本番**: `npm run build:web` → `gateway/public/app/` → Gateway が `/app/*` で配信
 - **モバイル**: Gateway が `/embed/terminal` を配信 → WebView で表示
-- **systemd**: `zenterm-gateway.service` でローカルプロジェクトから直接起動
+- **systemd**: `zenterm-gateway.service` は npm 公開版の `zenterm-gateway` パッケージを npx キャッシュ経由で起動する。ローカル変更を反映するには `npm publish` 後に再インストールが必要（このリポジトリを直接 systemd から起動しているわけではない）。設定ファイル実体は `~/.config/systemd/user/zenterm-gateway.service`、ユーザースコープで稼働
+- **tmux セッションと CGroup**: Gateway の子プロセスとして tmux が起動するため、`systemctl --user stop zenterm-gateway` は既存 tmux セッションも巻き込んで落とす可能性あり。停止前に稼働中セッションを確認すること
 
 ## 設計方針
 - Web: xterm.js を npm パッケージとして直接 import（WebView 不要）

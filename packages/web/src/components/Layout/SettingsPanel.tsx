@@ -40,8 +40,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setFontFamily = useSettingsStore((s) => s.setFontFamily);
   const language = useSettingsStore((s) => s.language);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
-  const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
-  const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
   const autoCopyOnSelect = useSettingsStore((s) => s.autoCopyOnSelect);
   const setAutoCopyOnSelect = useSettingsStore((s) => s.setAutoCopyOnSelect);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -58,18 +56,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       document.removeEventListener('click', handleClick);
     };
   }, [onClose]);
-
-  const handleNotificationToggle = async () => {
-    if (!notificationsEnabled) {
-      if ('Notification' in window && Notification.permission !== 'granted') {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
-      }
-      setNotificationsEnabled(true);
-    } else {
-      setNotificationsEnabled(false);
-    }
-  };
 
   return (
     <div ref={panelRef} className={styles.panel}>
@@ -120,12 +106,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             </option>
           ))}
         </select>
-      </div>
-      <div className={styles.item}>
-        <span className={styles.label}>{t('settings.notifications')}</span>
-        <button className={styles.value} onClick={handleNotificationToggle}>
-          {notificationsEnabled ? 'ON' : 'OFF'}
-        </button>
       </div>
       <div className={styles.item}>
         <span className={styles.label}>{t('settings.autoCopy')}</span>

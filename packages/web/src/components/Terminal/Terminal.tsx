@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { useTerminal, type ConnectionStatus } from '../../hooks/useTerminal';
-import { useTerminalNotifications } from '../../hooks/useTerminalNotifications';
 import { SearchBar } from './SearchBar';
 import styles from './Terminal.module.css';
 
@@ -20,11 +19,7 @@ export function TerminalView({ sessionId, active }: TerminalProps) {
     setStatus(s);
     setStatusMessage(message ?? '');
   }, []);
-  const onOutputRef = useTerminalNotifications(sessionId);
-  const onOutput = useCallback((data: string) => {
-    onOutputRef.current?.(data);
-  }, [onOutputRef]);
-  const { attach, focus, searchRef, wsRef } = useTerminal({ sessionId, onStatusChange, onOutput });
+  const { attach, focus, searchRef, wsRef } = useTerminal({ sessionId, onStatusChange });
 
   useEffect(() => {
     if (!containerRef.current) return;

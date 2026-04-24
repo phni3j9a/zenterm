@@ -15,10 +15,8 @@ import terminalRoutes from './routes/terminal.js';
 import fileRoutes from './routes/files.js';
 import systemRoutes from './routes/system.js';
 import uploadRoutes from './routes/upload.js';
-import notificationRoutes from './routes/notifications.js';
 import { FilesystemError } from './services/filesystem.js';
 import { TmuxServiceError } from './services/tmux.js';
-import { loadStore } from './services/notification-store.js';
 
 const thisDir = fileURLToPath(new URL('.', import.meta.url));
 const publicDir = resolve(thisDir, '..', 'public');
@@ -132,9 +130,6 @@ export async function buildApp(): Promise<FastifyInstance> {
     return reply.sendFile('app/index.html');
   });
 
-  // Load notification store on startup
-  loadStore();
-
   await app.register(embedRoutes);
   await app.register(terminalRoutes);
   await app.register(authRoutes);
@@ -142,7 +137,6 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(systemRoutes);
   await app.register(fileRoutes);
   await app.register(uploadRoutes);
-  await app.register(notificationRoutes);
 
   return app;
 }
