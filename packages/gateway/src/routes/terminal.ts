@@ -7,6 +7,7 @@ import {
   attachSession,
   createSession,
   getSession,
+  killViewSession,
   sessionExists,
   TmuxServiceError
 } from '../services/tmux.js';
@@ -66,6 +67,7 @@ const terminalRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/ws/terminal', { websocket: true }, (socket, request) => {
     let ptyProcess: IPty | null = null;
     let currentSession: TmuxSession | null = null;
+    let viewSessionName: string | null = null;
     let cleanedUp = false;
     let connectionAcquired = false;
     let releasedConnection = false;
@@ -92,17 +94,20 @@ const terminalRoutes: FastifyPluginAsync = async (fastify) => {
         heartbeatTimer = null;
       }
 
-      if (!ptyProcess) {
-        return;
+      if (ptyProcess) {
+        // tmux detach (Ctrl-B d) to gracefully leave the session alive
+        try {
+          ptyProcess.write('\x02d');
+        } catch (error) {
+          request.log.debug({ err: error, session: currentSession?.name }, 'pty detach skipped');
+        } finally {
+          ptyProcess = null;
+        }
       }
 
-      // tmux detach (Ctrl-B d) to gracefully leave the session alive
-      try {
-        ptyProcess.write('\x02d');
-      } catch (error) {
-        request.log.debug({ err: error, session: currentSession?.name }, 'pty detach skipped');
-      } finally {
-        ptyProcess = null;
+      if (viewSessionName) {
+        killViewSession(viewSessionName);
+        viewSessionName = null;
       }
     };
 
@@ -154,7 +159,9 @@ const terminalRoutes: FastifyPluginAsync = async (fastify) => {
           : createSession(query.sessionId)
         : createSession();
 
-      ptyProcess = attachSession(currentSession.name, query.windowIndex);
+      const result = attachSession(currentSession.name, query.windowIndex);
+      ptyProcess = result.pty;
+      viewSessionName = result.viewSessionName;
     } catch (error) {
       request.log.error({ err: error, sessionId: query.sessionId }, 'terminal attach failed');
       fail(

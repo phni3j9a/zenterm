@@ -1,8 +1,11 @@
+import { randomBytes } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { spawn, type IPty } from 'node-pty';
 import { z } from 'zod';
 import { config } from '../config.js';
 import type { TmuxSession, TmuxWindow } from '../types/index.js';
+
+const VIEW_SESSION_PREFIX = '_zen_view_';
 
 interface ExecFileSyncError extends NodeJS.ErrnoException {
   stderr?: Buffer | string;
@@ -275,7 +278,53 @@ export function createSession(input?: string): TmuxSession {
   return getSession(displayName) ?? buildFallbackSession(displayName);
 }
 
-export function attachSession(input: string, windowIndex?: number): IPty {
+function generateViewSessionName(): string {
+  return `${VIEW_SESSION_PREFIX}${randomBytes(6).toString('hex')}`;
+}
+
+/**
+ * クライアントがアタッチしている間だけ存在する一時的な「ビュー」セッションを
+ * 削除する。ビューは元 session とグループ化されているため、削除しても元 session
+ * の windows/panes は失われない。
+ */
+export function killViewSession(viewSessionName: string): void {
+  if (!viewSessionName.startsWith(VIEW_SESSION_PREFIX)) {
+    return;
+  }
+
+  try {
+    runTmux(['kill-session', '-t', `=${viewSessionName}`]);
+  } catch {
+    // 既に消えている、tmux server が止まっている等は無視。
+  }
+}
+
+/** 起動時に取り残された view session を一掃する。 */
+export function cleanupOrphanViewSessions(): void {
+  let output: string;
+  try {
+    output = runTmux(['list-sessions', '-F', '#{session_name}']).trim();
+  } catch (error) {
+    if (error instanceof TmuxServiceError && isTmuxNoServerError(error)) {
+      return;
+    }
+    return;
+  }
+
+  for (const line of output.split('\n')) {
+    if (line.startsWith(VIEW_SESSION_PREFIX)) {
+      killViewSession(line);
+    }
+  }
+}
+
+export interface AttachResult {
+  pty: IPty;
+  /** 一時的な view session の名前。WebSocket 切断時に kill する責務は呼び出し側にある。 */
+  viewSessionName: string | null;
+}
+
+export function attachSession(input: string, windowIndex?: number): AttachResult {
   const displayName = normalizeSessionName(input);
 
   if (!sessionExists(displayName)) {
@@ -283,11 +332,6 @@ export function attachSession(input: string, windowIndex?: number): IPty {
   }
 
   applySessionOptions(displayName);
-
-  const target =
-    typeof windowIndex === 'number'
-      ? getWindowTarget(displayName, windowIndex)
-      : getExactTmuxTarget(displayName);
 
   if (typeof windowIndex === 'number' && !windowExists(displayName, windowIndex)) {
     throw new TmuxServiceError(
@@ -297,8 +341,44 @@ export function attachSession(input: string, windowIndex?: number): IPty {
     );
   }
 
+  let target: string;
+  let viewSessionName: string | null = null;
+
+  if (typeof windowIndex === 'number') {
+    // window 指定がある場合は専用 view session を作る。
+    // - 元 session とグループ化することで windows/panes 構造を共有
+    // - select-window はこの view 内でのみ有効なので他クライアントに影響しない
+    viewSessionName = generateViewSessionName();
+    try {
+      runTmux([
+        'new-session',
+        '-d',
+        '-t', getExactTmuxTarget(displayName),
+        '-s', viewSessionName,
+        '-x', '80',
+        '-y', '24'
+      ]);
+      runTmux([
+        'select-window',
+        '-t', `=${viewSessionName}:${windowIndex}`
+      ]);
+    } catch (error) {
+      // view session が作れなかったら掃除して握り潰す。
+      killViewSession(viewSessionName);
+      throw new TmuxServiceError(
+        `ビューセッションの作成に失敗しました: ${getErrorText(error)}`,
+        500,
+        'VIEW_SESSION_FAILED',
+        { cause: error }
+      );
+    }
+    target = `=${viewSessionName}`;
+  } else {
+    target = getExactTmuxTarget(displayName);
+  }
+
   try {
-    return spawn('tmux', ['attach-session', '-t', target], {
+    const pty = spawn('tmux', ['attach-session', '-t', target], {
       name: 'xterm-256color',
       cols: 80,
       rows: 24,
@@ -310,7 +390,11 @@ export function attachSession(input: string, windowIndex?: number): IPty {
         TERM: 'xterm-256color'
       }
     });
+    return { pty, viewSessionName };
   } catch (error) {
+    if (viewSessionName) {
+      killViewSession(viewSessionName);
+    }
     if (isTmuxMissing(error)) {
       throw new TmuxServiceError('tmux が見つかりません。PATH を確認してください。', 500, 'TMUX_NOT_FOUND', {
         cause: error

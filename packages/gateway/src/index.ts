@@ -2,10 +2,14 @@ import { createRequire } from 'node:module';
 import os from 'node:os';
 import { config } from './config.js';
 import { buildApp } from './app.js';
+import { cleanupOrphanViewSessions } from './services/tmux.js';
 
 const require = createRequire(import.meta.url);
 
 const app = await buildApp();
+
+// 前回終了時に取り残された一時的な view session を一掃しておく。
+cleanupOrphanViewSessions();
 let shuttingDown = false;
 
 async function shutdown(signal: string): Promise<void> {
