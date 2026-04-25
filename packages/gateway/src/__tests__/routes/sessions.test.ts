@@ -12,6 +12,13 @@ const tmuxMocks = vi.hoisted(() => ({
   listSessions: vi.fn(),
   killSession: vi.fn(),
   renameSession: vi.fn(),
+  listWindows: vi.fn(),
+  createWindow: vi.fn(),
+  killWindow: vi.fn(),
+  renameWindow: vi.fn(),
+  toggleWindowZoom: vi.fn(),
+  captureScrollback: vi.fn(),
+  captureWindowScrollback: vi.fn(),
 }));
 
 vi.mock('../../services/tmux.js', () => {
@@ -173,5 +180,108 @@ describe('session routes', () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ ok: true });
     expect(tmuxMocks.killSession).toHaveBeenCalledWith('to-delete');
+  });
+
+  it('GET /api/sessions/:sessionId/windows: ウィンドウ一覧を返す', async () => {
+    tmuxMocks.listWindows.mockReturnValue([
+      { index: 0, name: 'term1', active: true, zoomed: false, paneCount: 1, cwd: '/home/testuser' },
+      { index: 1, name: 'term2', active: false, zoomed: false, paneCount: 2, cwd: '/srv/work' },
+    ]);
+
+    const response = await app!.inject({
+      method: 'GET',
+      url: '/api/sessions/dev/windows',
+      headers: { authorization: 'Bearer test-token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual([
+      { index: 0, name: 'term1', active: true, zoomed: false, paneCount: 1, cwd: '/home/testuser' },
+      { index: 1, name: 'term2', active: false, zoomed: false, paneCount: 2, cwd: '/srv/work' },
+    ]);
+    expect(tmuxMocks.listWindows).toHaveBeenCalledWith('dev');
+  });
+
+  it('POST /api/sessions/:sessionId/windows: ウィンドウを作成する', async () => {
+    tmuxMocks.createWindow.mockReturnValue({
+      index: 1,
+      name: 'api',
+      active: true,
+      zoomed: false,
+      paneCount: 1,
+      cwd: '/home/testuser',
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/api/sessions/dev/windows',
+      headers: { authorization: 'Bearer test-token' },
+      payload: { name: 'api' },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(JSON.parse(response.body)).toEqual({
+      index: 1,
+      name: 'api',
+      active: true,
+      zoomed: false,
+      paneCount: 1,
+      cwd: '/home/testuser',
+    });
+    expect(tmuxMocks.createWindow).toHaveBeenCalledWith('dev', 'api');
+  });
+
+  it('PATCH /api/sessions/:sessionId/windows/:windowIndex: リネーム成功', async () => {
+    tmuxMocks.renameWindow.mockReturnValue({
+      index: 1,
+      name: 'renamed',
+      active: false,
+      zoomed: false,
+      paneCount: 1,
+      cwd: '/home/testuser',
+    });
+
+    const response = await app!.inject({
+      method: 'PATCH',
+      url: '/api/sessions/dev/windows/1',
+      headers: { authorization: 'Bearer test-token' },
+      payload: { name: 'renamed' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(tmuxMocks.renameWindow).toHaveBeenCalledWith('dev', 1, 'renamed');
+  });
+
+  it('DELETE /api/sessions/:sessionId/windows/:windowIndex: 削除成功', async () => {
+    const response = await app!.inject({
+      method: 'DELETE',
+      url: '/api/sessions/dev/windows/2',
+      headers: { authorization: 'Bearer test-token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({ ok: true });
+    expect(tmuxMocks.killWindow).toHaveBeenCalledWith('dev', 2);
+  });
+
+  it('POST /api/sessions/:sessionId/windows/:windowIndex/zoom: zoom トグル', async () => {
+    tmuxMocks.toggleWindowZoom.mockReturnValue({
+      index: 0,
+      name: 'term1',
+      active: true,
+      zoomed: true,
+      paneCount: 2,
+      cwd: '/home/testuser',
+    });
+
+    const response = await app!.inject({
+      method: 'POST',
+      url: '/api/sessions/dev/windows/0/zoom',
+      headers: { authorization: 'Bearer test-token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body).zoomed).toBe(true);
+    expect(tmuxMocks.toggleWindowZoom).toHaveBeenCalledWith('dev', 0);
   });
 });

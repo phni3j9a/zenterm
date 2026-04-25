@@ -1,9 +1,20 @@
+/** tmux ウィンドウ情報 (session 内の表示単位) */
+export interface TmuxWindow {
+  index: number;
+  name: string;
+  active: boolean;
+  zoomed: boolean;
+  paneCount: number;
+  cwd: string;
+}
+
 /** tmux セッション情報 (gateway ↔ mobile 共通) */
 export interface TmuxSession {
   name: string;
   displayName: string;
   created: number;
   cwd: string;
+  windows?: TmuxWindow[];
 }
 
 /** クライアント → ゲートウェイ WebSocket メッセージ */

@@ -1,6 +1,18 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { createSession, killSession, listSessions, renameSession, captureScrollback } from '../services/tmux.js';
+import {
+  captureScrollback,
+  captureWindowScrollback,
+  createSession,
+  createWindow,
+  killSession,
+  killWindow,
+  listSessions,
+  listWindows,
+  renameSession,
+  renameWindow,
+  toggleWindowZoom
+} from '../services/tmux.js';
 
 const createSessionSchema = z
   .object({
@@ -16,6 +28,23 @@ const renameSessionSchema = z
 
 const sessionParamsSchema = z.object({
   sessionId: z.string().trim().min(1).max(64)
+});
+
+const createWindowSchema = z
+  .object({
+    name: z.string().trim().min(1).max(64).optional()
+  })
+  .strict();
+
+const renameWindowSchema = z
+  .object({
+    name: z.string().trim().min(1).max(64)
+  })
+  .strict();
+
+const windowParamsSchema = z.object({
+  sessionId: z.string().trim().min(1).max(64),
+  windowIndex: z.coerce.number().int().min(0).max(999)
 });
 
 const sessionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -49,6 +78,65 @@ const sessionRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/sessions/:sessionId/scrollback', async (request) => {
     const params = sessionParamsSchema.parse(request.params);
     const content = captureScrollback(params.sessionId);
+    return { content };
+  });
+
+  // ─── Window routes ───
+
+  fastify.get('/api/sessions/:sessionId/windows', async (request) => {
+    const params = sessionParamsSchema.parse(request.params);
+    return listWindows(params.sessionId);
+  });
+
+  fastify.post('/api/sessions/:sessionId/windows', async (request, reply) => {
+    const params = sessionParamsSchema.parse(request.params);
+    const body = createWindowSchema.parse(request.body ?? {});
+    const window = createWindow(params.sessionId, body.name);
+
+    request.log.info(
+      { session: params.sessionId, window: window.name },
+      'tmux window created'
+    );
+    return reply.status(201).send(window);
+  });
+
+  fastify.patch('/api/sessions/:sessionId/windows/:windowIndex', async (request) => {
+    const params = windowParamsSchema.parse(request.params);
+    const body = renameWindowSchema.parse(request.body ?? {});
+    const window = renameWindow(params.sessionId, params.windowIndex, body.name);
+
+    request.log.info(
+      { session: params.sessionId, window: params.windowIndex, name: window.name },
+      'tmux window renamed'
+    );
+    return window;
+  });
+
+  fastify.delete('/api/sessions/:sessionId/windows/:windowIndex', async (request) => {
+    const params = windowParamsSchema.parse(request.params);
+    killWindow(params.sessionId, params.windowIndex);
+
+    request.log.info(
+      { session: params.sessionId, window: params.windowIndex },
+      'tmux window deleted'
+    );
+    return { ok: true };
+  });
+
+  fastify.post('/api/sessions/:sessionId/windows/:windowIndex/zoom', async (request) => {
+    const params = windowParamsSchema.parse(request.params);
+    const window = toggleWindowZoom(params.sessionId, params.windowIndex);
+
+    request.log.info(
+      { session: params.sessionId, window: params.windowIndex, zoomed: window.zoomed },
+      'tmux window zoom toggled'
+    );
+    return window;
+  });
+
+  fastify.get('/api/sessions/:sessionId/windows/:windowIndex/scrollback', async (request) => {
+    const params = windowParamsSchema.parse(request.params);
+    const content = captureWindowScrollback(params.sessionId, params.windowIndex);
     return { content };
   });
 };

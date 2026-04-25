@@ -17,6 +17,7 @@ const HEARTBEAT_INTERVAL_MS = 30_000;
 const HEARTBEAT_STALE_MS = 60_000;
 const terminalQuerySchema = z.object({
   sessionId: z.string().trim().min(1).max(64).optional(),
+  windowIndex: z.coerce.number().int().min(0).max(999).optional(),
   token: z.string().trim().min(1)
 });
 
@@ -153,7 +154,7 @@ const terminalRoutes: FastifyPluginAsync = async (fastify) => {
           : createSession(query.sessionId)
         : createSession();
 
-      ptyProcess = attachSession(currentSession.name);
+      ptyProcess = attachSession(currentSession.name, query.windowIndex);
     } catch (error) {
       request.log.error({ err: error, sessionId: query.sessionId }, 'terminal attach failed');
       fail(

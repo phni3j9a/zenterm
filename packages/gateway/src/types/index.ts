@@ -1,6 +1,7 @@
 // 型は @zenterm/shared から re-export
 export type {
   TmuxSession,
+  TmuxWindow,
   ClientMessage,
   ServerMessage,
   SystemStatus,

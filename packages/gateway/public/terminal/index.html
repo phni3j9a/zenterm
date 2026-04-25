@@ -56,6 +56,7 @@
   <script>
     var params = new URLSearchParams(window.location.search);
     var sessionId = params.get('sessionId');
+    var windowIndex = params.get('windowIndex');
     var token = params.get('token');
     var theme = params.get('theme') || 'dark';
     var parsedFontSize = Number.parseInt(params.get('fontSize') || '10', 10);
@@ -239,6 +240,7 @@
       var wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       var wsParams = new URLSearchParams();
       if (sessionId) wsParams.set('sessionId', sessionId);
+      if (windowIndex !== null && windowIndex !== '') wsParams.set('windowIndex', windowIndex);
       if (token) wsParams.set('token', token);
       return wsProtocol + '//' + window.location.host + '/ws/terminal?' + wsParams.toString();
     }
