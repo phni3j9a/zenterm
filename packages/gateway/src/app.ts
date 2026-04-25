@@ -10,6 +10,7 @@ import bearerPlugin from './auth/bearer.js';
 import { config } from './config.js';
 import authRoutes from './routes/auth.js';
 import embedRoutes from './routes/embed.js';
+import eventsRoutes from './routes/events.js';
 import sessionRoutes from './routes/sessions.js';
 import terminalRoutes from './routes/terminal.js';
 import fileRoutes from './routes/files.js';
@@ -132,6 +133,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await app.register(embedRoutes);
   await app.register(terminalRoutes);
+  await app.register(eventsRoutes);
   await app.register(authRoutes);
   await app.register(sessionRoutes);
   await app.register(systemRoutes);
