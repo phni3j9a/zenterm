@@ -504,7 +504,8 @@ export function listWindows(sessionInput: string): TmuxWindow[] {
   return output
     .split('\n')
     .map(parseWindowLine)
-    .filter((window): window is TmuxWindow => window !== null);
+    .filter((window): window is TmuxWindow => window !== null)
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
 
 export function windowExists(sessionInput: string, windowIndex: number): boolean {
