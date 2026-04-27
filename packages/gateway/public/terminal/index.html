@@ -374,8 +374,9 @@
           if (term) {
             if (!message.noFocus) {
               term.focus();
-            } else {
-              // noFocus時は内部textareaのfocusを外してiOSキーボード再表示を防ぐ
+            } else if (!window.__zenKeyboardOpen) {
+              // ユーザーが意図的にキーボードを開いている時は維持する。
+              // それ以外は内部 textarea の focus を外して iOS キーボード再表示を防ぐ
               var textarea = document.querySelector('.xterm-helper-textarea');
               if (textarea) {
                 textarea.blur();
@@ -395,6 +396,22 @@
           term.resize(message.cols, message.rows);
           updateKnownSize();
           sendResize();
+          return;
+        }
+        if (message.type === 'focus') {
+          if (term) {
+            term.focus();
+          }
+          return;
+        }
+        if (message.type === 'blur') {
+          var helperTextarea = document.querySelector('.xterm-helper-textarea');
+          if (helperTextarea) {
+            helperTextarea.blur();
+          }
+          if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+          }
           return;
         }
         if (message.type === 'theme') {
