@@ -1,7 +1,7 @@
 process.env.AUTH_TOKEN = 'test-token';
 process.env.LOG_LEVEL = 'error';
 
-import { mkdtemp, rm, writeFile, chmod } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile, chmod } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { FastifyInstance } from 'fastify';
@@ -44,27 +44,25 @@ async function buildTestApp(): Promise<FastifyInstance> {
 
 let app: FastifyInstance | undefined;
 let workDir: string;
-let statusPath: string;
+let zentermDir: string;
+let legacyFile: string;
+let multiDir: string;
 
-const FIXED_NOW = 1_714_500_000; // Unix秒。テスト中の時計を固定する基準
+const FIXED_NOW = 1_714_500_000;
 
 beforeEach(async () => {
   vi.clearAllMocks();
   vi.resetModules();
   process.env.AUTH_TOKEN = 'test-token';
   process.env.LOG_LEVEL = 'error';
-  workDir = await mkdtemp(join(tmpdir(), 'zenterm-claude-test-'));
-  statusPath = join(workDir, 'claude-status.json');
-  // XDG_CONFIG_HOME を一時ディレクトリに向けて、サービスのデフォルトパスをここへ寄せる
-  process.env.XDG_CONFIG_HOME = workDir;
-  // サービスは <XDG_CONFIG_HOME>/zenterm/claude-status.json を見るので、
-  // statusPath を実体に合わせて作り直す
-  const subDir = join(workDir, 'zenterm');
-  const { mkdir } = await import('node:fs/promises');
-  await mkdir(subDir, { recursive: true });
-  statusPath = join(subDir, 'claude-status.json');
 
-  // 時計を固定
+  workDir = await mkdtemp(join(tmpdir(), 'zenterm-claude-test-'));
+  process.env.XDG_CONFIG_HOME = workDir;
+  zentermDir = join(workDir, 'zenterm');
+  await mkdir(zentermDir, { recursive: true });
+  legacyFile = join(zentermDir, 'claude-status.json');
+  multiDir = join(zentermDir, 'claude-status');
+
   vi.useFakeTimers();
   vi.setSystemTime(FIXED_NOW * 1000);
 
@@ -90,27 +88,31 @@ async function get() {
   return { status: response.statusCode, body: JSON.parse(response.body) };
 }
 
-describe('GET /api/claude/limits', () => {
-  it('ファイルが無ければ unconfigured を 200 で返す', async () => {
+function payload(overrides: Record<string, unknown> = {}) {
+  return JSON.stringify({
+    schema_version: 1,
+    captured_at: FIXED_NOW - 60,
+    five_hour: { used_percentage: 23.5, resets_at: FIXED_NOW + 18000 },
+    seven_day: { used_percentage: 41.2, resets_at: FIXED_NOW + 600000 },
+    ...overrides,
+  });
+}
+
+describe('GET /api/claude/limits — single legacy file', () => {
+  it('ファイルもディレクトリも無ければ unconfigured を 200 で返す', async () => {
     const { status, body } = await get();
     expect(status).toBe(200);
     expect(body).toEqual({ state: 'unconfigured' });
   });
 
-  it('正常なファイル (両ウィンドウあり、新鮮) は ok / stale: false', async () => {
-    await writeFile(
-      statusPath,
-      JSON.stringify({
-        schema_version: 1,
-        captured_at: FIXED_NOW - 60,
-        five_hour: { used_percentage: 23.5, resets_at: FIXED_NOW + 18000 },
-        seven_day: { used_percentage: 41.2, resets_at: FIXED_NOW + 600000 },
-      })
-    );
-
+  it('legacy ファイル単独・正常 (両ウィンドウあり、新鮮) は configured / state ok / label "default"', async () => {
+    await writeFile(legacyFile, payload());
     const { status, body } = await get();
     expect(status).toBe(200);
-    expect(body).toMatchObject({
+    expect(body.state).toBe('configured');
+    expect(body.accounts).toHaveLength(1);
+    expect(body.accounts[0]).toMatchObject({
+      label: 'default',
       state: 'ok',
       capturedAt: FIXED_NOW - 60,
       ageSeconds: 60,
@@ -121,108 +123,134 @@ describe('GET /api/claude/limits', () => {
   });
 
   it('captured_at が 5 分超過なら stale: true', async () => {
-    await writeFile(
-      statusPath,
-      JSON.stringify({
-        schema_version: 1,
-        captured_at: FIXED_NOW - 600,
-        five_hour: { used_percentage: 50, resets_at: FIXED_NOW + 1000 },
-        seven_day: { used_percentage: 60, resets_at: FIXED_NOW + 100000 },
-      })
-    );
-
+    await writeFile(legacyFile, payload({ captured_at: FIXED_NOW - 600 }));
     const { body } = await get();
-    expect(body).toMatchObject({
-      state: 'ok',
-      ageSeconds: 600,
-      stale: true,
-    });
+    expect(body.accounts[0]).toMatchObject({ state: 'ok', ageSeconds: 600, stale: true });
   });
 
-  it('rate_limits が両方欠落なら pending', async () => {
-    await writeFile(
-      statusPath,
-      JSON.stringify({
-        schema_version: 1,
-        captured_at: FIXED_NOW - 30,
-        five_hour: null,
-        seven_day: null,
-      })
-    );
-
+  it('rate_limits 両方 null で pending', async () => {
+    await writeFile(legacyFile, payload({ five_hour: null, seven_day: null }));
     const { body } = await get();
-    expect(body).toEqual({
+    expect(body.accounts[0]).toEqual({
+      label: 'default',
       state: 'pending',
-      capturedAt: FIXED_NOW - 30,
-      ageSeconds: 30,
+      capturedAt: FIXED_NOW - 60,
+      ageSeconds: 60,
       stale: false,
     });
   });
 
-  it('片方の窓だけあれば ok で欠落側は undefined', async () => {
-    await writeFile(
-      statusPath,
-      JSON.stringify({
-        schema_version: 1,
-        captured_at: FIXED_NOW - 30,
-        five_hour: { used_percentage: 10, resets_at: FIXED_NOW + 1000 },
-        seven_day: null,
-      })
-    );
-
+  it('片方の窓だけあれば ok (欠落側 undefined)', async () => {
+    await writeFile(legacyFile, payload({ seven_day: null }));
     const { body } = await get();
-    expect(body.state).toBe('ok');
-    expect(body.fiveHour).toEqual({ usedPercentage: 10, resetsAt: FIXED_NOW + 1000 });
-    expect(body.sevenDay).toBeUndefined();
+    expect(body.accounts[0].state).toBe('ok');
+    expect(body.accounts[0].fiveHour).toEqual({ usedPercentage: 23.5, resetsAt: FIXED_NOW + 18000 });
+    expect(body.accounts[0].sevenDay).toBeUndefined();
   });
 
-  it('JSON パース失敗は unavailable: malformed', async () => {
-    await writeFile(statusPath, 'not json {');
-
+  it('JSON パース失敗は unavailable: malformed (label "default")', async () => {
+    await writeFile(legacyFile, 'not json {');
     const { body } = await get();
-    expect(body.state).toBe('unavailable');
-    expect(body.reason).toBe('malformed');
-    expect(body.message).toContain('JSON parse failed');
+    expect(body.state).toBe('configured');
+    expect(body.accounts[0]).toMatchObject({
+      label: 'default',
+      state: 'unavailable',
+      reason: 'malformed',
+    });
+    expect(body.accounts[0].message).toContain('JSON parse failed');
   });
 
-  it('スキーマ違反 (used_percentage が文字列) も unavailable: malformed', async () => {
+  it('スキーマ違反は unavailable: malformed', async () => {
     await writeFile(
-      statusPath,
+      legacyFile,
       JSON.stringify({
         schema_version: 1,
         captured_at: FIXED_NOW,
         five_hour: { used_percentage: 'high', resets_at: FIXED_NOW + 1000 },
       })
     );
-
     const { body } = await get();
-    expect(body.state).toBe('unavailable');
-    expect(body.reason).toBe('malformed');
-    expect(body.message).toContain('schema validation failed');
+    expect(body.accounts[0].state).toBe('unavailable');
+    expect(body.accounts[0].reason).toBe('malformed');
   });
 
-  it('読み取り権限なしなら unavailable: read_error', async () => {
-    await writeFile(
-      statusPath,
-      JSON.stringify({
-        schema_version: 1,
-        captured_at: FIXED_NOW,
-        five_hour: null,
-        seven_day: null,
-      })
-    );
-    // 0o000 にして読み取り不能にする (root で実行されると無効になるためその場合はスキップ)
-    if (process.getuid && process.getuid() === 0) {
-      return;
-    }
-    await chmod(statusPath, 0o000);
-
+  it('読み取り権限なしは unavailable: read_error', async () => {
+    await writeFile(legacyFile, payload({ five_hour: null, seven_day: null }));
+    if (process.getuid && process.getuid() === 0) return;
+    await chmod(legacyFile, 0o000);
     try {
       const { body } = await get();
-      expect(body.state).toBe('unavailable');
-      expect(body.reason).toBe('read_error');
+      expect(body.accounts[0].state).toBe('unavailable');
+      expect(body.accounts[0].reason).toBe('read_error');
     } finally {
-      await chmod(statusPath, 0o644);
+      await chmod(legacyFile, 0o644);
     }
+  });
+});
+
+describe('GET /api/claude/limits — multi-account directory', () => {
+  it('ディレクトリ内の各 .json を読み、ファイル名 stem を label にする', async () => {
+    await mkdir(multiDir, { recursive: true });
+    await writeFile(join(multiDir, 'main.json'), payload());
+    await writeFile(
+      join(multiDir, 'sub.json'),
+      payload({
+        captured_at: FIXED_NOW - 30,
+        five_hour: { used_percentage: 5, resets_at: FIXED_NOW + 9000 },
+        seven_day: { used_percentage: 12, resets_at: FIXED_NOW + 500000 },
+      })
+    );
+
+    const { body } = await get();
+    expect(body.state).toBe('configured');
+    expect(body.accounts).toHaveLength(2);
+    // 並びはファイル名昇順 (sort) なので main < sub
+    expect(body.accounts[0].label).toBe('main');
+    expect(body.accounts[1].label).toBe('sub');
+    expect(body.accounts[1].fiveHour).toEqual({ usedPercentage: 5, resetsAt: FIXED_NOW + 9000 });
+  });
+
+  it('JSON 内の label フィールドはファイル名より優先される', async () => {
+    await mkdir(multiDir, { recursive: true });
+    await writeFile(join(multiDir, 'a1b2c3.json'), payload({ label: 'main account' }));
+    const { body } = await get();
+    expect(body.accounts[0].label).toBe('main account');
+  });
+
+  it('legacy ファイルとディレクトリ両方ある場合は両方返す', async () => {
+    await writeFile(legacyFile, payload());
+    await mkdir(multiDir, { recursive: true });
+    await writeFile(join(multiDir, 'sub.json'), payload({ captured_at: FIXED_NOW - 90 }));
+    const { body } = await get();
+    expect(body.accounts).toHaveLength(2);
+    expect(body.accounts.map((a: { label: string }) => a.label)).toEqual(['default', 'sub']);
+  });
+
+  it('1 ファイルが malformed でも他のアカウントは生きる', async () => {
+    await mkdir(multiDir, { recursive: true });
+    await writeFile(join(multiDir, 'main.json'), payload());
+    await writeFile(join(multiDir, 'sub.json'), 'broken{');
+    const { body } = await get();
+    expect(body.accounts).toHaveLength(2);
+    const main = body.accounts.find((a: { label: string }) => a.label === 'main');
+    const sub = body.accounts.find((a: { label: string }) => a.label === 'sub');
+    expect(main.state).toBe('ok');
+    expect(sub.state).toBe('unavailable');
+    expect(sub.reason).toBe('malformed');
+  });
+
+  it('空ディレクトリ + legacy 不在は unconfigured', async () => {
+    await mkdir(multiDir, { recursive: true });
+    const { body } = await get();
+    expect(body).toEqual({ state: 'unconfigured' });
+  });
+
+  it('.json 以外のファイルは無視する', async () => {
+    await mkdir(multiDir, { recursive: true });
+    await writeFile(join(multiDir, 'README'), 'notes about this dir');
+    await writeFile(join(multiDir, 'main.json'), payload());
+    const { body } = await get();
+    expect(body.accounts).toHaveLength(1);
+    expect(body.accounts[0].label).toBe('main');
   });
 });

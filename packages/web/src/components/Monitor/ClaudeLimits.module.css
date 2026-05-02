@@ -73,6 +73,26 @@
   opacity: 0.6;
 }
 
+.accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.accountLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary, var(--color-text-secondary));
+}
+
 .row {
   display: flex;
   flex-direction: column;

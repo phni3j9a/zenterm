@@ -136,24 +136,25 @@ export interface ClaudeLimitsWindow {
 export const CLAUDE_STATUS_STALE_AFTER_SECONDS = 300;
 
 /**
- * `GET /api/claude/limits` レスポンス。
- * 常に HTTP 200 で返り、`state` で UI が分岐する (`unconfigured` はセットアップ案内、
- * `pending` は API 呼び出し前、`unavailable` はファイル/JSON 異常、`ok` は描画可)。
+ * 1 アカウント分の Claude Code レート制限ステータス。
+ * `label` は UI 表示用の識別子で、ファイル名 stem または JSON 内の `label` から決まる。
  */
-export type ClaudeLimitsResponse =
-  | { state: 'unconfigured' }
+export type ClaudeAccountStatus =
   | {
+      label: string;
       state: 'unavailable';
       reason: 'malformed' | 'read_error';
       message: string;
     }
   | {
+      label: string;
       state: 'pending';
       capturedAt: number;
       ageSeconds: number;
       stale: boolean;
     }
   | {
+      label: string;
       state: 'ok';
       capturedAt: number;
       ageSeconds: number;
@@ -161,3 +162,21 @@ export type ClaudeLimitsResponse =
       fiveHour?: ClaudeLimitsWindow;
       sevenDay?: ClaudeLimitsWindow;
     };
+
+/**
+ * `GET /api/claude/limits` レスポンス。
+ * 常に HTTP 200 で返り、`state` で UI が分岐する。
+ *
+ * - `unconfigured`: ZenTerm 連携用ファイルが一切存在しない (セットアップ未完了)
+ * - `configured`: 1 アカウント以上のファイルを検出。`accounts` に各アカウントの
+ *   ステータスが入る (それぞれ `pending` / `unavailable` / `ok` のいずれか)
+ *
+ * ファイルパス:
+ * - 単一アカウント (legacy): `~/.config/zenterm/claude-status.json`
+ *   → label = "default"
+ * - 複数アカウント: `~/.config/zenterm/claude-status/<name>.json`
+ *   → label = ファイル内の `label` フィールド or ファイル名 stem
+ */
+export type ClaudeLimitsResponse =
+  | { state: 'unconfigured' }
+  | { state: 'configured'; accounts: ClaudeAccountStatus[] };
