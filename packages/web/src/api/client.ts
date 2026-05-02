@@ -5,6 +5,7 @@ import type {
   FileContentResponse,
   FileWriteResponse,
   FileUploadResponse,
+  ClaudeLimitsResponse,
 } from '@zenterm/shared';
 import { useAuthStore } from '../stores/auth';
 
@@ -116,6 +117,12 @@ export const getScrollback = (id: string) =>
 
 export const getSystemStatus = (options?: { signal?: AbortSignal }) =>
   apiRequest<SystemStatus>('/api/system/status', options?.signal ? { signal: options.signal } : undefined);
+
+export const getClaudeLimits = (options?: { signal?: AbortSignal }) =>
+  apiRequest<ClaudeLimitsResponse>(
+    '/api/claude/limits',
+    options?.signal ? { signal: options.signal } : undefined,
+  );
 
 export const listFiles = (path = '~', showHidden = true) =>
   apiRequest<FileListResponse>(`/api/files?path=${encodeURIComponent(path)}&showHidden=${showHidden}`);

@@ -118,3 +118,46 @@ export interface FileMkdirResponse {
   path: string;
   created: boolean;
 }
+
+/**
+ * Claude Code レート制限ウィンドウ
+ * `used_percentage` は 0–100、`resets_at` は Unix epoch 秒。
+ */
+export interface ClaudeLimitsWindow {
+  usedPercentage: number;
+  resetsAt: number;
+}
+
+/**
+ * statusline スクリプトが捕捉してから古いと判定するまでの秒数。
+ * Claude Code はイベント駆動で statusline を再実行するため、
+ * これを超えるデータは別マシン/別セッションでの消費と乖離している可能性がある。
+ */
+export const CLAUDE_STATUS_STALE_AFTER_SECONDS = 300;
+
+/**
+ * `GET /api/claude/limits` レスポンス。
+ * 常に HTTP 200 で返り、`state` で UI が分岐する (`unconfigured` はセットアップ案内、
+ * `pending` は API 呼び出し前、`unavailable` はファイル/JSON 異常、`ok` は描画可)。
+ */
+export type ClaudeLimitsResponse =
+  | { state: 'unconfigured' }
+  | {
+      state: 'unavailable';
+      reason: 'malformed' | 'read_error';
+      message: string;
+    }
+  | {
+      state: 'pending';
+      capturedAt: number;
+      ageSeconds: number;
+      stale: boolean;
+    }
+  | {
+      state: 'ok';
+      capturedAt: number;
+      ageSeconds: number;
+      stale: boolean;
+      fiveHour?: ClaudeLimitsWindow;
+      sevenDay?: ClaudeLimitsWindow;
+    };

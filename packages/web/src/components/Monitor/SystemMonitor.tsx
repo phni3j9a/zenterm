@@ -1,5 +1,6 @@
 import { useSystemMetrics } from '../../hooks/useSystemMetrics';
 import type { MetricsHistory } from '../../hooks/useSystemMetrics';
+import { ClaudeLimits } from './ClaudeLimits';
 import styles from './SystemMonitor.module.css';
 
 interface Props {
@@ -74,6 +75,9 @@ export function SystemMonitor({ visible }: Props) {
           <span className={styles.statValue}>{formatUptime(current.uptime)}</span>
         </div>
       </section>
+
+      {/* Claude Code rate limits */}
+      <ClaudeLimits />
     </div>
   );
 }

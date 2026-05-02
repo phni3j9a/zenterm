@@ -15,4 +15,8 @@ export type {
   FileCopyResponse,
   FileMoveResponse,
   FileMkdirResponse,
+  ClaudeLimitsWindow,
+  ClaudeLimitsResponse,
 } from '@zenterm/shared';
+
+export { CLAUDE_STATUS_STALE_AFTER_SECONDS } from '@zenterm/shared';

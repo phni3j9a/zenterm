@@ -9,6 +9,7 @@ import { ZodError } from 'zod';
 import bearerPlugin from './auth/bearer.js';
 import { config } from './config.js';
 import authRoutes from './routes/auth.js';
+import claudeRoutes from './routes/claude.js';
 import embedRoutes from './routes/embed.js';
 import eventsRoutes from './routes/events.js';
 import sessionRoutes from './routes/sessions.js';
@@ -137,6 +138,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(authRoutes);
   await app.register(sessionRoutes);
   await app.register(systemRoutes);
+  await app.register(claudeRoutes);
   await app.register(fileRoutes);
   await app.register(uploadRoutes);
 
