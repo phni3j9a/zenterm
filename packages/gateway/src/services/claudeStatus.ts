@@ -2,10 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { z } from 'zod';
-import {
-  CLAUDE_STATUS_STALE_AFTER_SECONDS,
-  type ClaudeLimitsResponse,
-} from '../types/index.js';
+import type { ClaudeLimitsResponse } from '../types/index.js';
+
+// Inlined to avoid a runtime import of `@zenterm/shared`, which is a
+// workspace-only package and isn't resolvable from the published gateway.
+const CLAUDE_STATUS_STALE_AFTER_SECONDS = 300;
 
 const windowSchema = z.object({
   used_percentage: z.number().min(0).max(100),
