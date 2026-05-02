@@ -1,7 +1,10 @@
+import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSystemMetrics } from '../../hooks/useSystemMetrics';
 import type { MetricsHistory } from '../../hooks/useSystemMetrics';
 import { ClaudeLimits } from './ClaudeLimits';
 import { CodexLimits } from './CodexLimits';
+import { RefreshButton } from './RefreshButton';
 import styles from './SystemMonitor.module.css';
 
 interface Props {
@@ -10,6 +13,14 @@ interface Props {
 
 export function SystemMonitor({ visible }: Props) {
   const { current, history, error } = useSystemMetrics(visible);
+  const { t } = useTranslation();
+  const [rateLimitsRefreshKey, setRateLimitsRefreshKey] = useState(0);
+  const [rateLimitsRefreshing, setRateLimitsRefreshing] = useState(false);
+  const handleRefreshRateLimits = useCallback(() => {
+    setRateLimitsRefreshKey((k) => k + 1);
+    setRateLimitsRefreshing(true);
+    setTimeout(() => setRateLimitsRefreshing(false), 800);
+  }, []);
 
   if (!visible) return null;
 
@@ -77,11 +88,18 @@ export function SystemMonitor({ visible }: Props) {
         </div>
       </section>
 
-      {/* Claude Code rate limits */}
-      <ClaudeLimits />
-
-      {/* Codex rate limits */}
-      <CodexLimits />
+      {/* Rate limits (Claude + Codex) */}
+      <section className={styles.section}>
+        <div className={styles.rateLimitsHeader}>
+          <h3 className={styles.sectionTitle}>{t('rateLimits')}</h3>
+          <RefreshButton
+            onClick={handleRefreshRateLimits}
+            loading={rateLimitsRefreshing}
+          />
+        </div>
+        <ClaudeLimits refreshKey={rateLimitsRefreshKey} />
+        <CodexLimits refreshKey={rateLimitsRefreshKey} />
+      </section>
     </div>
   );
 }

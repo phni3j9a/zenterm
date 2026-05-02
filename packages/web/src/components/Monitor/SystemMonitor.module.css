@@ -34,6 +34,13 @@
   margin: 0;
 }
 
+.rateLimitsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .sparkline {
   width: 100%;
   height: 40px;

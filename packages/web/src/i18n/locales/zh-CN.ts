@@ -14,6 +14,7 @@ const zhCN: TranslationDictionary = {
     confirm: '确认',
     loading: '加载中…',
     error: '错误',
+    refresh: '刷新',
   },
   tabs: {
     files: '文件',
@@ -52,6 +53,7 @@ const zhCN: TranslationDictionary = {
     pending: '等待 Claude Code 的首次 API 响应。',
     unavailable: 'Claude 限额数据不可用',
   },
+  rateLimits: '使用限额',
   codexLimits: {
     title: 'Codex',
     experimental: '实验性',

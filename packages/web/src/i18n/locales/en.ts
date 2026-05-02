@@ -12,6 +12,7 @@ const en = {
     confirm: 'Confirm',
     loading: 'Loading…',
     error: 'Error',
+    refresh: 'Refresh',
   },
   tabs: {
     files: 'Files',
@@ -52,6 +53,7 @@ const en = {
     pending: 'Waiting for the first API response from Claude Code.',
     unavailable: 'Claude rate limit data unavailable',
   },
+  rateLimits: 'Rate limits',
   codexLimits: {
     title: 'Codex',
     experimental: 'Experimental',

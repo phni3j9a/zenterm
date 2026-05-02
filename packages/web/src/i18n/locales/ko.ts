@@ -14,6 +14,7 @@ const ko: TranslationDictionary = {
     confirm: '확인',
     loading: '로딩 중…',
     error: '오류',
+    refresh: '새로고침',
   },
   tabs: {
     files: '파일',
@@ -52,6 +53,7 @@ const ko: TranslationDictionary = {
     pending: 'Claude Code의 첫 API 응답을 기다리는 중입니다.',
     unavailable: 'Claude 제한 데이터를 가져올 수 없습니다',
   },
+  rateLimits: '사용량 한도',
   codexLimits: {
     title: 'Codex',
     experimental: '실험적 기능',

@@ -7,10 +7,14 @@ import styles from './ClaudeLimits.module.css';
 const DOCS_URL =
   'https://github.com/phni3j9a/zenterm/blob/main/docs/claude-statusline.md';
 
-export function ClaudeLimits() {
+interface ClaudeLimitsProps {
+  refreshKey?: number;
+}
+
+export function ClaudeLimits({ refreshKey = 0 }: ClaudeLimitsProps) {
   const { t } = useTranslation();
   const [data, setData] = useState<ClaudeLimitsResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -27,27 +31,16 @@ export function ClaudeLimits() {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+  }, [refresh, refreshKey]);
 
   return (
-    <section className={styles.section}>
-      <header className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h3 className={styles.title}>{t('claudeLimits.title')}</h3>
-          <span className={styles.experimentalBadge}>{t('claudeLimits.experimental')}</span>
-        </div>
-        <button
-          type="button"
-          className={styles.refreshBtn}
-          onClick={() => void refresh()}
-          disabled={loading}
-          aria-label={t('claudeLimits.refresh')}
-        >
-          {loading ? '…' : '↻'}
-        </button>
-      </header>
+    <div className={styles.section}>
+      <div className={styles.titleGroup}>
+        <h3 className={styles.title}>{t('claudeLimits.title')}</h3>
+        <span className={styles.experimentalBadge}>{t('claudeLimits.experimental')}</span>
+      </div>
       <Body data={data} fetchError={fetchError} />
-    </section>
+    </div>
   );
 }
 

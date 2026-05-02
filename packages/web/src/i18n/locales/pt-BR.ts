@@ -14,6 +14,7 @@ const ptBR: TranslationDictionary = {
     confirm: 'Confirmar',
     loading: 'Carregando…',
     error: 'Erro',
+    refresh: 'Atualizar',
   },
   tabs: {
     files: 'Arquivos',
@@ -52,6 +53,7 @@ const ptBR: TranslationDictionary = {
     pending: 'Aguardando a primeira resposta da API do Claude Code.',
     unavailable: 'Dados de limite do Claude indisponíveis',
   },
+  rateLimits: 'Limites de uso',
   codexLimits: {
     title: 'Codex',
     experimental: 'Experimental',

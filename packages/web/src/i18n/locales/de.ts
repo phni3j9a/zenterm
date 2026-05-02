@@ -14,6 +14,7 @@ const de: TranslationDictionary = {
     confirm: 'Bestätigen',
     loading: 'Laden…',
     error: 'Fehler',
+    refresh: 'Aktualisieren',
   },
   tabs: {
     files: 'Dateien',
@@ -52,6 +53,7 @@ const de: TranslationDictionary = {
     pending: 'Warte auf erste API-Antwort von Claude Code.',
     unavailable: 'Claude-Limitdaten nicht verfügbar',
   },
+  rateLimits: 'Nutzungslimits',
   codexLimits: {
     title: 'Codex',
     experimental: 'Experimentell',

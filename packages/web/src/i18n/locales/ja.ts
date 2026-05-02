@@ -14,6 +14,7 @@ const ja: TranslationDictionary = {
     confirm: '確認',
     loading: '読み込み中…',
     error: 'エラー',
+    refresh: '更新',
   },
   tabs: {
     files: 'ファイル',
@@ -54,6 +55,7 @@ const ja: TranslationDictionary = {
     pending: 'Claude Code の初回 API レスポンスを待機中です。',
     unavailable: 'Claude のレート制限データを取得できません',
   },
+  rateLimits: 'レート制限',
   codexLimits: {
     title: 'Codex',
     experimental: '試験運用',
