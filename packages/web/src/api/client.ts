@@ -6,6 +6,7 @@ import type {
   FileWriteResponse,
   FileUploadResponse,
   ClaudeLimitsResponse,
+  CodexLimitsResponse,
 } from '@zenterm/shared';
 import { useAuthStore } from '../stores/auth';
 
@@ -121,6 +122,12 @@ export const getSystemStatus = (options?: { signal?: AbortSignal }) =>
 export const getClaudeLimits = (options?: { signal?: AbortSignal }) =>
   apiRequest<ClaudeLimitsResponse>(
     '/api/claude/limits',
+    options?.signal ? { signal: options.signal } : undefined,
+  );
+
+export const getCodexLimits = (options?: { signal?: AbortSignal }) =>
+  apiRequest<CodexLimitsResponse>(
+    '/api/codex/limits',
     options?.signal ? { signal: options.signal } : undefined,
   );
 
