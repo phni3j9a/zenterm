@@ -32,7 +32,10 @@ export function ClaudeLimits() {
   return (
     <section className={styles.section}>
       <header className={styles.header}>
-        <h3 className={styles.title}>{t('claudeLimits.title')}</h3>
+        <div className={styles.titleGroup}>
+          <h3 className={styles.title}>{t('claudeLimits.title')}</h3>
+          <span className={styles.experimentalBadge}>{t('claudeLimits.experimental')}</span>
+        </div>
         <button
           type="button"
           className={styles.refreshBtn}
