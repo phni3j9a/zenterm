@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ClaudeLimitsResponse } from '@zenterm/shared';
+import type { ClaudeAccountStatus, ClaudeLimitsResponse } from '@zenterm/shared';
 import { getClaudeLimits } from '../../api/client';
 import styles from './ClaudeLimits.module.css';
 
@@ -84,26 +84,57 @@ function Body({ data, fetchError }: BodyProps) {
     );
   }
 
-  if (data.state === 'unavailable') {
+  // state === 'configured' — render each account
+  const showLabels = data.accounts.length > 1 || data.accounts.some((a) => a.label !== 'default');
+
+  return (
+    <div className={styles.accounts}>
+      {data.accounts.map((account, i) => (
+        <AccountRow key={`${account.label}-${i}`} account={account} showLabel={showLabels} />
+      ))}
+    </div>
+  );
+}
+
+interface AccountRowProps {
+  account: ClaudeAccountStatus;
+  showLabel: boolean;
+}
+
+function AccountRow({ account, showLabel }: AccountRowProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div className={styles.account}>
+      {showLabel && <div className={styles.accountLabel}>{account.label}</div>}
+      <AccountBody account={account} />
+    </div>
+  );
+}
+
+function AccountBody({ account }: { account: ClaudeAccountStatus }) {
+  const { t } = useTranslation();
+
+  if (account.state === 'unavailable') {
     return (
       <div className={styles.error}>
         <div>{t('claudeLimits.unavailable')}</div>
-        <div className={styles.errorDetail}>{data.message}</div>
+        <div className={styles.errorDetail}>{account.message}</div>
       </div>
     );
   }
 
-  if (data.state === 'pending') {
+  if (account.state === 'pending') {
     return (
       <div className={styles.notice}>
         <p className={styles.noticeText}>{t('claudeLimits.pending')}</p>
-        <StaleHint stale={data.stale} ageSeconds={data.ageSeconds} />
+        <StaleHint stale={account.stale} ageSeconds={account.ageSeconds} />
       </div>
     );
   }
 
   // state === 'ok'
-  const { fiveHour, sevenDay, ageSeconds, stale } = data;
+  const { fiveHour, sevenDay, ageSeconds, stale } = account;
   return (
     <div className={styles.body} data-stale={stale}>
       {fiveHour && (

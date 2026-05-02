@@ -16,5 +16,6 @@ export type {
   FileMoveResponse,
   FileMkdirResponse,
   ClaudeLimitsWindow,
+  ClaudeAccountStatus,
   ClaudeLimitsResponse,
 } from '@zenterm/shared';
