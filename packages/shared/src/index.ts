@@ -180,3 +180,58 @@ export type ClaudeAccountStatus =
 export type ClaudeLimitsResponse =
   | { state: 'unconfigured' }
   | { state: 'configured'; accounts: ClaudeAccountStatus[] };
+
+/**
+ * Codex CLI レート制限ウィンドウ。Claude と同じ shape にして UI を共通化できるようにしてある。
+ */
+export interface CodexLimitsWindow {
+  usedPercentage: number;
+  resetsAt: number;
+}
+
+/**
+ * Codex の token_count イベントが古くなったと判定するまでの秒数。
+ * Codex はリクエスト発生時にしか書かないので、Claude と同じ 5 分閾値で十分。
+ */
+export const CODEX_STATUS_STALE_AFTER_SECONDS = 300;
+
+/**
+ * 1 アカウント分の Codex レート制限ステータス。
+ * `label` は将来 CODEX_HOME 切替対応時の識別子用。現状は "default" 固定。
+ * `planType` は token_count イベント中の `plan_type` をそのまま渡す ("plus" / "pro" 等)。
+ */
+export type CodexAccountStatus =
+  | {
+      label: string;
+      state: 'unavailable';
+      reason: 'read_error';
+      message: string;
+    }
+  | {
+      label: string;
+      state: 'pending';
+      message: string;
+    }
+  | {
+      label: string;
+      state: 'ok';
+      capturedAt: number;
+      ageSeconds: number;
+      stale: boolean;
+      planType?: string;
+      fiveHour?: CodexLimitsWindow;
+      sevenDay?: CodexLimitsWindow;
+    };
+
+/**
+ * `GET /api/codex/limits` レスポンス。
+ *
+ * - `unconfigured`: `~/.codex` 自体が無い (Codex CLI 未インストール / 未起動)
+ * - `configured`: ホームディレクトリは存在。`accounts` に各アカウントのステータス
+ *
+ * Claude 側と違い、ユーザー側の連携セットアップは不要で、Gateway が
+ * `~/.codex/sessions/YYYY/MM/DD/*.jsonl` を直接読んで rate_limits を抽出する。
+ */
+export type CodexLimitsResponse =
+  | { state: 'unconfigured' }
+  | { state: 'configured'; accounts: CodexAccountStatus[] };

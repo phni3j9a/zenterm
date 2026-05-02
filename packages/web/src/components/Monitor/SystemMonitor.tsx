@@ -1,6 +1,7 @@
 import { useSystemMetrics } from '../../hooks/useSystemMetrics';
 import type { MetricsHistory } from '../../hooks/useSystemMetrics';
 import { ClaudeLimits } from './ClaudeLimits';
+import { CodexLimits } from './CodexLimits';
 import styles from './SystemMonitor.module.css';
 
 interface Props {
@@ -78,6 +79,9 @@ export function SystemMonitor({ visible }: Props) {
 
       {/* Claude Code rate limits */}
       <ClaudeLimits />
+
+      {/* Codex rate limits */}
+      <CodexLimits />
     </div>
   );
 }

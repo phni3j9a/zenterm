@@ -18,4 +18,7 @@ export type {
   ClaudeLimitsWindow,
   ClaudeAccountStatus,
   ClaudeLimitsResponse,
+  CodexLimitsWindow,
+  CodexAccountStatus,
+  CodexLimitsResponse,
 } from '@zenterm/shared';
