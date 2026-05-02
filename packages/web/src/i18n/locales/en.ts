@@ -58,7 +58,6 @@ const en = {
     refresh: 'Refresh',
     fiveHour: '5h window',
     sevenDay: '7d window',
-    plan: 'Plan: {{plan}}',
     resetsIn: 'Resets in {{time}}',
     stale: 'Last updated {{age}} ago',
     unconfigured: 'Codex CLI not detected on this machine.',

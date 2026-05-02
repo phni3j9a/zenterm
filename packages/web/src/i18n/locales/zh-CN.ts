@@ -58,7 +58,6 @@ const zhCN: TranslationDictionary = {
     refresh: '刷新',
     fiveHour: '5小时窗口',
     sevenDay: '7天窗口',
-    plan: '套餐：{{plan}}',
     resetsIn: '{{time}} 后重置',
     stale: '{{age}} 前的数据',
     unconfigured: '此机器上未检测到 Codex CLI。',

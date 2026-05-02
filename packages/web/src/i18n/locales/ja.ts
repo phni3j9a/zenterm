@@ -60,7 +60,6 @@ const ja: TranslationDictionary = {
     refresh: '更新',
     fiveHour: '5時間枠',
     sevenDay: '週次枠',
-    plan: 'プラン: {{plan}}',
     resetsIn: 'リセットまで {{time}}',
     stale: '{{age}}前のデータ',
     unconfigured: 'このマシンに Codex CLI がインストールされていません。',

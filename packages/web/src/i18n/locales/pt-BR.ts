@@ -58,7 +58,6 @@ const ptBR: TranslationDictionary = {
     refresh: 'Atualizar',
     fiveHour: 'Janela 5h',
     sevenDay: 'Janela 7d',
-    plan: 'Plano: {{plan}}',
     resetsIn: 'Reinicia em {{time}}',
     stale: 'Atualizado há {{age}}',
     unconfigured: 'Codex CLI não detectado nesta máquina.',

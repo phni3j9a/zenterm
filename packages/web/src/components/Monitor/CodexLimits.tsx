@@ -114,14 +114,9 @@ function AccountBody({ account }: { account: CodexAccountStatus }) {
     );
   }
 
-  const { fiveHour, sevenDay, ageSeconds, stale, planType } = account;
+  const { fiveHour, sevenDay, ageSeconds, stale } = account;
   return (
     <div className={styles.body} data-stale={stale}>
-      {planType ? (
-        <div className={styles.resetHint}>
-          {t('codexLimits.plan', { plan: planType })}
-        </div>
-      ) : null}
       {fiveHour && (
         <RateBar
           label={t('codexLimits.fiveHour')}

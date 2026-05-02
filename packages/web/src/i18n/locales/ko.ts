@@ -58,7 +58,6 @@ const ko: TranslationDictionary = {
     refresh: '새로고침',
     fiveHour: '5시간 한도',
     sevenDay: '주간 한도',
-    plan: '플랜: {{plan}}',
     resetsIn: '{{time}} 후 재설정',
     stale: '{{age}} 전 데이터',
     unconfigured: '이 컴퓨터에서 Codex CLI가 감지되지 않았습니다.',

@@ -58,7 +58,6 @@ const de: TranslationDictionary = {
     refresh: 'Aktualisieren',
     fiveHour: '5h-Fenster',
     sevenDay: '7d-Fenster',
-    plan: 'Plan: {{plan}}',
     resetsIn: 'Zurücksetzen in {{time}}',
     stale: 'Zuletzt aktualisiert vor {{age}}',
     unconfigured: 'Codex CLI auf diesem Rechner nicht erkannt.',
