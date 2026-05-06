@@ -116,23 +116,6 @@ export async function buildApp(): Promise<FastifyInstance> {
     return reply.sendFile('index.html');
   });
 
-  // SPA: serve app/index.html for client-side routes (not static assets)
-  app.get('/app', async (_request, reply) => {
-    reply.redirect('/app/');
-  });
-  app.get('/app/*', async (request, reply) => {
-    // Let static plugin handle actual files (js, css, etc.)
-    const path = request.url.replace(/\?.*$/, '');
-    if (path.match(/\.\w+$/)) {
-      // Has a file extension — let Fastify's static plugin handle it (will 404 if not found)
-      return reply.sendFile(path.slice(1)); // remove leading /
-    }
-    // No file extension — serve SPA index for client-side routing
-    reply.type('text/html; charset=utf-8');
-    reply.header('Cache-Control', 'no-store');
-    return reply.sendFile('app/index.html');
-  });
-
   await app.register(embedRoutes);
   await app.register(terminalRoutes);
   await app.register(eventsRoutes);

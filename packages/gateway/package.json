@@ -1,7 +1,7 @@
 {
   "name": "zenterm-gateway",
   "version": "0.4.1",
-  "description": "Mobile terminal gateway — access your server from any browser or the ZenTerm app",
+  "description": "Mobile terminal gateway — access your server from the ZenTerm app",
   "type": "module",
   "bin": {
     "zenterm-gateway": "./dist/cli.js"
@@ -15,9 +15,9 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npm run build -w ../web && tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
-    "prepublishOnly": "npm run build -w ../web && tsc"
+    "prepublishOnly": "tsc"
   },
   "keywords": [
     "terminal",

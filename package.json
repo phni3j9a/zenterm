@@ -4,14 +4,11 @@
   "private": true,
   "workspaces": [
     "packages/shared",
-    "packages/gateway",
-    "packages/web"
+    "packages/gateway"
   ],
   "scripts": {
     "dev:gateway": "npm run dev -w packages/gateway",
-    "dev:web": "npm run dev -w packages/web",
     "build:gateway": "npm run build -w packages/gateway",
-    "build:web": "npm run build -w packages/web",
     "sync:pages": "node scripts/sync-pages-from-gateway.mjs",
     "mock:zen-light": "node scripts/generate-zen-light-mockups.mjs"
   },
