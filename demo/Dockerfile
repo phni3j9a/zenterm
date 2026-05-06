@@ -12,16 +12,13 @@ WORKDIR /build
 # Copy workspace root (for npm workspaces)
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
-COPY packages/web/package.json packages/web/
 COPY packages/gateway/package.json packages/gateway/
 
 RUN npm ci
 
 COPY packages/shared/ packages/shared/
-COPY packages/web/ packages/web/
 COPY packages/gateway/ packages/gateway/
 
-# build:gateway also builds web and copies to gateway/public/app/
 RUN npm run build:gateway
 
 # ============================================

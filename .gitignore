@@ -3,7 +3,6 @@ node_modules/
 
 # build output
 dist/
-packages/gateway/public/app/
 
 # env / secrets
 .env

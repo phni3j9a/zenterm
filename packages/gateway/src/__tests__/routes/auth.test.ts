@@ -2,6 +2,8 @@ process.env.AUTH_TOKEN = 'test-token';
 process.env.LOG_LEVEL = 'error';
 
 import type { FastifyInstance } from 'fastify';
+import type { AddressInfo } from 'node:net';
+import { WebSocket } from 'ws';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const tmuxMocks = vi.hoisted(() => ({
@@ -12,6 +14,10 @@ const tmuxMocks = vi.hoisted(() => ({
   listSessions: vi.fn(),
   killSession: vi.fn(),
   renameSession: vi.fn(),
+}));
+
+const tmuxControlMocks = vi.hoisted(() => ({
+  subscribe: vi.fn(() => () => undefined),
 }));
 
 vi.mock('../../services/tmux.js', () => {
@@ -31,6 +37,10 @@ vi.mock('../../services/tmux.js', () => {
     TmuxServiceError,
   };
 });
+
+vi.mock('../../services/tmuxControl.js', () => ({
+  tmuxControlService: tmuxControlMocks,
+}));
 
 async function buildTestApp(): Promise<FastifyInstance> {
   const { buildApp } = await import('../../app.js');
@@ -100,5 +110,64 @@ describe('auth routes', () => {
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
     expect(body).toEqual({ ok: true });
+  });
+
+  it('GET /embed/terminal: モバイル WebView 用 HTML は認証なしで配信する', async () => {
+    const response = await app!.inject({
+      method: 'GET',
+      url: '/embed/terminal?sessionId=session-1&token=test-token',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toContain('text/html');
+    expect(response.body).toContain('id="terminal"');
+  });
+
+  it('GET /terminal/lib/xterm.min.js: モバイル WebView 用 asset は認証なしで配信する', async () => {
+    const response = await app!.inject({
+      method: 'GET',
+      url: '/terminal/lib/xterm.min.js',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toContain('application/javascript');
+  });
+
+  it('GET /app/login: 旧 Web SPA パスは public 扱いしない', async () => {
+    const response = await app!.inject({
+      method: 'GET',
+      url: '/app/login',
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
+  it('WS /ws/events: アプリの tmux event stream は query token で接続できる', async () => {
+    await app!.listen({ port: 0, host: '127.0.0.1' });
+    const address = app!.server.address() as AddressInfo;
+
+    await new Promise<void>((resolve, reject) => {
+      const socket = new WebSocket(`ws://127.0.0.1:${address.port}/ws/events?token=test-token`);
+      const timer = setTimeout(() => {
+        socket.close();
+        reject(new Error('events websocket connection timed out'));
+      }, 2000);
+
+      socket.on('open', () => {
+        clearTimeout(timer);
+        socket.close();
+        resolve();
+      });
+      socket.on('unexpected-response', (_request, response) => {
+        clearTimeout(timer);
+        reject(new Error(`events websocket rejected with ${response.statusCode}`));
+      });
+      socket.on('error', (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+    });
+
+    expect(tmuxControlMocks.subscribe).toHaveBeenCalledOnce();
   });
 });

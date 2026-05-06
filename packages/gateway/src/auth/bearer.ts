@@ -8,6 +8,7 @@ const publicExactPaths = new Set([
   '/index.html',
   '/embed/terminal',
   '/health',
+  '/ws/events',
   '/ws/terminal',
 ]);
 
@@ -18,7 +19,6 @@ function getPathname(url?: string): string {
 function isPublicPath(pathname: string): boolean {
   if (publicExactPaths.has(pathname)) return true;
   if (pathname.startsWith('/terminal/lib/')) return true;
-  if (pathname.startsWith('/app')) return true;
   if (pathname.startsWith('/lp/')) return true;
   return false;
 }
