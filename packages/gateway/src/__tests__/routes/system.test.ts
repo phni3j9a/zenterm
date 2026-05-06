@@ -87,6 +87,7 @@ describe('system routes', () => {
       },
       temperature: 48.2,
       uptime: 7200,
+      gatewayVersion: '0.4.1',
     });
 
     const response = await app!.inject({
@@ -119,6 +120,7 @@ describe('system routes', () => {
       },
       temperature: 48.2,
       uptime: 7200,
+      gatewayVersion: '0.4.1',
     });
     expect(systemMocks.getSystemStatus).toHaveBeenCalledOnce();
   });

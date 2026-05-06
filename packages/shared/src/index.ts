@@ -52,6 +52,7 @@ export interface SystemStatus {
   };
   temperature: number | null;
   uptime: number;
+  gatewayVersion: string;
 }
 
 export interface FileEntry {
