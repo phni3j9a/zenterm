@@ -13,6 +13,10 @@ WorkingDirectory=__PROJECT_DIR__/packages/gateway
 ExecStart=/usr/bin/node dist/index.js
 Restart=always
 RestartSec=5
+# tmux サーバーは Gateway と同じ cgroup だが自己デーモン化しているため、
+# KillMode=process にしておくと restart/stop 時に Gateway だけが落ち、
+# 既存 tmux セッションは保持される。
+KillMode=process
 EnvironmentFile=__PROJECT_DIR__/packages/gateway/.env
 StandardOutput=journal
 StandardError=journal

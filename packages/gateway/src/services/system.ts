@@ -1,7 +1,25 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import os from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import type { SystemStatus } from '../types/index.js';
+
+let cachedGatewayVersion: string | null = null;
+
+function getGatewayVersion(): string {
+  if (cachedGatewayVersion !== null) {
+    return cachedGatewayVersion;
+  }
+  try {
+    const packagePath = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'package.json');
+    const pkg = JSON.parse(readFileSync(packagePath, 'utf-8')) as { version?: unknown };
+    cachedGatewayVersion = typeof pkg.version === 'string' ? pkg.version : 'unknown';
+  } catch {
+    cachedGatewayVersion = 'unknown';
+  }
+  return cachedGatewayVersion;
+}
 
 const PROC_STAT_PATH = '/proc/stat';
 const THERMAL_PATH = '/sys/class/thermal/thermal_zone0/temp';
@@ -212,6 +230,7 @@ export function getSystemStatus(): SystemStatus {
     },
     disk: getDiskUsage(),
     temperature: getTemperature(),
-    uptime: os.uptime()
+    uptime: os.uptime(),
+    gatewayVersion: getGatewayVersion()
   };
 }

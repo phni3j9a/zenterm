@@ -4,11 +4,14 @@ import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const home = process.env.HOME ?? '';
+
+function getHome(): string {
+  return process.env.HOME ?? '';
+}
 
 export async function runSetup(): Promise<void> {
   const platform = process.platform;
-  const configDir = join(home, '.config', 'zenterm');
+  const configDir = join(getHome(), '.config', 'zenterm');
   const envPath = join(configDir, '.env');
 
   console.log('');
@@ -42,32 +45,52 @@ export async function runSetup(): Promise<void> {
   console.log('マシンの再起動後も自動的に zenterm-gateway が起動します。');
 }
 
-function setupLinux(): void {
-  const nodePath = process.execPath;
-  const cliPath = join(__dirname, 'cli.js');
-  const packageDir = join(__dirname, '..');
-  const currentPath = process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin';
+interface SystemdUnitParams {
+  nodePath: string;
+  cliPath: string;
+  packageDir: string;
+  pathEnv: string;
+}
 
-  const serviceDir = join(home, '.config', 'systemd', 'user');
-  const servicePath = join(serviceDir, 'zenterm-gateway.service');
-
-  const service = [
+export function buildSystemdUnit(params: SystemdUnitParams): string {
+  return [
     '[Unit]',
     'Description=ZenTerm Gateway - Terminal WebSocket Server',
     'After=network.target',
     '',
     '[Service]',
     'Type=simple',
-    `WorkingDirectory=${packageDir}`,
-    `ExecStart=${nodePath} ${cliPath}`,
+    `WorkingDirectory=${params.packageDir}`,
+    `ExecStart=${params.nodePath} ${params.cliPath}`,
     'Restart=always',
     'RestartSec=5',
-    `Environment=PATH=${currentPath}`,
+    // tmux サーバーは Gateway と同じ cgroup に属するが、自己デーモン化しているので
+    // KillMode=process なら停止・再起動時に Gateway 本体だけが SIGTERM を受け、
+    // 既存 tmux セッションは保持される。
+    'KillMode=process',
+    `Environment=PATH=${params.pathEnv}`,
     '',
     '[Install]',
     'WantedBy=default.target',
     '',
   ].join('\n');
+}
+
+export function setupLinux(): void {
+  const nodePath = process.execPath;
+  const cliPath = join(__dirname, 'cli.js');
+  const packageDir = join(__dirname, '..');
+  const currentPath = process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin';
+
+  const serviceDir = join(getHome(), '.config', 'systemd', 'user');
+  const servicePath = join(serviceDir, 'zenterm-gateway.service');
+
+  const service = buildSystemdUnit({
+    nodePath,
+    cliPath,
+    packageDir,
+    pathEnv: currentPath,
+  });
 
   mkdirSync(serviceDir, { recursive: true });
   writeFileSync(servicePath, service, 'utf8');
@@ -106,18 +129,18 @@ function setupLinux(): void {
   console.log('停止・無効化:    systemctl --user disable --now zenterm-gateway');
 }
 
-function setupMacOS(): void {
-  const nodePath = process.execPath;
-  const cliPath = join(__dirname, 'cli.js');
-  const packageDir = join(__dirname, '..');
-  const user = process.env.USER ?? '';
-  const currentPath = process.env.PATH ?? '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin';
-  const logPath = join(home, 'Library', 'Logs', 'zenterm-gateway.log');
+interface LaunchdPlistParams {
+  nodePath: string;
+  cliPath: string;
+  packageDir: string;
+  user: string;
+  homeDir: string;
+  pathEnv: string;
+  logPath: string;
+}
 
-  const plistDir = join(home, 'Library', 'LaunchAgents');
-  const plistPath = join(plistDir, 'com.zenterm.gateway.plist');
-
-  const plist = `<?xml version="1.0" encoding="UTF-8"?>
+export function buildLaunchdPlist(params: LaunchdPlistParams): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -126,23 +149,23 @@ function setupMacOS(): void {
 
 \t<key>ProgramArguments</key>
 \t<array>
-\t\t<string>${nodePath}</string>
-\t\t<string>${cliPath}</string>
+\t\t<string>${params.nodePath}</string>
+\t\t<string>${params.cliPath}</string>
 \t</array>
 
 \t<key>WorkingDirectory</key>
-\t<string>${packageDir}</string>
+\t<string>${params.packageDir}</string>
 
 \t<key>EnvironmentVariables</key>
 \t<dict>
 \t\t<key>HOME</key>
-\t\t<string>${home}</string>
+\t\t<string>${params.homeDir}</string>
 \t\t<key>PATH</key>
-\t\t<string>${currentPath}</string>
+\t\t<string>${params.pathEnv}</string>
 \t</dict>
 
 \t<key>UserName</key>
-\t<string>${user}</string>
+\t<string>${params.user}</string>
 
 \t<key>KeepAlive</key>
 \t<true/>
@@ -151,16 +174,39 @@ function setupMacOS(): void {
 \t<true/>
 
 \t<key>StandardOutPath</key>
-\t<string>${logPath}</string>
+\t<string>${params.logPath}</string>
 
 \t<key>StandardErrorPath</key>
-\t<string>${logPath}</string>
+\t<string>${params.logPath}</string>
 
 \t<key>ThrottleInterval</key>
 \t<integer>5</integer>
 </dict>
 </plist>
 `;
+}
+
+export function setupMacOS(): void {
+  const nodePath = process.execPath;
+  const cliPath = join(__dirname, 'cli.js');
+  const packageDir = join(__dirname, '..');
+  const user = process.env.USER ?? '';
+  const currentPath = process.env.PATH ?? '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin';
+  const homeDir = getHome();
+  const logPath = join(homeDir, 'Library', 'Logs', 'zenterm-gateway.log');
+
+  const plistDir = join(homeDir, 'Library', 'LaunchAgents');
+  const plistPath = join(plistDir, 'com.zenterm.gateway.plist');
+
+  const plist = buildLaunchdPlist({
+    nodePath,
+    cliPath,
+    packageDir,
+    user,
+    homeDir,
+    pathEnv: currentPath,
+    logPath,
+  });
 
   mkdirSync(plistDir, { recursive: true });
 

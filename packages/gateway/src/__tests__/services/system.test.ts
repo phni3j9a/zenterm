@@ -61,6 +61,10 @@ describe('system service — Linux', () => {
     readFileSyncMock.mockImplementation((...rawArgs: unknown[]) => {
       const target = rawArgs[0] as string;
 
+      if (target.endsWith('package.json')) {
+        return JSON.stringify({ version: '9.9.9' });
+      }
+
       switch (target) {
         case '/proc/stat':
           return 'cpu  10 0 20 30 0 0 0 0 0 0\n';
@@ -95,7 +99,39 @@ describe('system service — Linux', () => {
       },
       temperature: 51.2,
       uptime: 3600,
+      gatewayVersion: '9.9.9',
     });
+
+    // gatewayVersion は gateway パッケージ自身の package.json から読むこと
+    // （誤って monorepo ルート等を掴まないように検証）
+    const versionRead = readFileSyncMock.mock.calls.find(
+      (call) => typeof call[0] === 'string' && (call[0] as string).endsWith('package.json'),
+    );
+    expect(versionRead).toBeDefined();
+    expect(versionRead?.[0]).toMatch(/packages\/gateway\/package\.json$/);
+    expect(versionRead?.[1]).toBe('utf-8');
+  });
+
+  it('getSystemStatus: package.json が読めない場合は gatewayVersion=unknown', async () => {
+    const { getSystemStatus } = await loadSystemModule();
+
+    totalmemMock.mockReturnValue(4000);
+    freememMock.mockReturnValue(1000);
+    cpusMock.mockReturnValue([{ model: 'Test CPU' }] as ReturnType<typeof os.cpus>);
+    loadavgMock.mockReturnValue([0, 0, 0]);
+    uptimeMock.mockReturnValue(60);
+    readFileSyncMock.mockImplementation((...rawArgs: unknown[]) => {
+      const target = rawArgs[0] as string;
+      if (target.endsWith('package.json')) {
+        throw new Error('ENOENT');
+      }
+      if (target === '/proc/stat') return 'cpu  1 0 1 10 0 0 0 0 0 0\n';
+      if (target === '/proc/cpuinfo') return 'Model\t: Test';
+      throw new Error(`Unexpected read path: ${target}`);
+    });
+    execFileSyncMock.mockReturnValue('1B-blocks Used Available\n1 0 1\n');
+
+    expect(getSystemStatus().gatewayVersion).toBe('unknown');
   });
 
   it('getSystemStatus: 温度取得失敗時は null を返す', async () => {
@@ -171,6 +207,13 @@ describe('system service — macOS', () => {
     ] as ReturnType<typeof os.cpus>);
     loadavgMock.mockReturnValue([0.2, 0.1, 0.05]);
     uptimeMock.mockReturnValue(3600);
+    readFileSyncMock.mockImplementation((...rawArgs: unknown[]) => {
+      const target = rawArgs[0] as string;
+      if (target.endsWith('package.json')) {
+        return JSON.stringify({ version: '1.0.0' });
+      }
+      throw new Error(`Unexpected read path: ${target}`);
+    });
     execFileSyncMock.mockReturnValue(
       'Filesystem 1024-blocks Used Available Capacity\n/dev/disk1s1 1000 400 600 40%\n'
     );
@@ -178,8 +221,13 @@ describe('system service — macOS', () => {
     const status = getSystemStatus();
 
     expect(status.cpu.model).toBe('Apple M1');
-    // readFileSync should NOT be called for /proc paths on macOS
-    expect(readFileSyncMock).not.toHaveBeenCalled();
+    // gatewayVersion はプラットフォーム非依存。Darwin でも mock 値が返ること、かつ
+    // /proc / thermal を触らないことを両方検証する。
+    expect(status.gatewayVersion).toBe('1.0.0');
+    const readPaths = readFileSyncMock.mock.calls.map((call) => call[0] as string);
+    expect(readPaths.length).toBeGreaterThan(0);
+    expect(readPaths.every((p) => p.endsWith('package.json'))).toBe(true);
+    expect(readPaths.some((p) => p.startsWith('/proc') || p.includes('thermal'))).toBe(false);
   });
 
   it('getSystemStatus: df -k 出力を正しくパースする', async () => {

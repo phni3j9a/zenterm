@@ -25,7 +25,9 @@ npm run build:gateway       # Gateway ビルド
 - **モバイル**: Gateway が `/embed/terminal` を配信 → WebView で表示
 - **ブラウザ版**: 旧 `packages/web` は削除済み。新しいブラウザ版は別途再構築する
 - **systemd**: `zenterm-gateway.service` は npm 公開版の `zenterm-gateway` パッケージを npx キャッシュ経由で起動する。ローカル変更を反映するには `npm publish` 後に再インストールが必要（このリポジトリを直接 systemd から起動しているわけではない）。設定ファイル実体は `~/.config/systemd/user/zenterm-gateway.service`、ユーザースコープで稼働
-- **tmux セッションと CGroup**: Gateway の子プロセスとして tmux が起動するため、`systemctl --user stop zenterm-gateway` は既存 tmux セッションも巻き込んで落とす可能性あり。停止前に稼働中セッションを確認すること
+- **tmux セッションと CGroup**: tmux サーバーは `fork+setsid` で自己デーモン化するため process tree 上は Gateway の子ではなく、PPID は `systemd --user`。さらに systemd unit は `KillMode=process` で起動しているので、`systemctl --user stop|restart zenterm-gateway` で死ぬのは Gateway 本体（と attach 中の PTY クライアント）だけで、tmux サーバーとセッションは保持される。WebSocket 接続中のユーザーは一瞬切断されるが再接続で同じセッションに戻れる
+  - `KillMode=process` は `packages/gateway/src/setup.ts` の `buildSystemdUnit()` と `deploy/zenterm-gateway.service` テンプレートの両方で設定済み。`npx -y zenterm-gateway@latest setup` 由来の unit と install.sh 由来の unit のいずれでも tmux は保護される
+  - cgroup 上は tmux も Gateway と同じ unit cgroup に属するため、`systemctl kill --kill-whom=all` 等を明示した場合は両方落ちる点に注意
 
 ## 設計方針
 - 認証は Bearer token（.env の AUTH_TOKEN）
