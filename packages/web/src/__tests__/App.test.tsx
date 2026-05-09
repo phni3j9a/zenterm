@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { App } from '../App';
@@ -8,6 +8,11 @@ describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear();
     useAuthStore.setState({ token: null, gatewayUrl: null });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } })));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('redirects unauthed user to /web/login showing the form', () => {
@@ -19,13 +24,13 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: /ZenTerm Web/i })).toBeInTheDocument();
   });
 
-  it('shows sessions placeholder when authed', () => {
+  it('shows sessions screen when authed', async () => {
     useAuthStore.setState({ token: '1234', gatewayUrl: 'http://gateway.test:18765' });
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: /Sessions/i })).toBeInTheDocument();
+    expect(await screen.findByLabelText(/Sessions panel/i)).toBeInTheDocument();
   });
 });
