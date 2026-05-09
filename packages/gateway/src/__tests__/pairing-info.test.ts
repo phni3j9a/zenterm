@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPairingInfo } from '../index.js';
+import { formatPairingInfo } from '../pairing-info.js';
 
 describe('formatPairingInfo', () => {
   it('includes LAN, Tailscale, Web URLs and Token', () => {

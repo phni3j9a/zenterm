@@ -67,7 +67,6 @@ if (process.argv[2] === 'setup') {
 
 // --- info subcommand ---
 if (process.argv[2] === 'info') {
-  process.env.NODE_ENV = 'test';
   const { runInfoCommand } = await import('./commands/info.js');
   try {
     await runInfoCommand();

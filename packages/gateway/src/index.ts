@@ -3,6 +3,7 @@ import os from 'node:os';
 import { config } from './config.js';
 import { buildApp } from './app.js';
 import { cleanupOrphanViewSessions } from './services/tmux.js';
+import { formatPairingInfo } from './pairing-info.js';
 
 const require = createRequire(import.meta.url);
 
@@ -62,27 +63,7 @@ function getNetworkAddresses(): NetworkAddresses {
   return result;
 }
 
-export interface PairingInfoInput {
-  lan: string | null;
-  tailscale: string | null;
-  port: number;
-  token: string;
-}
-
-export function formatPairingInfo(input: PairingInfoInput): string[] {
-  const { lan, tailscale, port, token } = input;
-  const lines: string[] = [];
-  if (lan) {
-    lines.push(`  LAN:       http://${lan}:${port}`);
-    lines.push(`  Web (LAN): http://${lan}:${port}/web`);
-  }
-  if (tailscale) {
-    lines.push(`  Tailscale: http://${tailscale}:${port}`);
-    lines.push(`  Web (Ts):  http://${tailscale}:${port}/web`);
-  }
-  lines.push(`  Token:     ${token}`);
-  return lines;
-}
+export { formatPairingInfo, type PairingInfoInput } from './pairing-info.js';
 
 function showPairingInfo(): void {
   const { lan, tailscale } = getNetworkAddresses();

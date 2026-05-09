@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 import { join } from 'node:path';
-import { formatPairingInfo } from '../index.js';
+import { formatPairingInfo } from '../pairing-info.js';
 
 interface RunInfoOptions {
   log?: (message?: unknown) => void;
