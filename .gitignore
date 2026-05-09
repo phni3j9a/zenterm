@@ -27,3 +27,6 @@ playwright-artifacts/
 playwright-report/
 test-results/
 TEST_RESULTS.md
+
+# web SPA build output (Vite writes here during npm run build:web)
+packages/gateway/public/web/assets/
