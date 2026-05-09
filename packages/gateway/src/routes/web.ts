@@ -8,14 +8,14 @@ const webRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.sendFile('web/index.html');
   });
 
-  // /web/* → SPA fallback (any nested path returns index.html for client routing)
-  fastify.get('/web/*', async (request, reply) => {
+  // /web/assets/* → serve static assets directly (CSS, JS, source maps, etc.)
+  fastify.get('/web/assets/*', async (request, reply) => {
     const path = (request.params as { '*': string })['*'];
-    // Don't fallback for /web/assets/* — staticPlugin already serves those
-    if (path.startsWith('assets/')) {
-      reply.callNotFound();
-      return;
-    }
+    return reply.sendFile(`web/assets/${path}`);
+  });
+
+  // /web/* → SPA fallback (any nested client-routed path returns index.html)
+  fastify.get('/web/*', async (_request, reply) => {
     reply.type('text/html; charset=utf-8');
     reply.header('Cache-Control', 'no-store');
     return reply.sendFile('web/index.html');
