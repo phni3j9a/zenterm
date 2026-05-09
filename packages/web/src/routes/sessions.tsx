@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { TerminalPane } from '@/components/TerminalPane';
 import { ApiClient } from '@/api/client';
+import { HttpError } from '@/api/errors';
 import { useAuthStore } from '@/stores/auth';
 import { useSessionsStore } from '@/stores/sessions';
 import { useSessionViewStore } from '@/stores/sessionView';
@@ -9,8 +11,10 @@ import { useTheme } from '@/theme';
 
 export function SessionsRoute() {
   const { tokens } = useTheme();
+  const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const gatewayUrl = useAuthStore((s) => s.gatewayUrl);
+  const logout = useAuthStore((s) => s.logout);
   const sessions = useSessionsStore((s) => s.sessions);
   const setSessions = useSessionsStore((s) => s.setSessions);
   const setError = useSessionsStore((s) => s.setError);
@@ -21,15 +25,20 @@ export function SessionsRoute() {
   useEffect(() => {
     if (!token || !gatewayUrl) return;
     const client = new ApiClient(gatewayUrl, token);
-    client.listSessions().then(setSessions).catch((err) => {
-      setError(err instanceof Error ? err.message : String(err));
-    });
-  }, [token, gatewayUrl, setSessions, setError]);
+    client
+      .listSessions()
+      .then(setSessions)
+      .catch((err) => {
+        if (err instanceof HttpError && err.status === 401) {
+          logout();
+          navigate('/web/login', { replace: true });
+          return;
+        }
+        setError(err instanceof Error ? err.message : String(err));
+      });
+  }, [token, gatewayUrl, setSessions, setError, logout, navigate]);
 
-  if (!token || !gatewayUrl) {
-    // Should never happen — RequireAuth guards this. But keep a safety fallback.
-    return null;
-  }
+  if (!token || !gatewayUrl) return null;
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: tokens.colors.bg }}>

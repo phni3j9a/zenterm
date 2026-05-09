@@ -56,4 +56,13 @@ describe('ApiClient', () => {
     const client = new ApiClient(baseUrl, token);
     await expect(client.listSessions()).rejects.toBeInstanceOf(HttpError);
   });
+
+  it('listSessions throws HttpError with status 401 on auth failure', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }));
+    const client = new ApiClient(baseUrl, token);
+    await expect(client.listSessions()).rejects.toMatchObject({
+      status: 401,
+    });
+  });
 });

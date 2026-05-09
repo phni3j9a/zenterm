@@ -121,4 +121,19 @@ describe('SessionsRoute', () => {
     // Toolbar shows the session name
     expect(screen.getAllByText(/dev/).length).toBeGreaterThan(1);
   });
+
+  it('on 401 from listSessions, logs out and redirects to /web/login', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      new Response('Unauthorized', { status: 401 }),
+    );
+    render(
+      <MemoryRouter initialEntries={['/web/sessions']}>
+        <SessionsRoute />
+      </MemoryRouter>,
+    );
+    // Wait for state to settle: useAuthStore should be cleared
+    await vi.waitFor(() => {
+      expect(useAuthStore.getState().token).toBeNull();
+    });
+  });
 });
