@@ -62,6 +62,28 @@ function getNetworkAddresses(): NetworkAddresses {
   return result;
 }
 
+export interface PairingInfoInput {
+  lan: string | null;
+  tailscale: string | null;
+  port: number;
+  token: string;
+}
+
+export function formatPairingInfo(input: PairingInfoInput): string[] {
+  const { lan, tailscale, port, token } = input;
+  const lines: string[] = [];
+  if (lan) {
+    lines.push(`  LAN:       http://${lan}:${port}`);
+    lines.push(`  Web (LAN): http://${lan}:${port}/web`);
+  }
+  if (tailscale) {
+    lines.push(`  Tailscale: http://${tailscale}:${port}`);
+    lines.push(`  Web (Ts):  http://${tailscale}:${port}/web`);
+  }
+  lines.push(`  Token:     ${token}`);
+  return lines;
+}
+
 function showPairingInfo(): void {
   const { lan, tailscale } = getNetworkAddresses();
 
@@ -70,20 +92,20 @@ function showPairingInfo(): void {
     return;
   }
 
-  // Use LAN IP for QR pairing (prefer local network)
-  const primaryIp = lan ?? tailscale;
+  const primaryIp = lan ?? tailscale!;
   const primaryUrl = `http://${primaryIp}:${config.PORT}`;
   const pairingUrl = `zenterm://connect?url=${encodeURIComponent(primaryUrl)}&token=${encodeURIComponent(config.AUTH_TOKEN)}`;
 
   console.log('');
   console.log('--- zenterm gateway ---');
-  if (lan) {
-    console.log(`  LAN:       http://${lan}:${config.PORT}`);
+  for (const line of formatPairingInfo({
+    lan,
+    tailscale,
+    port: config.PORT,
+    token: config.AUTH_TOKEN,
+  })) {
+    console.log(line);
   }
-  if (tailscale) {
-    console.log(`  Tailscale: http://${tailscale}:${config.PORT}`);
-  }
-  console.log(`  Token:     ${config.AUTH_TOKEN}`);
   console.log('');
 
   try {
@@ -101,29 +123,31 @@ function showPairingInfo(): void {
   console.log('');
 }
 
-try {
-  const address = await app.listen({
-    port: config.PORT,
-    host: config.HOST
-  });
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    const address = await app.listen({
+      port: config.PORT,
+      host: config.HOST
+    });
 
-  app.log.info({ address }, 'zenterm-gateway listening');
-  showPairingInfo();
-} catch (error) {
-  const isAddrInUse =
-    error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'EADDRINUSE';
+    app.log.info({ address }, 'zenterm-gateway listening');
+    showPairingInfo();
+  } catch (error) {
+    const isAddrInUse =
+      error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'EADDRINUSE';
 
-  if (isAddrInUse) {
-    console.error('');
-    console.error(`⚠ ポート ${config.PORT} は既に使用中です。`);
-    console.error('  zenterm-gateway が既に起動している可能性があります。');
-    console.error('');
-    console.error(`  確認:     ss -tlnp | grep ${config.PORT}`);
-    console.error(`  別ポート: zenterm-gateway --port ${config.PORT + 1}`);
-    console.error('');
-  } else {
-    app.log.error({ err: error }, 'failed to start gateway');
+    if (isAddrInUse) {
+      console.error('');
+      console.error(`⚠ ポート ${config.PORT} は既に使用中です。`);
+      console.error('  zenterm-gateway が既に起動している可能性があります。');
+      console.error('');
+      console.error(`  確認:     ss -tlnp | grep ${config.PORT}`);
+      console.error(`  別ポート: zenterm-gateway --port ${config.PORT + 1}`);
+      console.error('');
+    } else {
+      app.log.error({ err: error }, 'failed to start gateway');
+    }
+
+    process.exit(1);
   }
-
-  process.exit(1);
 }
