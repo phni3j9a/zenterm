@@ -77,6 +77,18 @@ if (process.argv[2] === 'info') {
   process.exit(0);
 }
 
+// --- qr subcommand ---
+if (process.argv[2] === 'qr') {
+  const { runQrCommand } = await import('./commands/qr.js');
+  try {
+    await runQrCommand();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+  process.exit(0);
+}
+
 const configDir = join(process.env.HOME ?? '', '.config', 'zenterm');
 const envPath = join(configDir, '.env');
 
