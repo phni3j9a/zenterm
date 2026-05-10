@@ -1,9 +1,10 @@
 # PC (Web) 版 ZenTerm Phase 2a 設計
 
 > 作成日: 2026-05-10
-> 状態: 設計確定 / 実装プラン未着手
+> 状態: Phase 2a 完了 (タグ `web-pc-phase-2a-done`)
 > 親 spec: `docs/superpowers/specs/2026-05-09-pc-web-design.md`
 > 前 phase: `docs/superpowers/plans/2026-05-09-pc-web-phase-1.md` (完了 — タグ `web-pc-phase-1-done`)
+> 実装プラン: `docs/superpowers/plans/2026-05-10-pc-web-phase-2a.md` (30 タスク完了)
 
 ## 背景と目的
 
