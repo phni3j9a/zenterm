@@ -143,8 +143,6 @@ function EventsStatusDot() {
     switch (status) {
       case 'connected':
         return t('sidebar.events.connected');
-      case 'disconnected':
-        return t('sidebar.events.disconnected');
       case 'reconnecting':
         return t('sidebar.events.reconnecting', { attempt });
       case 'failed':

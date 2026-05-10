@@ -34,7 +34,7 @@ describe('LimitsRow', () => {
   });
 
   it('uses warning color when percent ≥ 50', () => {
-    const { container } = render(
+    render(
       <LimitsRow accountLabel="x" windows={[{ shortLabel: '5h', percent: 65, resetsInText: '1h' }]} />,
     );
     const percentEl = screen.getByText('65%');
