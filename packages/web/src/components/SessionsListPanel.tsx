@@ -1,24 +1,48 @@
 import { useState } from 'react';
-import type { TmuxSession } from '@zenterm/shared';
+import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { useTheme } from '@/theme';
+import { SessionRow } from './sidebar/SessionRow';
+import { WindowRow } from './sidebar/WindowRow';
+import { NewSessionButton } from './sidebar/NewSessionButton';
+import { NewWindowButton } from './sidebar/NewWindowButton';
 
 export interface SessionsListPanelProps {
   sessions: TmuxSession[];
+  loading: boolean;
+  error: string | null;
   activeSessionId: string | null;
   activeWindowIndex: number | null;
   onSelect: (sessionId: string, windowIndex?: number) => void;
+  onCreateSession: (name?: string) => void | Promise<void>;
+  onRenameSession: (currentDisplayName: string, newName: string) => void | Promise<void>;
+  onRequestDeleteSession: (session: TmuxSession) => void;
+  onCreateWindow: (sessionDisplayName: string, name?: string) => void | Promise<void>;
+  onRenameWindow: (
+    sessionDisplayName: string,
+    windowIndex: number,
+    newName: string,
+  ) => void | Promise<void>;
+  onRequestDeleteWindow: (sessionDisplayName: string, window: TmuxWindow) => void;
 }
 
 export function SessionsListPanel({
   sessions,
+  loading,
+  error,
   activeSessionId,
   activeWindowIndex,
   onSelect,
+  onCreateSession,
+  onRenameSession,
+  onRequestDeleteSession,
+  onCreateWindow,
+  onRenameWindow,
+  onRequestDeleteWindow,
 }: SessionsListPanelProps) {
   const { tokens } = useTheme();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const toggle = (name: string) => {
+  const toggle = (name: string): void => {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(name)) next.delete(name);
@@ -28,7 +52,15 @@ export function SessionsListPanel({
   };
 
   return (
-    <div style={{ padding: tokens.spacing.md, color: tokens.colors.textPrimary }}>
+    <div
+      style={{
+        padding: tokens.spacing.md,
+        color: tokens.colors.textPrimary,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: tokens.spacing.sm,
+      }}
+    >
       <div
         style={{
           fontSize: tokens.typography.caption.fontSize,
@@ -40,118 +72,87 @@ export function SessionsListPanel({
       >
         Active · {sessions.length}
       </div>
+
+      {loading && sessions.length === 0 && (
+        <div style={{ padding: tokens.spacing.md, color: tokens.colors.textMuted }}>
+          読み込み中…
+        </div>
+      )}
+
+      {!loading && error && (
+        <div
+          style={{
+            padding: tokens.spacing.md,
+            color: tokens.colors.error,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: tokens.spacing.sm,
+          }}
+        >
+          <span>読み込めませんでした: {error}</span>
+        </div>
+      )}
+
+      {!loading && !error && sessions.length === 0 && (
+        <div
+          style={{
+            padding: tokens.spacing.lg,
+            color: tokens.colors.textMuted,
+            textAlign: 'center',
+          }}
+        >
+          セッションなし
+        </div>
+      )}
+
       {sessions.map((session) => {
         const isActive = session.displayName === activeSessionId;
-        const hasWindows = (session.windows?.length ?? 0) > 1;
         const isExpanded = expanded.has(session.name);
         return (
           <div key={session.name}>
-            <button
-              type="button"
-              aria-current={isActive ? 'true' : undefined}
-              onClick={() => onSelect(session.displayName, undefined)}
-              style={{
-                display: 'flex',
-                width: '100%',
-                alignItems: 'center',
-                gap: tokens.spacing.sm,
-                padding: tokens.spacing.sm,
-                margin: 0,
-                background: isActive ? tokens.colors.primarySubtle : 'transparent',
-                color: tokens.colors.textPrimary,
-                border: 'none',
-                borderRadius: tokens.radii.sm,
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: tokens.colors.success,
-                  flexShrink: 0,
-                }}
-              />
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: tokens.typography.bodyMedium.fontSize }}>
-                  {session.displayName}
-                </span>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: tokens.typography.small.fontSize,
-                    color: tokens.colors.textMuted,
-                    fontFamily: tokens.typography.mono.fontFamily,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                  title={session.cwd}
-                >
-                  {session.cwd}
-                </span>
-              </span>
-              {hasWindows && (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label={isExpanded ? 'Collapse windows' : 'Expand windows'}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggle(session.name);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      toggle(session.name);
-                    }
-                  }}
-                  style={{
-                    padding: tokens.spacing.xs,
-                    color: tokens.colors.textMuted,
-                    cursor: 'pointer',
-                    fontSize: tokens.typography.caption.fontSize,
-                  }}
-                >
-                  {isExpanded ? '▾' : '▸'}
-                </span>
-              )}
-            </button>
+            <SessionRow
+              session={session}
+              isActive={isActive}
+              isExpanded={isExpanded}
+              activeWindowIndex={activeWindowIndex}
+              onSelect={onSelect}
+              onToggleExpand={toggle}
+              onRename={onRenameSession}
+              onRequestDelete={onRequestDeleteSession}
+            />
             {isExpanded && session.windows && (
-              <div style={{ paddingLeft: tokens.spacing.lg, borderLeft: `1px solid ${tokens.colors.borderSubtle}`, marginLeft: tokens.spacing.md }}>
+              <div
+                style={{
+                  paddingLeft: tokens.spacing.lg,
+                  borderLeft: `1px solid ${tokens.colors.borderSubtle}`,
+                  marginLeft: tokens.spacing.md,
+                }}
+              >
                 {session.windows.map((w) => {
                   const isWindowActive =
                     isActive && activeWindowIndex === w.index;
                   return (
-                    <button
+                    <WindowRow
                       key={w.index}
-                      type="button"
-                      aria-current={isWindowActive ? 'true' : undefined}
-                      onClick={() => onSelect(session.displayName, w.index)}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: tokens.spacing.xs,
-                        background: isWindowActive ? tokens.colors.primarySubtle : 'transparent',
-                        border: 'none',
-                        color: tokens.colors.textSecondary,
-                        cursor: 'pointer',
-                        fontSize: tokens.typography.smallMedium.fontSize,
-                      }}
-                    >
-                      {w.name}
-                    </button>
+                      sessionDisplayName={session.displayName}
+                      window={w}
+                      isActive={isWindowActive}
+                      onSelect={() => onSelect(session.displayName, w.index)}
+                      onRename={onRenameWindow}
+                      onRequestDelete={onRequestDeleteWindow}
+                    />
                   );
                 })}
+                <NewWindowButton
+                  onCreate={(name) => onCreateWindow(session.displayName, name)}
+                />
               </div>
             )}
           </div>
         );
       })}
+
+      <NewSessionButton onCreate={onCreateSession} />
     </div>
   );
 }

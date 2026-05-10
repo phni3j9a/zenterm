@@ -1,23 +1,30 @@
-import type { TmuxSession } from '@zenterm/shared';
+import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { SessionsListPanel } from './SessionsListPanel';
 import { useTheme } from '@/theme';
 import { useEventsStore } from '@/stores/events';
 
 export interface SidebarProps {
   sessions: TmuxSession[];
+  loading: boolean;
+  error: string | null;
   activeSessionId: string | null;
   activeWindowIndex: number | null;
   onSelect: (sessionId: string, windowIndex?: number) => void;
+  onCreateSession: (name?: string) => void | Promise<void>;
+  onRenameSession: (currentDisplayName: string, newName: string) => void | Promise<void>;
+  onRequestDeleteSession: (session: TmuxSession) => void;
+  onCreateWindow: (sessionDisplayName: string, name?: string) => void | Promise<void>;
+  onRenameWindow: (
+    sessionDisplayName: string,
+    windowIndex: number,
+    newName: string,
+  ) => void | Promise<void>;
+  onRequestDeleteWindow: (sessionDisplayName: string, window: TmuxWindow) => void;
 }
 
 const SIDEBAR_WIDTH = 320;
 
-export function Sidebar({
-  sessions,
-  activeSessionId,
-  activeWindowIndex,
-  onSelect,
-}: SidebarProps) {
+export function Sidebar(props: SidebarProps) {
   const { tokens } = useTheme();
   return (
     <aside
@@ -33,16 +40,8 @@ export function Sidebar({
         boxSizing: 'border-box',
       }}
     >
-      <div
-        aria-label="Sessions panel"
-        style={{ overflowY: 'auto' }}
-      >
-        <SessionsListPanel
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          activeWindowIndex={activeWindowIndex}
-          onSelect={onSelect}
-        />
+      <div aria-label="Sessions panel" style={{ overflowY: 'auto' }}>
+        <SessionsListPanel {...props} />
       </div>
       <nav
         style={{
@@ -136,7 +135,7 @@ function EventsStatusDot() {
       title={label}
       style={{
         position: 'absolute',
-        right: tokens.spacing.md,
+        right: 12,
         top: '50%',
         transform: 'translateY(-50%)',
         width: 8,

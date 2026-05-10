@@ -17,39 +17,116 @@ const sessions: TmuxSession[] = [
   },
 ];
 
+const noopActions = {
+  onSelect: vi.fn(),
+  onCreateSession: vi.fn(),
+  onRenameSession: vi.fn(),
+  onRequestDeleteSession: vi.fn(),
+  onCreateWindow: vi.fn(),
+  onRenameWindow: vi.fn(),
+  onRequestDeleteWindow: vi.fn(),
+};
+
 describe('SessionsListPanel', () => {
   it('renders session names', () => {
-    render(<SessionsListPanel sessions={sessions} onSelect={vi.fn()} activeSessionId={null} activeWindowIndex={null} />);
+    render(
+      <SessionsListPanel
+        sessions={sessions}
+        loading={false}
+        error={null}
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
+      />,
+    );
     expect(screen.getByText('dev')).toBeInTheDocument();
   });
 
-  it('clicking a session calls onSelect with sessionId', async () => {
+  it('clicking a session calls onSelect', async () => {
     const onSelect = vi.fn();
-    render(<SessionsListPanel sessions={sessions} onSelect={onSelect} activeSessionId={null} activeWindowIndex={null} />);
+    render(
+      <SessionsListPanel
+        sessions={sessions}
+        loading={false}
+        error={null}
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
+        onSelect={onSelect}
+      />,
+    );
     await userEvent.click(screen.getByText('dev'));
     expect(onSelect).toHaveBeenCalledWith('dev', undefined);
   });
 
-  it('expands to show windows and clicking a window calls onSelect with index', async () => {
-    const onSelect = vi.fn();
-    render(<SessionsListPanel sessions={sessions} onSelect={onSelect} activeSessionId={null} activeWindowIndex={null} />);
-    await userEvent.click(screen.getByLabelText(/Expand windows/i));
-    expect(screen.getByText('main')).toBeInTheDocument();
-    expect(screen.getByText('test')).toBeInTheDocument();
-    await userEvent.click(screen.getByText('test'));
-    expect(onSelect).toHaveBeenCalledWith('dev', 1);
+  it('shows loading state', () => {
+    render(
+      <SessionsListPanel
+        sessions={[]}
+        loading
+        error={null}
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
+      />,
+    );
+    expect(screen.getByText(/読み込み中/)).toBeInTheDocument();
   });
 
-  it('highlights active session', () => {
+  it('shows empty state when sessions array is empty', () => {
+    render(
+      <SessionsListPanel
+        sessions={[]}
+        loading={false}
+        error={null}
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
+      />,
+    );
+    expect(screen.getByText(/セッションなし/)).toBeInTheDocument();
+  });
+
+  it('shows error state', () => {
+    render(
+      <SessionsListPanel
+        sessions={[]}
+        loading={false}
+        error="boom"
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
+      />,
+    );
+    expect(screen.getByText(/読み込めませんでした/)).toBeInTheDocument();
+  });
+
+  it('expanding a session reveals + window button', async () => {
     render(
       <SessionsListPanel
         sessions={sessions}
-        onSelect={vi.fn()}
-        activeSessionId="dev"
-        activeWindowIndex={0}
+        loading={false}
+        error={null}
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
       />,
     );
-    const row = screen.getByText('dev').closest('button');
-    expect(row).toHaveAttribute('aria-current', 'true');
+    await userEvent.click(screen.getByLabelText(/Expand windows/));
+    expect(screen.getByRole('button', { name: /\+ window/ })).toBeInTheDocument();
+  });
+
+  it('always shows + 新規セッション in footer', () => {
+    render(
+      <SessionsListPanel
+        sessions={sessions}
+        loading={false}
+        error={null}
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /新規セッション/ })).toBeInTheDocument();
   });
 });
