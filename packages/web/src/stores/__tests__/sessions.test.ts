@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import type { TmuxSession } from '@zenterm/shared';
 import { useSessionsStore } from '../sessions';
+import { useSessionViewStore } from '../sessionView';
 
 const sampleSession = (name: string): TmuxSession => ({
   name,
@@ -52,5 +53,55 @@ describe('useSessionsStore', () => {
     await useSessionsStore.getState().refetch(apiClient);
     expect(useSessionsStore.getState().loading).toBe(false);
     expect(useSessionsStore.getState().error).toBe('boom');
+  });
+
+  it('createSession calls API and upserts result', async () => {
+    const created: TmuxSession = sampleSession('new');
+    const client = {
+      createSession: vi.fn().mockResolvedValue(created),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['create']>[0];
+    const result = await useSessionsStore.getState().create(client, { name: 'new' });
+    expect(result).toEqual(created);
+    expect(useSessionsStore.getState().sessions).toContainEqual(created);
+  });
+
+  it('renameSession replaces session in store', async () => {
+    useSessionsStore.getState().setSessions([sampleSession('a')]);
+    const renamed = { ...sampleSession('a'), displayName: 'renamed' };
+    const client = {
+      renameSession: vi.fn().mockResolvedValue(renamed),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['rename']>[0];
+    const result = await useSessionsStore.getState().rename(client, 'a', 'renamed');
+    expect(result.displayName).toBe('renamed');
+    expect(useSessionsStore.getState().sessions[0].displayName).toBe('renamed');
+  });
+
+  it('removeSession drops session from store', async () => {
+    useSessionsStore.getState().setSessions([sampleSession('a'), sampleSession('b')]);
+    const client = {
+      killSession: vi.fn().mockResolvedValue({ ok: true }),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['removeSession']>[0];
+    await useSessionsStore.getState().removeSession(client, 'a');
+    expect(useSessionsStore.getState().sessions.map((s) => s.name)).toEqual(['b']);
+  });
+
+  it('removeSession switches active session to next when removing the active one', async () => {
+    useSessionsStore.getState().setSessions([sampleSession('a'), sampleSession('b')]);
+    useSessionViewStore.getState().open('a', 0);
+    const client = {
+      killSession: vi.fn().mockResolvedValue({ ok: true }),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['removeSession']>[0];
+    await useSessionsStore.getState().removeSession(client, 'a');
+    expect(useSessionViewStore.getState().activeSessionId).toBe('b');
+  });
+
+  it('removeSession clears view when no sessions remain', async () => {
+    useSessionsStore.getState().setSessions([sampleSession('a')]);
+    useSessionViewStore.getState().open('a', 0);
+    const client = {
+      killSession: vi.fn().mockResolvedValue({ ok: true }),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['removeSession']>[0];
+    await useSessionsStore.getState().removeSession(client, 'a');
+    expect(useSessionViewStore.getState().activeSessionId).toBeNull();
   });
 });
