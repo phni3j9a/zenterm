@@ -1,0 +1,12 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "close": "Close"
+  },
+  "settings": {
+    "title": "Settings"
+  }
+}
