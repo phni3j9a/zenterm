@@ -1,6 +1,7 @@
 import { useTheme } from '@/theme';
 import { AppearanceSection } from './AppearanceSection';
 import { TerminalSection } from './TerminalSection';
+import { GatewaySection } from './GatewaySection';
 
 function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLabel: string }) {
   const { tokens } = useTheme();
@@ -38,7 +39,7 @@ export function SettingsPanel() {
     <div style={{ padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.xl}px`, height: '100%', overflowY: 'auto' }}>
       <AppearanceSection />
       <TerminalSection />
-      <SectionPlaceholder titleKey="Gateway" ariaLabel="Gateway" />
+      <GatewaySection gatewayVersion={null} />
       <SectionPlaceholder titleKey="System status" ariaLabel="System status" />
       <SectionPlaceholder titleKey="Rate limits" ariaLabel="Rate limits" />
     </div>
