@@ -1,7 +1,11 @@
+import { useMemo, useState } from 'react';
+import { ApiClient } from '@/api/client';
+import { useAuthStore } from '@/stores/auth';
 import { useTheme } from '@/theme';
 import { AppearanceSection } from './AppearanceSection';
 import { TerminalSection } from './TerminalSection';
 import { GatewaySection } from './GatewaySection';
+import { SystemStatusSection } from './SystemStatusSection';
 
 function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLabel: string }) {
   const { tokens } = useTheme();
@@ -35,12 +39,20 @@ function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLab
 
 export function SettingsPanel() {
   const { tokens } = useTheme();
+  const auth = useAuthStore();
+  const [gatewayVersion, setGatewayVersion] = useState<string | null>(null);
+
+  const client = useMemo(() => {
+    if (!auth.gatewayUrl || !auth.token) return null;
+    return new ApiClient(auth.gatewayUrl, auth.token);
+  }, [auth.gatewayUrl, auth.token]);
+
   return (
     <div style={{ padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.xl}px`, height: '100%', overflowY: 'auto' }}>
       <AppearanceSection />
       <TerminalSection />
-      <GatewaySection gatewayVersion={null} />
-      <SectionPlaceholder titleKey="System status" ariaLabel="System status" />
+      <GatewaySection gatewayVersion={gatewayVersion} />
+      <SystemStatusSection client={client} onGatewayVersion={setGatewayVersion} />
       <SectionPlaceholder titleKey="Rate limits" ariaLabel="Rate limits" />
     </div>
   );
