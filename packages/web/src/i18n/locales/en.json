@@ -4,9 +4,106 @@
     "save": "Save",
     "loading": "Loading…",
     "retry": "Retry",
-    "close": "Close"
+    "close": "Close",
+    "delete": "Delete",
+    "rename": "Rename"
+  },
+  "sidebar": {
+    "tabs": {
+      "sessions": "Sessions",
+      "files": "Files",
+      "settings": "Settings"
+    },
+    "filesComingSoon": "Coming in Phase 2c",
+    "events": {
+      "connected": "Realtime updates: connected",
+      "disconnected": "Realtime updates: disconnected",
+      "reconnecting": "Realtime updates: reconnecting (attempt {{attempt}})",
+      "failed": "Realtime updates: failed"
+    }
+  },
+  "login": {
+    "title": "Sign in to ZenTerm",
+    "tokenLabel": "Token",
+    "tokenPlaceholder": "4-digit token",
+    "submit": "Sign in",
+    "invalid": "Invalid token. Please try again."
+  },
+  "sessions": {
+    "newSession": "New session",
+    "newWindow": "New window",
+    "namePlaceholder": "Name (optional)",
+    "actionsFor": "Actions for {{type}} {{name}}",
+    "deleteSessionTitle": "Delete session?",
+    "deleteSessionMessage": "This will terminate the tmux session \"{{name}}\". Continue?",
+    "deleteWindowTitle": "Delete window?",
+    "deleteWindowMessage": "This will close window {{index}} \"{{name}}\". Continue?",
+    "loadFailed": "Failed to load sessions: {{error}}",
+    "empty": "No sessions yet — create one above."
+  },
+  "terminal": {
+    "selectPrompt": "Select a session from the sidebar to start.",
+    "status": {
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "reconnecting": "Reconnecting…",
+      "error": "Error"
+    }
+  },
+  "validation": {
+    "nameEmpty": "Name cannot be empty",
+    "nameTooLong": "Name must be 64 characters or fewer",
+    "nameInvalidChars": "Use only letters, numbers, underscore, or hyphen"
   },
   "settings": {
-    "title": "Settings"
+    "title": "Settings",
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "themeOptions": { "light": "Light", "dark": "Dark", "system": "System" },
+      "language": "Language"
+    },
+    "terminal": {
+      "title": "Terminal",
+      "fontSize": "Font size"
+    },
+    "gateway": {
+      "title": "Gateway",
+      "connectedTo": "Connected to",
+      "token": "Token",
+      "version": "Gateway version",
+      "copyUrl": "Copy Web URL",
+      "copied": "Web URL copied",
+      "copyFailed": "Copy failed — please copy manually",
+      "showQr": "Show mobile QR",
+      "qrTitle": "Pair mobile app",
+      "qrInstructions": "Scan this QR with the ZenTerm mobile app to pair.",
+      "reauth": "Re-enter token",
+      "reauthTitle": "Re-enter token",
+      "verify": "Verify",
+      "invalidToken": "Invalid token",
+      "logout": "Logout",
+      "logoutTitle": "Logout",
+      "logoutConfirm": "Sign out and return to the login screen?"
+    },
+    "systemStatus": {
+      "title": "System status",
+      "uptime": "Uptime",
+      "loadAvg": "Load avg",
+      "memory": "Memory",
+      "unavailable": "Status unavailable"
+    },
+    "rateLimits": {
+      "title": "Rate limits",
+      "refresh": "Refresh",
+      "claude": "Claude",
+      "codex": "Codex",
+      "claudeUnconfigured": "Not configured",
+      "codexUnconfigured": "Not configured",
+      "openDocs": "Setup guide",
+      "pending": "Calculating…",
+      "unavailable": "Unavailable",
+      "stale": "Last updated {{age}} ago"
+    }
   }
 }
