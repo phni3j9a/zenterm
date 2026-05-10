@@ -1,6 +1,7 @@
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { LoginRoute } from './routes/login';
 import { SessionsRoute } from './routes/sessions';
+import { SettingsRoute } from './routes/settings';
 import { useAuthStore } from './stores/auth';
 import { ConfirmDialogHost } from './components/ui/ConfirmDialogHost';
 import { ToastViewport } from './components/ui/ToastViewport';
@@ -21,6 +22,14 @@ export function App() {
           element={
             <RequireAuth>
               <SessionsRoute />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/web/settings"
+          element={
+            <RequireAuth>
+              <SettingsRoute />
             </RequireAuth>
           }
         />
