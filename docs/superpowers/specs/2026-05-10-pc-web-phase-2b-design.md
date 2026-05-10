@@ -33,7 +33,7 @@ Files タブは Phase 2c に分離する。
 - `packages/web/src/components/Sidebar.tsx` 改修 (3 タブ全て interactive、URL pathname → activePanel)
 - `packages/web/src/components/terminal/XtermView.tsx` 改修 (resolvedTheme と fontSize を購読)
 - `packages/web/src/App.tsx` 改修 (`/web/settings` ルート追加)
-- 既存 Phase 2a UI 全体に i18n keys を導入 (Sidebar/Sessions/Login/CRUD ダイアログ等)
+- 既存 Phase 2a UI の hardcoded 文字列を i18n key 化 (対象: `routes/login.tsx`, `routes/sessions.tsx`, `components/Sidebar.tsx`, `components/SessionsListPanel.tsx`, `components/LoginForm.tsx`, `components/TerminalPane.tsx`, `components/sidebar/*` 5 ファイル, `components/ui/ConfirmDialog.tsx`, `components/ui/Toast.tsx`, validation message を返す `lib/validateName.ts`)
 - ユニット / コンポーネント / フロー / E2E テスト一式
 
 ### Out of scope (Phase 2c+ に分離)
@@ -261,17 +261,29 @@ export function initI18n() {
 
 `SessionsRoute` と同じく `Sidebar + 右側` の 2-column レイアウト。Phase 2b では右側は **TerminalPane を mount 維持** (sessionView store の current selection の xterm)。
 
+実装方針: `SessionsRoute` から共通 shell 部分 (auth check + wrappedClient 構築 + Sidebar + TerminalPane) を `components/AuthenticatedShell.tsx` に抽出する。`SessionsRoute` / `SettingsRoute` 両方が `AuthenticatedShell` をレンダリングし、Sidebar の `activePanel` は URL pathname から自動導出されるので route 側で渡す必要なし。
+
 ```tsx
+// routes/settings.tsx
 export function SettingsRoute() {
+  return <AuthenticatedShell />;
+}
+
+// routes/sessions.tsx (改修)
+export function SessionsRoute() {
+  return <AuthenticatedShell />;
+}
+
+// components/AuthenticatedShell.tsx (新規)
+export function AuthenticatedShell() {
   const auth = useAuthStore();
   if (!auth.token) return <Navigate to="/web/login" replace />;
-  // SessionsRoute と同じ wrappedClient 構築 (401 intercept)
-  // Sidebar (activePanel='settings' は URL から自動導出) + TerminalPane を描画
-  return <SessionsLikeShell />;
+  // wrappedClient (401 intercept), Sidebar, TerminalPane を組み立て
+  // Sidebar 内の activePanel は useLocation() から導出される
 }
 ```
 
-実装上は `SessionsRoute` から共通 shell 部分を抽出して両方で使うのが綺麗 (`AuthenticatedShell.tsx` のような名前)。
+これで Phase 2a IMP-1 (`wrappedClient` の memoize) も同時に解消できる。
 
 ### `components/Sidebar.tsx` 改修
 
@@ -333,8 +345,10 @@ export function buildPairingUrl(origin: string, token: string): string {
 
 ### `components/terminal/XtermView.tsx` 改修
 
+既存の `theme` / `fontSize` props は **削除し、`XtermView` 自身で `useTheme()` / `useSettingsStore()` を購読する** (上位 coupling を下げる)。
+
 ```tsx
-// 既存 props に加えて、内部で useTheme() / useSettingsStore() を購読:
+// XtermView 内部:
 const { resolvedTheme } = useTheme();
 const fontSize = useSettingsStore((s) => s.fontSize);
 
@@ -351,7 +365,7 @@ useEffect(() => {
 }, [fontSize]);
 ```
 
-既存 `theme` / `fontSize` props は削除 (store 直購読に切替)。または props を残して上位から渡す方式でも可だが、Phase 2b では `XtermView` 自身で購読するほうが coupling が低い。
+`TerminalPane` から `theme` / `fontSize` props 渡しを削除。既存テストの fontSize/theme 指定箇所は store の direct set に書き換え。
 
 ## データフロー
 
@@ -573,7 +587,7 @@ Phase 2a と同水準: 新規ファイルは行カバレッジ 80%+、Limits/Sys
 | **2b-4: Gateway セクション** | URL/Token/Copy/QR/Reauth/Logout/Version + 関連 modal |
 | **2b-5: SystemStatus セクション** | polling + state UI |
 | **2b-6: Limits セクション** | ClaudeLimits / CodexLimits / LimitsRow 移植 + Refresh |
-| **2b-7: 既存 Phase 2a UI の i18n key 化** | Sidebar / Sessions / CRUD ダイアログ等の hardcoded 文字列を t() で置換 |
+| **2b-7: 既存 Phase 2a UI の i18n key 化** | スコープ章で列挙した 11 ファイルの hardcoded 文字列を `t()` で置換 + en/ja 訳追加。既存テストは locale 'en' 固定で温存 |
 | **2b-8: Flow tests + E2E + ポリッシュ** | flows 4 本 + E2E 5 本 + Phase 2c 向け Files タブのラベル更新 |
 
 合計 30-40 タスク程度を見込む (Phase 2a と同等規模)。具体タスク数は writing-plans phase で確定。
@@ -587,7 +601,7 @@ Phase 2a と同水準: 新規ファイルは行カバレッジ 80%+、Limits/Sys
 | matchMedia が jsdom で動かない | useTheme テスト失敗 | setupTests.ts に matchMedia polyfill 追加 (Phase 2a でも追加済み箇所流用) |
 | Light theme で xterm の selection / cursor の可視性が悪い | 視認性低下 | mobile light テーマ完全移植 + 手動目視確認 |
 | qrcode.react の bundle size 増 | 初期ロード劣化 | dynamic import で QrModal を lazy load (open 時のみロード) |
-| Settings panel の vertical scroll が長すぎる | UX 低下 | scrollable container + section header に sticky 効果 (要確認) は Phase 2c 以降 |
+| Settings panel の vertical scroll が長すぎる | UX 低下 | Phase 2b は単純な縦スクロールで実装。section header の sticky 化や折りたたみは Phase 2c 以降の polish 課題 |
 | Limits の `unconfigured` 状態でユーザーが混乱する | サポート負荷 | mobile と同じドキュメントリンクに誘導 |
 
 ## 実装順序の目安 (依存関係)
