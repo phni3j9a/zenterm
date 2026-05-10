@@ -138,4 +138,49 @@ describe('ApiClient', () => {
     const [url] = fetchMock.mock.calls[0];
     expect(url).toBe('http://gateway.test:18765/api/sessions/a%20b');
   });
+
+  it('createWindow POSTs to /api/sessions/:id/windows', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ index: 2, name: 'w2', active: true, zoomed: false, paneCount: 1, cwd: '/' }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    const client = new ApiClient(baseUrl, token);
+    const window = await client.createWindow('dev', { name: 'w2' });
+    expect(window.index).toBe(2);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://gateway.test:18765/api/sessions/dev/windows');
+    expect((init as RequestInit).method).toBe('POST');
+    expect((init as RequestInit).body).toBe('{"name":"w2"}');
+  });
+
+  it('renameWindow PATCHes /api/sessions/:id/windows/:idx', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ index: 1, name: 'renamed', active: false, zoomed: false, paneCount: 1, cwd: '/' }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    const client = new ApiClient(baseUrl, token);
+    const window = await client.renameWindow('dev', 1, { name: 'renamed' });
+    expect(window.name).toBe('renamed');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://gateway.test:18765/api/sessions/dev/windows/1');
+    expect((init as RequestInit).method).toBe('PATCH');
+  });
+
+  it('killWindow DELETEs /api/sessions/:id/windows/:idx', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const client = new ApiClient(baseUrl, token);
+    await client.killWindow('dev', 1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://gateway.test:18765/api/sessions/dev/windows/1');
+    expect((init as RequestInit).method).toBe('DELETE');
+  });
 });

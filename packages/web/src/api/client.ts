@@ -80,4 +80,31 @@ export class ApiClient {
       `/api/sessions/${encodeURIComponent(sessionId)}`,
     );
   }
+
+  createWindow(sessionId: string, body?: { name?: string }): Promise<TmuxWindow> {
+    return this.request<TmuxWindow>(
+      'POST',
+      `/api/sessions/${encodeURIComponent(sessionId)}/windows`,
+      body ?? {},
+    );
+  }
+
+  renameWindow(
+    sessionId: string,
+    windowIndex: number,
+    body: { name: string },
+  ): Promise<TmuxWindow> {
+    return this.request<TmuxWindow>(
+      'PATCH',
+      `/api/sessions/${encodeURIComponent(sessionId)}/windows/${windowIndex}`,
+      body,
+    );
+  }
+
+  killWindow(sessionId: string, windowIndex: number): Promise<{ ok: true }> {
+    return this.request<{ ok: true }>(
+      'DELETE',
+      `/api/sessions/${encodeURIComponent(sessionId)}/windows/${windowIndex}`,
+    );
+  }
 }
