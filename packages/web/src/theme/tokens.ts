@@ -1,6 +1,9 @@
 // Ported from app/src/theme/tokens.ts (Zen palette).
 // Keep keys aligned with the mobile app so designers can port styles.
 
+export const FONT_FAMILY_MONO =
+  '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace';
+
 export interface ColorTokens {
   bg: string;
   bgElevated: string;
@@ -70,7 +73,7 @@ export const darkTokens: ThemeTokens = {
     small: { fontSize: 12, lineHeight: 16, fontWeight: 400 },
     caption: { fontSize: 11, lineHeight: 14, fontWeight: 400 },
     heading: { fontSize: 18, lineHeight: 24, fontWeight: 600 },
-    mono: { fontFamily: '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace' },
+    mono: { fontFamily: FONT_FAMILY_MONO },
   },
 };
 

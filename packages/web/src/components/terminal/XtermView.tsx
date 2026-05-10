@@ -6,6 +6,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
 
 import { terminalColorsDark, terminalColorsLight } from '@/theme/terminalColors';
+import { FONT_FAMILY_MONO } from '@/theme/tokens';
 import { createImeDedup } from '@/lib/imeDedup';
 import { createReconnectBackoff } from '@/lib/reconnectBackoff';
 import {
@@ -28,9 +29,6 @@ export interface XtermViewProps {
   onStatusChange: (status: TerminalStatus) => void;
 }
 
-const FONT_FAMILY =
-  '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace';
-
 export function XtermView({
   gatewayUrl,
   token,
@@ -41,6 +39,11 @@ export function XtermView({
   fontSize,
   onStatusChange,
 }: XtermViewProps) {
+  const onStatusChangeRef = useRef(onStatusChange);
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -58,7 +61,7 @@ export function XtermView({
     const palette = theme === 'light' ? terminalColorsLight : terminalColorsDark;
     const term = new Terminal({
       allowProposedApi: true,
-      fontFamily: FONT_FAMILY,
+      fontFamily: FONT_FAMILY_MONO,
       fontSize,
       cursorBlink: true,
       cursorStyle: 'block',
@@ -114,14 +117,14 @@ export function XtermView({
       const url = buildTerminalWsUrl(gatewayUrl, sessionId, windowIndex, token);
       const ws = new WebSocket(url);
       wsRef.current = ws;
-      onStatusChange('disconnected');
+      onStatusChangeRef.current('disconnected');
 
       ws.onopen = () => {
         backoffRef.current.reset();
         term.reset();
         fitRef.current?.fit();
         ws.send(encodeResize(term.cols, term.rows));
-        onStatusChange('connected');
+        onStatusChangeRef.current('connected');
       };
 
       ws.onmessage = (ev) => {
@@ -130,28 +133,28 @@ export function XtermView({
         if (msg.type === 'output') {
           term.write(msg.data);
         } else if (msg.type === 'error') {
-          onStatusChange('error');
+          onStatusChangeRef.current('error');
         }
       };
 
       ws.onclose = (ev) => {
         wsRef.current = null;
         if (ev.code === 1000 || ev.code === 1008) {
-          onStatusChange('disconnected');
+          onStatusChangeRef.current('disconnected');
           return;
         }
         const step = backoffRef.current.next();
         if (step.exhausted) {
-          onStatusChange('error');
+          onStatusChangeRef.current('error');
           return;
         }
-        onStatusChange('reconnecting');
+        onStatusChangeRef.current('reconnecting');
         reconnectTimerRef.current = window.setTimeout(() => {
           connect();
         }, step.delayMs);
       };
 
-      ws.onerror = () => onStatusChange('error');
+      ws.onerror = () => onStatusChangeRef.current('error');
     };
 
     connect();
@@ -179,7 +182,7 @@ export function XtermView({
         wsRef.current = null;
       }
     };
-  }, [gatewayUrl, token, sessionId, windowIndex, onStatusChange]);
+  }, [gatewayUrl, token, sessionId, windowIndex]);
 
   // ResizeObserver → fit + send resize
   useEffect(() => {
