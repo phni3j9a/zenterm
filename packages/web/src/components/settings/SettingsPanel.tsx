@@ -1,4 +1,5 @@
 import { useTheme } from '@/theme';
+import { AppearanceSection } from './AppearanceSection';
 
 function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLabel: string }) {
   const { tokens } = useTheme();
@@ -34,7 +35,7 @@ export function SettingsPanel() {
   const { tokens } = useTheme();
   return (
     <div style={{ padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.xl}px`, height: '100%', overflowY: 'auto' }}>
-      <SectionPlaceholder titleKey="Appearance" ariaLabel="Appearance" />
+      <AppearanceSection />
       <SectionPlaceholder titleKey="Terminal" ariaLabel="Terminal" />
       <SectionPlaceholder titleKey="Gateway" ariaLabel="Gateway" />
       <SectionPlaceholder titleKey="System status" ariaLabel="System status" />
