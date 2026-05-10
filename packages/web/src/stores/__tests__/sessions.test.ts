@@ -14,6 +14,7 @@ const sampleSession = (name: string): TmuxSession => ({
 describe('useSessionsStore', () => {
   beforeEach(() => {
     useSessionsStore.setState({ sessions: [], loading: false, error: null });
+    useSessionViewStore.setState({ activeSessionId: null, activeWindowIndex: null });
   });
 
   it('setSessions replaces the list', () => {

@@ -44,7 +44,7 @@ interface SessionsState {
 function fallbackAfterRemove(removedDisplayName: string, remaining: TmuxSession[]): void {
   const view = useSessionViewStore.getState();
   if (view.activeSessionId !== removedDisplayName) return;
-  const next = remaining.find((s) => s.displayName !== removedDisplayName);
+  const next = remaining[0];
   if (next) {
     view.open(next.displayName, next.windows?.[0]?.index ?? 0);
   } else {
