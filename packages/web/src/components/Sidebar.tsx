@@ -1,6 +1,7 @@
 import type { TmuxSession } from '@zenterm/shared';
 import { SessionsListPanel } from './SessionsListPanel';
 import { useTheme } from '@/theme';
+import { useEventsStore } from '@/stores/events';
 
 export interface SidebarProps {
   sessions: TmuxSession[];
@@ -50,6 +51,7 @@ export function Sidebar({
           justifyContent: 'space-around',
           borderTop: `1px solid ${tokens.colors.borderSubtle}`,
           background: tokens.colors.bgElevated,
+          position: 'relative',
         }}
       >
         <button
@@ -71,7 +73,7 @@ export function Sidebar({
           type="button"
           aria-label="Files tab"
           disabled
-          title="Coming in Phase 2"
+          title="Coming in Phase 2b"
           style={{
             background: 'none',
             border: 'none',
@@ -88,7 +90,7 @@ export function Sidebar({
           type="button"
           aria-label="Settings tab"
           disabled
-          title="Coming in Phase 2"
+          title="Coming in Phase 2b"
           style={{
             background: 'none',
             border: 'none',
@@ -101,7 +103,47 @@ export function Sidebar({
         >
           ⚙ Settings
         </button>
+        <EventsStatusDot />
       </nav>
     </aside>
+  );
+}
+
+function EventsStatusDot() {
+  const { tokens } = useTheme();
+  const status = useEventsStore((s) => s.status);
+  const attempt = useEventsStore((s) => s.reconnectAttempt);
+  const color = (() => {
+    switch (status) {
+      case 'connected':
+        return tokens.colors.success;
+      case 'reconnecting':
+        return tokens.colors.warning;
+      case 'failed':
+        return tokens.colors.error;
+      default:
+        return tokens.colors.textMuted;
+    }
+  })();
+  const label =
+    status === 'reconnecting'
+      ? `Realtime updates: reconnecting (attempt ${attempt})`
+      : `Realtime updates: ${status}`;
+  return (
+    <span
+      role="status"
+      aria-label={label}
+      title={label}
+      style={{
+        position: 'absolute',
+        right: tokens.spacing.md,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        background: color,
+      }}
+    />
   );
 }

@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useSessionsStore } from '@/stores/sessions';
 import { useSessionViewStore } from '@/stores/sessionView';
 import { useTheme } from '@/theme';
+import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 
 export function SessionsRoute() {
   const { tokens } = useTheme();
@@ -21,6 +22,8 @@ export function SessionsRoute() {
   const activeSessionId = useSessionViewStore((s) => s.activeSessionId);
   const activeWindowIndex = useSessionViewStore((s) => s.activeWindowIndex);
   const open = useSessionViewStore((s) => s.open);
+
+  useEventsSubscription();
 
   useEffect(() => {
     if (!token || !gatewayUrl) return;
