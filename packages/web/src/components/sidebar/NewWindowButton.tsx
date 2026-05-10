@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { validateSessionOrWindowName } from '@/lib/validateName';
 
@@ -8,6 +9,7 @@ export interface NewWindowButtonProps {
 
 export function NewWindowButton({ onCreate }: NewWindowButtonProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -63,8 +65,8 @@ export function NewWindowButton({ onCreate }: NewWindowButtonProps) {
         ref={inputRef}
         type="text"
         value={text}
-        placeholder="window 名 (空で自動)"
-        aria-label="新規 window 名"
+        placeholder={t('sessions.namePlaceholder')}
+        aria-label={t('sessions.newWindow')}
         aria-invalid={error ? 'true' : 'false'}
         onChange={(e) => {
           setText(e.target.value);

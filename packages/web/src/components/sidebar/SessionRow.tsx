@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TmuxSession } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { InlineEdit } from '@/components/ui/InlineEdit';
@@ -27,6 +28,7 @@ export function SessionRow({
   onRequestDelete,
 }: SessionRowProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<RowMode>('idle');
   const [menuOpen, setMenuOpen] = useState(false);
   const [hover, setHover] = useState(false);
@@ -73,7 +75,7 @@ export function SessionRow({
             <InlineEdit
               value={session.displayName}
               validate={validateSessionOrWindowName}
-              ariaLabel="セッション名を編集"
+              ariaLabel={t('common.rename') + ' ' + session.displayName}
               onSave={async (next) => {
                 await onRename(session.displayName, next);
                 setMode('idle');

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { Sidebar } from '@/components/Sidebar';
@@ -14,6 +15,7 @@ import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 
 export function AuthenticatedShell() {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const gatewayUrl = useAuthStore((s) => s.gatewayUrl);
@@ -87,22 +89,22 @@ export function AuthenticatedShell() {
     return false;
   };
 
-  const reportMutationError = (err: unknown, action: string): void => {
+  const reportMutationError = (err: unknown): void => {
     if (handleAuthError(err)) return;
     if (err instanceof HttpError && err.status === 404) {
-      pushToast({ type: 'error', message: '対象が見つかりません。一覧を更新します' });
+      pushToast({ type: 'error', message: t('sessions.loadFailed', { error: 'not found' }) });
       void useSessionsStore.getState().refetch(wrappedClient);
       return;
     }
     const message = err instanceof Error ? err.message : String(err);
-    pushToast({ type: 'error', message: `${action}に失敗: ${message}` });
+    pushToast({ type: 'error', message: t('sessions.loadFailed', { error: message }) });
   };
 
   const handleCreateSession = async (name?: string): Promise<void> => {
     try {
       await useSessionsStore.getState().create(wrappedClient, { name });
     } catch (err) {
-      reportMutationError(err, 'セッション作成');
+      reportMutationError(err);
     }
   };
 
@@ -113,25 +115,20 @@ export function AuthenticatedShell() {
     try {
       await useSessionsStore.getState().rename(wrappedClient, currentDisplayName, newName);
     } catch (err) {
-      reportMutationError(err, 'セッション名変更');
+      reportMutationError(err);
     }
   };
 
   const handleRequestDeleteSession = (session: TmuxSession): void => {
-    const windowCount = session.windows?.length ?? 0;
-    const message =
-      windowCount > 0
-        ? `${session.displayName} を削除しますか? (window ${windowCount} 個も削除されます)`
-        : `${session.displayName} を削除しますか?`;
     showConfirm({
-      title: 'セッションを削除',
-      message,
+      title: t('sessions.deleteSessionTitle'),
+      message: t('sessions.deleteSessionMessage', { name: session.displayName }),
       destructive: true,
       onConfirm: async () => {
         try {
           await useSessionsStore.getState().removeSession(wrappedClient, session.displayName);
         } catch (err) {
-          reportMutationError(err, 'セッション削除');
+          reportMutationError(err);
         }
       },
     });
@@ -144,7 +141,7 @@ export function AuthenticatedShell() {
     try {
       await useSessionsStore.getState().createWindow(wrappedClient, sessionDisplayName, { name });
     } catch (err) {
-      reportMutationError(err, 'window 作成');
+      reportMutationError(err);
     }
   };
 
@@ -156,7 +153,7 @@ export function AuthenticatedShell() {
     try {
       await useSessionsStore.getState().renameWindow(wrappedClient, sessionDisplayName, windowIndex, newName);
     } catch (err) {
-      reportMutationError(err, 'window 名変更');
+      reportMutationError(err);
     }
   };
 
@@ -165,14 +162,14 @@ export function AuthenticatedShell() {
     window: TmuxWindow,
   ): void => {
     showConfirm({
-      title: 'window を削除',
-      message: `${window.name} を削除しますか?`,
+      title: t('sessions.deleteWindowTitle'),
+      message: t('sessions.deleteWindowMessage', { index: window.index, name: window.name }),
       destructive: true,
       onConfirm: async () => {
         try {
           await useSessionsStore.getState().removeWindow(wrappedClient, sessionDisplayName, window.index);
         } catch (err) {
-          reportMutationError(err, 'window 削除');
+          reportMutationError(err);
         }
       },
     });

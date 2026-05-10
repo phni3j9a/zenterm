@@ -137,7 +137,7 @@ describe('Window CRUD flows', () => {
     await waitFor(() => screen.getByLabelText(/Actions for session a/));
     await userEvent.click(screen.getByLabelText(/Expand windows/));
     await userEvent.click(screen.getByRole('button', { name: /\+ window/ }));
-    await userEvent.type(screen.getByRole('textbox', { name: /新規 window 名/ }), 'logs{Enter}');
+    await userEvent.type(screen.getByRole('textbox', { name: /New window/i }), 'logs{Enter}');
 
     await waitFor(() =>
       expect(
@@ -180,7 +180,7 @@ describe('Window CRUD flows', () => {
     await userEvent.click(screen.getByLabelText(/Expand windows/));
     await userEvent.click(screen.getByLabelText(/Actions for window w1/));
     await userEvent.click(screen.getByRole('menuitem', { name: /Rename/ }));
-    const input = screen.getByRole('textbox', { name: /window 名を編集/ });
+    const input = screen.getByRole('textbox', { name: /Rename/i });
     await userEvent.clear(input);
     await userEvent.type(input, 'renamed{Enter}');
 
@@ -220,8 +220,8 @@ describe('Window CRUD flows', () => {
     await userEvent.click(screen.getByLabelText(/Actions for window w0/));
     await userEvent.click(screen.getByRole('menuitem', { name: /Delete/ }));
 
-    expect(screen.getByText(/w0 を削除しますか/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '削除' }));
+    expect(screen.getByText(/Delete window/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Delete/i }));
 
     await waitFor(() =>
       expect(useSessionViewStore.getState().activeWindowIndex).toBe(1),

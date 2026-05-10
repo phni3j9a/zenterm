@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TmuxWindow } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { InlineEdit } from '@/components/ui/InlineEdit';
@@ -29,6 +30,7 @@ export function WindowRow({
   onRequestDelete,
 }: WindowRowProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<RowMode>('idle');
   const [menuOpen, setMenuOpen] = useState(false);
   const [hover, setHover] = useState(false);
@@ -60,7 +62,7 @@ export function WindowRow({
           <InlineEdit
             value={window.name}
             validate={validateSessionOrWindowName}
-            ariaLabel="window 名を編集"
+            ariaLabel={t('common.rename') + ' ' + window.name}
             onSave={async (next) => {
               await onRename(sessionDisplayName, window.index, next);
               setMode('idle');

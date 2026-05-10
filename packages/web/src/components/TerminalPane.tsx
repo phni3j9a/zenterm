@@ -79,7 +79,7 @@ export function TerminalPane({
         </span>
         <span style={{ flex: 1 }} />
         <span
-          aria-label={`Connection ${status}`}
+          aria-label={`Connection ${t(`terminal.status.${status}` as 'terminal.status.connected')}`}
           style={{
             width: 8,
             height: 8,
