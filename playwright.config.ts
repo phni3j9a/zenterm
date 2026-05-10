@@ -5,6 +5,9 @@ export default defineConfig({
   outputDir: './playwright-artifacts',
   timeout: 30_000,
   expect: { timeout: 10_000 },
+  // All specs share the same tmux server, so concurrent spec execution
+  // causes cross-spec session cleanup races. Run spec files serially.
+  workers: 1,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
     baseURL: 'http://localhost:18765',
