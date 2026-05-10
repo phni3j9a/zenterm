@@ -65,4 +65,77 @@ describe('ApiClient', () => {
       status: 401,
     });
   });
+
+  it('createSession POSTs to /api/sessions and returns session', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ name: 'zen_new', displayName: 'new', created: 1, cwd: '/home', windows: [] }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    const client = new ApiClient(baseUrl, token);
+    const session = await client.createSession({ name: 'new' });
+    expect(session.displayName).toBe('new');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://gateway.test:18765/api/sessions');
+    expect((init as RequestInit).method).toBe('POST');
+    expect((init as RequestInit).body).toBe('{"name":"new"}');
+  });
+
+  it('createSession works with no name', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ name: 'zen_auto', displayName: 'auto', created: 1, cwd: '/', windows: [] }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    const client = new ApiClient(baseUrl, token);
+    await client.createSession();
+    const [, init] = fetchMock.mock.calls[0];
+    expect((init as RequestInit).body).toBe('{}');
+  });
+
+  it('renameSession PATCHes /api/sessions/:id and returns updated session', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ name: 'zen_renamed', displayName: 'renamed', created: 1, cwd: '/', windows: [] }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    const client = new ApiClient(baseUrl, token);
+    const session = await client.renameSession('old', { name: 'renamed' });
+    expect(session.displayName).toBe('renamed');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://gateway.test:18765/api/sessions/old');
+    expect((init as RequestInit).method).toBe('PATCH');
+  });
+
+  it('killSession DELETEs /api/sessions/:id', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const client = new ApiClient(baseUrl, token);
+    await client.killSession('old');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://gateway.test:18765/api/sessions/old');
+    expect((init as RequestInit).method).toBe('DELETE');
+  });
+
+  it('renameSession encodes session id with special characters', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      new Response('{"name":"x","displayName":"x","created":1,"cwd":"/","windows":[]}', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const client = new ApiClient(baseUrl, token);
+    await client.renameSession('a b', { name: 'x' });
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toBe('http://gateway.test:18765/api/sessions/a%20b');
+  });
 });

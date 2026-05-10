@@ -61,4 +61,23 @@ export class ApiClient {
       `/api/sessions/${encodeURIComponent(sessionId)}/windows`,
     );
   }
+
+  createSession(body?: { name?: string }): Promise<TmuxSession> {
+    return this.request<TmuxSession>('POST', '/api/sessions', body ?? {});
+  }
+
+  renameSession(sessionId: string, body: { name: string }): Promise<TmuxSession> {
+    return this.request<TmuxSession>(
+      'PATCH',
+      `/api/sessions/${encodeURIComponent(sessionId)}`,
+      body,
+    );
+  }
+
+  killSession(sessionId: string): Promise<{ ok: true }> {
+    return this.request<{ ok: true }>(
+      'DELETE',
+      `/api/sessions/${encodeURIComponent(sessionId)}`,
+    );
+  }
 }
