@@ -6,6 +6,7 @@ import { AppearanceSection } from './AppearanceSection';
 import { TerminalSection } from './TerminalSection';
 import { GatewaySection } from './GatewaySection';
 import { SystemStatusSection } from './SystemStatusSection';
+import { RateLimitsSection } from './RateLimitsSection';
 
 function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLabel: string }) {
   const { tokens } = useTheme();
@@ -53,7 +54,7 @@ export function SettingsPanel() {
       <TerminalSection />
       <GatewaySection gatewayVersion={gatewayVersion} />
       <SystemStatusSection client={client} onGatewayVersion={setGatewayVersion} />
-      <SectionPlaceholder titleKey="Rate limits" ariaLabel="Rate limits" />
+      {client ? <RateLimitsSection client={client} /> : <SectionPlaceholder titleKey="Rate limits" ariaLabel="Rate limits" />}
     </div>
   );
 }
