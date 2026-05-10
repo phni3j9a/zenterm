@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
-import { validateSessionOrWindowName } from '@/lib/validateName';
+import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
 
 export interface NewWindowButtonProps {
   onCreate: (name?: string) => void | Promise<void>;
@@ -27,9 +27,9 @@ export function NewWindowButton({ onCreate }: NewWindowButtonProps) {
       setText('');
       return;
     }
-    const validationError = validateSessionOrWindowName(trimmed);
-    if (validationError) {
-      setError(validationError);
+    const errCode = validateSessionOrWindowName(trimmed);
+    if (errCode) {
+      setError(t(nameValidationKey(errCode)));
       return;
     }
     void onCreate(trimmed);

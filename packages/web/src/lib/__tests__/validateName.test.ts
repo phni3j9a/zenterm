@@ -8,20 +8,20 @@ describe('validateSessionOrWindowName', () => {
     expect(validateSessionOrWindowName('w0')).toBeNull();
   });
 
-  it('rejects empty / whitespace-only', () => {
-    expect(validateSessionOrWindowName('')).toBe('名前を入力してください');
-    expect(validateSessionOrWindowName('   ')).toBe('名前を入力してください');
+  it('returns "empty" for empty / whitespace-only', () => {
+    expect(validateSessionOrWindowName('')).toBe('empty');
+    expect(validateSessionOrWindowName('   ')).toBe('empty');
   });
 
-  it('rejects names longer than 64 chars', () => {
+  it('returns "too-long" for names longer than 64 chars', () => {
     const long = 'a'.repeat(65);
-    expect(validateSessionOrWindowName(long)).toBe('64 文字以内で入力してください');
+    expect(validateSessionOrWindowName(long)).toBe('too-long');
   });
 
-  it('rejects names with unsupported characters', () => {
-    expect(validateSessionOrWindowName('foo bar')).toBe('英数字・_・- のみ使用できます');
-    expect(validateSessionOrWindowName('foo.bar')).toBe('英数字・_・- のみ使用できます');
-    expect(validateSessionOrWindowName('日本語')).toBe('英数字・_・- のみ使用できます');
+  it('returns "invalid-chars" for names with unsupported characters', () => {
+    expect(validateSessionOrWindowName('foo bar')).toBe('invalid-chars');
+    expect(validateSessionOrWindowName('foo.bar')).toBe('invalid-chars');
+    expect(validateSessionOrWindowName('日本語')).toBe('invalid-chars');
   });
 
   it('trims surrounding whitespace before validating', () => {

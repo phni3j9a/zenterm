@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { TmuxWindow } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { InlineEdit } from '@/components/ui/InlineEdit';
-import { validateSessionOrWindowName } from '@/lib/validateName';
+import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
 import { RowActionsMenu } from './RowActionsMenu';
 
 export interface WindowRowProps {
@@ -61,7 +61,7 @@ export function WindowRow({
         {mode === 'editing-name' ? (
           <InlineEdit
             value={window.name}
-            validate={validateSessionOrWindowName}
+            validate={(name) => { const e = validateSessionOrWindowName(name); return e ? t(nameValidationKey(e)) : null; }}
             ariaLabel={t('common.rename') + ' ' + window.name}
             onSave={async (next) => {
               await onRename(sessionDisplayName, window.index, next);
