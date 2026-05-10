@@ -1,4 +1,4 @@
-import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
+import type { SystemStatus, TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { HttpError } from './errors';
 
 export class ApiClient {
@@ -106,5 +106,9 @@ export class ApiClient {
       'DELETE',
       `/api/sessions/${encodeURIComponent(sessionId)}/windows/${windowIndex}`,
     );
+  }
+
+  getSystemStatus(): Promise<SystemStatus> {
+    return this.request<SystemStatus>('GET', '/api/system/status');
   }
 }
