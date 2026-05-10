@@ -45,6 +45,7 @@
   "devDependencies": {
     "@zenterm/shared": "*",
     "@types/node": "^22.0.0",
+    "@types/qrcode-terminal": "^0.12.2",
     "@types/ws": "^8.5.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",

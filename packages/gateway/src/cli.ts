@@ -26,6 +26,8 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
 
 Commands:
   setup        サービス登録 (systemd / launchd)
+  info         接続用 URL / Token を再表示
+  qr           ペアリング QR コードを再表示
 
 Options:
   --port <number>   ポート番号 (default: 18765)
@@ -60,6 +62,30 @@ if (cliHost) process.env.HOST = cliHost;
 if (process.argv[2] === 'setup') {
   const { runSetup } = await import('./setup.js');
   await runSetup();
+  process.exit(0);
+}
+
+// --- info subcommand ---
+if (process.argv[2] === 'info') {
+  const { runInfoCommand } = await import('./commands/info.js');
+  try {
+    await runInfoCommand();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+  process.exit(0);
+}
+
+// --- qr subcommand ---
+if (process.argv[2] === 'qr') {
+  const { runQrCommand } = await import('./commands/qr.js');
+  try {
+    await runQrCommand();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
   process.exit(0);
 }
 

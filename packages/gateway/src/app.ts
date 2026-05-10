@@ -18,6 +18,7 @@ import terminalRoutes from './routes/terminal.js';
 import fileRoutes from './routes/files.js';
 import systemRoutes from './routes/system.js';
 import uploadRoutes from './routes/upload.js';
+import webRoutes from './routes/web.js';
 import { FilesystemError } from './services/filesystem.js';
 import { TmuxServiceError } from './services/tmux.js';
 
@@ -117,6 +118,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await app.register(embedRoutes);
+  await app.register(webRoutes);
   await app.register(terminalRoutes);
   await app.register(eventsRoutes);
   await app.register(authRoutes);

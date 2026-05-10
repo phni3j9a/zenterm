@@ -237,4 +237,17 @@ export type CodexLimitsResponse =
   | { state: 'unconfigured' }
   | { state: 'configured'; accounts: CodexAccountStatus[] };
 
+/**
+ * tmux 制御モード由来のイベント。Gateway が `/ws/events` で配信し、
+ * クライアント (web / app) が一覧の refetch トリガとして利用する。
+ *
+ * - `sessions-changed`: session の追加/削除/rename
+ * - `windows-changed`: window の追加/削除/rename/layout 変更
+ * - `monitor-restart`: 監視 tmux サーバーが再接続した (refetch 推奨)
+ */
+export type TmuxEvent =
+  | { type: 'sessions-changed' }
+  | { type: 'windows-changed' }
+  | { type: 'monitor-restart' };
+
 export * from './tokens';

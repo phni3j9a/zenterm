@@ -5,5 +5,8 @@ export default defineConfig({
     root: 'src',
     environment: 'node',
     testTimeout: 10000,
+    env: {
+      NODE_ENV: 'test',
+    },
   },
 });

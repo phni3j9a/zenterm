@@ -126,6 +126,17 @@ npm run dev:gateway
 
 起動するとコンソールに QR コードが表示されます。ZenTerm アプリでスキャンして接続してください。
 
+### Re-displaying connection info
+
+Daemon 稼働中はターミナル出力が見えないため、以下のコマンドで接続情報を再表示できます:
+
+```bash
+zenterm-gateway info     # LAN / Tailscale / Web URL / Token を表示
+zenterm-gateway qr       # ペアリング用 QR コードを再表示
+```
+
+Web ブラウザからアクセスする場合は `Web (LAN)` または `Web (Ts)` の URL を開き、`Token` の 4 桁を入力してください。
+
 ## Configuration
 
 設定ファイル: `~/.config/zenterm/.env`
