@@ -105,4 +105,50 @@ describe('useSessionsStore', () => {
     await useSessionsStore.getState().removeSession(client, 'a');
     expect(useSessionViewStore.getState().activeSessionId).toBeNull();
   });
+
+  it('createWindow refetches sessions on success', async () => {
+    const updated = [{ ...sampleSession('a'), windows: [{ index: 0, name: 'w0', active: true, zoomed: false, paneCount: 1, cwd: '/' }] }];
+    const client = {
+      createWindow: vi.fn().mockResolvedValue({ index: 0, name: 'w0', active: true, zoomed: false, paneCount: 1, cwd: '/' }),
+      listSessions: vi.fn().mockResolvedValue(updated),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['createWindow']>[0];
+    await useSessionsStore.getState().createWindow(client, 'a', { name: 'w0' });
+    expect(client.createWindow).toHaveBeenCalledWith('a', { name: 'w0' });
+    expect(client.listSessions).toHaveBeenCalled();
+    expect(useSessionsStore.getState().sessions).toEqual(updated);
+  });
+
+  it('renameWindow refetches sessions on success', async () => {
+    const updated = [{ ...sampleSession('a'), windows: [{ index: 0, name: 'renamed', active: true, zoomed: false, paneCount: 1, cwd: '/' }] }];
+    const client = {
+      renameWindow: vi.fn().mockResolvedValue({ index: 0, name: 'renamed', active: true, zoomed: false, paneCount: 1, cwd: '/' }),
+      listSessions: vi.fn().mockResolvedValue(updated),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['renameWindow']>[0];
+    await useSessionsStore.getState().renameWindow(client, 'a', 0, 'renamed');
+    expect(client.renameWindow).toHaveBeenCalledWith('a', 0, { name: 'renamed' });
+  });
+
+  it('removeWindow refetches and falls back to next window when removing active', async () => {
+    useSessionsStore.getState().setSessions([
+      {
+        ...sampleSession('a'),
+        windows: [
+          { index: 0, name: 'w0', active: true, zoomed: false, paneCount: 1, cwd: '/' },
+          { index: 1, name: 'w1', active: false, zoomed: false, paneCount: 1, cwd: '/' },
+        ],
+      },
+    ]);
+    useSessionViewStore.getState().open('a', 0);
+    const client = {
+      killWindow: vi.fn().mockResolvedValue({ ok: true }),
+      listSessions: vi.fn().mockResolvedValue([
+        {
+          ...sampleSession('a'),
+          windows: [{ index: 1, name: 'w1', active: true, zoomed: false, paneCount: 1, cwd: '/' }],
+        },
+      ]),
+    } as unknown as Parameters<ReturnType<typeof useSessionsStore.getState>['removeWindow']>[0];
+    await useSessionsStore.getState().removeWindow(client, 'a', 0);
+    expect(useSessionViewStore.getState().activeWindowIndex).toBe(1);
+  });
 });

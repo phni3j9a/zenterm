@@ -39,6 +39,35 @@ interface SessionsState {
     client: Pick<SessionsApiClient, 'killSession'>,
     id: string,
   ) => Promise<void>;
+  createWindow: (
+    client: Pick<SessionsApiClient, 'createWindow' | 'listSessions'>,
+    sessionId: string,
+    body?: { name?: string },
+  ) => Promise<void>;
+  renameWindow: (
+    client: Pick<SessionsApiClient, 'renameWindow' | 'listSessions'>,
+    sessionId: string,
+    windowIndex: number,
+    newName: string,
+  ) => Promise<void>;
+  removeWindow: (
+    client: Pick<SessionsApiClient, 'killWindow' | 'listSessions'>,
+    sessionId: string,
+    windowIndex: number,
+  ) => Promise<void>;
+}
+
+function fallbackAfterRemoveWindow(sessionId: string, removedIndex: number): void {
+  const view = useSessionViewStore.getState();
+  if (view.activeSessionId !== sessionId || view.activeWindowIndex !== removedIndex) return;
+  const session = useSessionsStore.getState().sessions.find((s) => s.displayName === sessionId);
+  if (!session || !session.windows || session.windows.length === 0) {
+    fallbackAfterRemove(sessionId, useSessionsStore.getState().sessions);
+    return;
+  }
+  const sorted = [...session.windows].sort((a, b) => a.index - b.index);
+  const next = sorted.find((w) => w.index > removedIndex) ?? sorted[sorted.length - 1];
+  view.open(sessionId, next.index);
 }
 
 function fallbackAfterRemove(removedDisplayName: string, remaining: TmuxSession[]): void {
@@ -102,5 +131,18 @@ export const useSessionsStore = create<SessionsState>((set, get) => ({
     const remaining = get().sessions.filter((s) => s.displayName !== id);
     set({ sessions: remaining });
     fallbackAfterRemove(id, remaining);
+  },
+  createWindow: async (client, sessionId, body) => {
+    await client.createWindow(sessionId, body);
+    await get().refetch(client);
+  },
+  renameWindow: async (client, sessionId, windowIndex, newName) => {
+    await client.renameWindow(sessionId, windowIndex, { name: newName });
+    await get().refetch(client);
+  },
+  removeWindow: async (client, sessionId, windowIndex) => {
+    await client.killWindow(sessionId, windowIndex);
+    await get().refetch(client);
+    fallbackAfterRemoveWindow(sessionId, windowIndex);
   },
 }));
