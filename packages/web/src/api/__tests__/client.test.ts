@@ -220,4 +220,34 @@ describe('ApiClient', () => {
       });
     });
   });
+
+  describe('ApiClient.getClaudeLimits', () => {
+    it('GETs /api/claude/limits', async () => {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce({
+        ok: true, status: 200,
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        json: async () => ({ state: 'unconfigured' }),
+      });
+      const c = new ApiClient(baseUrl, token);
+      const res = await c.getClaudeLimits();
+      expect(res).toEqual({ state: 'unconfigured' });
+      expect(fetchMock).toHaveBeenCalledWith('http://gateway.test:18765/api/claude/limits', expect.any(Object));
+    });
+  });
+
+  describe('ApiClient.getCodexLimits', () => {
+    it('GETs /api/codex/limits', async () => {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce({
+        ok: true, status: 200,
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        json: async () => ({ state: 'unconfigured' }),
+      });
+      const c = new ApiClient(baseUrl, token);
+      const res = await c.getCodexLimits();
+      expect(res).toEqual({ state: 'unconfigured' });
+      expect(fetchMock).toHaveBeenCalledWith('http://gateway.test:18765/api/codex/limits', expect.any(Object));
+    });
+  });
 });
