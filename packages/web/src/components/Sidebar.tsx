@@ -1,5 +1,6 @@
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SessionsListPanel } from './SessionsListPanel';
 import { SettingsPanel } from './settings/SettingsPanel';
 import { useTheme } from '@/theme';
@@ -36,6 +37,7 @@ function deriveActivePanel(pathname: string): ActivePanel {
 
 export function Sidebar(props: SidebarProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const activePanel = deriveActivePanel(location.pathname);
@@ -93,17 +95,17 @@ export function Sidebar(props: SidebarProps) {
           onClick={() => navigate('/web/sessions')}
           style={tabButtonStyle(activePanel === 'sessions')}
         >
-          ⌘ Sessions
+          ⌘ {t('sidebar.tabs.sessions')}
         </button>
         <button
           type="button"
           aria-label="Files tab"
           aria-pressed={activePanel === 'files'}
           disabled
-          title="Coming in Phase 2c"
+          title={t('sidebar.filesComingSoon')}
           style={tabButtonStyle(activePanel === 'files', true)}
         >
-          📁 Files
+          📁 {t('sidebar.tabs.files')}
         </button>
         <button
           type="button"
@@ -112,7 +114,7 @@ export function Sidebar(props: SidebarProps) {
           onClick={() => navigate('/web/settings')}
           style={tabButtonStyle(activePanel === 'settings')}
         >
-          ⚙ Settings
+          ⚙ {t('sidebar.tabs.settings')}
         </button>
         <EventsStatusDot />
       </nav>
@@ -122,6 +124,7 @@ export function Sidebar(props: SidebarProps) {
 
 function EventsStatusDot() {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const status = useEventsStore((s) => s.status);
   const attempt = useEventsStore((s) => s.reconnectAttempt);
   const color = (() => {
@@ -136,10 +139,20 @@ function EventsStatusDot() {
         return tokens.colors.textMuted;
     }
   })();
-  const label =
-    status === 'reconnecting'
-      ? `Realtime updates: reconnecting (attempt ${attempt})`
-      : `Realtime updates: ${status}`;
+  const label = (() => {
+    switch (status) {
+      case 'connected':
+        return t('sidebar.events.connected');
+      case 'disconnected':
+        return t('sidebar.events.disconnected');
+      case 'reconnecting':
+        return t('sidebar.events.reconnecting', { attempt });
+      case 'failed':
+        return t('sidebar.events.failed');
+      default:
+        return t('sidebar.events.disconnected');
+    }
+  })();
   return (
     <span
       role="status"
