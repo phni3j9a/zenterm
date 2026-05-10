@@ -108,7 +108,7 @@ export function SessionRow({
           <span
             role="button"
             tabIndex={0}
-            aria-label={isExpanded ? 'Collapse windows' : 'Expand windows'}
+            aria-label={isExpanded ? t('sessions.collapseWindows') : t('sessions.expandWindows')}
             onClick={(e) => {
               e.stopPropagation();
               onToggleExpand(session.name);
@@ -133,7 +133,7 @@ export function SessionRow({
         <button
           ref={kebabRef}
           type="button"
-          aria-label={`Actions for session ${session.displayName}`}
+          aria-label={t('sessions.actionsFor', { type: 'session', name: session.displayName })}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           onClick={(e) => {
@@ -157,8 +157,8 @@ export function SessionRow({
         open={menuOpen}
         anchorEl={kebabRef.current}
         items={[
-          { label: 'Rename', onClick: () => setMode('editing-name') },
-          { label: 'Delete', onClick: () => onRequestDelete(session), destructive: true },
+          { label: t('common.rename'), onClick: () => setMode('editing-name') },
+          { label: t('common.delete'), onClick: () => onRequestDelete(session), destructive: true },
         ]}
         onClose={() => setMenuOpen(false)}
       />

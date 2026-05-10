@@ -76,7 +76,7 @@ export function WindowRow({
       <button
         ref={kebabRef}
         type="button"
-        aria-label={`Actions for window ${window.name}`}
+        aria-label={t('sessions.actionsFor', { type: 'window', name: window.name })}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         onClick={(e) => {
@@ -98,9 +98,9 @@ export function WindowRow({
         open={menuOpen}
         anchorEl={kebabRef.current}
         items={[
-          { label: 'Rename', onClick: () => setMode('editing-name') },
+          { label: t('common.rename'), onClick: () => setMode('editing-name') },
           {
-            label: 'Delete',
+            label: t('common.delete'),
             onClick: () => onRequestDelete(sessionDisplayName, window),
             destructive: true,
           },

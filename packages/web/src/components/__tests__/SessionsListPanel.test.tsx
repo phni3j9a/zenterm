@@ -113,7 +113,7 @@ describe('SessionsListPanel', () => {
       />,
     );
     await userEvent.click(screen.getByLabelText(/Expand windows/));
-    expect(screen.getByRole('button', { name: /\+ window/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /\+ New window/i })).toBeInTheDocument();
   });
 
   it('always shows + New session in footer', () => {

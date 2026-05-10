@@ -136,7 +136,7 @@ describe('Window CRUD flows', () => {
     renderApp();
     await waitFor(() => screen.getByLabelText(/Actions for session a/));
     await userEvent.click(screen.getByLabelText(/Expand windows/));
-    await userEvent.click(screen.getByRole('button', { name: /\+ window/ }));
+    await userEvent.click(screen.getByRole('button', { name: /\+ New window/i }));
     await userEvent.type(screen.getByRole('textbox', { name: /New window/i }), 'logs{Enter}');
 
     await waitFor(() =>

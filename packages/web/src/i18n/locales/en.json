@@ -34,6 +34,8 @@
     "newWindow": "New window",
     "namePlaceholder": "Name (optional)",
     "actionsFor": "Actions for {{type}} {{name}}",
+    "collapseWindows": "Collapse windows",
+    "expandWindows": "Expand windows",
     "deleteSessionTitle": "Delete session?",
     "deleteSessionMessage": "This will terminate the tmux session \"{{name}}\". Continue?",
     "deleteWindowTitle": "Delete window?",

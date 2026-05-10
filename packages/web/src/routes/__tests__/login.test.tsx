@@ -33,7 +33,7 @@ describe('LoginRoute', () => {
       </MemoryRouter>,
     );
     await userEvent.type(screen.getByLabelText(/Token/i), '1234');
-    await userEvent.click(screen.getByRole('button', { name: /Connect/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Sign in/i }));
     expect(await screen.findByText('Sessions Screen')).toBeInTheDocument();
     expect(useAuthStore.getState().token).toBe('1234');
     expect(useAuthStore.getState().gatewayUrl).toBe('http://gateway.test:18765');
@@ -52,8 +52,8 @@ describe('LoginRoute', () => {
       </MemoryRouter>,
     );
     await userEvent.type(screen.getByLabelText(/Token/i), '0000');
-    await userEvent.click(screen.getByRole('button', { name: /Connect/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Token/);
+    await userEvent.click(screen.getByRole('button', { name: /Sign in/i }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Invalid token/i);
     expect(useAuthStore.getState().token).toBeNull();
   });
 });

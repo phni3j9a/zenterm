@@ -21,7 +21,7 @@ describe('App', () => {
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: /ZenTerm Web/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Sign in to ZenTerm/i })).toBeInTheDocument();
   });
 
   it('shows sessions screen when authed', async () => {

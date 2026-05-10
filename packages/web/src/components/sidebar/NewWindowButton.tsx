@@ -54,7 +54,7 @@ export function NewWindowButton({ onCreate }: NewWindowButtonProps) {
           textAlign: 'left',
         }}
       >
-        + window
+        {'+ ' + t('sessions.newWindow')}
       </button>
     );
   }

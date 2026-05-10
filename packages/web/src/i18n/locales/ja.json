@@ -34,6 +34,8 @@
     "newWindow": "新規ウィンドウ",
     "namePlaceholder": "名前 (任意)",
     "actionsFor": "{{type}} {{name}} の操作",
+    "collapseWindows": "ウィンドウを折りたたむ",
+    "expandWindows": "ウィンドウを展開",
     "deleteSessionTitle": "セッションを削除しますか？",
     "deleteSessionMessage": "tmux セッション「{{name}}」を終了します。続行しますか？",
     "deleteWindowTitle": "ウィンドウを削除しますか？",
