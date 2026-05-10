@@ -114,7 +114,6 @@ export function SessionsListPanel({
               session={session}
               isActive={isActive}
               isExpanded={isExpanded}
-              activeWindowIndex={activeWindowIndex}
               onSelect={onSelect}
               onToggleExpand={toggle}
               onRename={onRenameSession}

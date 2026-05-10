@@ -9,7 +9,6 @@ export interface SessionRowProps {
   session: TmuxSession;
   isActive: boolean;
   isExpanded: boolean;
-  activeWindowIndex: number | null;
   onSelect: (sessionId: string, windowIndex?: number) => void;
   onToggleExpand: (sessionName: string) => void;
   onRename: (currentDisplayName: string, newName: string) => void | Promise<void>;

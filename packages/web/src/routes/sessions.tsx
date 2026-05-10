@@ -6,7 +6,7 @@ import { TerminalPane } from '@/components/TerminalPane';
 import { ApiClient } from '@/api/client';
 import { HttpError } from '@/api/errors';
 import { useAuthStore } from '@/stores/auth';
-import { useSessionsStore } from '@/stores/sessions';
+import { useSessionsStore, type SessionsApiClient } from '@/stores/sessions';
 import { useSessionViewStore } from '@/stores/sessionView';
 import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
@@ -31,11 +31,11 @@ export function SessionsRoute() {
 
   useEffect(() => {
     if (!token || !gatewayUrl) return;
-    const baseClient = new ApiClient(gatewayUrl, token);
-    const wrappedClient = {
+    const base = new ApiClient(gatewayUrl, token);
+    const wrapped: SessionsApiClient = {
       listSessions: async () => {
         try {
-          return await baseClient.listSessions();
+          return await base.listSessions();
         } catch (err) {
           if (err instanceof HttpError && err.status === 401) {
             logout();
@@ -44,13 +44,39 @@ export function SessionsRoute() {
           throw err;
         }
       },
+      createSession: base.createSession.bind(base),
+      renameSession: base.renameSession.bind(base),
+      killSession: base.killSession.bind(base),
+      createWindow: base.createWindow.bind(base),
+      renameWindow: base.renameWindow.bind(base),
+      killWindow: base.killWindow.bind(base),
     };
-    void useSessionsStore.getState().refetch(wrappedClient);
+    void useSessionsStore.getState().refetch(wrapped);
   }, [token, gatewayUrl, logout, navigate]);
 
   if (!token || !gatewayUrl) return null;
 
-  const client = new ApiClient(gatewayUrl, token);
+  const baseClient = new ApiClient(gatewayUrl, token);
+
+  const wrappedClient: SessionsApiClient = {
+    listSessions: async () => {
+      try {
+        return await baseClient.listSessions();
+      } catch (err) {
+        if (err instanceof HttpError && err.status === 401) {
+          logout();
+          navigate('/web/login', { replace: true });
+        }
+        throw err;
+      }
+    },
+    createSession: baseClient.createSession.bind(baseClient),
+    renameSession: baseClient.renameSession.bind(baseClient),
+    killSession: baseClient.killSession.bind(baseClient),
+    createWindow: baseClient.createWindow.bind(baseClient),
+    renameWindow: baseClient.renameWindow.bind(baseClient),
+    killWindow: baseClient.killWindow.bind(baseClient),
+  };
 
   const handleAuthError = (err: unknown): boolean => {
     if (err instanceof HttpError && err.status === 401) {
@@ -65,7 +91,7 @@ export function SessionsRoute() {
     if (handleAuthError(err)) return;
     if (err instanceof HttpError && err.status === 404) {
       pushToast({ type: 'error', message: '対象が見つかりません。一覧を更新します' });
-      void useSessionsStore.getState().refetch(client);
+      void useSessionsStore.getState().refetch(wrappedClient);
       return;
     }
     const message = err instanceof Error ? err.message : String(err);
@@ -74,7 +100,7 @@ export function SessionsRoute() {
 
   const handleCreateSession = async (name?: string): Promise<void> => {
     try {
-      await useSessionsStore.getState().create(client, { name });
+      await useSessionsStore.getState().create(wrappedClient, { name });
     } catch (err) {
       reportMutationError(err, 'セッション作成');
     }
@@ -85,7 +111,7 @@ export function SessionsRoute() {
     newName: string,
   ): Promise<void> => {
     try {
-      await useSessionsStore.getState().rename(client, currentDisplayName, newName);
+      await useSessionsStore.getState().rename(wrappedClient, currentDisplayName, newName);
     } catch (err) {
       reportMutationError(err, 'セッション名変更');
     }
@@ -103,7 +129,7 @@ export function SessionsRoute() {
       destructive: true,
       onConfirm: async () => {
         try {
-          await useSessionsStore.getState().removeSession(client, session.displayName);
+          await useSessionsStore.getState().removeSession(wrappedClient, session.displayName);
         } catch (err) {
           reportMutationError(err, 'セッション削除');
         }
@@ -116,7 +142,7 @@ export function SessionsRoute() {
     name?: string,
   ): Promise<void> => {
     try {
-      await useSessionsStore.getState().createWindow(client, sessionDisplayName, { name });
+      await useSessionsStore.getState().createWindow(wrappedClient, sessionDisplayName, { name });
     } catch (err) {
       reportMutationError(err, 'window 作成');
     }
@@ -128,7 +154,7 @@ export function SessionsRoute() {
     newName: string,
   ): Promise<void> => {
     try {
-      await useSessionsStore.getState().renameWindow(client, sessionDisplayName, windowIndex, newName);
+      await useSessionsStore.getState().renameWindow(wrappedClient, sessionDisplayName, windowIndex, newName);
     } catch (err) {
       reportMutationError(err, 'window 名変更');
     }
@@ -144,7 +170,7 @@ export function SessionsRoute() {
       destructive: true,
       onConfirm: async () => {
         try {
-          await useSessionsStore.getState().removeWindow(client, sessionDisplayName, window.index);
+          await useSessionsStore.getState().removeWindow(wrappedClient, sessionDisplayName, window.index);
         } catch (err) {
           reportMutationError(err, 'window 削除');
         }
