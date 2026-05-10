@@ -15,7 +15,7 @@ export function TerminalPane({
   sessionId,
   windowIndex,
 }: TerminalPaneProps) {
-  const { tokens, mode } = useTheme();
+  const { tokens } = useTheme();
   const [status, setStatus] = useState<TerminalStatus>('disconnected');
 
   const statusColor: string = (() => {
@@ -47,10 +47,6 @@ export function TerminalPane({
       </main>
     );
   }
-
-  const themeMode = mode === 'system'
-    ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
-    : mode;
 
   return (
     <section
@@ -97,8 +93,6 @@ export function TerminalPane({
           sessionId={sessionId}
           windowIndex={windowIndex}
           isFocused
-          theme={themeMode}
-          fontSize={14}
           onStatusChange={setStatus}
         />
       </div>

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import { useSettingsStore } from '@/stores/settings';
 
 // xterm.js can't render in jsdom (no canvas). Mock the modules so the
 // component tree mounts cleanly while we test WS / lifecycle wiring.
@@ -78,6 +79,16 @@ beforeEach(() => {
     unobserve() {}
     disconnect() {}
   });
+  useSettingsStore.setState({ fontSize: 14 } as any);
+  // matchMedia stub for useTheme resolving system theme
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }),
+  });
 });
 
 afterEach(() => {
@@ -93,8 +104,6 @@ describe('XtermView', () => {
         sessionId="dev"
         windowIndex={0}
         isFocused
-        theme="dark"
-        fontSize={14}
         onStatusChange={() => undefined}
       />,
     );
@@ -113,8 +122,6 @@ describe('XtermView', () => {
         sessionId="dev"
         windowIndex={0}
         isFocused
-        theme="dark"
-        fontSize={14}
         onStatusChange={onStatus}
       />,
     );
@@ -133,8 +140,6 @@ describe('XtermView', () => {
         sessionId="dev"
         windowIndex={0}
         isFocused
-        theme="dark"
-        fontSize={14}
         onStatusChange={() => undefined}
       />,
     );
@@ -152,8 +157,6 @@ describe('XtermView', () => {
         sessionId="dev"
         windowIndex={0}
         isFocused
-        theme="dark"
-        fontSize={14}
         onStatusChange={() => undefined}
       />,
     );
