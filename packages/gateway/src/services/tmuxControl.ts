@@ -1,13 +1,11 @@
 import { execFileSync } from 'node:child_process';
 import { spawn, type IPty } from 'node-pty';
+import type { TmuxEvent } from '@zenterm/shared';
 
 const MONITOR_SESSION = '_zen_monitor';
 const RECONNECT_DELAY_MS = 2000;
 
-export type TmuxEvent =
-  | { type: 'sessions-changed' }
-  | { type: 'windows-changed' }
-  | { type: 'monitor-restart' };
+export type { TmuxEvent };
 
 type Listener = (event: TmuxEvent) => void;
 
