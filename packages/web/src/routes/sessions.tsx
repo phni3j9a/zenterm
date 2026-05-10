@@ -17,8 +17,6 @@ export function SessionsRoute() {
   const gatewayUrl = useAuthStore((s) => s.gatewayUrl);
   const logout = useAuthStore((s) => s.logout);
   const sessions = useSessionsStore((s) => s.sessions);
-  const setSessions = useSessionsStore((s) => s.setSessions);
-  const setError = useSessionsStore((s) => s.setError);
   const activeSessionId = useSessionViewStore((s) => s.activeSessionId);
   const activeWindowIndex = useSessionViewStore((s) => s.activeWindowIndex);
   const open = useSessionViewStore((s) => s.open);
@@ -27,19 +25,22 @@ export function SessionsRoute() {
 
   useEffect(() => {
     if (!token || !gatewayUrl) return;
-    const client = new ApiClient(gatewayUrl, token);
-    client
-      .listSessions()
-      .then(setSessions)
-      .catch((err) => {
-        if (err instanceof HttpError && err.status === 401) {
-          logout();
-          navigate('/web/login', { replace: true });
-          return;
+    const base = new ApiClient(gatewayUrl, token);
+    const client = {
+      listSessions: async () => {
+        try {
+          return await base.listSessions();
+        } catch (err) {
+          if (err instanceof HttpError && err.status === 401) {
+            logout();
+            navigate('/web/login', { replace: true });
+          }
+          throw err;
         }
-        setError(err instanceof Error ? err.message : String(err));
-      });
-  }, [token, gatewayUrl, setSessions, setError, logout, navigate]);
+      },
+    };
+    void useSessionsStore.getState().refetch(client);
+  }, [token, gatewayUrl, logout, navigate]);
 
   if (!token || !gatewayUrl) return null;
 

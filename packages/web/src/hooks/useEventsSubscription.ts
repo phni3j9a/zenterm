@@ -23,7 +23,7 @@ export function useEventsSubscription(): void {
     isUnmountedRef.current = false;
 
     const refetch = (): void => {
-      void (useSessionsStore.getState() as unknown as { refetch: (c: { listSessions: () => Promise<unknown[]> }) => Promise<void> }).refetch({
+      void useSessionsStore.getState().refetch({
         listSessions: () => new ApiClient(gatewayUrl, token).listSessions(),
       });
     };

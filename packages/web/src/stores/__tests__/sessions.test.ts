@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import type { TmuxSession } from '@zenterm/shared';
 import { useSessionsStore } from '../sessions';
 
@@ -32,5 +32,25 @@ describe('useSessionsStore', () => {
     useSessionsStore.getState().setSessions([sampleSession('a'), sampleSession('b')]);
     useSessionsStore.getState().remove('a');
     expect(useSessionsStore.getState().sessions.map((s) => s.name)).toEqual(['b']);
+  });
+
+  it('refetch sets loading and replaces sessions on success', async () => {
+    const sessions = [sampleSession('a'), sampleSession('b')];
+    const fetchMock = vi.fn().mockResolvedValue(sessions);
+    const apiClientFactory = () => ({ listSessions: fetchMock } as unknown as { listSessions: () => Promise<TmuxSession[]> });
+    const promise = useSessionsStore.getState().refetch(apiClientFactory());
+    expect(useSessionsStore.getState().loading).toBe(true);
+    await promise;
+    expect(useSessionsStore.getState().loading).toBe(false);
+    expect(useSessionsStore.getState().sessions.map((s) => s.name)).toEqual(['a', 'b']);
+    expect(useSessionsStore.getState().error).toBeNull();
+  });
+
+  it('refetch records error on failure', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('boom'));
+    const apiClient = { listSessions: fetchMock } as unknown as { listSessions: () => Promise<TmuxSession[]> };
+    await useSessionsStore.getState().refetch(apiClient);
+    expect(useSessionsStore.getState().loading).toBe(false);
+    expect(useSessionsStore.getState().error).toBe('boom');
   });
 });
