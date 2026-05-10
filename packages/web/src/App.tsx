@@ -33,6 +33,7 @@ export function App() {
             </RequireAuth>
           }
         />
+        <Route path="/web/files" element={<Navigate to="/web/sessions" replace />} />
         <Route path="/web" element={<Navigate to="/web/sessions" replace />} />
         <Route path="*" element={<Navigate to="/web" replace />} />
       </Routes>

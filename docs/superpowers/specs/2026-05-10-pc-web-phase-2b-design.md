@@ -1,7 +1,7 @@
 # PC (Web) 版 ZenTerm — Phase 2b 設計 (Settings + i18n + Limits + SystemStatus)
 
 > 作成日: 2026-05-10
-> 状態: 設計完了 / 実装計画中
+> 状態: Phase 2b 完了 (2026-05-11)
 > 親仕様: `docs/superpowers/specs/2026-05-09-pc-web-design.md`
 > 前 Phase: `docs/superpowers/specs/2026-05-10-pc-web-phase-2a-design.md` (events + Sidebar CRUD 完了)
 > 関連: mobile `app/src/components/layout/SettingsPanel.tsx`, `app/src/components/{ClaudeLimits,CodexLimits,SystemStatus,LimitsRow}.tsx`

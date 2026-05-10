@@ -57,9 +57,14 @@ test.afterAll(async () => {
 async function loginIn(browser: Browser) {
   const context = await browser.newContext();
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
   await page.getByLabel(/Token/i).fill(TOKEN);
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible();
   return { context, page };
 }
@@ -68,8 +73,8 @@ test('session created in tab A appears in tab B via /ws/events', async ({ browse
   const a = await loginIn(browser);
   const b = await loginIn(browser);
   try {
-    await a.page.getByRole('button', { name: /新規セッション/ }).click();
-    await a.page.getByRole('textbox', { name: /新規セッション名/ }).fill('e2e_realtime');
+    await a.page.getByRole('button', { name: /New session/ }).click();
+    await a.page.getByRole('textbox', { name: /New session/ }).fill('e2e_realtime');
     await a.page.keyboard.press('Enter');
     await expect(b.page.getByText('e2e_realtime')).toBeVisible({ timeout: 5000 });
   } finally {
@@ -94,7 +99,7 @@ test('session renamed in tab A reflects in tab B', async ({ browser }) => {
     await a.page.getByText('e2e_sync').hover();
     await a.page.getByLabel('Actions for session e2e_sync').click({ force: true });
     await a.page.getByRole('menuitem', { name: /Rename/ }).click();
-    const input = a.page.getByRole('textbox', { name: /セッション名を編集/ });
+    const input = a.page.getByRole('textbox', { name: /Rename e2e_sync/ });
     await input.fill('e2e_synced');
     await a.page.keyboard.press('Enter');
 

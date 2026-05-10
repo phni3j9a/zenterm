@@ -1,7 +1,7 @@
 # PC (Web) 版 ZenTerm 設計
 
 > 作成日: 2026-05-09
-> 状態: Phase 1 (Bootstrap) + Phase 2a (events + Sidebar CRUD) 完了 / Phase 2b 計画中
+> 状態: Phase 1 (Bootstrap) + Phase 2a (events + Sidebar CRUD) + Phase 2b (Settings + i18n + Limits + SystemStatus) 完了 / Phase 2c (Files) 計画中
 > 関連リポジトリ: phni3j9a/zenterm（server）, phni3j9a/zenterm-app
 > 前提仕様: `app/docs/superpowers/specs/2026-05-07-ipad-multi-platform-design.md`
 

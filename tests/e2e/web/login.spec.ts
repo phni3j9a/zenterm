@@ -40,16 +40,26 @@ test.afterAll(() => {
 });
 
 test('login with valid token navigates to sessions screen', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
-  await expect(page.getByRole('heading', { name: /ZenTerm Web/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Sign in to ZenTerm/i })).toBeVisible();
   await page.getByLabel(/Token/i).fill(TOKEN);
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 });
 
 test('login with wrong token shows error', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
   await page.getByLabel(/Token/i).fill('0000');
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByRole('alert')).toBeVisible();
 });
