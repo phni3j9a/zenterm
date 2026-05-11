@@ -1,12 +1,14 @@
 # ZenTerm PC Web Phase 2c (Files タブ) — Design Spec
 
+> 状態: Phase 2c 完了 (2026-05-11) — `web-pc-phase-2c-done` タグ付き
+
 > Phase 2c: PC Web ブラウザに Files タブを追加し、ホームディレクトリ配下のブラウズ・閲覧・編集・mutation を完全実装する。Mobile アプリの `FilesPanel` (1630 行モノリス) を参考にしつつ、PC 向けに decompose し直す。
 
 - 作成日: 2026-05-11
 - 担当: Phase 2c
 - 前提: Phase 2a (events + sidebar CRUD) + Phase 2b (settings + i18n) 完了済み (`origin/main` へマージ済み)
 - ブランチ: `feature/web-pc-phase-2c`
-- 完了タグ: `web-pc-phase-2c-done` (予定)
+- 完了タグ: `web-pc-phase-2c-done`
 
 ---
 
