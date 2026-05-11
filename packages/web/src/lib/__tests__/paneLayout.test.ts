@@ -6,7 +6,6 @@ import {
   DEFAULT_RATIOS,
   clampRatio,
   dropExtraPanes,
-  type LayoutMode,
 } from '../paneLayout';
 
 describe('paneLayout constants', () => {
@@ -110,6 +109,20 @@ describe('dropExtraPanes', () => {
   it('focusedIndex が範囲外の場合 0 にクランプ', () => {
     const panes = [{ sessionId: 'a', windowIndex: 0 }, null];
     const result = dropExtraPanes(panes, 5, 2);
+    expect(result.focusedIndex).toBe(0);
+  });
+
+  it('nextCount が負数のとき空配列を返す', () => {
+    const panes = [{ sessionId: 'a', windowIndex: 0 }];
+    const result = dropExtraPanes(panes, 0, -1);
+    expect(result.panes).toEqual([]);
+    expect(result.focusedIndex).toBe(0);
+  });
+
+  it('nextCount=0 で空配列を返し focus は 0', () => {
+    const panes = [{ sessionId: 'a', windowIndex: 0 }, { sessionId: 'b', windowIndex: 0 }];
+    const result = dropExtraPanes(panes, 1, 0);
+    expect(result.panes).toEqual([]);
     expect(result.focusedIndex).toBe(0);
   });
 });

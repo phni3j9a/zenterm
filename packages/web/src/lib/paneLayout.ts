@@ -26,7 +26,7 @@ export const SPLITTER_COUNT: Record<LayoutMode, number> = {
   'main-side-2': 2,
 };
 
-export const DEFAULT_RATIOS: Record<LayoutMode, number[]> = {
+export const DEFAULT_RATIOS: Record<LayoutMode, readonly number[]> = {
   single: [],
   'cols-2': [0.5],
   'cols-3': [1 / 3, 0.5],
@@ -55,25 +55,30 @@ export function dropExtraPanes(
   focusedIndex: number,
   nextCount: number,
 ): DropExtraResult {
+  const safeCount = Math.max(0, nextCount);
   const clampedFocus =
     focusedIndex >= 0 && focusedIndex < current.length ? focusedIndex : 0;
   const focused = current[clampedFocus] ?? null;
   const rest = current.filter((_, i) => i !== clampedFocus);
 
-  if (nextCount >= current.length) {
+  if (safeCount >= current.length) {
     const expanded: (PaneTarget | null)[] = [...current];
-    while (expanded.length < nextCount) expanded.push(null);
+    while (expanded.length < safeCount) expanded.push(null);
     return {
       panes: expanded,
       focusedIndex: clampedFocus,
     };
   }
 
+  if (safeCount === 0) {
+    return { panes: [], focusedIndex: 0 };
+  }
+
   const result: (PaneTarget | null)[] = [focused];
   for (const p of rest) {
-    if (result.length >= nextCount) break;
+    if (result.length >= safeCount) break;
     result.push(p);
   }
-  while (result.length < nextCount) result.push(null);
+  while (result.length < safeCount) result.push(null);
   return { panes: result, focusedIndex: 0 };
 }
