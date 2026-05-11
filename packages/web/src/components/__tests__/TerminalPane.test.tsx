@@ -92,6 +92,8 @@ describe('TerminalPane', () => {
         token="1234"
         sessionId={null}
         windowIndex={null}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );
@@ -105,6 +107,8 @@ describe('TerminalPane', () => {
         token="1234"
         sessionId="dev"
         windowIndex={2}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );
@@ -119,6 +123,8 @@ describe('TerminalPane', () => {
         token="1234"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible={false}
       />,
     );
@@ -134,6 +140,8 @@ describe('TerminalPane', () => {
         token="1234"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );

@@ -112,4 +112,37 @@ describe('AuthenticatedShell', () => {
     expect(terminalRoot).not.toBeNull();
     expect((terminalRoot as HTMLElement).style.display).toBe('none');
   });
+
+  it('suspends current layout to single when route leaves /web/sessions', async () => {
+    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
+    const { usePaneStore } = await import('@/stores/pane');
+    usePaneStore.setState({
+      layout: 'cols-2',
+      panes: [{ sessionId: 'a', windowIndex: 0 }, { sessionId: 'b', windowIndex: 0 }],
+      focusedIndex: 0,
+      ratios: {
+        single: [],
+        'cols-2': [0.5],
+        'cols-3': [1 / 3, 0.5],
+        'grid-2x2': [0.5, 0.5],
+        'main-side-2': [0.6, 0.5],
+      },
+      savedLayout: null,
+    });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'Content-Type': 'application/json' }),
+      json: async () => ({ entries: [], path: '~' }),
+      text: async () => '{"entries":[],"path":"~"}',
+    }));
+    render(
+      <MemoryRouter initialEntries={['/web/files']}>
+        <AuthenticatedShell />
+      </MemoryRouter>,
+    );
+    await act(async () => { await Promise.resolve(); });
+    expect(usePaneStore.getState().layout).toBe('single');
+    expect(usePaneStore.getState().savedLayout).toBe('cols-2');
+  });
 });

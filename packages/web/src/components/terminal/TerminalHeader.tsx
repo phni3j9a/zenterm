@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { MAX_FONT_SIZE, MIN_FONT_SIZE } from '@/stores/settings';
@@ -16,6 +17,7 @@ export interface TerminalHeaderProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomReset: () => void;
+  layoutSlot?: ReactNode;
 }
 
 export function TerminalHeader({
@@ -31,6 +33,7 @@ export function TerminalHeader({
   onZoomIn,
   onZoomOut,
   onZoomReset,
+  layoutSlot,
 }: TerminalHeaderProps) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -84,6 +87,7 @@ export function TerminalHeader({
       <span style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.smallMedium.fontSize }}>
         [w{windowIndex}]
       </span>
+      {layoutSlot}
       <button
         type="button"
         aria-label={t('terminal.copySessionId')}

@@ -33,6 +33,8 @@ describe('TerminalPane Reconnect button', () => {
         token="t"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );
@@ -46,6 +48,8 @@ describe('TerminalPane Reconnect button', () => {
         token="t"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );
@@ -69,6 +73,8 @@ describe('TerminalPane Reconnect button', () => {
         token="t"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );
