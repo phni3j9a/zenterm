@@ -1,14 +1,62 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+
+vi.mock('@xterm/xterm', () => ({
+  Terminal: vi.fn().mockImplementation(function () {
+    return {
+      open: vi.fn(),
+      onData: vi.fn(() => ({ dispose: vi.fn() })),
+      onSelectionChange: vi.fn(() => ({ dispose: vi.fn() })),
+      attachCustomKeyEventHandler: vi.fn(),
+      write: vi.fn(),
+      reset: vi.fn(),
+      dispose: vi.fn(),
+      focus: vi.fn(),
+      loadAddon: vi.fn(),
+      getSelection: vi.fn(() => ''),
+      clear: vi.fn(),
+      refresh: vi.fn(),
+      options: {},
+      cols: 80,
+      rows: 24,
+      unicode: { activeVersion: '6' },
+    };
+  }),
+}));
+vi.mock('@xterm/addon-fit', () => ({
+  FitAddon: vi.fn().mockImplementation(function () { return { fit: vi.fn() }; }),
+}));
+vi.mock('@xterm/addon-unicode11', () => ({
+  Unicode11Addon: vi.fn().mockImplementation(function () { return {}; }),
+}));
+vi.mock('@xterm/addon-web-links', () => ({
+  WebLinksAddon: vi.fn().mockImplementation(function () { return {}; }),
+}));
+vi.mock('@xterm/xterm/css/xterm.css', () => ({ default: '' }));
+
 import { AuthenticatedShell } from '../AuthenticatedShell';
 import { useAuthStore } from '@/stores/auth';
 import { useFilesStore } from '@/stores/files';
+import { useSessionViewStore } from '@/stores/sessionView';
 
 describe('AuthenticatedShell', () => {
   beforeEach(() => {
     window.localStorage.clear();
     useAuthStore.setState({ token: null, gatewayUrl: null });
+    useSessionViewStore.setState({ activeSessionId: null, activeWindowIndex: null });
+    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+    vi.stubGlobal('WebSocket', class {
+      static OPEN = 1;
+      readyState = 0;
+      send = vi.fn();
+      close = vi.fn();
+      onopen: ((ev: Event) => void) | null = null;
+      onmessage: ((ev: MessageEvent) => void) | null = null;
+      onclose: ((ev: CloseEvent) => void) | null = null;
+      onerror: ((ev: Event) => void) | null = null;
+      constructor(public url: string) {}
+    });
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -38,11 +86,11 @@ describe('AuthenticatedShell', () => {
     expect(screen.getAllByLabelText(/Sessions/i).length).toBeGreaterThan(0);
   });
 
-  it('keeps TerminalPane mounted when navigated to /web/files', () => {
+  it('keeps TerminalPane mounted (hidden) when navigated to /web/files', async () => {
     useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
-    useFilesStore.getState().reset?.();
-    // Override fetch to return a FileListResponse shape so FilesSidebarPanel /
-    // FilesList don't throw on entries.filter when mounted under /web/files.
+    useFilesStore.getState().reset();
+    useSessionViewStore.setState({ activeSessionId: 'dev', activeWindowIndex: 0 });
+    // FilesSidebarPanel + FilesList expect a FileListResponse shape on /web/files.
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -55,13 +103,13 @@ describe('AuthenticatedShell', () => {
         <AuthenticatedShell />
       </MemoryRouter>,
     );
-    // TerminalPane root is present in DOM but hidden (display:none) because
-    // sessionId === null + isVisible=false collapses to empty-state hidden.
-    // FilesViewerPane is also rendered.
-    expect(container.querySelector('main, section')).not.toBeNull();
-    // Files heading from FilesViewerPane (rendered when isFilesRoute) — the
-    // exact selector varies with FilesViewerPane internals; the smoke test is
-    // that both branches render without throwing.
-    expect(container.textContent ?? '').toMatch(/Files|file/i);
+    // Flush pending fetch promises so FilesSidebarPanel resolves without act() warnings.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    // TerminalPane real (non-empty-state) root must exist with display:none.
+    const terminalRoot = container.querySelector('section[data-terminal-root="true"]');
+    expect(terminalRoot).not.toBeNull();
+    expect((terminalRoot as HTMLElement).style.display).toBe('none');
   });
 });
