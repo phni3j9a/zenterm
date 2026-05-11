@@ -8,6 +8,7 @@ import {
 } from './terminal/XtermView';
 import { TerminalHeader } from './terminal/TerminalHeader';
 import { TerminalContextMenu } from './terminal/TerminalContextMenu';
+import { LayoutSelector } from './terminal/LayoutSelector';
 import { useTheme } from '@/theme';
 import {
   DEFAULT_FONT_SIZE,
@@ -127,6 +128,7 @@ export function TerminalPane({
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onZoomReset={handleZoomReset}
+        layoutSlot={isFocused ? <LayoutSelector /> : null}
       />
       <div style={{ minHeight: 0 }}>
         <XtermView

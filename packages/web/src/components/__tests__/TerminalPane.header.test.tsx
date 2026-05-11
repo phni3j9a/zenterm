@@ -99,4 +99,34 @@ describe('TerminalPane header integration', () => {
     fireEvent.click(screen.getByRole('button', { name: /increase font size/i }));
     expect(useSettingsStore.getState().fontSize).toBe(15);
   });
+
+  it('focused=true のとき layout selector ボタンが表示される', () => {
+    render(
+      <TerminalPane
+        gatewayUrl="http://gateway.test:18765"
+        token="t"
+        sessionId="dev"
+        windowIndex={0}
+        paneIndex={0}
+        isFocused
+        isVisible
+      />,
+    );
+    expect(screen.getByRole('button', { name: /change layout/i })).toBeInTheDocument();
+  });
+
+  it('focused=false のとき layout selector ボタンは出ない', () => {
+    render(
+      <TerminalPane
+        gatewayUrl="http://gateway.test:18765"
+        token="t"
+        sessionId="dev"
+        windowIndex={0}
+        paneIndex={0}
+        isFocused={false}
+        isVisible
+      />,
+    );
+    expect(screen.queryByRole('button', { name: /change layout/i })).toBeNull();
+  });
 });
