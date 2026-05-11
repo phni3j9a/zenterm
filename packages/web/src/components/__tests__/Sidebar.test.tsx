@@ -136,6 +136,16 @@ describe('Sidebar URL-driven activePanel', () => {
     expect(filesTab.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('marks Files tab pressed on /web/files', () => {
+    render(
+      <MemoryRouter initialEntries={['/web/files']}>
+        <Sidebar {...baseProps} />
+      </MemoryRouter>,
+    );
+    const filesTab = screen.getByRole('button', { name: /Files tab/i });
+    expect(filesTab.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('renders FilesSidebarPanel when activePanel=files and filesClient given', () => {
     const filesClient = {
       listFiles: () => Promise.resolve({ path: '~', entries: [] }),
