@@ -3,6 +3,15 @@ import { TerminalPane } from '@/components/TerminalPane';
 import { SplitPane } from './SplitPane';
 import { usePaneStore } from '@/stores/pane';
 
+// NOTE: Layout switches (e.g. cols-2 → grid-2x2) cause TerminalPane to
+// remount because React reconciles by tree position, and SplitPane's
+// nested structure differs across layouts. Within a given layout, focus
+// and ratio changes preserve pane identity (verified by tests). A future
+// refactor (always-mount + portal/CSS grid) will eliminate cross-layout
+// remount; for now, xterm scrollback is lost on layout switch and the
+// terminal reconnects via Phase 2d's WebSocket reconnect logic. tmux
+// sessions are unaffected (server-side state).
+
 export interface MultiPaneAreaProps {
   gatewayUrl: string;
   token: string;

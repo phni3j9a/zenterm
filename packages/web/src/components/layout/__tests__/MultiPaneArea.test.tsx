@@ -100,4 +100,30 @@ describe('MultiPaneArea', () => {
     fireEvent.click(screen.getByTestId('pane-1').parentElement as HTMLElement);
     expect(usePaneStore.getState().focusedIndex).toBe(1);
   });
+
+  it('同 layout 内で focus 変更しても TerminalPane は remount されない', () => {
+    usePaneStore.getState().setLayout('cols-2');
+    usePaneStore.getState().assignPane(0, { sessionId: 'a', windowIndex: 0 });
+    usePaneStore.getState().assignPane(1, { sessionId: 'b', windowIndex: 0 });
+    usePaneStore.getState().setFocusedIndex(0);
+    const { rerender } = renderArea();
+    const beforeP0 = screen.getByTestId('pane-0');
+    const beforeP1 = screen.getByTestId('pane-1');
+    // Change focus only (no layout change)
+    usePaneStore.getState().setFocusedIndex(1);
+    rerender(<MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={true} />);
+    expect(screen.getByTestId('pane-0')).toBe(beforeP0);
+    expect(screen.getByTestId('pane-1')).toBe(beforeP1);
+  });
+
+  it('同 layout 内で ratio 変更しても TerminalPane は remount されない', () => {
+    usePaneStore.getState().setLayout('cols-2');
+    usePaneStore.getState().assignPane(0, { sessionId: 'a', windowIndex: 0 });
+    usePaneStore.getState().assignPane(1, { sessionId: 'b', windowIndex: 0 });
+    const { rerender } = renderArea();
+    const beforeP0 = screen.getByTestId('pane-0');
+    usePaneStore.getState().setRatio('cols-2', 0, 0.7);
+    rerender(<MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={true} />);
+    expect(screen.getByTestId('pane-0')).toBe(beforeP0);
+  });
 });
