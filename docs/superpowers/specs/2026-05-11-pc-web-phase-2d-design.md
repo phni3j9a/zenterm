@@ -1,5 +1,7 @@
 # ZenTerm PC Web Phase 2d (TerminalPane mount 永続化 + Terminal UX 改善) — Design Spec
 
+> 状態: Phase 2d 完了 (2026-05-11) — `web-pc-phase-2d-done` タグ付き
+
 > Phase 2d: PC Web の TerminalPane を Files タブ往復で unmount しない構造に改修し、ターミナル UX を強化する。Phase 2c で deferred になっていた "TerminalPane 完全マウント保持" を回収する。
 
 - 作成日: 2026-05-11
