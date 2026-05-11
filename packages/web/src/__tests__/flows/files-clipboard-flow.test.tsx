@@ -83,4 +83,21 @@ describe('Files clipboard flow', () => {
     await waitFor(() => expect(client.moveFiles).toHaveBeenCalledWith(['~/a.ts'], '~/sub'));
     expect(useFilesStore.getState().clipboard).toBeNull();
   });
+
+  it('bulk delete calls deleteFile for each selected item', async () => {
+    const client = makeClient();
+    client.deleteFile = vi.fn().mockResolvedValue({ path: '', deleted: true });
+    render(<FilesSidebarPanel client={client as any} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /a\.ts/ }), { ctrlKey: true });
+    fireEvent.click(screen.getByRole('button', { name: /b\.ts/ }));
+
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    expect(useUiStore.getState().confirmDialog).not.toBeNull();
+    await useUiStore.getState().confirmDialog!.onConfirm();
+
+    expect(client.deleteFile).toHaveBeenCalledTimes(2);
+  });
 });
