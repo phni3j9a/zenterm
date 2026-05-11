@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
@@ -19,6 +19,7 @@ import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
 import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
+import { parseSessionRoute } from '@/lib/urlSync';
 import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
@@ -74,6 +75,34 @@ export function AuthenticatedShell() {
       usePaneStore.getState().suspendForSingle();
     }
   }, [isSessionsRoute]);
+
+  const lastSyncedPath = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastSyncedPath.current === location.pathname) return;
+    const parsed = parseSessionRoute(location.pathname);
+    if (!parsed) {
+      lastSyncedPath.current = location.pathname;
+      return;
+    }
+    if (!Array.isArray(sessions) || sessions.length === 0) {
+      return;
+    }
+    const exists = sessions.some((s) => s.displayName === parsed.sessionId);
+    if (!exists) {
+      lastSyncedPath.current = location.pathname;
+      return;
+    }
+    const sess = sessions.find((s) => s.displayName === parsed.sessionId);
+    const wins = sess?.windows ?? [];
+    const targetIdx = wins.some((w) => w.index === parsed.windowIndex)
+      ? parsed.windowIndex
+      : wins[0]?.index ?? parsed.windowIndex;
+    usePaneStore.getState().openInFocusedPane({
+      sessionId: parsed.sessionId,
+      windowIndex: targetIdx,
+    });
+    lastSyncedPath.current = location.pathname;
+  }, [location.pathname, sessions]);
 
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const openPalette = useLayoutStore((s) => s.openPalette);
