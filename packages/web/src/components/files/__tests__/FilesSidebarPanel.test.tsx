@@ -62,4 +62,24 @@ describe('FilesSidebarPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /home/i }));
     await waitFor(() => expect(client.listFiles).toHaveBeenLastCalledWith('~', false));
   });
+
+  it('shows unsaved-changes confirm when switching while dirty', async () => {
+    const client = makeClient();
+    render(<FilesSidebarPanel client={client as any} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: /README\.md/ })).toBeInTheDocument());
+
+    // Simulate dirty edit state on a different file
+    useFilesPreviewStore.getState().selectFile('~/other.ts', 'other.ts', 'text');
+    useFilesPreviewStore.getState().setText('a', 1, false);
+    useFilesPreviewStore.getState().startEditing();
+    useFilesPreviewStore.getState().setEditContent('changed');
+
+    // Click README.md in the list
+    fireEvent.click(screen.getByRole('button', { name: /README\.md/ }));
+
+    // The confirm dialog should be queued
+    const { useUiStore } = await import('@/stores/ui');
+    expect(useUiStore.getState().confirmDialog).not.toBeNull();
+    expect(useUiStore.getState().confirmDialog?.title).toMatch(/unsaved/i);
+  });
 });

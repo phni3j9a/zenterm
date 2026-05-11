@@ -4,6 +4,7 @@ import type { FileEntry } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { useFilesStore } from '@/stores/files';
 import { useFilesPreviewStore } from '@/stores/filesPreview';
+import { useUiStore } from '@/stores/ui';
 import { buildEntryPath } from '@/lib/filesPath';
 import { getPreviewKind } from '@/lib/filesIcon';
 import { FilesToolbar } from './FilesToolbar';
@@ -29,12 +30,32 @@ export function FilesSidebarPanel({ client }: Props) {
   }, [client, currentPath, showHidden]);
 
   const handleOpen = (entry: FileEntry) => {
-    if (entry.type === 'directory' || (entry.type === 'symlink' && entry.resolvedType === 'directory')) {
-      useFilesStore.getState().setCurrentPath(buildEntryPath(currentPath, entry.name));
+    const isDir = entry.type === 'directory'
+      || (entry.type === 'symlink' && entry.resolvedType === 'directory');
+
+    const proceed = () => {
+      if (isDir) {
+        useFilesStore.getState().setCurrentPath(buildEntryPath(currentPath, entry.name));
+        return;
+      }
+      const kind = getPreviewKind(entry.name);
+      useFilesPreviewStore.getState().selectFile(buildEntryPath(currentPath, entry.name), entry.name, kind);
+    };
+
+    const isDirty = useFilesPreviewStore.getState().isDirty;
+    if (isDirty) {
+      useUiStore.getState().showConfirm({
+        title: t('files.unsavedChangesTitle'),
+        message: t('files.unsavedChangesMessage'),
+        destructive: true,
+        onConfirm: () => {
+          useFilesPreviewStore.getState().cancelEditing();
+          proceed();
+        },
+      });
       return;
     }
-    const kind = getPreviewKind(entry.name);
-    useFilesPreviewStore.getState().selectFile(buildEntryPath(currentPath, entry.name), entry.name, kind);
+    proceed();
   };
 
   return (
