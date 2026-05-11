@@ -177,6 +177,10 @@
     "selectedCount": "{{count}} selected",
     "selectAll": "Select all",
     "deselectAll": "Deselect all",
-    "clipboardItems": "{{count}} item(s) on clipboard"
+    "clipboardItems": "{{count}} item(s) on clipboard",
+    "uploadComplete": "Upload complete",
+    "uploadFailed": "Upload failed",
+    "uploadFailedDesc": "Could not upload file.",
+    "uploadDropHint": "Drop files here to upload"
   }
 }

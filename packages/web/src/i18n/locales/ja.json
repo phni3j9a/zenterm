@@ -177,6 +177,10 @@
     "selectedCount": "{{count}} 件選択中",
     "selectAll": "全選択",
     "deselectAll": "選択解除",
-    "clipboardItems": "{{count}} 件をクリップボード"
+    "clipboardItems": "{{count}} 件をクリップボード",
+    "uploadComplete": "アップロード完了",
+    "uploadFailed": "アップロード失敗",
+    "uploadFailedDesc": "ファイルをアップロードできませんでした。",
+    "uploadDropHint": "ここにドロップしてアップロード"
   }
 }
