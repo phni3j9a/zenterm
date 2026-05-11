@@ -44,6 +44,7 @@
   },
   "terminal": {
     "selectPrompt": "サイドバーからセッションを選択してください。",
+    "copyFailed": "クリップボード操作が拒否されました",
     "copySessionId": "セッション ID をコピー",
     "copySessionIdSuccess": "セッション ID をコピーしました",
     "reconnect": "再接続",

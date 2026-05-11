@@ -44,6 +44,7 @@
   },
   "terminal": {
     "selectPrompt": "Select a session from the sidebar to start.",
+    "copyFailed": "Clipboard copy denied",
     "copySessionId": "Copy session ID",
     "copySessionIdSuccess": "Session ID copied",
     "reconnect": "Reconnect",

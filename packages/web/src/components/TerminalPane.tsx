@@ -5,7 +5,16 @@ import {
   type ReconnectInfo,
   type TerminalStatus,
 } from './terminal/XtermView';
+import { TerminalHeader } from './terminal/TerminalHeader';
 import { useTheme } from '@/theme';
+import {
+  DEFAULT_FONT_SIZE,
+  MAX_FONT_SIZE,
+  MIN_FONT_SIZE,
+  useSettingsStore,
+} from '@/stores/settings';
+import { useSessionsStore } from '@/stores/sessions';
+import { useUiStore } from '@/stores/ui';
 
 export interface TerminalPaneProps {
   gatewayUrl: string;
@@ -28,22 +37,42 @@ export function TerminalPane({
   const [reconnectNonce, setReconnectNonce] = useState(0);
   const [reconnectInfo, setReconnectInfo] = useState<ReconnectInfo | null>(null);
 
+  const fontSize = useSettingsStore((s) => s.fontSize);
+  const setFontSize = useSettingsStore((s) => s.setFontSize);
+  const pushToast = useUiStore((s) => s.pushToast);
+
+  const session = useSessionsStore((s) =>
+    sessionId ? s.sessions.find((sess) => (sess as { id?: string }).id === sessionId) : undefined,
+  );
+  const displayName = session?.displayName ?? '';
+  const windowName =
+    windowIndex !== null
+      ? session?.windows?.find((w) => w.index === windowIndex)?.name ?? ''
+      : '';
+
   const handleReconnect = (): void => {
     setReconnectNonce((n) => n + 1);
   };
 
-  const statusColor: string = (() => {
-    switch (status) {
-      case 'connected':
-        return tokens.colors.success;
-      case 'reconnecting':
-        return tokens.colors.warning;
-      case 'error':
-        return tokens.colors.error;
-      default:
-        return tokens.colors.textMuted;
+  const handleCopySessionId = async (): Promise<void> => {
+    if (!sessionId) return;
+    try {
+      await navigator.clipboard.writeText(sessionId);
+      pushToast({ type: 'success', message: t('terminal.copySessionIdSuccess') });
+    } catch {
+      pushToast({ type: 'error', message: t('terminal.copyFailed') });
     }
-  })();
+  };
+
+  const handleZoomIn = (): void => {
+    if (fontSize < MAX_FONT_SIZE) setFontSize(fontSize + 1);
+  };
+  const handleZoomOut = (): void => {
+    if (fontSize > MIN_FONT_SIZE) setFontSize(fontSize - 1);
+  };
+  const handleZoomReset = (): void => {
+    setFontSize(DEFAULT_FONT_SIZE);
+  };
 
   if (sessionId === null || windowIndex === null) {
     return (
@@ -73,68 +102,20 @@ export function TerminalPane({
         background: tokens.colors.bg,
       }}
     >
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: tokens.spacing.sm,
-          padding: `0 ${tokens.spacing.lg}px`,
-          borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
-          background: tokens.colors.bgElevated,
-          color: tokens.colors.textPrimary,
-        }}
-      >
-        <span style={{ fontWeight: 600, fontSize: tokens.typography.bodyMedium.fontSize }}>
-          {sessionId}
-        </span>
-        <span style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.smallMedium.fontSize }}>
-          · w{windowIndex}
-        </span>
-        <span style={{ flex: 1 }} />
-        {(status === 'disconnected' || status === 'reconnecting' || status === 'error') && (
-          <button
-            type="button"
-            aria-label={t('terminal.reconnect')}
-            onClick={handleReconnect}
-            style={{
-              background: tokens.colors.surface,
-              color: tokens.colors.textPrimary,
-              border: `1px solid ${tokens.colors.border}`,
-              padding: `4px 10px`,
-              borderRadius: tokens.radii.sm,
-              fontSize: tokens.typography.caption.fontSize,
-              cursor: 'pointer',
-              marginRight: tokens.spacing.sm,
-            }}
-          >
-            ↺ {t('terminal.reconnect')}
-          </button>
-        )}
-        {status === 'reconnecting' && reconnectInfo && !reconnectInfo.exhausted && (
-          <span
-            data-testid="terminal-reconnect-eta"
-            style={{
-              color: tokens.colors.textMuted,
-              fontSize: tokens.typography.caption.fontSize,
-              marginRight: tokens.spacing.sm,
-            }}
-          >
-            {t('terminal.reconnectingEta', {
-              seconds: Math.max(1, Math.ceil(reconnectInfo.etaMs / 1000)),
-              attempt: reconnectInfo.attempt,
-            })}
-          </span>
-        )}
-        <span
-          aria-label={`Connection ${t(`terminal.status.${status}` as 'terminal.status.connected')}`}
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: statusColor,
-          }}
-        />
-      </header>
+      <TerminalHeader
+        sessionId={sessionId}
+        windowIndex={windowIndex}
+        displayName={displayName}
+        windowName={windowName}
+        status={status}
+        reconnectInfo={reconnectInfo}
+        fontSize={fontSize}
+        onReconnect={handleReconnect}
+        onCopySessionId={handleCopySessionId}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onZoomReset={handleZoomReset}
+      />
       <div style={{ minHeight: 0 }}>
         <XtermView
           gatewayUrl={gatewayUrl}

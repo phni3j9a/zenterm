@@ -55,7 +55,7 @@ describe('TerminalPane Reconnect button', () => {
     act(() => {
       last.onStatusChange('disconnected');
     });
-    const btn = screen.getByRole('button', { name: /terminal\.reconnect/i });
+    const btn = screen.getByRole('button', { name: /reconnect/i });
     fireEvent.click(btn);
     const nodes = screen.getAllByTestId('mock-xterm');
     const nonce = parseInt(nodes[nodes.length - 1].getAttribute('data-nonce') ?? '0', 10);
