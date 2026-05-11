@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useTheme } from '@/theme';
 import { clampRatio } from '@/lib/paneLayout';
 
@@ -24,22 +24,32 @@ export function SplitPane({
   const draggingRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const pendingRatioRef = useRef<number | null>(null);
+  const onRatioChangeRef = useRef(onRatioChange);
+
+  useEffect(() => {
+    onRatioChangeRef.current = onRatioChange;
+  }, [onRatioChange]);
 
   const isVertical = orientation === 'vertical';
   const clampedRatio = clampRatio(ratio);
   const firstSize = `${(clampedRatio * 100).toFixed(4)}%`;
   const secondSize = `${((1 - clampedRatio) * 100).toFixed(4)}%`;
 
-  const commit = useCallback(() => {
-    if (pendingRatioRef.current !== null) {
-      onRatioChange(pendingRatioRef.current);
-      pendingRatioRef.current = null;
-    }
-    rafRef.current = null;
-  }, [onRatioChange]);
+  // Stable handler refs so addEventListener / removeEventListener can be paired
+  // even if onRatioChange changes during a drag.
+  const moveHandlerRef = useRef<(ev: PointerEvent) => void>(() => {});
+  const upHandlerRef = useRef<() => void>(() => {});
 
-  const onPointerMove = useCallback(
-    (ev: PointerEvent) => {
+  useEffect(() => {
+    const commit = () => {
+      if (pendingRatioRef.current !== null) {
+        onRatioChangeRef.current(pendingRatioRef.current);
+        pendingRatioRef.current = null;
+      }
+      rafRef.current = null;
+    };
+
+    moveHandlerRef.current = (ev: PointerEvent) => {
       if (!draggingRef.current) return;
       const container = containerRef.current;
       if (!container) return;
@@ -52,35 +62,37 @@ export function SplitPane({
       if (rafRef.current === null) {
         rafRef.current = window.requestAnimationFrame(commit);
       }
-    },
-    [isVertical, commit],
-  );
+    };
 
-  const onPointerUp = useCallback(() => {
-    draggingRef.current = false;
-    window.removeEventListener('pointermove', onPointerMove);
-    window.removeEventListener('pointerup', onPointerUp);
-    if (rafRef.current !== null) {
-      window.cancelAnimationFrame(rafRef.current);
-      commit();
-    }
-  }, [onPointerMove, commit]);
+    upHandlerRef.current = () => {
+      draggingRef.current = false;
+      window.removeEventListener('pointermove', moveHandlerRef.current);
+      window.removeEventListener('pointerup', upHandlerRef.current);
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        commit();
+      }
+    };
+  }, [isVertical]);
 
   useEffect(() => {
     return () => {
+      // On unmount: stop any in-flight rAF and detach the currently-installed handlers.
       if (rafRef.current !== null) {
         window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
       }
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointermove', moveHandlerRef.current);
+      window.removeEventListener('pointerup', upHandlerRef.current);
+      draggingRef.current = false;
     };
-  }, [onPointerMove, onPointerUp]);
+  }, []);
 
   const onPointerDown = (ev: React.PointerEvent<HTMLDivElement>) => {
     draggingRef.current = true;
     ev.preventDefault();
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointermove', moveHandlerRef.current);
+    window.addEventListener('pointerup', upHandlerRef.current);
   };
 
   return (
