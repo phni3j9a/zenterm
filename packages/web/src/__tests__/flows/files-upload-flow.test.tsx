@@ -53,4 +53,18 @@ describe('Files upload flow', () => {
     fireEvent.drop(overlay, { dataTransfer: { files: [file], types: ['Files'] } });
     await waitFor(() => expect(client.uploadFile).toHaveBeenCalledWith(file, '~'));
   });
+
+  it('shows error toast on upload failure', async () => {
+    const client = makeClient();
+    client.uploadFile = vi.fn().mockRejectedValue(new Error('boom'));
+    render(<FilesSidebarPanel client={client as any} />);
+    await waitFor(() => expect(client.listFiles).toHaveBeenCalled());
+
+    const input = screen.getByTestId('files-upload-input') as HTMLInputElement;
+    const file = new File(['data'], 'up.bin', { type: 'application/octet-stream' });
+    Object.defineProperty(input, 'files', { value: [file] });
+    fireEvent.change(input);
+
+    await waitFor(() => expect(useUiStore.getState().toasts.some((t) => t.type === 'error')).toBe(true));
+  });
 });
