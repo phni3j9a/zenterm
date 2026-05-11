@@ -65,6 +65,30 @@ export function FilesViewerPane({ client, token }: Props) {
     }
   };
 
+  const handleDownload = async () => {
+    const path = useFilesPreviewStore.getState().selectedPath;
+    const name = useFilesPreviewStore.getState().selectedName;
+    if (!path || !name) return;
+    try {
+      const res = await fetch(client.buildRawFileUrl(path), {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      useUiStore.getState().pushToast({ type: 'error', message: `${t('files.downloadFailed')}: ${msg}` });
+    }
+  };
+
   const containerStyle = {
     flex: 1,
     display: 'flex',
@@ -83,7 +107,7 @@ export function FilesViewerPane({ client, token }: Props) {
         onEdit={() => useFilesPreviewStore.getState().startEditing()}
         onSave={handleSave}
         onCancel={() => useFilesPreviewStore.getState().cancelEditing()}
-        onDownload={() => { /* wired in Sub-phase 2c-8 (Task 51) */ }}
+        onDownload={handleDownload}
         onToggleMarkdown={() => useFilesPreviewStore.getState().toggleMarkdownRendered()}
       />
       {selectedKind === 'unsupported' && <FilesViewerEmpty mode="unsupported" name={selectedName ?? ''} />}
