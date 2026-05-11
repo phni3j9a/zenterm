@@ -784,7 +784,6 @@ git commit -m "feat(web): add paneStore (zustand persist + layout/ratios/duplica
 ```tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { ThemeProvider } from '@/theme';
 import { SplitPane } from '../SplitPane';
 
 beforeEach(() => {
@@ -798,7 +797,6 @@ beforeEach(() => {
 function setup(props: Partial<React.ComponentProps<typeof SplitPane>> = {}) {
   const onChange = vi.fn();
   render(
-    <ThemeProvider>
       <div style={{ width: 800, height: 600 }}>
         <SplitPane
           orientation={props.orientation ?? 'vertical'}
@@ -808,7 +806,6 @@ function setup(props: Partial<React.ComponentProps<typeof SplitPane>> = {}) {
           second={<div data-testid="second">Second</div>}
         />
       </div>
-    </ThemeProvider>,
   );
   return { onChange };
 }
@@ -1038,7 +1035,6 @@ git commit -m "feat(web): add SplitPane (pointer-drag + rAF debounce + clamp 0.1
 ```tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ThemeProvider } from '@/theme';
 import { usePaneStore } from '@/stores/pane';
 import { MultiPaneArea } from '../MultiPaneArea';
 
@@ -1082,9 +1078,7 @@ beforeEach(() => {
 
 function renderArea(isVisible = true) {
   return render(
-    <ThemeProvider>
       <MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={isVisible} />
-    </ThemeProvider>,
   );
 }
 
@@ -1392,7 +1386,6 @@ git commit -m "feat(web): TerminalPane accepts paneIndex + isFocused props (focu
 ```tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { ThemeProvider } from '@/theme';
 import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { usePaneStore } from '@/stores/pane';
@@ -1420,9 +1413,7 @@ beforeEach(() => {
 describe('LayoutSelector', () => {
   it('ボタンクリックで 5 種のメニュー項目が出る', () => {
     render(
-      <ThemeProvider>
         <LayoutSelector />
-      </ThemeProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
     expect(screen.getByRole('menuitem', { name: /single/i })).toBeInTheDocument();
@@ -1434,9 +1425,7 @@ describe('LayoutSelector', () => {
 
   it('メニュー項目クリックで paneStore.setLayout が呼ばれる', () => {
     render(
-      <ThemeProvider>
         <LayoutSelector />
-      </ThemeProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
     fireEvent.click(screen.getByRole('menuitem', { name: /2x2/i }));
@@ -1446,9 +1435,7 @@ describe('LayoutSelector', () => {
   it('現在の layout はメニュー上で aria-checked', () => {
     usePaneStore.getState().setLayout('cols-2');
     render(
-      <ThemeProvider>
         <LayoutSelector />
-      </ThemeProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
     const checked = screen.getByRole('menuitem', { name: /2 cols/i });
@@ -1457,9 +1444,7 @@ describe('LayoutSelector', () => {
 
   it('Escape でメニューが閉じる', () => {
     render(
-      <ThemeProvider>
         <LayoutSelector />
-      </ThemeProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -2028,7 +2013,6 @@ git commit -m "feat(web): AuthenticatedShell uses MultiPaneArea, suspends to sin
 ```tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ThemeProvider } from '@/theme';
 import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { WindowRow } from '../WindowRow';
@@ -2050,7 +2034,6 @@ const baseWindow = {
 describe('WindowRow duplicate guard', () => {
   it('isOccupiedElsewhere=true で disabled + ⛔ プレフィックス', () => {
     render(
-      <ThemeProvider>
         <WindowRow
           sessionDisplayName="dev"
           window={baseWindow}
@@ -2062,7 +2045,6 @@ describe('WindowRow duplicate guard', () => {
           onRequestDelete={vi.fn()}
           onOpenInPane={vi.fn()}
         />
-      </ThemeProvider>,
     );
     const btn = screen.getByRole('button', { name: /main/ }) as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
@@ -2072,7 +2054,6 @@ describe('WindowRow duplicate guard', () => {
   it('isOccupiedElsewhere=true のとき onSelect は呼ばれない', () => {
     const onSelect = vi.fn();
     render(
-      <ThemeProvider>
         <WindowRow
           sessionDisplayName="dev"
           window={baseWindow}
@@ -2084,7 +2065,6 @@ describe('WindowRow duplicate guard', () => {
           onRequestDelete={vi.fn()}
           onOpenInPane={vi.fn()}
         />
-      </ThemeProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: /main/ }));
     expect(onSelect).not.toHaveBeenCalled();
@@ -2094,7 +2074,6 @@ describe('WindowRow duplicate guard', () => {
 describe('WindowRow openInPane menu', () => {
   it('openInPaneOptions が空でないときメニューに「Open in pane N」項目が出る', () => {
     render(
-      <ThemeProvider>
         <WindowRow
           sessionDisplayName="dev"
           window={baseWindow}
@@ -2106,7 +2085,6 @@ describe('WindowRow openInPane menu', () => {
           onRequestDelete={vi.fn()}
           onOpenInPane={vi.fn()}
         />
-      </ThemeProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: /actions for window/i }));
     expect(screen.getByRole('menuitem', { name: /open in pane 2/i })).toBeInTheDocument();
@@ -2116,7 +2094,6 @@ describe('WindowRow openInPane menu', () => {
   it('「Open in pane N」クリックで onOpenInPane(idx) が呼ばれる (0-based)', () => {
     const onOpenInPane = vi.fn();
     render(
-      <ThemeProvider>
         <WindowRow
           sessionDisplayName="dev"
           window={baseWindow}
@@ -2128,7 +2105,6 @@ describe('WindowRow openInPane menu', () => {
           onRequestDelete={vi.fn()}
           onOpenInPane={onOpenInPane}
         />
-      </ThemeProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: /actions for window/i }));
     fireEvent.click(screen.getByRole('menuitem', { name: /open in pane 3/i }));
