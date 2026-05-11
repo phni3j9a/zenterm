@@ -63,6 +63,14 @@
       "disconnected": "切断",
       "reconnecting": "再接続中…",
       "error": "エラー"
+    },
+    "layout": {
+      "menuLabel": "レイアウト変更",
+      "single": "単一",
+      "cols2": "2列",
+      "cols3": "3列",
+      "grid2x2": "2x2 グリッド",
+      "mainSide2": "主 + 副2"
     }
   },
   "validation": {

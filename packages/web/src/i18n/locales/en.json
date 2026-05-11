@@ -63,6 +63,14 @@
       "disconnected": "Disconnected",
       "reconnecting": "Reconnecting…",
       "error": "Error"
+    },
+    "layout": {
+      "menuLabel": "Change layout",
+      "single": "Single",
+      "cols2": "2 cols",
+      "cols3": "3 cols",
+      "grid2x2": "2x2 grid",
+      "mainSide2": "Main + side"
     }
   },
   "validation": {
