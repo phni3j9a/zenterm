@@ -19,6 +19,7 @@ export function AuthenticatedShell() {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const token = useAuthStore((s) => s.token);
   const gatewayUrl = useAuthStore((s) => s.gatewayUrl);
   const logout = useAuthStore((s) => s.logout);
@@ -82,7 +83,6 @@ export function AuthenticatedShell() {
     killWindow: baseClient.killWindow.bind(baseClient),
   };
 
-  const location = useLocation();
   const isFilesRoute = location.pathname.startsWith('/web/files');
 
   const filesClient: FilesApiClient = {
