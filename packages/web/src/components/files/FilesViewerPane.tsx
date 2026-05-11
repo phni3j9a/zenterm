@@ -1,11 +1,14 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFilesPreviewStore } from '@/stores/filesPreview';
+import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { FilesViewerEmpty } from './FilesViewerEmpty';
 import { FilesViewerHeader } from './FilesViewerHeader';
 import { FilesTextViewer } from './FilesTextViewer';
 import { FilesImageViewer } from './FilesImageViewer';
 import { FilesMarkdownViewer } from './FilesMarkdownViewer';
+import { FilesEditor } from './FilesEditor';
 import type { FilesApiClient } from './filesApi';
 
 interface Props {
@@ -42,6 +45,26 @@ export function FilesViewerPane({ client, token }: Props) {
     return () => { cancelled = true; };
   }, [client, selectedPath, selectedKind]);
 
+  const { t } = useTranslation();
+  const isEditing = useFilesPreviewStore((s) => s.isEditing);
+  const editContent = useFilesPreviewStore((s) => s.editContent);
+
+  const handleSave = async () => {
+    const path = useFilesPreviewStore.getState().selectedPath;
+    if (!path) return;
+    const content = useFilesPreviewStore.getState().editContent;
+    useFilesPreviewStore.getState().setSaving(true);
+    try {
+      await client.writeFileContent(path, content);
+      useFilesPreviewStore.getState().finishSave(content);
+      useUiStore.getState().pushToast({ type: 'success', message: t('files.saved') });
+    } catch (err) {
+      useFilesPreviewStore.getState().setSaving(false);
+      const msg = err instanceof Error ? err.message : String(err);
+      useUiStore.getState().pushToast({ type: 'error', message: `${t('files.saveFailed')}: ${msg}` });
+    }
+  };
+
   const containerStyle = {
     flex: 1,
     display: 'flex',
@@ -58,7 +81,7 @@ export function FilesViewerPane({ client, token }: Props) {
     <div style={containerStyle}>
       <FilesViewerHeader
         onEdit={() => useFilesPreviewStore.getState().startEditing()}
-        onSave={() => { /* wired in Sub-phase 2c-4 (Task 28) */ }}
+        onSave={handleSave}
         onCancel={() => useFilesPreviewStore.getState().cancelEditing()}
         onDownload={() => { /* wired in Sub-phase 2c-8 (Task 51) */ }}
         onToggleMarkdown={() => useFilesPreviewStore.getState().toggleMarkdownRendered()}
@@ -67,8 +90,16 @@ export function FilesViewerPane({ client, token }: Props) {
       {selectedKind === 'image' && (
         <FilesImageViewer rawUrl={client.buildRawFileUrl(selectedPath)} token={token} name={selectedName ?? ''} />
       )}
-      {selectedKind === 'text' && <FilesTextViewer />}
-      {selectedKind === 'markdown' && (
+      {(selectedKind === 'text' || selectedKind === 'markdown') && isEditing && (
+        <FilesEditor
+          filename={selectedName ?? ''}
+          value={editContent}
+          onChange={(v) => useFilesPreviewStore.getState().setEditContent(v)}
+          onSave={handleSave}
+        />
+      )}
+      {selectedKind === 'text' && !isEditing && <FilesTextViewer />}
+      {selectedKind === 'markdown' && !isEditing && (
         showMarkdownRendered
           ? <FilesMarkdownViewer source={textContent ?? ''} />
           : <FilesTextViewer />
