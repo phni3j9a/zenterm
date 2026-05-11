@@ -17,7 +17,7 @@ import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
-import { SLOT_COUNT } from '@/lib/paneLayout';
+import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
 import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
@@ -36,6 +36,7 @@ export function AuthenticatedShell() {
   const open = useSessionViewStore((s) => s.open);
   const showConfirm = useUiStore((s) => s.showConfirm);
   const pushToast = useUiStore((s) => s.pushToast);
+  const currentLayout = usePaneStore((s) => s.layout);
 
   useEventsSubscription();
 
@@ -205,6 +206,28 @@ export function AuthenticatedShell() {
     });
   };
 
+  const upgradeLayout = (current: LayoutMode): LayoutMode | null => {
+    if (current === 'single') return 'cols-2';
+    if (current === 'cols-2') return 'cols-3';
+    if (current === 'cols-3') return 'grid-2x2';
+    return null;
+  };
+
+  const newPaneFromCurrent = () => {
+    const state = usePaneStore.getState();
+    const next = upgradeLayout(state.layout);
+    if (!next) return;
+    state.setLayout(next);
+    const fresh = usePaneStore.getState();
+    const slotCount = SLOT_COUNT[next];
+    for (let i = 0; i < slotCount; i++) {
+      if (!fresh.panes[i]) {
+        fresh.setFocusedIndex(i);
+        return;
+      }
+    }
+  };
+
   const cyclePane = (dir: 1 | -1) => {
     const { panes, focusedIndex, layout, setFocusedIndex } = usePaneStore.getState();
     const slotCount = SLOT_COUNT[layout];
@@ -267,6 +290,8 @@ export function AuthenticatedShell() {
 
   if (!token || !gatewayUrl) return <Navigate to="/web/login" replace />;
 
+  const canCreateNewPane = upgradeLayout(currentLayout) !== null;
+
   const isFilesRoute = location.pathname.startsWith('/web/files');
 
   const filesClient: FilesApiClient = {
@@ -305,6 +330,9 @@ export function AuthenticatedShell() {
             gatewayUrl={gatewayUrl}
             token={token}
             isVisible={!isFilesRoute}
+            onSearch={() => useLayoutStore.getState().openSearch()}
+            onNewPane={newPaneFromCurrent}
+            canCreateNewPane={canCreateNewPane}
           />
           {isFilesRoute && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>

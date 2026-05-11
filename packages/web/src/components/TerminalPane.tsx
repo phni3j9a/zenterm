@@ -29,6 +29,9 @@ export interface TerminalPaneProps {
   paneIndex: number;
   isFocused: boolean;
   isVisible: boolean;
+  onSearch?: () => void;
+  onNewPane?: () => void;
+  canCreateNewPane?: boolean;
 }
 
 export function TerminalPane({
@@ -39,6 +42,9 @@ export function TerminalPane({
   paneIndex,
   isFocused,
   isVisible,
+  onSearch,
+  onNewPane,
+  canCreateNewPane = false,
 }: TerminalPaneProps) {
   // paneIndex is accepted for Tasks 6+ (focus routing, drag/drop) but not used in this component yet.
   void paneIndex;
@@ -167,6 +173,9 @@ export function TerminalPane({
           onPaste={() => actionsRef.current?.paste()}
           onClear={() => actionsRef.current?.clear()}
           onReconnect={handleReconnect}
+          onSearch={() => onSearch?.()}
+          onNewPane={() => onNewPane?.()}
+          canCreateNewPane={canCreateNewPane && typeof onNewPane === 'function'}
           onClose={() => setMenu(null)}
         />
       )}

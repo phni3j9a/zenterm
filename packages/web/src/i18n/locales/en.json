@@ -60,7 +60,9 @@
       "copy": "Copy",
       "paste": "Paste",
       "clear": "Clear",
-      "reconnect": "Reconnect"
+      "search": "Search",
+      "reconnect": "Reconnect",
+      "newPane": "New pane"
     },
     "status": {
       "connected": "Connected",

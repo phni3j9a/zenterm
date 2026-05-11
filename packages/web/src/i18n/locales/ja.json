@@ -60,7 +60,9 @@
       "copy": "コピー",
       "paste": "ペースト",
       "clear": "クリア",
-      "reconnect": "再接続"
+      "search": "検索",
+      "reconnect": "再接続",
+      "newPane": "新しいペイン"
     },
     "status": {
       "connected": "接続中",

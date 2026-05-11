@@ -21,6 +21,9 @@ describe('TerminalContextMenu', () => {
         onPaste={() => undefined}
         onClear={() => undefined}
         onReconnect={() => undefined}
+        onSearch={() => undefined}
+        onNewPane={() => undefined}
+        canCreateNewPane={false}
         onClose={() => undefined}
       />,
     );
@@ -38,6 +41,9 @@ describe('TerminalContextMenu', () => {
         onPaste={() => undefined}
         onClear={() => undefined}
         onReconnect={() => undefined}
+        onSearch={() => undefined}
+        onNewPane={() => undefined}
+        canCreateNewPane={false}
         onClose={() => undefined}
       />,
     );
@@ -58,6 +64,9 @@ describe('TerminalContextMenu', () => {
         onPaste={() => undefined}
         onClear={() => undefined}
         onReconnect={() => undefined}
+        onSearch={() => undefined}
+        onNewPane={() => undefined}
+        canCreateNewPane={false}
         onClose={() => undefined}
       />,
     );
@@ -77,6 +86,9 @@ describe('TerminalContextMenu', () => {
         onPaste={() => undefined}
         onClear={() => undefined}
         onReconnect={() => undefined}
+        onSearch={() => undefined}
+        onNewPane={() => undefined}
+        canCreateNewPane={false}
         onClose={onClose}
       />,
     );
@@ -97,6 +109,9 @@ describe('TerminalContextMenu', () => {
         onPaste={() => undefined}
         onClear={() => undefined}
         onReconnect={() => undefined}
+        onSearch={() => undefined}
+        onNewPane={() => undefined}
+        canCreateNewPane={false}
         onClose={onClose}
       />,
     );
@@ -118,6 +133,9 @@ describe('TerminalContextMenu', () => {
           onPaste={() => undefined}
           onClear={() => undefined}
           onReconnect={() => undefined}
+          onSearch={() => undefined}
+          onNewPane={() => undefined}
+          canCreateNewPane={false}
           onClose={onClose}
         />
       </>,
@@ -137,11 +155,70 @@ describe('TerminalContextMenu', () => {
         onPaste={() => undefined}
         onClear={() => undefined}
         onReconnect={() => undefined}
+        onSearch={() => undefined}
+        onNewPane={() => undefined}
+        canCreateNewPane={false}
         onClose={() => undefined}
       />,
     );
     const menu = screen.getByRole('menu');
     expect(menu.style.left).toBe('42px');
     expect(menu.style.top).toBe('84px');
+  });
+
+  it('calls onSearch when Search menuitem is clicked', () => {
+    const onSearch = vi.fn();
+    render(
+      <TerminalContextMenu
+        open x={10} y={10}
+        hasSelection={false}
+        onCopy={vi.fn()} onPaste={vi.fn()} onClear={vi.fn()}
+        onReconnect={vi.fn()}
+        onSearch={onSearch}
+        onNewPane={vi.fn()}
+        canCreateNewPane={true}
+        onClose={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole('menuitem', { name: /search|検索/i }));
+    expect(onSearch).toHaveBeenCalled();
+  });
+
+  it('calls onNewPane when New pane menuitem is enabled and clicked', () => {
+    const onNewPane = vi.fn();
+    render(
+      <TerminalContextMenu
+        open x={10} y={10}
+        hasSelection={false}
+        onCopy={vi.fn()} onPaste={vi.fn()} onClear={vi.fn()}
+        onReconnect={vi.fn()}
+        onSearch={vi.fn()}
+        onNewPane={onNewPane}
+        canCreateNewPane={true}
+        onClose={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole('menuitem', { name: /new pane|新しいペイン/i }));
+    expect(onNewPane).toHaveBeenCalled();
+  });
+
+  it('disables New pane menuitem when canCreateNewPane is false', () => {
+    const onNewPane = vi.fn();
+    render(
+      <TerminalContextMenu
+        open x={10} y={10}
+        hasSelection={false}
+        onCopy={vi.fn()} onPaste={vi.fn()} onClear={vi.fn()}
+        onReconnect={vi.fn()}
+        onSearch={vi.fn()}
+        onNewPane={onNewPane}
+        canCreateNewPane={false}
+        onClose={vi.fn()}
+      />,
+    );
+    const item = screen.getByRole('menuitem', { name: /new pane|新しいペイン/i });
+    expect(item).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(item);
+    expect(onNewPane).not.toHaveBeenCalled();
   });
 });

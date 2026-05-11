@@ -16,9 +16,12 @@ export interface MultiPaneAreaProps {
   gatewayUrl: string;
   token: string;
   isVisible: boolean;
+  onSearch?: () => void;
+  onNewPane?: () => void;
+  canCreateNewPane?: boolean;
 }
 
-export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaProps) {
+export function MultiPaneArea({ gatewayUrl, token, isVisible, onSearch, onNewPane, canCreateNewPane = false }: MultiPaneAreaProps) {
   const layout = usePaneStore((s) => s.layout);
   const panes = usePaneStore((s) => s.panes);
   const focusedIndex = usePaneStore((s) => s.focusedIndex);
@@ -53,6 +56,9 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
         paneIndex={idx}
         isFocused={idx === focusedIndex}
         isVisible={isVisible}
+        onSearch={onSearch}
+        onNewPane={onNewPane}
+        canCreateNewPane={canCreateNewPane}
       />
     </div>
   );
