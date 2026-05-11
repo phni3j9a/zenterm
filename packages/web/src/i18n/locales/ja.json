@@ -90,7 +90,8 @@
     "dropHint": "ファイルをドロップしてセッション cwd にアップロード",
     "uploadProgress": "アップロード中 {{current}} ({{completed}}/{{total}})",
     "uploadDone": "{{count}} ファイルをアップロードしました",
-    "uploadError": "アップロード失敗: {{message}}"
+    "uploadError": "アップロード失敗: {{message}}",
+    "uploadBusy": "別のアップロードが進行中です"
   },
   "validation": {
     "nameEmpty": "名前は必須です",

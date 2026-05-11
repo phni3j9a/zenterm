@@ -90,7 +90,8 @@
     "dropHint": "Drop files to upload to session cwd",
     "uploadProgress": "Uploading {{current}} ({{completed}}/{{total}})",
     "uploadDone": "Uploaded {{count}} file(s)",
-    "uploadError": "Upload failed: {{message}}"
+    "uploadError": "Upload failed: {{message}}",
+    "uploadBusy": "Another upload is in progress"
   },
   "validation": {
     "nameEmpty": "Name cannot be empty",

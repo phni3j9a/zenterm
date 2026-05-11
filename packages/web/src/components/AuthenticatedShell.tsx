@@ -88,6 +88,10 @@ export function AuthenticatedShell() {
 
   const handleTerminalDrop = async (files: File[], cwd: string): Promise<void> => {
     if (!baseClient) return;
+    if (uploadProgress.active) {
+      pushToast({ type: 'error', message: t('terminal.uploadBusy') });
+      return;
+    }
     uploadProgress.begin(files.length);
     for (const file of files) {
       uploadProgress.markStart(file.name);
