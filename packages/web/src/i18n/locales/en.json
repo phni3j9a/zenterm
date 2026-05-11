@@ -80,7 +80,9 @@
     },
     "terminal": {
       "title": "Terminal",
-      "fontSize": "Font size"
+      "fontSize": "Font size",
+      "autoCopyOnSelect": "Auto-copy selection",
+      "autoCopyOnSelectDesc": "Copy selected text to the clipboard automatically when you finish a selection in the terminal."
     },
     "gateway": {
       "title": "Gateway",

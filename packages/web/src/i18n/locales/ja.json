@@ -80,7 +80,9 @@
     },
     "terminal": {
       "title": "ターミナル",
-      "fontSize": "フォントサイズ"
+      "fontSize": "フォントサイズ",
+      "autoCopyOnSelect": "選択時に自動コピー",
+      "autoCopyOnSelectDesc": "ターミナルでテキストを選択し終えた瞬間にクリップボードへコピーします。"
     },
     "gateway": {
       "title": "ゲートウェイ",
