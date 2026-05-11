@@ -19,7 +19,8 @@
       "disconnected": "Realtime updates: disconnected",
       "reconnecting": "Realtime updates: reconnecting (attempt {{attempt}})",
       "failed": "Realtime updates: failed"
-    }
+    },
+    "resize": "Resize sidebar"
   },
   "login": {
     "title": "Sign in to ZenTerm",
