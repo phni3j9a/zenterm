@@ -8,6 +8,7 @@ describe('useLayoutStore', () => {
       sidebarCollapsed: false,
       paletteOpen: false,
       layoutMenuOpen: false,
+      searchOpen: false,
     });
   });
 
@@ -15,6 +16,7 @@ describe('useLayoutStore', () => {
     expect(useLayoutStore.getState().sidebarCollapsed).toBe(false);
     expect(useLayoutStore.getState().paletteOpen).toBe(false);
     expect(useLayoutStore.getState().layoutMenuOpen).toBe(false);
+    expect(useLayoutStore.getState().searchOpen).toBe(false);
   });
 
   it('toggles sidebarCollapsed', () => {
@@ -38,6 +40,13 @@ describe('useLayoutStore', () => {
     expect(useLayoutStore.getState().layoutMenuOpen).toBe(false);
   });
 
+  it('opens and closes search', () => {
+    useLayoutStore.getState().openSearch();
+    expect(useLayoutStore.getState().searchOpen).toBe(true);
+    useLayoutStore.getState().closeSearch();
+    expect(useLayoutStore.getState().searchOpen).toBe(false);
+  });
+
   it('persists sidebarCollapsed only (not transient open flags)', () => {
     useLayoutStore.getState().toggleSidebar();
     useLayoutStore.getState().openPalette();
@@ -47,5 +56,6 @@ describe('useLayoutStore', () => {
     expect(parsed.state.sidebarCollapsed).toBe(true);
     expect(parsed.state.paletteOpen).toBeUndefined();
     expect(parsed.state.layoutMenuOpen).toBeUndefined();
+    expect(parsed.state.searchOpen).toBeUndefined();
   });
 });

@@ -75,6 +75,7 @@ export function AuthenticatedShell() {
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const openPalette = useLayoutStore((s) => s.openPalette);
   const openLayoutMenu = useLayoutStore((s) => s.openLayoutMenu);
+  const openSearch = useLayoutStore((s) => s.openSearch);
 
   // Build clients early so helpers below (used by shortcuts) can close over them.
   // These are stable as long as token/gatewayUrl don't change between renders.
@@ -260,7 +261,7 @@ export function AuthenticatedShell() {
     focusNextPane,
     focusPrevPane,
     openLayoutMenu,
-    openSearch: () => undefined,
+    openSearch,
   });
 
   if (!token || !gatewayUrl) return <Navigate to="/web/login" replace />;

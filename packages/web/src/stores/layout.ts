@@ -5,12 +5,15 @@ interface LayoutState {
   sidebarCollapsed: boolean;
   paletteOpen: boolean;
   layoutMenuOpen: boolean;
+  searchOpen: boolean;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   openPalette: () => void;
   closePalette: () => void;
   openLayoutMenu: () => void;
   closeLayoutMenu: () => void;
+  openSearch: () => void;
+  closeSearch: () => void;
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -19,6 +22,7 @@ export const useLayoutStore = create<LayoutState>()(
       sidebarCollapsed: false,
       paletteOpen: false,
       layoutMenuOpen: false,
+      searchOpen: false,
       toggleSidebar: () =>
         set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
@@ -26,6 +30,8 @@ export const useLayoutStore = create<LayoutState>()(
       closePalette: () => set({ paletteOpen: false }),
       openLayoutMenu: () => set({ layoutMenuOpen: true }),
       closeLayoutMenu: () => set({ layoutMenuOpen: false }),
+      openSearch: () => set({ searchOpen: true }),
+      closeSearch: () => set({ searchOpen: false }),
     }),
     {
       name: 'zenterm-web-layout',
