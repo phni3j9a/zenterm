@@ -44,6 +44,13 @@
   },
   "terminal": {
     "selectPrompt": "Select a session from the sidebar to start.",
+    "copySessionId": "Copy session ID",
+    "copySessionIdSuccess": "Session ID copied",
+    "reconnect": "Reconnect",
+    "reconnectingEta": "Reconnecting in {{seconds}}s (attempt {{attempt}}/20)",
+    "zoomIn": "Increase font size",
+    "zoomOut": "Decrease font size",
+    "zoomReset": "Reset font size",
     "status": {
       "connected": "Connected",
       "disconnected": "Disconnected",

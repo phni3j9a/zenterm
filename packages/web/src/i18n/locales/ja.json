@@ -44,6 +44,13 @@
   },
   "terminal": {
     "selectPrompt": "サイドバーからセッションを選択してください。",
+    "copySessionId": "セッション ID をコピー",
+    "copySessionIdSuccess": "セッション ID をコピーしました",
+    "reconnect": "再接続",
+    "reconnectingEta": "{{seconds}} 秒後に再接続 (試行 {{attempt}}/20)",
+    "zoomIn": "フォントサイズを大きく",
+    "zoomOut": "フォントサイズを小さく",
+    "zoomReset": "フォントサイズをリセット",
     "status": {
       "connected": "接続中",
       "disconnected": "切断",
