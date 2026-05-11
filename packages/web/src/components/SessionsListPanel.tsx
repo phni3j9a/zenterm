@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { useTheme } from '@/theme';
+import { usePaneStore } from '@/stores/pane';
 import { SessionRow } from './sidebar/SessionRow';
 import { WindowRow } from './sidebar/WindowRow';
 import { NewSessionButton } from './sidebar/NewSessionButton';
@@ -43,6 +44,9 @@ export function SessionsListPanel({
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const panes = usePaneStore((s) => s.panes);
+  const focusedIndex = usePaneStore((s) => s.focusedIndex);
+  const assignPane = usePaneStore((s) => s.assignPane);
 
   const toggle = (name: string): void => {
     setExpanded((prev) => {
@@ -130,6 +134,18 @@ export function SessionsListPanel({
                 }}
               >
                 {session.windows.map((w) => {
+                  const target = { sessionId: session.displayName, windowIndex: w.index };
+                  const occupyingIdx = panes.findIndex(
+                    (p) =>
+                      p !== null &&
+                      p.sessionId === target.sessionId &&
+                      p.windowIndex === target.windowIndex,
+                  );
+                  const isOccupiedElsewhere =
+                    occupyingIdx !== -1 && occupyingIdx !== focusedIndex;
+                  const openInPaneOptions = panes
+                    .map((_, i) => i)
+                    .filter((i) => i !== focusedIndex && i !== occupyingIdx);
                   const isWindowActive =
                     isActive && activeWindowIndex === w.index;
                   return (
@@ -138,9 +154,12 @@ export function SessionsListPanel({
                       sessionDisplayName={session.displayName}
                       window={w}
                       isActive={isWindowActive}
+                      isOccupiedElsewhere={isOccupiedElsewhere}
+                      openInPaneOptions={openInPaneOptions}
                       onSelect={() => onSelect(session.displayName, w.index)}
                       onRename={onRenameWindow}
                       onRequestDelete={onRequestDeleteWindow}
+                      onOpenInPane={(idx) => assignPane(idx, target)}
                     />
                   );
                 })}

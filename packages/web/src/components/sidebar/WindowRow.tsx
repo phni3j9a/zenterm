@@ -10,6 +10,8 @@ export interface WindowRowProps {
   sessionDisplayName: string;
   window: TmuxWindow;
   isActive: boolean;
+  isOccupiedElsewhere: boolean;
+  openInPaneOptions: number[]; // 0-based pane indices
   onSelect: () => void;
   onRename: (
     sessionDisplayName: string,
@@ -17,6 +19,7 @@ export interface WindowRowProps {
     newName: string,
   ) => void | Promise<void>;
   onRequestDelete: (sessionDisplayName: string, window: TmuxWindow) => void;
+  onOpenInPane: (paneIndex: number) => void;
 }
 
 type RowMode = 'idle' | 'editing-name';
@@ -25,9 +28,12 @@ export function WindowRow({
   sessionDisplayName,
   window,
   isActive,
+  isOccupiedElsewhere,
+  openInPaneOptions,
   onSelect,
   onRename,
   onRequestDelete,
+  onOpenInPane,
 }: WindowRowProps) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -36,6 +42,20 @@ export function WindowRow({
   const [hover, setHover] = useState(false);
   const kebabRef = useRef<HTMLButtonElement | null>(null);
   const showKebab = hover || menuOpen;
+
+  const openInItems = openInPaneOptions.map((idx) => ({
+    label: t('sessions.openInPane.label', { pane: idx + 1 }),
+    onClick: () => onOpenInPane(idx),
+  }));
+  const baseItems = [
+    { label: t('common.rename'), onClick: () => setMode('editing-name') },
+    {
+      label: t('common.delete'),
+      onClick: () => onRequestDelete(sessionDisplayName, window),
+      destructive: true,
+    },
+  ];
+  const items = [...openInItems, ...baseItems];
 
   return (
     <div
@@ -46,7 +66,8 @@ export function WindowRow({
       <button
         type="button"
         aria-current={isActive ? 'true' : undefined}
-        onClick={onSelect}
+        disabled={isOccupiedElsewhere}
+        onClick={!isOccupiedElsewhere ? onSelect : undefined}
         style={{
           flex: 1,
           textAlign: 'left',
@@ -54,7 +75,8 @@ export function WindowRow({
           background: isActive ? tokens.colors.primarySubtle : 'transparent',
           border: 'none',
           color: tokens.colors.textSecondary,
-          cursor: 'pointer',
+          cursor: isOccupiedElsewhere ? 'not-allowed' : 'pointer',
+          opacity: isOccupiedElsewhere ? 0.5 : 1,
           fontSize: tokens.typography.smallMedium.fontSize,
         }}
       >
@@ -70,7 +92,7 @@ export function WindowRow({
             onCancel={() => setMode('idle')}
           />
         ) : (
-          window.name
+          `${isOccupiedElsewhere ? '⛔ ' : ''}${window.name}`
         )}
       </button>
       <button
@@ -97,14 +119,7 @@ export function WindowRow({
       <RowActionsMenu
         open={menuOpen}
         anchorEl={kebabRef.current}
-        items={[
-          { label: t('common.rename'), onClick: () => setMode('editing-name') },
-          {
-            label: t('common.delete'),
-            onClick: () => onRequestDelete(sessionDisplayName, window),
-            destructive: true,
-          },
-        ]}
+        items={items}
         onClose={() => setMenuOpen(false)}
       />
     </div>

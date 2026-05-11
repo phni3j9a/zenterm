@@ -40,7 +40,10 @@
     "deleteWindowTitle": "ウィンドウを削除しますか？",
     "deleteWindowMessage": "ウィンドウ {{index}}「{{name}}」を閉じます。続行しますか？",
     "loadFailed": "セッション取得に失敗: {{error}}",
-    "empty": "セッションがまだありません — 上部で作成してください。"
+    "empty": "セッションがまだありません — 上部で作成してください。",
+    "openInPane": {
+      "label": "ペイン {{pane}} で開く"
+    }
   },
   "terminal": {
     "selectPrompt": "サイドバーからセッションを選択してください。",

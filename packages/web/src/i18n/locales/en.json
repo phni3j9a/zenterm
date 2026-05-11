@@ -40,7 +40,10 @@
     "deleteWindowTitle": "Delete window?",
     "deleteWindowMessage": "This will close window {{index}} \"{{name}}\". Continue?",
     "loadFailed": "Failed to load sessions: {{error}}",
-    "empty": "No sessions yet — create one above."
+    "empty": "No sessions yet — create one above.",
+    "openInPane": {
+      "label": "Open in pane {{pane}}"
+    }
   },
   "terminal": {
     "selectPrompt": "Select a session from the sidebar to start.",
