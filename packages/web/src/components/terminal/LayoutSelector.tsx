@@ -84,7 +84,7 @@ export function LayoutSelector() {
             <button
               key={mode}
               type="button"
-              role="menuitem"
+              role="menuitemradio"
               aria-checked={mode === layout}
               onClick={() => {
                 setLayout(mode);

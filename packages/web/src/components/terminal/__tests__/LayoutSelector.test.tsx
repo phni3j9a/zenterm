@@ -28,17 +28,17 @@ describe('LayoutSelector', () => {
   it('ボタンクリックで 5 種のメニュー項目が出る', () => {
     render(<LayoutSelector />);
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
-    expect(screen.getByRole('menuitem', { name: /single/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /2 cols/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /3 cols/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /2x2/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /main \+ 2 side/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /single/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /2 cols/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /3 cols/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /2x2/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /main \+ 2 side/i })).toBeInTheDocument();
   });
 
   it('メニュー項目クリックで paneStore.setLayout が呼ばれる', () => {
     render(<LayoutSelector />);
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
-    fireEvent.click(screen.getByRole('menuitem', { name: /2x2/i }));
+    fireEvent.click(screen.getByRole('menuitemradio', { name: /2x2/i }));
     expect(usePaneStore.getState().layout).toBe('grid-2x2');
   });
 
@@ -46,7 +46,7 @@ describe('LayoutSelector', () => {
     usePaneStore.getState().setLayout('cols-2');
     render(<LayoutSelector />);
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
-    const checked = screen.getByRole('menuitem', { name: /2 cols/i });
+    const checked = screen.getByRole('menuitemradio', { name: /2 cols/i });
     expect(checked.getAttribute('aria-checked')).toBe('true');
   });
 
@@ -54,6 +54,14 @@ describe('LayoutSelector', () => {
     render(<LayoutSelector />);
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
     fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.queryByRole('menuitem')).toBeNull();
+    expect(screen.queryByRole('menuitemradio')).toBeNull();
+  });
+
+  it('外側 pointerdown でメニューが閉じる', () => {
+    render(<LayoutSelector />);
+    fireEvent.click(screen.getByRole('button', { name: /layout/i }));
+    expect(screen.getByRole('menuitemradio', { name: /single/i })).toBeInTheDocument();
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole('menuitemradio')).toBeNull();
   });
 });
