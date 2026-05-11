@@ -52,6 +52,12 @@
     "zoomIn": "フォントサイズを大きく",
     "zoomOut": "フォントサイズを小さく",
     "zoomReset": "フォントサイズをリセット",
+    "menu": {
+      "copy": "コピー",
+      "paste": "ペースト",
+      "clear": "クリア",
+      "reconnect": "再接続"
+    },
     "status": {
       "connected": "接続中",
       "disconnected": "切断",

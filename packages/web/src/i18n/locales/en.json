@@ -52,6 +52,12 @@
     "zoomIn": "Increase font size",
     "zoomOut": "Decrease font size",
     "zoomReset": "Reset font size",
+    "menu": {
+      "copy": "Copy",
+      "paste": "Paste",
+      "clear": "Clear",
+      "reconnect": "Reconnect"
+    },
     "status": {
       "connected": "Connected",
       "disconnected": "Disconnected",
