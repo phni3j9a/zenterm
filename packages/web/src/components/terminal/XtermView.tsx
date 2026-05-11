@@ -8,7 +8,12 @@ import '@xterm/xterm/css/xterm.css';
 import { terminalColorsDark, terminalColorsLight } from '@/theme/terminalColors';
 import { FONT_FAMILY_MONO } from '@/theme/tokens';
 import { useTheme } from '@/theme';
-import { useSettingsStore } from '@/stores/settings';
+import {
+  DEFAULT_FONT_SIZE,
+  MAX_FONT_SIZE,
+  MIN_FONT_SIZE,
+  useSettingsStore,
+} from '@/stores/settings';
 import { createImeDedup } from '@/lib/imeDedup';
 import {
   createReconnectBackoff,
@@ -131,6 +136,74 @@ export function XtermView({
     term.options.disableStdin = !isFocused;
     if (isFocused && isVisibleRef.current) term.focus();
   }, [isFocused]);
+
+  // Keyboard shortcuts (intercepted before xterm processes them).
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term) return;
+    type KeyHandler = (ev: KeyboardEvent) => boolean;
+    const handler: KeyHandler = (ev) => {
+      if (ev.type !== 'keydown') return true;
+
+      // Ctrl+Shift+C — copy selection
+      if (ev.ctrlKey && ev.shiftKey && (ev.key === 'C' || ev.key === 'c')) {
+        const sel = term.getSelection();
+        if (sel && navigator.clipboard?.writeText) {
+          void navigator.clipboard.writeText(sel).catch(() => undefined);
+        }
+        return false;
+      }
+
+      // Ctrl+Shift+V — paste from clipboard
+      if (ev.ctrlKey && ev.shiftKey && (ev.key === 'V' || ev.key === 'v')) {
+        if (navigator.clipboard?.readText) {
+          void navigator.clipboard.readText().then((text) => {
+            if (!text) return;
+            const ws = wsRef.current;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(encodeInput(text));
+            }
+          }).catch(() => undefined);
+        }
+        return false;
+      }
+
+      // Ctrl+= / Ctrl++ — zoom in
+      if (ev.ctrlKey && !ev.shiftKey && (ev.key === '=' || ev.key === '+')) {
+        const cur = useSettingsStore.getState().fontSize;
+        if (cur < MAX_FONT_SIZE) {
+          useSettingsStore.getState().setFontSize(cur + 1);
+        }
+        return false;
+      }
+
+      // Ctrl+- — zoom out
+      if (ev.ctrlKey && !ev.shiftKey && ev.key === '-') {
+        const cur = useSettingsStore.getState().fontSize;
+        if (cur > MIN_FONT_SIZE) {
+          useSettingsStore.getState().setFontSize(cur - 1);
+        }
+        return false;
+      }
+
+      // Ctrl+0 — reset
+      if (ev.ctrlKey && !ev.shiftKey && ev.key === '0') {
+        useSettingsStore.getState().setFontSize(DEFAULT_FONT_SIZE);
+        return false;
+      }
+
+      return true;
+    };
+    term.attachCustomKeyEventHandler(handler);
+    return () => {
+      // xterm has no formal "detach" — re-attach a passthrough on cleanup.
+      try {
+        term.attachCustomKeyEventHandler(() => true);
+      } catch {
+        /* noop */
+      }
+    };
+  }, []);
 
   // Reveal hook: when isVisible flips false → true, fit + focus + maybe send resize.
   useEffect(() => {
