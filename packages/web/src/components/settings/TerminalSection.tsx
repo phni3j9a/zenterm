@@ -7,6 +7,8 @@ export function TerminalSection() {
   const { t } = useTranslation();
   const fontSize = useSettingsStore((s) => s.fontSize);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
+  const autoCopyOnSelect = useSettingsStore((s) => s.autoCopyOnSelect);
+  const setAutoCopyOnSelect = useSettingsStore((s) => s.setAutoCopyOnSelect);
 
   const stepBtn = (disabled: boolean) => ({
     background: tokens.colors.surface,
@@ -40,6 +42,7 @@ export function TerminalSection() {
       >
         {t('settings.terminal.title', 'Terminal')}
       </h3>
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${tokens.spacing.sm}px 0` }}>
         <span style={{ color: tokens.colors.textPrimary, fontSize: tokens.typography.smallMedium.fontSize }}>
           {t('settings.terminal.fontSize', 'Font size')}
@@ -67,6 +70,48 @@ export function TerminalSection() {
             +
           </button>
         </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: `${tokens.spacing.sm}px 0`, gap: tokens.spacing.md }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ color: tokens.colors.textPrimary, fontSize: tokens.typography.smallMedium.fontSize }}>
+            {t('settings.terminal.autoCopyOnSelect', 'Auto-copy selection')}
+          </div>
+          <div style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.caption.fontSize, marginTop: tokens.spacing.xs }}>
+            {t('settings.terminal.autoCopyOnSelectDesc', 'Copy selected text to the clipboard automatically.')}
+          </div>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={autoCopyOnSelect}
+          aria-label={t('settings.terminal.autoCopyOnSelect', 'Auto-copy selection')}
+          onClick={() => setAutoCopyOnSelect(!autoCopyOnSelect)}
+          style={{
+            width: 36,
+            height: 20,
+            borderRadius: 10,
+            border: `1px solid ${tokens.colors.border}`,
+            background: autoCopyOnSelect ? tokens.colors.primary : tokens.colors.surface,
+            position: 'relative',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              display: 'block',
+              width: 14,
+              height: 14,
+              borderRadius: '50%',
+              background: tokens.colors.bgElevated,
+              position: 'absolute',
+              top: 2,
+              left: autoCopyOnSelect ? 18 : 2,
+              transition: 'left 120ms',
+            }}
+          />
+        </button>
       </div>
     </section>
   );

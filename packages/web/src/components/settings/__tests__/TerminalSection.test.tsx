@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { TerminalSection } from '../TerminalSection';
 import { useSettingsStore, MIN_FONT_SIZE, MAX_FONT_SIZE } from '@/stores/settings';
+import { initI18n } from '@/i18n';
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -43,5 +44,39 @@ describe('TerminalSection', () => {
     useSettingsStore.setState({ fontSize: MIN_FONT_SIZE } as any);
     render(<TerminalSection />);
     expect(screen.getByRole('button', { name: /decrease font size/i })).toBeDisabled();
+  });
+});
+
+describe('TerminalSection autoCopyOnSelect toggle', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    useSettingsStore.setState({
+      themeMode: 'system',
+      language: 'en',
+      fontSize: 14,
+      autoCopyOnSelect: false,
+    } as any);
+    initI18n();
+  });
+
+  it('renders the toggle in the off state by default', () => {
+    render(<TerminalSection />);
+    const toggle = screen.getByRole('switch', { name: /auto-copy selection/i });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('clicking toggles autoCopyOnSelect in the store', () => {
+    render(<TerminalSection />);
+    const toggle = screen.getByRole('switch', { name: /auto-copy selection/i });
+    fireEvent.click(toggle);
+    expect(useSettingsStore.getState().autoCopyOnSelect).toBe(true);
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(toggle);
+    expect(useSettingsStore.getState().autoCopyOnSelect).toBe(false);
+  });
+
+  it('renders the description string', () => {
+    render(<TerminalSection />);
+    expect(screen.getByText(/copy selected text to the clipboard automatically/i)).toBeInTheDocument();
   });
 });
