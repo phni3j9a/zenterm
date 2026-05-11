@@ -34,7 +34,7 @@ describe('Sidebar', () => {
     );
     expect(screen.getByLabelText(/Sessions panel/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sessions tab/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Files tab/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Files tab/i })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: /Settings tab/i })).not.toBeDisabled();
   });
 
@@ -121,14 +121,49 @@ describe('Sidebar URL-driven activePanel', () => {
     expect(settingsTab.getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('Files tab is disabled with Phase 2c tooltip', () => {
+  it('Files tab is enabled and navigates to /web/files', () => {
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
+        <Routes>
+          <Route path="/web/*" element={<Sidebar {...baseProps} />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const filesTab = screen.getByRole('button', { name: /Files tab/i });
+    expect(filesTab).not.toBeDisabled();
+    expect(filesTab.getAttribute('title') ?? '').not.toMatch(/Phase 2c/);
+    fireEvent.click(filesTab);
+    expect(filesTab.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('marks Files tab pressed on /web/files', () => {
+    render(
+      <MemoryRouter initialEntries={['/web/files']}>
         <Sidebar {...baseProps} />
       </MemoryRouter>,
     );
     const filesTab = screen.getByRole('button', { name: /Files tab/i });
-    expect(filesTab).toBeDisabled();
-    expect(filesTab.getAttribute('title')).toMatch(/Phase 2c/);
+    expect(filesTab.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('renders FilesSidebarPanel when activePanel=files and filesClient given', () => {
+    const filesClient = {
+      listFiles: () => Promise.resolve({ path: '~', entries: [] }),
+      getFileContent: () => Promise.resolve({ path: '', content: '', lines: 0, truncated: false }),
+      writeFileContent: () => Promise.resolve({ path: '', bytes: 0 }),
+      deleteFile: () => Promise.resolve({ path: '', deleted: true }),
+      renameFile: () => Promise.resolve({ oldPath: '', newPath: '' }),
+      copyFiles: () => Promise.resolve({ copied: [] }),
+      moveFiles: () => Promise.resolve({ moved: [] }),
+      createDirectory: () => Promise.resolve({ path: '', created: true }),
+      uploadFile: () => Promise.resolve({ success: true, path: '', filename: '', size: 0, mimetype: '' }),
+      buildRawFileUrl: () => '',
+    };
+    render(
+      <MemoryRouter initialEntries={['/web/files']}>
+        <Sidebar {...baseProps} filesClient={filesClient as any} />
+      </MemoryRouter>,
+    );
+    expect(screen.getAllByLabelText(/Files panel/i).length).toBeGreaterThan(0);
   });
 });

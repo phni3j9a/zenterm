@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { Sidebar } from '@/components/Sidebar';
 import { TerminalPane } from '@/components/TerminalPane';
+import { FilesViewerPane } from '@/components/files/FilesViewerPane';
+import type { FilesApiClient } from '@/components/files/filesApi';
 import { ApiClient } from '@/api/client';
 import { HttpError } from '@/api/errors';
 import { useAuthStore } from '@/stores/auth';
@@ -17,6 +19,7 @@ export function AuthenticatedShell() {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const token = useAuthStore((s) => s.token);
   const gatewayUrl = useAuthStore((s) => s.gatewayUrl);
   const logout = useAuthStore((s) => s.logout);
@@ -78,6 +81,21 @@ export function AuthenticatedShell() {
     createWindow: baseClient.createWindow.bind(baseClient),
     renameWindow: baseClient.renameWindow.bind(baseClient),
     killWindow: baseClient.killWindow.bind(baseClient),
+  };
+
+  const isFilesRoute = location.pathname.startsWith('/web/files');
+
+  const filesClient: FilesApiClient = {
+    listFiles: baseClient.listFiles.bind(baseClient),
+    getFileContent: baseClient.getFileContent.bind(baseClient),
+    writeFileContent: baseClient.writeFileContent.bind(baseClient),
+    deleteFile: baseClient.deleteFile.bind(baseClient),
+    renameFile: baseClient.renameFile.bind(baseClient),
+    copyFiles: baseClient.copyFiles.bind(baseClient),
+    moveFiles: baseClient.moveFiles.bind(baseClient),
+    createDirectory: baseClient.createDirectory.bind(baseClient),
+    uploadFile: baseClient.uploadFile.bind(baseClient),
+    buildRawFileUrl: baseClient.buildRawFileUrl.bind(baseClient),
   };
 
   const handleAuthError = (err: unknown): boolean => {
@@ -190,13 +208,18 @@ export function AuthenticatedShell() {
         onCreateWindow={handleCreateWindow}
         onRenameWindow={handleRenameWindow}
         onRequestDeleteWindow={handleRequestDeleteWindow}
+        filesClient={filesClient}
       />
-      <TerminalPane
-        gatewayUrl={gatewayUrl}
-        token={token}
-        sessionId={activeSessionId}
-        windowIndex={activeWindowIndex}
-      />
+      {isFilesRoute ? (
+        <FilesViewerPane client={filesClient} token={token} />
+      ) : (
+        <TerminalPane
+          gatewayUrl={gatewayUrl}
+          token={token}
+          sessionId={activeSessionId}
+          windowIndex={activeWindowIndex}
+        />
+      )}
     </div>
   );
 }
