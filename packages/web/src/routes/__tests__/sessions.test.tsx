@@ -10,11 +10,13 @@ vi.mock('@xterm/xterm', () => ({
     return {
       open: vi.fn(),
       onData: vi.fn(() => ({ dispose: vi.fn() })),
+      attachCustomKeyEventHandler: vi.fn(),
       write: vi.fn(),
       reset: vi.fn(),
       dispose: vi.fn(),
       focus: vi.fn(),
       loadAddon: vi.fn(),
+      getSelection: vi.fn(() => ''),
       options: {},
       cols: 80,
       rows: 24,
