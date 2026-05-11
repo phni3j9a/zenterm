@@ -8,6 +8,7 @@ import type { FilesApiClient } from './files/filesApi';
 import { useTheme } from '@/theme';
 import { useEventsStore } from '@/stores/events';
 import { useLayoutStore } from '@/stores/layout';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 type ActivePanel = 'sessions' | 'files' | 'settings';
 
@@ -99,33 +100,39 @@ export function Sidebar(props: SidebarProps) {
               position: 'relative',
             }}
           >
-            <button
-              type="button"
-              aria-label="Sessions tab"
-              aria-pressed={activePanel === 'sessions'}
-              onClick={() => navigate('/web/sessions')}
-              style={tabButtonStyle(activePanel === 'sessions')}
-            >
-              ⌘ {t('sidebar.tabs.sessions')}
-            </button>
-            <button
-              type="button"
-              aria-label="Files tab"
-              aria-pressed={activePanel === 'files'}
-              onClick={() => navigate('/web/files')}
-              style={tabButtonStyle(activePanel === 'files')}
-            >
-              📁 {t('sidebar.tabs.files')}
-            </button>
-            <button
-              type="button"
-              aria-label="Settings tab"
-              aria-pressed={activePanel === 'settings'}
-              onClick={() => navigate('/web/settings')}
-              style={tabButtonStyle(activePanel === 'settings')}
-            >
-              ⚙ {t('sidebar.tabs.settings')}
-            </button>
+            <Tooltip label={t('sidebar.tabs.sessions')}>
+              <button
+                type="button"
+                aria-label="Sessions tab"
+                aria-pressed={activePanel === 'sessions'}
+                onClick={() => navigate('/web/sessions')}
+                style={tabButtonStyle(activePanel === 'sessions')}
+              >
+                ⌘ {t('sidebar.tabs.sessions')}
+              </button>
+            </Tooltip>
+            <Tooltip label={t('sidebar.tabs.files')}>
+              <button
+                type="button"
+                aria-label="Files tab"
+                aria-pressed={activePanel === 'files'}
+                onClick={() => navigate('/web/files')}
+                style={tabButtonStyle(activePanel === 'files')}
+              >
+                📁 {t('sidebar.tabs.files')}
+              </button>
+            </Tooltip>
+            <Tooltip label={t('sidebar.tabs.settings')}>
+              <button
+                type="button"
+                aria-label="Settings tab"
+                aria-pressed={activePanel === 'settings'}
+                onClick={() => navigate('/web/settings')}
+                style={tabButtonStyle(activePanel === 'settings')}
+              >
+                ⚙ {t('sidebar.tabs.settings')}
+              </button>
+            </Tooltip>
             <EventsStatusDot />
           </nav>
         </>

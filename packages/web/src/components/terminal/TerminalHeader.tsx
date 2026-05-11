@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { MAX_FONT_SIZE, MIN_FONT_SIZE } from '@/stores/settings';
 import type { TerminalStatus, ReconnectInfo } from './XtermView';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export interface TerminalHeaderProps {
   sessionId: string;
@@ -88,60 +89,68 @@ export function TerminalHeader({
         [w{windowIndex}]
       </span>
       {layoutSlot}
-      <button
-        type="button"
-        aria-label={t('terminal.copySessionId')}
-        onClick={onCopySessionId}
-        style={{
-          background: 'transparent',
-          border: `1px solid ${tokens.colors.borderSubtle}`,
-          color: tokens.colors.textSecondary,
-          padding: `2px 8px`,
-          borderRadius: tokens.radii.sm,
-          fontSize: tokens.typography.caption.fontSize,
-          cursor: 'pointer',
-        }}
-      >
-        ID
-      </button>
+      <Tooltip label={t('terminal.copySessionId')}>
+        <button
+          type="button"
+          aria-label={t('terminal.copySessionId')}
+          onClick={onCopySessionId}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${tokens.colors.borderSubtle}`,
+            color: tokens.colors.textSecondary,
+            padding: `2px 8px`,
+            borderRadius: tokens.radii.sm,
+            fontSize: tokens.typography.caption.fontSize,
+            cursor: 'pointer',
+          }}
+        >
+          ID
+        </button>
+      </Tooltip>
       <span style={{ flex: 1 }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.xs }}>
-        <button
-          type="button"
-          aria-label={t('terminal.zoomOut')}
-          onClick={onZoomOut}
-          disabled={fontSize <= MIN_FONT_SIZE}
-          style={stepBtn(fontSize <= MIN_FONT_SIZE)}
-        >
-          −
-        </button>
-        <button
-          type="button"
-          aria-label={t('terminal.zoomReset')}
-          onClick={onZoomReset}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: tokens.colors.textPrimary,
-            cursor: 'pointer',
-            minWidth: 24,
-            textAlign: 'center',
-            fontVariantNumeric: 'tabular-nums',
-            fontSize: tokens.typography.caption.fontSize,
-          }}
-        >
-          {fontSize}
-        </button>
-        <button
-          type="button"
-          aria-label={t('terminal.zoomIn')}
-          onClick={onZoomIn}
-          disabled={fontSize >= MAX_FONT_SIZE}
-          style={stepBtn(fontSize >= MAX_FONT_SIZE)}
-        >
-          +
-        </button>
+        <Tooltip label={t('terminal.zoomOut')}>
+          <button
+            type="button"
+            aria-label={t('terminal.zoomOut')}
+            onClick={onZoomOut}
+            disabled={fontSize <= MIN_FONT_SIZE}
+            style={stepBtn(fontSize <= MIN_FONT_SIZE)}
+          >
+            −
+          </button>
+        </Tooltip>
+        <Tooltip label={t('terminal.zoomReset')}>
+          <button
+            type="button"
+            aria-label={t('terminal.zoomReset')}
+            onClick={onZoomReset}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: tokens.colors.textPrimary,
+              cursor: 'pointer',
+              minWidth: 24,
+              textAlign: 'center',
+              fontVariantNumeric: 'tabular-nums',
+              fontSize: tokens.typography.caption.fontSize,
+            }}
+          >
+            {fontSize}
+          </button>
+        </Tooltip>
+        <Tooltip label={t('terminal.zoomIn')}>
+          <button
+            type="button"
+            aria-label={t('terminal.zoomIn')}
+            onClick={onZoomIn}
+            disabled={fontSize >= MAX_FONT_SIZE}
+            style={stepBtn(fontSize >= MAX_FONT_SIZE)}
+          >
+            +
+          </button>
+        </Tooltip>
       </div>
 
       {showEta && reconnectInfo && (
@@ -161,23 +170,25 @@ export function TerminalHeader({
       )}
 
       {showReconnectBtn && (
-        <button
-          type="button"
-          aria-label={t('terminal.reconnect')}
-          onClick={onReconnect}
-          style={{
-            background: tokens.colors.surface,
-            color: tokens.colors.textPrimary,
-            border: `1px solid ${tokens.colors.border}`,
-            padding: `4px 10px`,
-            borderRadius: tokens.radii.sm,
-            fontSize: tokens.typography.caption.fontSize,
-            cursor: 'pointer',
-            marginLeft: tokens.spacing.sm,
-          }}
-        >
-          ↺ {t('terminal.reconnect')}
-        </button>
+        <Tooltip label={t('terminal.reconnect')}>
+          <button
+            type="button"
+            aria-label={t('terminal.reconnect')}
+            onClick={onReconnect}
+            style={{
+              background: tokens.colors.surface,
+              color: tokens.colors.textPrimary,
+              border: `1px solid ${tokens.colors.border}`,
+              padding: `4px 10px`,
+              borderRadius: tokens.radii.sm,
+              fontSize: tokens.typography.caption.fontSize,
+              cursor: 'pointer',
+              marginLeft: tokens.spacing.sm,
+            }}
+          >
+            ↺ {t('terminal.reconnect')}
+          </button>
+        </Tooltip>
       )}
 
       <span
