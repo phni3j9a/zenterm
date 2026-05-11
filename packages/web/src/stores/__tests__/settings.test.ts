@@ -48,3 +48,46 @@ describe('useSettingsStore', () => {
     expect(useSettingsStore.getState().fontSize).toBe(15);
   });
 });
+
+describe('useSettingsStore autoCopyOnSelect', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    useSettingsStore.setState({
+      themeMode: 'system',
+      language: 'ja',
+      fontSize: DEFAULT_FONT_SIZE,
+      autoCopyOnSelect: false,
+    } as any);
+  });
+
+  it('defaults to false', () => {
+    expect(useSettingsStore.getState().autoCopyOnSelect).toBe(false);
+  });
+
+  it('setAutoCopyOnSelect updates and persists', () => {
+    useSettingsStore.getState().setAutoCopyOnSelect(true);
+    expect(useSettingsStore.getState().autoCopyOnSelect).toBe(true);
+    const raw = window.localStorage.getItem('zenterm-web-settings');
+    expect(raw).toBeTruthy();
+    expect(JSON.parse(raw!).state.autoCopyOnSelect).toBe(true);
+    expect(JSON.parse(raw!).version).toBe(2);
+  });
+
+  it('migrates v1 persisted state by adding autoCopyOnSelect: false', async () => {
+    window.localStorage.setItem(
+      'zenterm-web-settings',
+      JSON.stringify({
+        state: { themeMode: 'dark', language: 'en', fontSize: 16 },
+        version: 1,
+      }),
+    );
+    // Force re-hydration by re-importing via dynamic import is complex; instead,
+    // call the persist `rehydrate` API directly.
+    await (useSettingsStore as any).persist.rehydrate();
+    const s = useSettingsStore.getState();
+    expect(s.themeMode).toBe('dark');
+    expect(s.language).toBe('en');
+    expect(s.fontSize).toBe(16);
+    expect(s.autoCopyOnSelect).toBe(false);
+  });
+});
