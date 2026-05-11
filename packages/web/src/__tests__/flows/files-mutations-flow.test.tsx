@@ -81,4 +81,19 @@ describe('Files mutations flow', () => {
 
     await waitFor(() => expect(client.renameFile).toHaveBeenCalledWith('~/a.ts', 'b.ts'));
   });
+
+  it('clears preview when the deleted file is currently selected', async () => {
+    const client = makeClient();
+    const { useFilesPreviewStore } = await import('@/stores/filesPreview');
+    useFilesPreviewStore.getState().selectFile('~/a.ts', 'a.ts', 'text');
+
+    render(<FilesSidebarPanel client={client as any} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /a\.ts/ }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: /delete/i }));
+    await useUiStore.getState().confirmDialog!.onConfirm();
+
+    expect(useFilesPreviewStore.getState().selectedPath).toBeNull();
+  });
 });

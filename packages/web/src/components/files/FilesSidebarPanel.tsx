@@ -53,9 +53,13 @@ export function FilesSidebarPanel({ client }: Props) {
       message: t('files.deleteConfirmMessage', { name: entry.name }),
       destructive: true,
       onConfirm: async () => {
+        const targetPath = buildEntryPath(useFilesStore.getState().currentPath, entry.name);
         try {
-          await client.deleteFile(buildEntryPath(useFilesStore.getState().currentPath, entry.name));
+          await client.deleteFile(targetPath);
           pushToast({ type: 'success', message: t('files.deleteSuccess') });
+          if (useFilesPreviewStore.getState().selectedPath === targetPath) {
+            useFilesPreviewStore.getState().clear();
+          }
           await refresh();
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
