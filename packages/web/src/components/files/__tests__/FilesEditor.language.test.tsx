@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { FilesEditor } from '../FilesEditor';
 
-const langSpy = vi.fn(async (name: string) => null);
+const langSpy = vi.fn(async (_name: string) => null);
 vi.mock('@/lib/languageForFilename', () => ({
   languageForFilename: (n: string) => langSpy(n),
 }));
