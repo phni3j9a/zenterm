@@ -27,6 +27,22 @@ export function App() {
           }
         />
         <Route
+          path="/web/sessions/:id"
+          element={
+            <RequireAuth>
+              <SessionsRoute />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/web/sessions/:id/window/:index"
+          element={
+            <RequireAuth>
+              <SessionsRoute />
+            </RequireAuth>
+          }
+        />
+        <Route
           path="/web/settings"
           element={
             <RequireAuth>

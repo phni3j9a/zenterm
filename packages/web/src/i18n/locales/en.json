@@ -19,7 +19,8 @@
       "disconnected": "Realtime updates: disconnected",
       "reconnecting": "Realtime updates: reconnecting (attempt {{attempt}})",
       "failed": "Realtime updates: failed"
-    }
+    },
+    "resize": "Resize sidebar"
   },
   "login": {
     "title": "Sign in to ZenTerm",
@@ -59,7 +60,9 @@
       "copy": "Copy",
       "paste": "Paste",
       "clear": "Clear",
-      "reconnect": "Reconnect"
+      "search": "Search",
+      "reconnect": "Reconnect",
+      "newPane": "New pane"
     },
     "status": {
       "connected": "Connected",
@@ -83,7 +86,12 @@
       "findNext": "Find next",
       "findPrev": "Find previous",
       "close": "Close search"
-    }
+    },
+    "dropHint": "Drop files to upload to session cwd",
+    "uploadProgress": "Uploading {{current}} ({{completed}}/{{total}})",
+    "uploadDone": "Uploaded {{count}} file(s)",
+    "uploadError": "Upload failed: {{message}}",
+    "uploadBusy": "Another upload is in progress"
   },
   "validation": {
     "nameEmpty": "Name cannot be empty",

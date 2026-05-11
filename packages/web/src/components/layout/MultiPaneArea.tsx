@@ -2,6 +2,7 @@ import { type ReactNode, useMemo } from 'react';
 import { TerminalPane } from '@/components/TerminalPane';
 import { SplitPane } from './SplitPane';
 import { usePaneStore } from '@/stores/pane';
+import { useSessionsStore } from '@/stores/sessions';
 
 // NOTE: Layout switches (e.g. cols-2 → grid-2x2) cause TerminalPane to
 // remount because React reconciles by tree position, and SplitPane's
@@ -16,15 +17,27 @@ export interface MultiPaneAreaProps {
   gatewayUrl: string;
   token: string;
   isVisible: boolean;
+  onSearch?: () => void;
+  onNewPane?: () => void;
+  canCreateNewPane?: boolean;
+  onDropFiles?: (files: File[], cwd: string) => void;
+  uploadProgress?: {
+    active: boolean;
+    total: number;
+    completed: number;
+    currentFile?: string;
+    error?: string;
+  };
 }
 
-export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaProps) {
+export function MultiPaneArea({ gatewayUrl, token, isVisible, onSearch, onNewPane, canCreateNewPane = false, onDropFiles, uploadProgress }: MultiPaneAreaProps) {
   const layout = usePaneStore((s) => s.layout);
   const panes = usePaneStore((s) => s.panes);
   const focusedIndex = usePaneStore((s) => s.focusedIndex);
   const ratios = usePaneStore((s) => s.ratios);
   const setFocusedIndex = usePaneStore((s) => s.setFocusedIndex);
   const setRatio = usePaneStore((s) => s.setRatio);
+  const sessions = useSessionsStore((s) => s.sessions);
 
   const ratioSetters = useMemo(
     () => ({
@@ -39,23 +52,36 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
     [setRatio],
   );
 
-  const slot = (idx: number): ReactNode => (
-    <div
-      key={`pane-${idx}`}
-      onClick={() => setFocusedIndex(idx)}
-      style={{ width: '100%', height: '100%' }}
-    >
-      <TerminalPane
-        gatewayUrl={gatewayUrl}
-        token={token}
-        sessionId={panes[idx]?.sessionId ?? null}
-        windowIndex={panes[idx]?.windowIndex ?? null}
-        paneIndex={idx}
-        isFocused={idx === focusedIndex}
-        isVisible={isVisible}
-      />
-    </div>
-  );
+  const slot = (idx: number): ReactNode => {
+    const pane = panes[idx];
+    const session = Array.isArray(sessions)
+      ? sessions.find((s) => s.displayName === pane?.sessionId)
+      : undefined;
+    const sessionCwd = session?.cwd;
+    return (
+      <div
+        key={`pane-${idx}`}
+        onClick={() => setFocusedIndex(idx)}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <TerminalPane
+          gatewayUrl={gatewayUrl}
+          token={token}
+          sessionId={pane?.sessionId ?? null}
+          windowIndex={pane?.windowIndex ?? null}
+          paneIndex={idx}
+          isFocused={idx === focusedIndex}
+          isVisible={isVisible}
+          onSearch={onSearch}
+          onNewPane={onNewPane}
+          canCreateNewPane={canCreateNewPane}
+          sessionCwd={sessionCwd}
+          onDropFiles={onDropFiles}
+          uploadProgress={uploadProgress}
+        />
+      </div>
+    );
+  };
 
   if (layout === 'single') {
     return <div style={{ width: '100%', height: '100%' }}>{slot(0)}</div>;

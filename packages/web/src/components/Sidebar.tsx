@@ -9,6 +9,7 @@ import { useTheme } from '@/theme';
 import { useEventsStore } from '@/stores/events';
 import { useLayoutStore } from '@/stores/layout';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { SidebarResizer } from './sidebar/SidebarResizer';
 
 type ActivePanel = 'sessions' | 'files' | 'settings';
 
@@ -32,8 +33,6 @@ export interface SidebarProps {
   filesClient?: FilesApiClient;
 }
 
-const SIDEBAR_WIDTH = 320;
-
 function deriveActivePanel(pathname: string): ActivePanel {
   if (pathname.startsWith('/web/settings')) return 'settings';
   if (pathname.startsWith('/web/files')) return 'files';
@@ -47,6 +46,7 @@ export function Sidebar(props: SidebarProps) {
   const navigate = useNavigate();
   const activePanel = deriveActivePanel(location.pathname);
   const collapsed = useLayoutStore((s) => s.sidebarCollapsed);
+  const sidebarWidth = useLayoutStore((s) => s.sidebarWidth);
 
   const renderPanel = () => {
     if (activePanel === 'settings') return <SettingsPanel />;
@@ -74,7 +74,7 @@ export function Sidebar(props: SidebarProps) {
       role="complementary"
       aria-hidden={collapsed || undefined}
       style={{
-        width: collapsed ? 0 : SIDEBAR_WIDTH,
+        width: collapsed ? 0 : sidebarWidth,
         flexShrink: 0,
         background: tokens.colors.bgElevated,
         borderRight: collapsed ? 'none' : `1px solid ${tokens.colors.borderSubtle}`,
@@ -83,6 +83,7 @@ export function Sidebar(props: SidebarProps) {
         height: '100vh',
         overflow: 'hidden',
         boxSizing: 'border-box',
+        position: 'relative',
       }}
     >
       {collapsed ? null : (
@@ -135,6 +136,7 @@ export function Sidebar(props: SidebarProps) {
             </Tooltip>
             <EventsStatusDot />
           </nav>
+          <SidebarResizer />
         </>
       )}
     </aside>

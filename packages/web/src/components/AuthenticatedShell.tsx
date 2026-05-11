@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
@@ -17,7 +17,9 @@ import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
-import { SLOT_COUNT } from '@/lib/paneLayout';
+import { useUploadProgress } from '@/hooks/useUploadProgress';
+import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
+import { parseSessionRoute } from '@/lib/urlSync';
 import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
@@ -36,6 +38,7 @@ export function AuthenticatedShell() {
   const open = useSessionViewStore((s) => s.open);
   const showConfirm = useUiStore((s) => s.showConfirm);
   const pushToast = useUiStore((s) => s.pushToast);
+  const currentLayout = usePaneStore((s) => s.layout);
 
   useEventsSubscription();
 
@@ -73,6 +76,34 @@ export function AuthenticatedShell() {
     }
   }, [isSessionsRoute]);
 
+  const lastSyncedPath = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastSyncedPath.current === location.pathname) return;
+    const parsed = parseSessionRoute(location.pathname);
+    if (!parsed) {
+      lastSyncedPath.current = location.pathname;
+      return;
+    }
+    if (!Array.isArray(sessions) || sessions.length === 0) {
+      return;
+    }
+    const exists = sessions.some((s) => s.displayName === parsed.sessionId);
+    if (!exists) {
+      lastSyncedPath.current = location.pathname;
+      return;
+    }
+    const sess = sessions.find((s) => s.displayName === parsed.sessionId);
+    const wins = sess?.windows ?? [];
+    const targetIdx = wins.some((w) => w.index === parsed.windowIndex)
+      ? parsed.windowIndex
+      : wins[0]?.index ?? parsed.windowIndex;
+    usePaneStore.getState().openInFocusedPane({
+      sessionId: parsed.sessionId,
+      windowIndex: targetIdx,
+    });
+    lastSyncedPath.current = location.pathname;
+  }, [location.pathname, sessions]);
+
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const openPalette = useLayoutStore((s) => s.openPalette);
   const openLayoutMenu = useLayoutStore((s) => s.openLayoutMenu);
@@ -81,6 +112,32 @@ export function AuthenticatedShell() {
   // Build clients early so helpers below (used by shortcuts) can close over them.
   // These are stable as long as token/gatewayUrl don't change between renders.
   const baseClient = token && gatewayUrl ? new ApiClient(gatewayUrl, token) : null;
+
+  const uploadProgress = useUploadProgress();
+
+  const handleTerminalDrop = async (files: File[], cwd: string): Promise<void> => {
+    if (!baseClient) return;
+    if (uploadProgress.active) {
+      pushToast({ type: 'error', message: t('terminal.uploadBusy') });
+      return;
+    }
+    uploadProgress.begin(files.length);
+    for (const file of files) {
+      uploadProgress.markStart(file.name);
+      try {
+        await baseClient.uploadFile(file, cwd);
+        uploadProgress.markDone();
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        uploadProgress.fail(msg);
+        pushToast({ type: 'error', message: t('terminal.uploadError', { message: msg }) });
+        setTimeout(() => uploadProgress.finish(), 3000);
+        return;
+      }
+    }
+    pushToast({ type: 'success', message: t('terminal.uploadDone', { count: files.length }) });
+    setTimeout(() => uploadProgress.finish(), 1500);
+  };
 
   const wrappedClient: SessionsApiClient | null = baseClient
     ? {
@@ -205,6 +262,28 @@ export function AuthenticatedShell() {
     });
   };
 
+  const upgradeLayout = (current: LayoutMode): LayoutMode | null => {
+    if (current === 'single') return 'cols-2';
+    if (current === 'cols-2') return 'cols-3';
+    if (current === 'cols-3') return 'grid-2x2';
+    return null;
+  };
+
+  const newPaneFromCurrent = () => {
+    const state = usePaneStore.getState();
+    const next = upgradeLayout(state.layout);
+    if (!next) return;
+    state.setLayout(next);
+    const fresh = usePaneStore.getState();
+    const slotCount = SLOT_COUNT[next];
+    for (let i = 0; i < slotCount; i++) {
+      if (!fresh.panes[i]) {
+        fresh.setFocusedIndex(i);
+        return;
+      }
+    }
+  };
+
   const cyclePane = (dir: 1 | -1) => {
     const { panes, focusedIndex, layout, setFocusedIndex } = usePaneStore.getState();
     const slotCount = SLOT_COUNT[layout];
@@ -267,6 +346,8 @@ export function AuthenticatedShell() {
 
   if (!token || !gatewayUrl) return <Navigate to="/web/login" replace />;
 
+  const canCreateNewPane = upgradeLayout(currentLayout) !== null;
+
   const isFilesRoute = location.pathname.startsWith('/web/files');
 
   const filesClient: FilesApiClient = {
@@ -305,6 +386,17 @@ export function AuthenticatedShell() {
             gatewayUrl={gatewayUrl}
             token={token}
             isVisible={!isFilesRoute}
+            onSearch={() => useLayoutStore.getState().openSearch()}
+            onNewPane={newPaneFromCurrent}
+            canCreateNewPane={canCreateNewPane}
+            onDropFiles={handleTerminalDrop}
+            uploadProgress={{
+              active: uploadProgress.active,
+              total: uploadProgress.total,
+              completed: uploadProgress.completed,
+              currentFile: uploadProgress.currentFile,
+              error: uploadProgress.error,
+            }}
           />
           {isFilesRoute && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>

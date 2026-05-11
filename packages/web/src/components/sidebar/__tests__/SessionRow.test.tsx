@@ -22,10 +22,12 @@ describe('SessionRow', () => {
         session={session}
         isActive={false}
         isExpanded={false}
+        openInPaneOptions={[]}
         onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
       />,
     );
     expect(screen.getByText('dev')).toBeInTheDocument();
@@ -39,10 +41,12 @@ describe('SessionRow', () => {
         session={session}
         isActive={false}
         isExpanded={false}
+        openInPaneOptions={[]}
         onSelect={onSelect}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
       />,
     );
     await userEvent.click(screen.getByText('dev'));
@@ -56,10 +60,12 @@ describe('SessionRow', () => {
         session={session}
         isActive={false}
         isExpanded={false}
+        openInPaneOptions={[]}
         onSelect={vi.fn()}
         onToggleExpand={onToggleExpand}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
       />,
     );
     await userEvent.click(screen.getByLabelText(/Expand windows/i));
@@ -72,10 +78,12 @@ describe('SessionRow', () => {
         session={session}
         isActive={false}
         isExpanded={false}
+        openInPaneOptions={[]}
         onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
       />,
     );
     await userEvent.click(screen.getByLabelText(/Actions for session dev/i));
@@ -90,10 +98,12 @@ describe('SessionRow', () => {
         session={session}
         isActive={false}
         isExpanded={false}
+        openInPaneOptions={[]}
         onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={onRename}
         onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
       />,
     );
     await userEvent.click(screen.getByLabelText(/Actions for session dev/i));
@@ -111,14 +121,55 @@ describe('SessionRow', () => {
         session={session}
         isActive={false}
         isExpanded={false}
+        openInPaneOptions={[]}
         onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={onRequestDelete}
+        onOpenInPane={vi.fn()}
       />,
     );
     await userEvent.click(screen.getByLabelText(/Actions for session dev/i));
     await userEvent.click(screen.getByRole('menuitem', { name: /Delete/ }));
     expect(onRequestDelete).toHaveBeenCalledWith(session);
+  });
+
+  it('shows open-in-pane menu items when openInPaneOptions provided', async () => {
+    const onOpenInPane = vi.fn();
+    render(
+      <SessionRow
+        session={session}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[1, 2]}
+        onSelect={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={onOpenInPane}
+      />,
+    );
+    await userEvent.click(screen.getByLabelText(/Actions for session dev/i));
+    // idx=1 → pane: 2、idx=2 → pane: 3
+    await userEvent.click(screen.getByRole('menuitem', { name: /pane 2/i }));
+    expect(onOpenInPane).toHaveBeenCalledWith(1);
+  });
+
+  it('hides open-in-pane items when openInPaneOptions is empty', async () => {
+    render(
+      <SessionRow
+        session={session}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onSelect={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByLabelText(/Actions for session dev/i));
+    expect(screen.queryByRole('menuitem', { name: /open in pane|pane \d/i })).toBeNull();
   });
 });

@@ -19,7 +19,8 @@
       "disconnected": "リアルタイム更新: 切断",
       "reconnecting": "リアルタイム更新: 再接続中 (試行 {{attempt}})",
       "failed": "リアルタイム更新: 失敗"
-    }
+    },
+    "resize": "サイドバー幅変更"
   },
   "login": {
     "title": "ZenTerm にサインイン",
@@ -59,7 +60,9 @@
       "copy": "コピー",
       "paste": "ペースト",
       "clear": "クリア",
-      "reconnect": "再接続"
+      "search": "検索",
+      "reconnect": "再接続",
+      "newPane": "新しいペイン"
     },
     "status": {
       "connected": "接続中",
@@ -83,7 +86,12 @@
       "findNext": "次へ",
       "findPrev": "前へ",
       "close": "検索を閉じる"
-    }
+    },
+    "dropHint": "ファイルをドロップしてセッション cwd にアップロード",
+    "uploadProgress": "アップロード中 {{current}} ({{completed}}/{{total}})",
+    "uploadDone": "{{count}} ファイルをアップロードしました",
+    "uploadError": "アップロード失敗: {{message}}",
+    "uploadBusy": "別のアップロードが進行中です"
   },
   "validation": {
     "nameEmpty": "名前は必須です",

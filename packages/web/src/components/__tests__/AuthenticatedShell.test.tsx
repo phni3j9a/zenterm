@@ -39,12 +39,14 @@ import { AuthenticatedShell } from '../AuthenticatedShell';
 import { useAuthStore } from '@/stores/auth';
 import { useFilesStore } from '@/stores/files';
 import { useSessionViewStore } from '@/stores/sessionView';
+import { useSessionsStore } from '@/stores/sessions';
 
 describe('AuthenticatedShell', () => {
   beforeEach(() => {
     window.localStorage.clear();
     useAuthStore.setState({ token: null, gatewayUrl: null });
     useSessionViewStore.setState({ activeSessionId: null, activeWindowIndex: null });
+    useSessionsStore.setState({ sessions: [], loading: false, error: null });
     vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
     vi.stubGlobal('WebSocket', class {
       static OPEN = 1;
@@ -111,6 +113,112 @@ describe('AuthenticatedShell', () => {
     const terminalRoot = container.querySelector('section[data-terminal-root="true"]');
     expect(terminalRoot).not.toBeNull();
     expect((terminalRoot as HTMLElement).style.display).toBe('none');
+  });
+
+  it('opens session from /web/sessions/:id URL', async () => {
+    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
+    const { usePaneStore } = await import('@/stores/pane');
+    usePaneStore.setState({
+      layout: 'single',
+      panes: [null],
+      focusedIndex: 0,
+      ratios: {
+        single: [],
+        'cols-2': [0.5],
+        'cols-3': [1 / 3, 0.5],
+        'grid-2x2': [0.5, 0.5],
+        'main-side-2': [0.6, 0.5],
+      },
+      savedLayout: null,
+    });
+    useSessionsStore.setState({
+      sessions: [
+        { name: 'zen_work', displayName: 'work', created: 0, cwd: '~', windows: [{ index: 0, name: 'bash', active: true, zoomed: false, paneCount: 1, cwd: '~' }] },
+        { name: 'zen_play', displayName: 'play', created: 0, cwd: '~', windows: [{ index: 0, name: 'bash', active: true, zoomed: false, paneCount: 1, cwd: '~' }] },
+      ],
+      loading: false,
+      error: null,
+    });
+    render(
+      <MemoryRouter initialEntries={['/web/sessions/work']}>
+        <AuthenticatedShell />
+      </MemoryRouter>,
+    );
+    await act(async () => { await Promise.resolve(); });
+    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'work', windowIndex: 0 });
+  });
+
+  it('opens specific window from /web/sessions/:id/window/:index', async () => {
+    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
+    const { usePaneStore } = await import('@/stores/pane');
+    usePaneStore.setState({
+      layout: 'single',
+      panes: [null],
+      focusedIndex: 0,
+      ratios: {
+        single: [],
+        'cols-2': [0.5],
+        'cols-3': [1 / 3, 0.5],
+        'grid-2x2': [0.5, 0.5],
+        'main-side-2': [0.6, 0.5],
+      },
+      savedLayout: null,
+    });
+    useSessionsStore.setState({
+      sessions: [
+        {
+          name: 'zen_work',
+          displayName: 'work',
+          created: 0,
+          cwd: '~',
+          windows: [
+            { index: 0, name: 'bash', active: false, zoomed: false, paneCount: 1, cwd: '~' },
+            { index: 2, name: 'vim', active: true, zoomed: false, paneCount: 1, cwd: '~' },
+          ],
+        },
+      ],
+      loading: false,
+      error: null,
+    });
+    render(
+      <MemoryRouter initialEntries={['/web/sessions/work/window/2']}>
+        <AuthenticatedShell />
+      </MemoryRouter>,
+    );
+    await act(async () => { await Promise.resolve(); });
+    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'work', windowIndex: 2 });
+  });
+
+  it('ignores URL whose session does not exist', async () => {
+    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
+    const { usePaneStore } = await import('@/stores/pane');
+    usePaneStore.setState({
+      layout: 'single',
+      panes: [null],
+      focusedIndex: 0,
+      ratios: {
+        single: [],
+        'cols-2': [0.5],
+        'cols-3': [1 / 3, 0.5],
+        'grid-2x2': [0.5, 0.5],
+        'main-side-2': [0.6, 0.5],
+      },
+      savedLayout: null,
+    });
+    useSessionsStore.setState({
+      sessions: [
+        { name: 'zen_work', displayName: 'work', created: 0, cwd: '~', windows: [{ index: 0, name: 'bash', active: true, zoomed: false, paneCount: 1, cwd: '~' }] },
+      ],
+      loading: false,
+      error: null,
+    });
+    render(
+      <MemoryRouter initialEntries={['/web/sessions/ghost']}>
+        <AuthenticatedShell />
+      </MemoryRouter>,
+    );
+    await act(async () => { await Promise.resolve(); });
+    expect(usePaneStore.getState().panes[0]).toBeNull();
   });
 
   it('suspends current layout to single when route leaves /web/sessions', async () => {

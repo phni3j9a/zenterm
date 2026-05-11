@@ -11,6 +11,9 @@ export interface TerminalContextMenuProps {
   onPaste: () => void;
   onClear: () => void;
   onReconnect: () => void;
+  onSearch: () => void;
+  onNewPane: () => void;
+  canCreateNewPane: boolean;
   onClose: () => void;
 }
 
@@ -23,6 +26,9 @@ export function TerminalContextMenu({
   onPaste,
   onClear,
   onReconnect,
+  onSearch,
+  onNewPane,
+  canCreateNewPane,
   onClose,
 }: TerminalContextMenuProps) {
   const { tokens } = useTheme();
@@ -112,10 +118,28 @@ export function TerminalContextMenu({
       <button
         type="button"
         role="menuitem"
+        onClick={handleClick(onSearch)}
+        style={itemStyle(false)}
+      >
+        {t('terminal.menu.search')}
+      </button>
+      <button
+        type="button"
+        role="menuitem"
         onClick={handleClick(onReconnect)}
         style={itemStyle(false)}
       >
         {t('terminal.menu.reconnect')}
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        aria-disabled={!canCreateNewPane}
+        disabled={!canCreateNewPane}
+        onClick={canCreateNewPane ? handleClick(onNewPane) : undefined}
+        style={itemStyle(!canCreateNewPane)}
+      >
+        {t('terminal.menu.newPane')}
       </button>
     </div>
   );

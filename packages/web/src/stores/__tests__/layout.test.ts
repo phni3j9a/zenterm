@@ -9,6 +9,7 @@ describe('useLayoutStore', () => {
       paletteOpen: false,
       layoutMenuOpen: false,
       searchOpen: false,
+      sidebarWidth: 320,
     });
   });
 
@@ -47,15 +48,49 @@ describe('useLayoutStore', () => {
     expect(useLayoutStore.getState().searchOpen).toBe(false);
   });
 
-  it('persists sidebarCollapsed only (not transient open flags)', () => {
+  it('persists sidebarCollapsed and sidebarWidth (not transient open flags)', () => {
     useLayoutStore.getState().toggleSidebar();
+    useLayoutStore.getState().setSidebarWidth(400);
     useLayoutStore.getState().openPalette();
     const raw = localStorage.getItem('zenterm-web-layout');
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw!) as { state: Record<string, unknown> };
     expect(parsed.state.sidebarCollapsed).toBe(true);
+    expect(parsed.state.sidebarWidth).toBe(400);
     expect(parsed.state.paletteOpen).toBeUndefined();
     expect(parsed.state.layoutMenuOpen).toBeUndefined();
     expect(parsed.state.searchOpen).toBeUndefined();
+  });
+
+  describe('sidebarWidth', () => {
+    beforeEach(() => {
+      useLayoutStore.setState({ sidebarWidth: 320 });
+    });
+
+    it('defaults to 320', () => {
+      expect(useLayoutStore.getState().sidebarWidth).toBe(320);
+    });
+
+    it('setSidebarWidth clamps to 240..480', () => {
+      useLayoutStore.getState().setSidebarWidth(100);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(240);
+      useLayoutStore.getState().setSidebarWidth(600);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(480);
+      useLayoutStore.getState().setSidebarWidth(350);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(350);
+    });
+
+    it('setSidebarWidth ignores NaN, clamps Infinity to max', () => {
+      useLayoutStore.getState().setSidebarWidth(300);
+      useLayoutStore.getState().setSidebarWidth(NaN);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(300);
+      useLayoutStore.getState().setSidebarWidth(Infinity);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(480);
+    });
+
+    it('rounds fractional widths', () => {
+      useLayoutStore.getState().setSidebarWidth(350.6);
+      expect(useLayoutStore.getState().sidebarWidth).toBe(351);
+    });
   });
 });
