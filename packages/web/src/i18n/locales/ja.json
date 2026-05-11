@@ -86,7 +86,11 @@
       "findNext": "次へ",
       "findPrev": "前へ",
       "close": "検索を閉じる"
-    }
+    },
+    "dropHint": "ファイルをドロップしてセッション cwd にアップロード",
+    "uploadProgress": "アップロード中 {{current}} ({{completed}}/{{total}})",
+    "uploadDone": "{{count}} ファイルをアップロードしました",
+    "uploadError": "アップロード失敗: {{message}}"
   },
   "validation": {
     "nameEmpty": "名前は必須です",

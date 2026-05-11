@@ -17,6 +17,7 @@ import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
+import { useUploadProgress } from '@/hooks/useUploadProgress';
 import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
 import { CommandPalette } from './CommandPalette';
 
@@ -82,6 +83,28 @@ export function AuthenticatedShell() {
   // Build clients early so helpers below (used by shortcuts) can close over them.
   // These are stable as long as token/gatewayUrl don't change between renders.
   const baseClient = token && gatewayUrl ? new ApiClient(gatewayUrl, token) : null;
+
+  const uploadProgress = useUploadProgress();
+
+  const handleTerminalDrop = async (files: File[], cwd: string): Promise<void> => {
+    if (!baseClient) return;
+    uploadProgress.begin(files.length);
+    for (const file of files) {
+      uploadProgress.markStart(file.name);
+      try {
+        await baseClient.uploadFile(file, cwd);
+        uploadProgress.markDone();
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        uploadProgress.fail(msg);
+        pushToast({ type: 'error', message: t('terminal.uploadError', { message: msg }) });
+        setTimeout(() => uploadProgress.finish(), 3000);
+        return;
+      }
+    }
+    pushToast({ type: 'success', message: t('terminal.uploadDone', { count: files.length }) });
+    setTimeout(() => uploadProgress.finish(), 1500);
+  };
 
   const wrappedClient: SessionsApiClient | null = baseClient
     ? {
@@ -333,6 +356,14 @@ export function AuthenticatedShell() {
             onSearch={() => useLayoutStore.getState().openSearch()}
             onNewPane={newPaneFromCurrent}
             canCreateNewPane={canCreateNewPane}
+            onDropFiles={handleTerminalDrop}
+            uploadProgress={{
+              active: uploadProgress.active,
+              total: uploadProgress.total,
+              completed: uploadProgress.completed,
+              currentFile: uploadProgress.currentFile,
+              error: uploadProgress.error,
+            }}
           />
           {isFilesRoute && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>

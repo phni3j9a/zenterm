@@ -86,7 +86,11 @@
       "findNext": "Find next",
       "findPrev": "Find previous",
       "close": "Close search"
-    }
+    },
+    "dropHint": "Drop files to upload to session cwd",
+    "uploadProgress": "Uploading {{current}} ({{completed}}/{{total}})",
+    "uploadDone": "Uploaded {{count}} file(s)",
+    "uploadError": "Upload failed: {{message}}"
   },
   "validation": {
     "nameEmpty": "Name cannot be empty",
