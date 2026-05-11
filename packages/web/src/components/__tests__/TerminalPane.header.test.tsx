@@ -17,12 +17,14 @@ beforeEach(() => {
   useSessionsStore.setState({
     sessions: [
       {
-        id: 'zen_dev',
+        name: 'zen_dev',
         displayName: 'dev',
-        windows: [{ index: 0, name: 'editor', active: true, panes: 1 }],
-        attached: false,
+        cwd: '/home/dev',
         created: 0,
-      } as any,
+        windows: [
+          { index: 0, name: 'editor', active: true, zoomed: false, paneCount: 1, cwd: '/home/dev' },
+        ],
+      },
     ],
   } as any);
   useUiStore.setState({ toasts: [] } as any);
@@ -44,7 +46,7 @@ describe('TerminalPane header integration', () => {
       <TerminalPane
         gatewayUrl="http://gateway.test:18765"
         token="t"
-        sessionId="zen_dev"
+        sessionId="dev"
         windowIndex={0}
         isVisible
       />,
@@ -63,7 +65,7 @@ describe('TerminalPane header integration', () => {
       <TerminalPane
         gatewayUrl="http://gateway.test:18765"
         token="t"
-        sessionId="zen_dev"
+        sessionId="dev"
         windowIndex={0}
         isVisible
       />,
@@ -71,7 +73,7 @@ describe('TerminalPane header integration', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /copy session id/i }));
     });
-    expect(writeText).toHaveBeenCalledWith('zen_dev');
+    expect(writeText).toHaveBeenCalledWith("dev");
     await waitFor(() => {
       const toasts = (useUiStore.getState() as any).toasts as Array<{ message: string; type: string }>;
       expect(toasts.some((tt) => /copied/i.test(tt.message))).toBe(true);
@@ -83,7 +85,7 @@ describe('TerminalPane header integration', () => {
       <TerminalPane
         gatewayUrl="http://gateway.test:18765"
         token="t"
-        sessionId="zen_dev"
+        sessionId="dev"
         windowIndex={0}
         isVisible
       />,

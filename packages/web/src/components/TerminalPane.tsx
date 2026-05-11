@@ -43,7 +43,7 @@ export function TerminalPane({
 
   const session = useSessionsStore((s) =>
     sessionId && Array.isArray(s.sessions)
-      ? s.sessions.find((sess) => (sess as { id?: string }).id === sessionId)
+      ? s.sessions.find((sess) => sess.displayName === sessionId)
       : undefined,
   );
   const displayName = session?.displayName ?? '';
