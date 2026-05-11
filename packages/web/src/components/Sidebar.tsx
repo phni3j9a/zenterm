@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SessionsListPanel } from './SessionsListPanel';
 import { SettingsPanel } from './settings/SettingsPanel';
+import { FilesSidebarPanel } from './files/FilesSidebarPanel';
+import type { FilesApiClient } from './files/filesApi';
 import { useTheme } from '@/theme';
 import { useEventsStore } from '@/stores/events';
 
@@ -25,6 +27,7 @@ export interface SidebarProps {
     newName: string,
   ) => void | Promise<void>;
   onRequestDeleteWindow: (sessionDisplayName: string, window: TmuxWindow) => void;
+  filesClient?: FilesApiClient;
 }
 
 const SIDEBAR_WIDTH = 320;
@@ -44,6 +47,8 @@ export function Sidebar(props: SidebarProps) {
 
   const renderPanel = () => {
     if (activePanel === 'settings') return <SettingsPanel />;
+    if (activePanel === 'files' && props.filesClient)
+      return <FilesSidebarPanel client={props.filesClient} />;
     return <SessionsListPanel {...props} />;
   };
 

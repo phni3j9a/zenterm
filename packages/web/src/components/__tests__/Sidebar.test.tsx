@@ -131,4 +131,25 @@ describe('Sidebar URL-driven activePanel', () => {
     expect(filesTab).toBeDisabled();
     expect(filesTab.getAttribute('title')).toMatch(/Phase 2c/);
   });
+
+  it('renders FilesSidebarPanel when activePanel=files and filesClient given', () => {
+    const filesClient = {
+      listFiles: () => Promise.resolve({ path: '~', entries: [] }),
+      getFileContent: () => Promise.resolve({ path: '', content: '', lines: 0, truncated: false }),
+      writeFileContent: () => Promise.resolve({ path: '', bytes: 0 }),
+      deleteFile: () => Promise.resolve({ path: '', deleted: true }),
+      renameFile: () => Promise.resolve({ oldPath: '', newPath: '' }),
+      copyFiles: () => Promise.resolve({ copied: [] }),
+      moveFiles: () => Promise.resolve({ moved: [] }),
+      createDirectory: () => Promise.resolve({ path: '', created: true }),
+      uploadFile: () => Promise.resolve({ success: true, path: '', filename: '', size: 0, mimetype: '' }),
+      buildRawFileUrl: () => '',
+    };
+    render(
+      <MemoryRouter initialEntries={['/web/files']}>
+        <Sidebar {...baseProps} filesClient={filesClient as any} />
+      </MemoryRouter>,
+    );
+    expect(screen.getAllByLabelText(/Files panel/i).length).toBeGreaterThan(0);
+  });
 });
