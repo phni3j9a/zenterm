@@ -140,6 +140,11 @@
     "loadFailedDesc": "Could not load file content.",
     "edit": "Edit",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "saved": "Saved",
+    "saveFailed": "Save failed",
+    "saveFailedDesc": "Could not save file.",
+    "unsavedChangesTitle": "Unsaved changes",
+    "unsavedChangesMessage": "You have unsaved changes. Discard?"
   }
 }

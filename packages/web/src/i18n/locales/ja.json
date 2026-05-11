@@ -140,6 +140,11 @@
     "loadFailedDesc": "ファイル内容を読み込めませんでした。",
     "edit": "編集",
     "save": "保存",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "saved": "保存しました",
+    "saveFailed": "保存失敗",
+    "saveFailedDesc": "ファイルを保存できませんでした。",
+    "unsavedChangesTitle": "未保存の変更",
+    "unsavedChangesMessage": "未保存の変更があります。破棄しますか？"
   }
 }
