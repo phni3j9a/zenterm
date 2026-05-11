@@ -205,6 +205,22 @@ export function XtermView({
     };
   }, []);
 
+  // Selection auto-copy (opt-in via settings).
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term) return;
+    const disposable = term.onSelectionChange(() => {
+      const enabled = useSettingsStore.getState().autoCopyOnSelect;
+      if (!enabled) return;
+      const sel = term.getSelection();
+      if (!sel) return;
+      if (navigator.clipboard?.writeText) {
+        void navigator.clipboard.writeText(sel).catch(() => undefined);
+      }
+    });
+    return () => disposable.dispose();
+  }, []);
+
   // Reveal hook: when isVisible flips false → true, fit + focus + maybe send resize.
   useEffect(() => {
     if (!isVisible) return;
