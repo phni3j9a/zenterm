@@ -114,16 +114,29 @@ export function SessionsListPanel({
       {sessions.map((session) => {
         const isActive = session.displayName === activeSessionId;
         const isExpanded = expanded.has(session.name);
+        const defaultWindowIndex = session.windows?.[0]?.index ?? 0;
+        const sessionTarget = { sessionId: session.displayName, windowIndex: defaultWindowIndex };
+        const sessionOccupyingIdx = panes.findIndex(
+          (p) =>
+            p !== null &&
+            p.sessionId === sessionTarget.sessionId &&
+            p.windowIndex === sessionTarget.windowIndex,
+        );
+        const sessionOpenInPaneOptions = panes
+          .map((_, i) => i)
+          .filter((i) => i !== focusedIndex && i !== sessionOccupyingIdx);
         return (
           <div key={session.name}>
             <SessionRow
               session={session}
               isActive={isActive}
               isExpanded={isExpanded}
+              openInPaneOptions={sessionOpenInPaneOptions}
               onSelect={onSelect}
               onToggleExpand={toggle}
               onRename={onRenameSession}
               onRequestDelete={onRequestDeleteSession}
+              onOpenInPane={(idx) => assignPane(idx, sessionTarget)}
             />
             {isExpanded && session.windows && (
               <div

@@ -10,10 +10,12 @@ export interface SessionRowProps {
   session: TmuxSession;
   isActive: boolean;
   isExpanded: boolean;
+  openInPaneOptions: number[];
   onSelect: (sessionId: string, windowIndex?: number) => void;
   onToggleExpand: (sessionName: string) => void;
   onRename: (currentDisplayName: string, newName: string) => void | Promise<void>;
   onRequestDelete: (session: TmuxSession) => void;
+  onOpenInPane: (paneIndex: number) => void;
 }
 
 type RowMode = 'idle' | 'editing-name';
@@ -22,10 +24,12 @@ export function SessionRow({
   session,
   isActive,
   isExpanded,
+  openInPaneOptions,
   onSelect,
   onToggleExpand,
   onRename,
   onRequestDelete,
+  onOpenInPane,
 }: SessionRowProps) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -157,6 +161,10 @@ export function SessionRow({
         open={menuOpen}
         anchorEl={kebabRef.current}
         items={[
+          ...openInPaneOptions.map((idx) => ({
+            label: t('sessions.openInPane.label', { pane: idx + 1 }),
+            onClick: () => onOpenInPane(idx),
+          })),
           { label: t('common.rename'), onClick: () => setMode('editing-name') },
           { label: t('common.delete'), onClick: () => onRequestDelete(session), destructive: true },
         ]}
