@@ -10,6 +10,7 @@ vi.mock('@xterm/xterm', () => ({
     return {
       open: vi.fn(),
       onData: vi.fn(() => ({ dispose: vi.fn() })),
+      onSelectionChange: vi.fn(() => ({ dispose: vi.fn() })),
       attachCustomKeyEventHandler: vi.fn(),
       write: vi.fn(),
       reset: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock('@xterm/xterm', () => ({
       focus: vi.fn(),
       loadAddon: vi.fn(),
       getSelection: vi.fn(() => ''),
+      clear: vi.fn(),
       options: {},
       cols: 80,
       rows: 24,
