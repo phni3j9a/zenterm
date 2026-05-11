@@ -42,7 +42,9 @@ export function TerminalPane({
   const pushToast = useUiStore((s) => s.pushToast);
 
   const session = useSessionsStore((s) =>
-    sessionId ? s.sessions.find((sess) => (sess as { id?: string }).id === sessionId) : undefined,
+    sessionId && Array.isArray(s.sessions)
+      ? s.sessions.find((sess) => (sess as { id?: string }).id === sessionId)
+      : undefined,
   );
   const displayName = session?.displayName ?? '';
   const windowName =
