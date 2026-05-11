@@ -34,6 +34,12 @@ export interface ReconnectInfo {
   exhausted: boolean;
 }
 
+export interface TerminalActions {
+  copy: () => void;
+  paste: () => void;
+  clear: () => void;
+}
+
 export interface XtermViewProps {
   gatewayUrl: string;
   token: string;
@@ -44,6 +50,8 @@ export interface XtermViewProps {
   reconnectNonce: number;
   onStatusChange: (status: TerminalStatus) => void;
   onReconnectInfo?: (info: ReconnectInfo | null) => void;
+  onContextMenu?: (info: { x: number; y: number; hasSelection: boolean }) => void;
+  onActionsReady?: (actions: TerminalActions) => void;
 }
 
 export function XtermView({
@@ -56,17 +64,23 @@ export function XtermView({
   reconnectNonce,
   onStatusChange,
   onReconnectInfo,
+  onContextMenu,
+  onActionsReady,
 }: XtermViewProps) {
   const { resolvedTheme } = useTheme();
   const fontSize = useSettingsStore((s) => s.fontSize);
   const onStatusChangeRef = useRef(onStatusChange);
   const onReconnectInfoRef = useRef(onReconnectInfo);
+  const onActionsReadyRef = useRef(onActionsReady);
   useEffect(() => {
     onStatusChangeRef.current = onStatusChange;
   }, [onStatusChange]);
   useEffect(() => {
     onReconnectInfoRef.current = onReconnectInfo;
   }, [onReconnectInfo]);
+  useEffect(() => {
+    onActionsReadyRef.current = onActionsReady;
+  }, [onActionsReady]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -109,6 +123,30 @@ export function XtermView({
     fit.fit();
     termRef.current = term;
     fitRef.current = fit;
+
+    const actions: TerminalActions = {
+      copy: () => {
+        const sel = term.getSelection();
+        if (!sel) return;
+        if (navigator.clipboard?.writeText) {
+          void navigator.clipboard.writeText(sel).catch(() => undefined);
+        }
+      },
+      paste: () => {
+        if (!navigator.clipboard?.readText) return;
+        void navigator.clipboard.readText().then((text) => {
+          if (!text) return;
+          const ws = wsRef.current;
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(encodeInput(text));
+          }
+        }).catch(() => undefined);
+      },
+      clear: () => {
+        term.clear();
+      },
+    };
+    onActionsReadyRef.current?.(actions);
 
     return () => {
       term.dispose();
@@ -370,6 +408,13 @@ export function XtermView({
   return (
     <div
       ref={containerRef}
+      onContextMenu={(e) => {
+        if (!onContextMenu) return;
+        e.preventDefault();
+        const term = termRef.current;
+        const sel = term?.getSelection() ?? '';
+        onContextMenu({ x: e.clientX, y: e.clientY, hasSelection: sel.length > 0 });
+      }}
       style={{
         width: '100%',
         height: '100%',

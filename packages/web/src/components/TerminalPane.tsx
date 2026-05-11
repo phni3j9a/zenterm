@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   XtermView,
   type ReconnectInfo,
+  type TerminalActions,
   type TerminalStatus,
 } from './terminal/XtermView';
 import { TerminalHeader } from './terminal/TerminalHeader';
+import { TerminalContextMenu } from './terminal/TerminalContextMenu';
 import { useTheme } from '@/theme';
 import {
   DEFAULT_FONT_SIZE,
@@ -36,6 +38,8 @@ export function TerminalPane({
   const [status, setStatus] = useState<TerminalStatus>('disconnected');
   const [reconnectNonce, setReconnectNonce] = useState(0);
   const [reconnectInfo, setReconnectInfo] = useState<ReconnectInfo | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; hasSelection: boolean } | null>(null);
+  const actionsRef = useRef<TerminalActions | null>(null);
 
   const fontSize = useSettingsStore((s) => s.fontSize);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
@@ -129,8 +133,23 @@ export function TerminalPane({
           reconnectNonce={reconnectNonce}
           onStatusChange={setStatus}
           onReconnectInfo={setReconnectInfo}
+          onContextMenu={(info) => setMenu(info)}
+          onActionsReady={(a) => { actionsRef.current = a; }}
         />
       </div>
+      {menu && (
+        <TerminalContextMenu
+          open
+          x={menu.x}
+          y={menu.y}
+          hasSelection={menu.hasSelection}
+          onCopy={() => actionsRef.current?.copy()}
+          onPaste={() => actionsRef.current?.paste()}
+          onClear={() => actionsRef.current?.clear()}
+          onReconnect={handleReconnect}
+          onClose={() => setMenu(null)}
+        />
+      )}
     </section>
   );
 }
