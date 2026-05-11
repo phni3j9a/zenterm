@@ -7,11 +7,16 @@ vi.mock('@xterm/xterm', () => ({
     return {
       open: vi.fn(),
       onData: vi.fn(() => ({ dispose: vi.fn() })),
+      onSelectionChange: vi.fn(() => ({ dispose: vi.fn() })),
+      attachCustomKeyEventHandler: vi.fn(),
       write: vi.fn(),
       reset: vi.fn(),
       dispose: vi.fn(),
       focus: vi.fn(),
       loadAddon: vi.fn(),
+      getSelection: vi.fn(() => ''),
+      clear: vi.fn(),
+      refresh: vi.fn(),
       options: {},
       cols: 80,
       rows: 24,
@@ -87,6 +92,7 @@ describe('TerminalPane', () => {
         token="1234"
         sessionId={null}
         windowIndex={null}
+        isVisible
       />,
     );
     expect(screen.getByText(/Select a session/i)).toBeInTheDocument();
@@ -99,9 +105,40 @@ describe('TerminalPane', () => {
         token="1234"
         sessionId="dev"
         windowIndex={2}
+        isVisible
       />,
     );
     expect(screen.getByText(/dev/)).toBeInTheDocument();
     expect(screen.getByText(/w2/)).toBeInTheDocument();
+  });
+
+  it('keeps DOM mounted but hidden when isVisible=false', () => {
+    const { container } = render(
+      <TerminalPane
+        gatewayUrl="http://gateway.test:18765"
+        token="1234"
+        sessionId="dev"
+        windowIndex={0}
+        isVisible={false}
+      />,
+    );
+    const root = container.querySelector('section[data-terminal-root="true"]');
+    expect(root).not.toBeNull();
+    expect((root as HTMLElement).style.display).toBe('none');
+  });
+
+  it('shows DOM (display: grid) when isVisible=true', () => {
+    const { container } = render(
+      <TerminalPane
+        gatewayUrl="http://gateway.test:18765"
+        token="1234"
+        sessionId="dev"
+        windowIndex={0}
+        isVisible
+      />,
+    );
+    const root = container.querySelector('section[data-terminal-root="true"]');
+    expect(root).not.toBeNull();
+    expect((root as HTMLElement).style.display).toBe('grid');
   });
 });

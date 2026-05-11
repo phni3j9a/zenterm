@@ -8,6 +8,7 @@ export interface TerminalPaneProps {
   token: string;
   sessionId: string | null;
   windowIndex: number | null;
+  isVisible: boolean;
 }
 
 export function TerminalPane({
@@ -15,6 +16,7 @@ export function TerminalPane({
   token,
   sessionId,
   windowIndex,
+  isVisible,
 }: TerminalPaneProps) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -40,7 +42,7 @@ export function TerminalPane({
           flex: 1,
           background: tokens.colors.bg,
           color: tokens.colors.textSecondary,
-          display: 'flex',
+          display: isVisible ? 'flex' : 'none',
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -52,9 +54,10 @@ export function TerminalPane({
 
   return (
     <section
+      data-terminal-root="true"
       style={{
         flex: 1,
-        display: 'grid',
+        display: isVisible ? 'grid' : 'none',
         gridTemplateRows: '48px 1fr',
         height: '100vh',
         background: tokens.colors.bg,
@@ -94,7 +97,9 @@ export function TerminalPane({
           token={token}
           sessionId={sessionId}
           windowIndex={windowIndex}
-          isFocused
+          isFocused={isVisible}
+          isVisible={isVisible}
+          reconnectNonce={0}
           onStatusChange={setStatus}
         />
       </div>
