@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { Sidebar } from '@/components/Sidebar';
-import { TerminalPane } from '@/components/TerminalPane';
+import { MultiPaneArea } from '@/components/layout/MultiPaneArea';
 import { FilesViewerPane } from '@/components/files/FilesViewerPane';
 import type { FilesApiClient } from '@/components/files/filesApi';
 import { ApiClient } from '@/api/client';
 import { HttpError } from '@/api/errors';
 import { useAuthStore } from '@/stores/auth';
+import { usePaneStore } from '@/stores/pane';
 import { useSessionsStore, type SessionsApiClient } from '@/stores/sessions';
 import { useSessionViewStore } from '@/stores/sessionView';
 import { useUiStore } from '@/stores/ui';
@@ -58,6 +59,15 @@ export function AuthenticatedShell() {
     };
     void useSessionsStore.getState().refetch(wrapped);
   }, [token, gatewayUrl, logout, navigate]);
+
+  const isSessionsRoute = location.pathname.startsWith('/web/sessions');
+  useEffect(() => {
+    if (isSessionsRoute) {
+      usePaneStore.getState().resume();
+    } else {
+      usePaneStore.getState().suspendForSingle();
+    }
+  }, [isSessionsRoute]);
 
   if (!token || !gatewayUrl) return <Navigate to="/web/login" replace />;
 
@@ -211,13 +221,9 @@ export function AuthenticatedShell() {
         filesClient={filesClient}
       />
       <div style={{ flex: 1, position: 'relative', minHeight: 0, display: 'flex' }}>
-        <TerminalPane
+        <MultiPaneArea
           gatewayUrl={gatewayUrl}
           token={token}
-          sessionId={activeSessionId}
-          windowIndex={activeWindowIndex}
-          paneIndex={0}
-          isFocused
           isVisible={!isFilesRoute}
         />
         {isFilesRoute && (
