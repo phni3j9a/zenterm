@@ -106,9 +106,8 @@ export function Sidebar(props: SidebarProps) {
           type="button"
           aria-label="Files tab"
           aria-pressed={activePanel === 'files'}
-          disabled
-          title={t('sidebar.filesComingSoon')}
-          style={tabButtonStyle(activePanel === 'files', true)}
+          onClick={() => navigate('/web/files')}
+          style={tabButtonStyle(activePanel === 'files')}
         >
           📁 {t('sidebar.tabs.files')}
         </button>

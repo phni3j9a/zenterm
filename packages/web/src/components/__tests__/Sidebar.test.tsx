@@ -34,7 +34,7 @@ describe('Sidebar', () => {
     );
     expect(screen.getByLabelText(/Sessions panel/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sessions tab/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Files tab/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Files tab/i })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: /Settings tab/i })).not.toBeDisabled();
   });
 
@@ -121,15 +121,19 @@ describe('Sidebar URL-driven activePanel', () => {
     expect(settingsTab.getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('Files tab is disabled with Phase 2c tooltip', () => {
+  it('Files tab is enabled and navigates to /web/files', () => {
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
-        <Sidebar {...baseProps} />
+        <Routes>
+          <Route path="/web/*" element={<Sidebar {...baseProps} />} />
+        </Routes>
       </MemoryRouter>,
     );
     const filesTab = screen.getByRole('button', { name: /Files tab/i });
-    expect(filesTab).toBeDisabled();
-    expect(filesTab.getAttribute('title')).toMatch(/Phase 2c/);
+    expect(filesTab).not.toBeDisabled();
+    expect(filesTab.getAttribute('title') ?? '').not.toMatch(/Phase 2c/);
+    fireEvent.click(filesTab);
+    expect(filesTab.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('renders FilesSidebarPanel when activePanel=files and filesClient given', () => {

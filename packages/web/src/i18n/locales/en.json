@@ -14,7 +14,6 @@
       "files": "Files",
       "settings": "Settings"
     },
-    "filesComingSoon": "Coming in Phase 2c",
     "events": {
       "connected": "Realtime updates: connected",
       "disconnected": "Realtime updates: disconnected",
