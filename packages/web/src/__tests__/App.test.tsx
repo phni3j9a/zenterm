@@ -33,4 +33,17 @@ describe('App', () => {
     );
     expect(await screen.findByLabelText(/Sessions panel/i)).toBeInTheDocument();
   });
+
+  it('renders FilesRoute on /web/files', async () => {
+    const { useAuthStore } = await import('@/stores/auth');
+    useAuthStore.setState({ token: '4790', gatewayUrl: 'http://gw' });
+    window.history.pushState({}, '', '/web/files');
+    render(
+      <MemoryRouter initialEntries={['/web/files']}>
+        <App />
+      </MemoryRouter>,
+    );
+    const matches = await screen.findAllByLabelText(/files panel/i);
+    expect(matches.length).toBeGreaterThan(0);
+  });
 });
