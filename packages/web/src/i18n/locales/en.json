@@ -126,6 +126,17 @@
     "toggleHiddenFiles": "Toggle hidden files",
     "uploadFile": "Upload",
     "createNewFile": "New File",
-    "newFolder": "New Folder"
+    "newFolder": "New Folder",
+    "previewTitle": "No file selected",
+    "previewDescription": "Select a file in the sidebar to preview.",
+    "cannotOpen": "Cannot open",
+    "cannotOpenDesc": "{{name}} cannot be previewed.",
+    "truncatedIndicator": "Truncated at {{lines}} lines",
+    "download": "Download",
+    "downloadFailed": "Download failed",
+    "downloadFailedDesc": "Could not download file.",
+    "rendered": "Rendered",
+    "source": "Source",
+    "loadFailedDesc": "Could not load file content."
   }
 }

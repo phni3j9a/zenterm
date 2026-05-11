@@ -126,6 +126,17 @@
     "toggleHiddenFiles": "隠しファイル表示切替",
     "uploadFile": "アップロード",
     "createNewFile": "新規ファイル",
-    "newFolder": "新規フォルダ"
+    "newFolder": "新規フォルダ",
+    "previewTitle": "ファイル未選択",
+    "previewDescription": "サイドバーからファイルを選択してください。",
+    "cannotOpen": "開けません",
+    "cannotOpenDesc": "{{name}} はプレビューできません。",
+    "truncatedIndicator": "{{lines}} 行で切り詰めました",
+    "download": "ダウンロード",
+    "downloadFailed": "ダウンロード失敗",
+    "downloadFailedDesc": "ファイルをダウンロードできませんでした。",
+    "rendered": "レンダリング",
+    "source": "ソース",
+    "loadFailedDesc": "ファイル内容を読み込めませんでした。"
   }
 }
