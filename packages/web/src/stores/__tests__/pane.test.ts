@@ -131,6 +131,20 @@ describe('setRatio', () => {
     usePaneStore.getState().setRatio('cols-2', 5, 0.4);
     expect(usePaneStore.getState().ratios['cols-2']).toEqual(before);
   });
+
+  it('別モードの ratios には影響を与えない', () => {
+    const before = {
+      'cols-3': usePaneStore.getState().ratios['cols-3'].slice(),
+      'grid-2x2': usePaneStore.getState().ratios['grid-2x2'].slice(),
+      'main-side-2': usePaneStore.getState().ratios['main-side-2'].slice(),
+    };
+    usePaneStore.getState().setRatio('cols-2', 0, 0.75);
+    const after = usePaneStore.getState().ratios;
+    expect(after['cols-3']).toEqual(before['cols-3']);
+    expect(after['grid-2x2']).toEqual(before['grid-2x2']);
+    expect(after['main-side-2']).toEqual(before['main-side-2']);
+    expect(after['cols-2']).toEqual([0.75]);
+  });
 });
 
 describe('suspendForSingle / resume', () => {
@@ -195,5 +209,67 @@ describe('SLOT_COUNT contract', () => {
       usePaneStore.getState().setLayout(mode);
       expect(usePaneStore.getState().panes.length).toBe(SLOT_COUNT[mode]);
     }
+  });
+});
+
+describe('persist hydration', () => {
+  it('seeded localStorage state is applied via migrate on next read', async () => {
+    // Seed a v1 persisted state directly
+    window.localStorage.setItem(
+      'zenterm-web-pane',
+      JSON.stringify({
+        state: {
+          layout: 'grid-2x2',
+          panes: [
+            { sessionId: 'x', windowIndex: 0 },
+            null,
+            { sessionId: 'y', windowIndex: 1 },
+            null,
+          ],
+          focusedIndex: 2,
+          ratios: {
+            single: [],
+            'cols-2': [0.5],
+            'cols-3': [1 / 3, 0.5],
+            'grid-2x2': [0.42, 0.58],
+            'main-side-2': [0.6, 0.5],
+          },
+          savedLayout: null,
+        },
+        version: 1,
+      }),
+    );
+    // Trigger rehydration manually (zustand persist API)
+    await usePaneStore.persist.rehydrate();
+    const s = usePaneStore.getState();
+    expect(s.layout).toBe('grid-2x2');
+    expect(s.panes).toEqual([
+      { sessionId: 'x', windowIndex: 0 },
+      null,
+      { sessionId: 'y', windowIndex: 1 },
+      null,
+    ]);
+    expect(s.focusedIndex).toBe(2);
+    expect(s.ratios['grid-2x2']).toEqual([0.42, 0.58]);
+  });
+
+  it('migrate fills missing fields with defaults', async () => {
+    // Seed a corrupt/partial state (missing focusedIndex and ratios)
+    window.localStorage.setItem(
+      'zenterm-web-pane',
+      JSON.stringify({
+        state: {
+          layout: 'cols-2',
+          panes: [null, null],
+        },
+        version: 1,
+      }),
+    );
+    await usePaneStore.persist.rehydrate();
+    const s = usePaneStore.getState();
+    expect(s.layout).toBe('cols-2');
+    expect(s.focusedIndex).toBe(0);
+    expect(s.ratios['cols-2']).toEqual([0.5]);
+    expect(s.savedLayout).toBeNull();
   });
 });
