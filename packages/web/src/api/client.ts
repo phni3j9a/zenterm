@@ -1,4 +1,8 @@
-import type { ClaudeLimitsResponse, CodexLimitsResponse, SystemStatus, TmuxSession, TmuxWindow } from '@zenterm/shared';
+import type {
+  ClaudeLimitsResponse, CodexLimitsResponse, SystemStatus, TmuxSession, TmuxWindow,
+  FileListResponse, FileContentResponse, FileWriteResponse, FileDeleteResponse,
+  FileRenameResponse, FileCopyResponse, FileMoveResponse, FileMkdirResponse, FileUploadResponse,
+} from '@zenterm/shared';
 import { HttpError } from './errors';
 
 export class ApiClient {
@@ -118,5 +122,61 @@ export class ApiClient {
 
   getCodexLimits(): Promise<CodexLimitsResponse> {
     return this.request<CodexLimitsResponse>('GET', '/api/codex/limits');
+  }
+
+  listFiles(path: string, showHidden: boolean): Promise<FileListResponse> {
+    const qs = `?path=${encodeURIComponent(path)}&showHidden=${showHidden ? 'true' : 'false'}`;
+    return this.request<FileListResponse>('GET', `/api/files${qs}`);
+  }
+
+  getFileContent(path: string): Promise<FileContentResponse> {
+    return this.request<FileContentResponse>(
+      'GET',
+      `/api/files/content?path=${encodeURIComponent(path)}`,
+    );
+  }
+
+  writeFileContent(path: string, content: string): Promise<FileWriteResponse> {
+    return this.request<FileWriteResponse>('PUT', '/api/files/content', { path, content });
+  }
+
+  deleteFile(path: string): Promise<FileDeleteResponse> {
+    return this.request<FileDeleteResponse>('DELETE', '/api/files', { path });
+  }
+
+  renameFile(path: string, newName: string): Promise<FileRenameResponse> {
+    return this.request<FileRenameResponse>('POST', '/api/files/rename', { path, newName });
+  }
+
+  copyFiles(sources: string[], destination: string): Promise<FileCopyResponse> {
+    return this.request<FileCopyResponse>('POST', '/api/files/copy', { sources, destination });
+  }
+
+  moveFiles(sources: string[], destination: string): Promise<FileMoveResponse> {
+    return this.request<FileMoveResponse>('POST', '/api/files/move', { sources, destination });
+  }
+
+  createDirectory(path: string): Promise<FileMkdirResponse> {
+    return this.request<FileMkdirResponse>('POST', '/api/files/mkdir', { path });
+  }
+
+  buildRawFileUrl(path: string): string {
+    return `${this.baseUrl}/api/files/raw?path=${encodeURIComponent(path)}`;
+  }
+
+  async uploadFile(file: File, destPath: string): Promise<FileUploadResponse> {
+    const url = `${this.baseUrl}/api/upload?dest=${encodeURIComponent(destPath)}&preserveName=true`;
+    const form = new FormData();
+    form.append('file', file, file.name);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.token}` },
+      body: form,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new HttpError(res.status, text);
+    }
+    return (await res.json()) as FileUploadResponse;
   }
 }
