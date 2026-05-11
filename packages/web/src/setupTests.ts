@@ -24,6 +24,20 @@ if (typeof Blob !== 'undefined' && typeof Blob.prototype.stream !== 'function') 
   });
 }
 
+// jsdom 25 has no navigator.clipboard. Tests that exercise Copy/Paste UX
+// (Phase 2d) need writeText/readText. Define a writable mock so individual
+// tests can override with vi.fn() per case.
+if (typeof navigator !== 'undefined' && !('clipboard' in navigator)) {
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    writable: true,
+    value: {
+      writeText: async (_text: string) => undefined,
+      readText: async () => '',
+    },
+  });
+}
+
 // Initialize i18next for tests with English forced.
 // We bypass initI18n() to avoid the settings-store subscription that would
 // switch the language whenever a test sets useSettingsStore({ language: 'ja' }).
