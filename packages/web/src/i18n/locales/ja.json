@@ -107,5 +107,25 @@
       "unavailable": "取得不可",
       "stale": "{{age}} 前に更新"
     }
+  },
+  "files": {
+    "title": "ファイル",
+    "noServerConfigured": "Gateway が未設定です。",
+    "fetchFailedDesc": "ディレクトリの読み込みに失敗しました。",
+    "loadFailed": "読み込み失敗",
+    "cannotFetchFiles": "ファイル一覧を取得できません",
+    "emptyDirectoryTitle": "空のディレクトリ",
+    "emptyDirectoryDescription": "ここにはファイルがありません。",
+    "goUp": "上へ",
+    "sort": "並び替え",
+    "toggleSort": "並び替え切替",
+    "sortNameAsc": "名前 (A→Z)",
+    "sortNameDesc": "名前 (Z→A)",
+    "sortSizeDesc": "サイズ (大きい順)",
+    "sortModifiedDesc": "更新日時 (新しい順)",
+    "toggleHiddenFiles": "隠しファイル表示切替",
+    "uploadFile": "アップロード",
+    "createNewFile": "新規ファイル",
+    "newFolder": "新規フォルダ"
   }
 }

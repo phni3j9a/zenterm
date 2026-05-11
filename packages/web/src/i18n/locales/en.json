@@ -107,5 +107,25 @@
       "unavailable": "Unavailable",
       "stale": "Last updated {{age}} ago"
     }
+  },
+  "files": {
+    "title": "Files",
+    "noServerConfigured": "Gateway not configured.",
+    "fetchFailedDesc": "Failed to load directory.",
+    "loadFailed": "Failed to load",
+    "cannotFetchFiles": "Cannot fetch files",
+    "emptyDirectoryTitle": "Empty directory",
+    "emptyDirectoryDescription": "There are no files here.",
+    "goUp": "Go up",
+    "sort": "Sort",
+    "toggleSort": "Toggle sort",
+    "sortNameAsc": "Name (A→Z)",
+    "sortNameDesc": "Name (Z→A)",
+    "sortSizeDesc": "Size (large first)",
+    "sortModifiedDesc": "Modified (newest)",
+    "toggleHiddenFiles": "Toggle hidden files",
+    "uploadFile": "Upload",
+    "createNewFile": "New File",
+    "newFolder": "New Folder"
   }
 }
