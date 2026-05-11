@@ -9,6 +9,7 @@ import {
 import { TerminalHeader } from './terminal/TerminalHeader';
 import { TerminalContextMenu } from './terminal/TerminalContextMenu';
 import { LayoutSelector } from './terminal/LayoutSelector';
+import { TerminalSearch, type TerminalSearchApi } from '@/components/terminal/TerminalSearch';
 import { useTheme } from '@/theme';
 import {
   DEFAULT_FONT_SIZE,
@@ -18,6 +19,7 @@ import {
 } from '@/stores/settings';
 import { useSessionsStore } from '@/stores/sessions';
 import { useUiStore } from '@/stores/ui';
+import { useLayoutStore } from '@/stores/layout';
 
 export interface TerminalPaneProps {
   gatewayUrl: string;
@@ -47,6 +49,10 @@ export function TerminalPane({
   const [reconnectInfo, setReconnectInfo] = useState<ReconnectInfo | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; hasSelection: boolean } | null>(null);
   const actionsRef = useRef<TerminalActions | null>(null);
+
+  const [searchApi, setSearchApi] = useState<TerminalSearchApi | null>(null);
+  const searchOpen = useLayoutStore((s) => s.searchOpen);
+  const closeSearch = useLayoutStore((s) => s.closeSearch);
 
   const fontSize = useSettingsStore((s) => s.fontSize);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
@@ -130,20 +136,26 @@ export function TerminalPane({
         onZoomReset={handleZoomReset}
         layoutSlot={isFocused ? <LayoutSelector /> : null}
       />
-      <div style={{ minHeight: 0 }}>
-        <XtermView
-          gatewayUrl={gatewayUrl}
-          token={token}
-          sessionId={sessionId}
-          windowIndex={windowIndex}
-          isFocused={isFocused && isVisible}
-          isVisible={isVisible}
-          reconnectNonce={reconnectNonce}
-          onStatusChange={setStatus}
-          onReconnectInfo={setReconnectInfo}
-          onContextMenu={(info) => setMenu(info)}
-          onActionsReady={(a) => { actionsRef.current = a; }}
-        />
+      <div style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        {searchOpen && isFocused && searchApi && (
+          <TerminalSearch open api={searchApi} onClose={closeSearch} />
+        )}
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <XtermView
+            gatewayUrl={gatewayUrl}
+            token={token}
+            sessionId={sessionId}
+            windowIndex={windowIndex}
+            isFocused={isFocused && isVisible}
+            isVisible={isVisible}
+            reconnectNonce={reconnectNonce}
+            onStatusChange={setStatus}
+            onReconnectInfo={setReconnectInfo}
+            onContextMenu={(info) => setMenu(info)}
+            onActionsReady={(a) => { actionsRef.current = a; }}
+            onSearchReady={setSearchApi}
+          />
+        </div>
       </div>
       {menu && (
         <TerminalContextMenu

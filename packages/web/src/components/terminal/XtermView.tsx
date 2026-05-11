@@ -3,7 +3,9 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { WebLinksAddon } from '@xterm/addon-web-links';
+import { SearchAddon } from '@xterm/addon-search';
 import '@xterm/xterm/css/xterm.css';
+import type { TerminalSearchApi } from './TerminalSearch';
 
 import { terminalColorsDark, terminalColorsLight } from '@/theme/terminalColors';
 import { FONT_FAMILY_MONO } from '@/theme/tokens';
@@ -52,6 +54,7 @@ export interface XtermViewProps {
   onReconnectInfo?: (info: ReconnectInfo | null) => void;
   onContextMenu?: (info: { x: number; y: number; hasSelection: boolean }) => void;
   onActionsReady?: (actions: TerminalActions) => void;
+  onSearchReady?: (api: TerminalSearchApi) => void;
 }
 
 export function XtermView({
@@ -66,12 +69,14 @@ export function XtermView({
   onReconnectInfo,
   onContextMenu,
   onActionsReady,
+  onSearchReady,
 }: XtermViewProps) {
   const { resolvedTheme } = useTheme();
   const fontSize = useSettingsStore((s) => s.fontSize);
   const onStatusChangeRef = useRef(onStatusChange);
   const onReconnectInfoRef = useRef(onReconnectInfo);
   const onActionsReadyRef = useRef(onActionsReady);
+  const onSearchReadyRef = useRef(onSearchReady);
   useEffect(() => {
     onStatusChangeRef.current = onStatusChange;
   }, [onStatusChange]);
@@ -81,6 +86,9 @@ export function XtermView({
   useEffect(() => {
     onActionsReadyRef.current = onActionsReady;
   }, [onActionsReady]);
+  useEffect(() => {
+    onSearchReadyRef.current = onSearchReady;
+  }, [onSearchReady]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -118,6 +126,8 @@ export function XtermView({
     term.loadAddon(new Unicode11Addon());
     term.unicode.activeVersion = '11';
     term.loadAddon(new WebLinksAddon());
+    const search = new SearchAddon();
+    term.loadAddon(search);
 
     term.open(container);
     fit.fit();
@@ -147,6 +157,13 @@ export function XtermView({
       },
     };
     onActionsReadyRef.current?.(actions);
+
+    const searchApi: TerminalSearchApi = {
+      findNext: (q, opts) => search.findNext(q, opts),
+      findPrevious: (q, opts) => search.findPrevious(q, opts),
+      clearDecorations: () => search.clearDecorations(),
+    };
+    onSearchReadyRef.current?.(searchApi);
 
     return () => {
       term.dispose();
