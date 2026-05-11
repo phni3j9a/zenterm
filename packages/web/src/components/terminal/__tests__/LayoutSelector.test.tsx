@@ -32,7 +32,7 @@ describe('LayoutSelector', () => {
     expect(screen.getByRole('menuitem', { name: /2 cols/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /3 cols/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /2x2/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /main \+ side/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /main \+ 2 side/i })).toBeInTheDocument();
   });
 
   it('メニュー項目クリックで paneStore.setLayout が呼ばれる', () => {
