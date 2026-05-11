@@ -41,6 +41,8 @@ describe('TerminalPane context menu', () => {
         token="t"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );
@@ -58,6 +60,8 @@ describe('TerminalPane context menu', () => {
         token="t"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );
@@ -76,6 +80,8 @@ describe('TerminalPane context menu', () => {
         token="t"
         sessionId="dev"
         windowIndex={0}
+        paneIndex={0}
+        isFocused
         isVisible
       />,
     );

@@ -23,6 +23,8 @@ export interface TerminalPaneProps {
   token: string;
   sessionId: string | null;
   windowIndex: number | null;
+  paneIndex: number;
+  isFocused: boolean;
   isVisible: boolean;
 }
 
@@ -31,8 +33,12 @@ export function TerminalPane({
   token,
   sessionId,
   windowIndex,
+  paneIndex,
+  isFocused,
   isVisible,
 }: TerminalPaneProps) {
+  // paneIndex is accepted for Tasks 6+ (focus routing, drag/drop) but not used in this component yet.
+  void paneIndex;
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const [status, setStatus] = useState<TerminalStatus>('disconnected');
@@ -128,7 +134,7 @@ export function TerminalPane({
           token={token}
           sessionId={sessionId}
           windowIndex={windowIndex}
-          isFocused={isVisible}
+          isFocused={isFocused && isVisible}
           isVisible={isVisible}
           reconnectNonce={reconnectNonce}
           onStatusChange={setStatus}

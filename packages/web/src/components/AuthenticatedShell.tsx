@@ -216,6 +216,8 @@ export function AuthenticatedShell() {
           token={token}
           sessionId={activeSessionId}
           windowIndex={activeWindowIndex}
+          paneIndex={0}
+          isFocused
           isVisible={!isFilesRoute}
         />
         {isFilesRoute && (
