@@ -143,6 +143,11 @@
       "stale": "{{age}} 前に更新"
     }
   },
+  "palette": {
+    "title": "コマンドパレット",
+    "placeholder": "コマンドかセッション名を入力…",
+    "noResults": "該当なし"
+  },
   "files": {
     "title": "ファイル",
     "noServerConfigured": "Gateway が未設定です。",

@@ -143,6 +143,11 @@
       "stale": "Last updated {{age}} ago"
     }
   },
+  "palette": {
+    "title": "Command Palette",
+    "placeholder": "Type a command or session name…",
+    "noResults": "No matches"
+  },
   "files": {
     "title": "Files",
     "noServerConfigured": "Gateway not configured.",

@@ -18,6 +18,7 @@ import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { SLOT_COUNT } from '@/lib/paneLayout';
+import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
   const { tokens } = useTheme();
@@ -282,34 +283,37 @@ export function AuthenticatedShell() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: tokens.colors.bg }}>
-      <Sidebar
-        sessions={sessions}
-        loading={loading}
-        error={error}
-        activeSessionId={activeSessionId}
-        activeWindowIndex={activeWindowIndex}
-        onSelect={(sessionId, windowIndex) => open(sessionId, windowIndex ?? 0)}
-        onCreateSession={handleCreateSession}
-        onRenameSession={handleRenameSession}
-        onRequestDeleteSession={handleRequestDeleteSession}
-        onCreateWindow={handleCreateWindow}
-        onRenameWindow={handleRenameWindow}
-        onRequestDeleteWindow={handleRequestDeleteWindow}
-        filesClient={filesClient}
-      />
-      <div style={{ flex: 1, position: 'relative', minHeight: 0, display: 'flex' }}>
-        <MultiPaneArea
-          gatewayUrl={gatewayUrl}
-          token={token}
-          isVisible={!isFilesRoute}
+    <>
+      <div style={{ display: 'flex', height: '100vh', background: tokens.colors.bg }}>
+        <Sidebar
+          sessions={sessions}
+          loading={loading}
+          error={error}
+          activeSessionId={activeSessionId}
+          activeWindowIndex={activeWindowIndex}
+          onSelect={(sessionId, windowIndex) => open(sessionId, windowIndex ?? 0)}
+          onCreateSession={handleCreateSession}
+          onRenameSession={handleRenameSession}
+          onRequestDeleteSession={handleRequestDeleteSession}
+          onCreateWindow={handleCreateWindow}
+          onRenameWindow={handleRenameWindow}
+          onRequestDeleteWindow={handleRequestDeleteWindow}
+          filesClient={filesClient}
         />
-        {isFilesRoute && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
-            <FilesViewerPane client={filesClient} token={token} />
-          </div>
-        )}
+        <div style={{ flex: 1, position: 'relative', minHeight: 0, display: 'flex' }}>
+          <MultiPaneArea
+            gatewayUrl={gatewayUrl}
+            token={token}
+            isVisible={!isFilesRoute}
+          />
+          {isFilesRoute && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
+              <FilesViewerPane client={filesClient} token={token} />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <CommandPalette />
+    </>
   );
 }
