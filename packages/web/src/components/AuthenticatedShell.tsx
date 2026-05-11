@@ -210,16 +210,20 @@ export function AuthenticatedShell() {
         onRequestDeleteWindow={handleRequestDeleteWindow}
         filesClient={filesClient}
       />
-      {isFilesRoute ? (
-        <FilesViewerPane client={filesClient} token={token} />
-      ) : (
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, display: 'flex' }}>
         <TerminalPane
           gatewayUrl={gatewayUrl}
           token={token}
           sessionId={activeSessionId}
           windowIndex={activeWindowIndex}
+          isVisible={!isFilesRoute}
         />
-      )}
+        {isFilesRoute && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
+            <FilesViewerPane client={filesClient} token={token} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
