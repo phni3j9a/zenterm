@@ -1,8 +1,7 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { TerminalPane } from '@/components/TerminalPane';
 import { SplitPane } from './SplitPane';
 import { usePaneStore } from '@/stores/pane';
-import type { LayoutMode } from '@/lib/paneLayout';
 
 export interface MultiPaneAreaProps {
   gatewayUrl: string;
@@ -18,8 +17,22 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
   const setFocusedIndex = usePaneStore((s) => s.setFocusedIndex);
   const setRatio = usePaneStore((s) => s.setRatio);
 
+  const ratioSetters = useMemo(
+    () => ({
+      'cols-2-0': (v: number) => setRatio('cols-2', 0, v),
+      'cols-3-0': (v: number) => setRatio('cols-3', 0, v),
+      'cols-3-1': (v: number) => setRatio('cols-3', 1, v),
+      'grid-2x2-0': (v: number) => setRatio('grid-2x2', 0, v),
+      'grid-2x2-1': (v: number) => setRatio('grid-2x2', 1, v),
+      'main-side-2-0': (v: number) => setRatio('main-side-2', 0, v),
+      'main-side-2-1': (v: number) => setRatio('main-side-2', 1, v),
+    }),
+    [setRatio],
+  );
+
   const slot = (idx: number): ReactNode => (
     <div
+      key={`pane-${idx}`}
       onClick={() => setFocusedIndex(idx)}
       style={{ width: '100%', height: '100%' }}
     >
@@ -35,9 +48,6 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
     </div>
   );
 
-  const setR = (mode: LayoutMode, splitterIdx: number) => (v: number) =>
-    setRatio(mode, splitterIdx, v);
-
   if (layout === 'single') {
     return <div style={{ width: '100%', height: '100%' }}>{slot(0)}</div>;
   }
@@ -47,7 +57,7 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
       <SplitPane
         orientation="vertical"
         ratio={ratios['cols-2'][0]}
-        onRatioChange={setR('cols-2', 0)}
+        onRatioChange={ratioSetters['cols-2-0']}
         first={slot(0)}
         second={slot(1)}
       />
@@ -59,13 +69,13 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
       <SplitPane
         orientation="vertical"
         ratio={ratios['cols-3'][0]}
-        onRatioChange={setR('cols-3', 0)}
+        onRatioChange={ratioSetters['cols-3-0']}
         first={slot(0)}
         second={
           <SplitPane
             orientation="vertical"
             ratio={ratios['cols-3'][1]}
-            onRatioChange={setR('cols-3', 1)}
+            onRatioChange={ratioSetters['cols-3-1']}
             first={slot(1)}
             second={slot(2)}
           />
@@ -75,16 +85,17 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
   }
 
   if (layout === 'grid-2x2') {
+    // grid-2x2: both rows share ratios['grid-2x2'][0] for column split (rows align column boundaries).
     return (
       <SplitPane
         orientation="horizontal"
         ratio={ratios['grid-2x2'][1]}
-        onRatioChange={setR('grid-2x2', 1)}
+        onRatioChange={ratioSetters['grid-2x2-1']}
         first={
           <SplitPane
             orientation="vertical"
             ratio={ratios['grid-2x2'][0]}
-            onRatioChange={setR('grid-2x2', 0)}
+            onRatioChange={ratioSetters['grid-2x2-0']}
             first={slot(0)}
             second={slot(1)}
           />
@@ -93,7 +104,7 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
           <SplitPane
             orientation="vertical"
             ratio={ratios['grid-2x2'][0]}
-            onRatioChange={setR('grid-2x2', 0)}
+            onRatioChange={ratioSetters['grid-2x2-0']}
             first={slot(2)}
             second={slot(3)}
           />
@@ -107,13 +118,13 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible }: MultiPaneAreaPro
     <SplitPane
       orientation="vertical"
       ratio={ratios['main-side-2'][0]}
-      onRatioChange={setR('main-side-2', 0)}
+      onRatioChange={ratioSetters['main-side-2-0']}
       first={slot(0)}
       second={
         <SplitPane
           orientation="horizontal"
           ratio={ratios['main-side-2'][1]}
-          onRatioChange={setR('main-side-2', 1)}
+          onRatioChange={ratioSetters['main-side-2-1']}
           first={slot(1)}
           second={slot(2)}
         />
