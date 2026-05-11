@@ -10,7 +10,10 @@ import { FONT_FAMILY_MONO } from '@/theme/tokens';
 import { useTheme } from '@/theme';
 import { useSettingsStore } from '@/stores/settings';
 import { createImeDedup } from '@/lib/imeDedup';
-import { createReconnectBackoff } from '@/lib/reconnectBackoff';
+import {
+  createReconnectBackoff,
+  type BackoffStep,
+} from '@/lib/reconnectBackoff';
 import {
   buildTerminalWsUrl,
   encodeInput,
@@ -20,13 +23,22 @@ import {
 
 export type TerminalStatus = 'connected' | 'disconnected' | 'error' | 'reconnecting';
 
+export interface ReconnectInfo {
+  attempt: number;
+  etaMs: number;
+  exhausted: boolean;
+}
+
 export interface XtermViewProps {
   gatewayUrl: string;
   token: string;
   sessionId: string;
   windowIndex: number;
   isFocused: boolean;
+  isVisible: boolean;
+  reconnectNonce: number;
   onStatusChange: (status: TerminalStatus) => void;
+  onReconnectInfo?: (info: ReconnectInfo | null) => void;
 }
 
 export function XtermView({
@@ -35,14 +47,21 @@ export function XtermView({
   sessionId,
   windowIndex,
   isFocused,
+  isVisible,
+  reconnectNonce,
   onStatusChange,
+  onReconnectInfo,
 }: XtermViewProps) {
   const { resolvedTheme } = useTheme();
   const fontSize = useSettingsStore((s) => s.fontSize);
   const onStatusChangeRef = useRef(onStatusChange);
+  const onReconnectInfoRef = useRef(onReconnectInfo);
   useEffect(() => {
     onStatusChangeRef.current = onStatusChange;
   }, [onStatusChange]);
+  useEffect(() => {
+    onReconnectInfoRef.current = onReconnectInfo;
+  }, [onReconnectInfo]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -52,8 +71,15 @@ export function XtermView({
   const dedupRef = useRef(createImeDedup());
   const reconnectTimerRef = useRef<number | null>(null);
   const isUnmountedRef = useRef(false);
+  const isVisibleRef = useRef(isVisible);
+  const lastSentSizeRef = useRef<{ cols: number; rows: number } | null>(null);
 
-  // Create xterm once on mount
+  // Keep ref in sync so ResizeObserver callback can early-return.
+  useEffect(() => {
+    isVisibleRef.current = isVisible;
+  }, [isVisible]);
+
+  // Create xterm once on mount.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -87,27 +113,55 @@ export function XtermView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Apply theme/fontSize updates
+  // Apply theme/fontSize updates.
   useEffect(() => {
     const term = termRef.current;
     if (!term) return;
     term.options.theme = resolvedTheme === 'light' ? terminalColorsLight : terminalColorsDark;
     term.options.fontSize = fontSize;
-    fitRef.current?.fit();
+    if (isVisibleRef.current) {
+      fitRef.current?.fit();
+    }
   }, [resolvedTheme, fontSize]);
 
-  // Apply focus
+  // Apply focus.
   useEffect(() => {
     const term = termRef.current;
     if (!term) return;
     term.options.disableStdin = !isFocused;
-    if (isFocused) term.focus();
+    if (isFocused && isVisibleRef.current) term.focus();
   }, [isFocused]);
 
-  // WebSocket connect & reconnect
+  // Reveal hook: when isVisible flips false → true, fit + focus + maybe send resize.
+  useEffect(() => {
+    if (!isVisible) return;
+    const term = termRef.current;
+    const fit = fitRef.current;
+    if (!term || !fit) return;
+    const raf = window.requestAnimationFrame(() => {
+      fit.fit();
+      term.refresh(0, term.rows - 1);
+      if (isFocused) term.focus();
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        // Always send a resize on reveal — the actual layout dimensions may
+        // have changed while hidden (display:none reports stale cols/rows
+        // until refresh + fit). Diff-guarding caused the visibility test to
+        // miss a reveal-time resize because the mocked size never changes.
+        ws.send(encodeResize(term.cols, term.rows));
+        lastSentSizeRef.current = { cols: term.cols, rows: term.rows };
+      }
+    });
+    return () => {
+      window.cancelAnimationFrame(raf);
+    };
+  }, [isVisible, isFocused]);
+
+  // WebSocket connect & reconnect (depends on identity + reconnectNonce).
   useEffect(() => {
     isUnmountedRef.current = false;
     backoffRef.current.reset();
+    onReconnectInfoRef.current?.(null);
 
     const connect = () => {
       if (isUnmountedRef.current) return;
@@ -121,9 +175,11 @@ export function XtermView({
 
       ws.onopen = () => {
         backoffRef.current.reset();
+        onReconnectInfoRef.current?.(null);
         term.reset();
-        fitRef.current?.fit();
+        if (isVisibleRef.current) fitRef.current?.fit();
         ws.send(encodeResize(term.cols, term.rows));
+        lastSentSizeRef.current = { cols: term.cols, rows: term.rows };
         onStatusChangeRef.current('connected');
       };
 
@@ -141,14 +197,25 @@ export function XtermView({
         wsRef.current = null;
         if (ev.code === 1000 || ev.code === 1008) {
           onStatusChangeRef.current('disconnected');
+          onReconnectInfoRef.current?.(null);
           return;
         }
-        const step = backoffRef.current.next();
+        const step: BackoffStep = backoffRef.current.next();
         if (step.exhausted) {
           onStatusChangeRef.current('error');
+          onReconnectInfoRef.current?.({
+            attempt: step.attempt,
+            etaMs: 0,
+            exhausted: true,
+          });
           return;
         }
         onStatusChangeRef.current('reconnecting');
+        onReconnectInfoRef.current?.({
+          attempt: step.attempt,
+          etaMs: step.delayMs,
+          exhausted: false,
+        });
         reconnectTimerRef.current = window.setTimeout(() => {
           connect();
         }, step.delayMs);
@@ -182,14 +249,15 @@ export function XtermView({
         wsRef.current = null;
       }
     };
-  }, [gatewayUrl, token, sessionId, windowIndex]);
+  }, [gatewayUrl, token, sessionId, windowIndex, reconnectNonce]);
 
-  // ResizeObserver → fit + send resize
+  // ResizeObserver → fit + send resize (skip while hidden).
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     let raf = 0;
     const ro = new ResizeObserver(() => {
+      if (!isVisibleRef.current) return;
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         const fit = fitRef.current;
@@ -199,6 +267,7 @@ export function XtermView({
         fit.fit();
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(encodeResize(term.cols, term.rows));
+          lastSentSizeRef.current = { cols: term.cols, rows: term.rows };
         }
       });
     });

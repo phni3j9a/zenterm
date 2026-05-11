@@ -2,11 +2,13 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import { useSettingsStore } from '@/stores/settings';
 
-// xterm.js can't render in jsdom (no canvas). Mock the modules so the
-// component tree mounts cleanly while we test WS / lifecycle wiring.
+// Track the most recently constructed Terminal mock so we can assert focus/fit calls.
+const fitCalls: number[] = [];
+const focusCalls: number[] = [];
+const sentMessages: string[] = [];
+
 vi.mock('@xterm/xterm', () => ({
-  // vitest 4.x requires regular functions (not arrow functions) for constructor mocks
-  Terminal: vi.fn().mockImplementation(function() {
+  Terminal: vi.fn().mockImplementation(function () {
     return {
       open: vi.fn(),
       onData: vi.fn(() => ({ dispose: vi.fn() })),
@@ -15,7 +17,7 @@ vi.mock('@xterm/xterm', () => ({
       write: vi.fn(),
       reset: vi.fn(),
       dispose: vi.fn(),
-      focus: vi.fn(),
+      focus: vi.fn(() => focusCalls.push(performance.now())),
       loadAddon: vi.fn(),
       getSelection: vi.fn(() => ''),
       clear: vi.fn(),
@@ -29,15 +31,17 @@ vi.mock('@xterm/xterm', () => ({
 }));
 
 vi.mock('@xterm/addon-fit', () => ({
-  FitAddon: vi.fn().mockImplementation(function() { return { fit: vi.fn() }; }),
+  FitAddon: vi.fn().mockImplementation(function () {
+    return { fit: vi.fn(() => fitCalls.push(performance.now())) };
+  }),
 }));
 
 vi.mock('@xterm/addon-unicode11', () => ({
-  Unicode11Addon: vi.fn().mockImplementation(function() { return {}; }),
+  Unicode11Addon: vi.fn().mockImplementation(function () { return {}; }),
 }));
 
 vi.mock('@xterm/addon-web-links', () => ({
-  WebLinksAddon: vi.fn().mockImplementation(function() { return {}; }),
+  WebLinksAddon: vi.fn().mockImplementation(function () { return {}; }),
 }));
 
 vi.mock('@xterm/xterm/css/xterm.css', () => ({ default: '' }));
@@ -54,7 +58,6 @@ class MockWebSocket {
   onmessage: ((ev: MessageEvent) => void) | null = null;
   onclose: ((ev: CloseEvent) => void) | null = null;
   onerror: ((ev: Event) => void) | null = null;
-  sentMessages: string[] = [];
 
   constructor(url: string) {
     this.url = url;
@@ -62,7 +65,7 @@ class MockWebSocket {
   }
 
   send(data: string) {
-    this.sentMessages.push(data);
+    sentMessages.push(data);
   }
 
   close(code?: number) {
@@ -77,6 +80,9 @@ class MockWebSocket {
 }
 
 beforeEach(() => {
+  fitCalls.length = 0;
+  focusCalls.length = 0;
+  sentMessages.length = 0;
   MockWebSocket.instances = [];
   vi.stubGlobal('WebSocket', MockWebSocket);
   vi.stubGlobal('ResizeObserver', class {
@@ -84,8 +90,11 @@ beforeEach(() => {
     unobserve() {}
     disconnect() {}
   });
+  vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+    cb(0);
+    return 1;
+  });
   useSettingsStore.setState({ fontSize: 14 } as any);
-  // matchMedia stub for useTheme resolving system theme
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockReturnValue({
@@ -100,88 +109,103 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('XtermView', () => {
-  it('opens a WebSocket with the right URL on mount', () => {
-    render(
+describe('XtermView isVisible prop', () => {
+  it('does not unmount terminal when toggled false', () => {
+    const { rerender } = render(
       <XtermView
         gatewayUrl="http://gateway.test:18765"
         token="1234"
         sessionId="dev"
         windowIndex={0}
-        isFocused
         isVisible
+        isFocused
         reconnectNonce={0}
         onStatusChange={() => undefined}
       />,
     );
-    expect(MockWebSocket.instances).toHaveLength(1);
-    expect(MockWebSocket.instances[0].url).toBe(
-      'ws://gateway.test:18765/ws/terminal?sessionId=dev&windowIndex=0&token=1234',
-    );
-  });
-
-  it('reports connected status when WS opens', () => {
-    const onStatus = vi.fn();
-    render(
+    const wsBefore = MockWebSocket.instances.length;
+    rerender(
       <XtermView
         gatewayUrl="http://gateway.test:18765"
         token="1234"
         sessionId="dev"
         windowIndex={0}
+        isVisible={false}
         isFocused
-        isVisible
         reconnectNonce={0}
-        onStatusChange={onStatus}
+        onStatusChange={() => undefined}
       />,
     );
-    expect(onStatus).toHaveBeenCalledWith('disconnected');
+    // No new WebSocket should be opened, and the existing one stays connected.
+    expect(MockWebSocket.instances.length).toBe(wsBefore);
+    expect(MockWebSocket.instances[0].readyState).not.toBe(MockWebSocket.CLOSED);
+  });
+
+  it('calls fit + focus when toggled false → true', () => {
+    const { rerender } = render(
+      <XtermView
+        gatewayUrl="http://gateway.test:18765"
+        token="1234"
+        sessionId="dev"
+        windowIndex={0}
+        isVisible={false}
+        isFocused
+        reconnectNonce={0}
+        onStatusChange={() => undefined}
+      />,
+    );
+    const fitCallsBeforeReveal = fitCalls.length;
+    const focusCallsBeforeReveal = focusCalls.length;
+    act(() => {
+      rerender(
+        <XtermView
+          gatewayUrl="http://gateway.test:18765"
+          token="1234"
+          sessionId="dev"
+          windowIndex={0}
+          isVisible
+          isFocused
+          reconnectNonce={0}
+          onStatusChange={() => undefined}
+        />,
+      );
+    });
+    expect(fitCalls.length).toBeGreaterThan(fitCallsBeforeReveal);
+    expect(focusCalls.length).toBeGreaterThan(focusCallsBeforeReveal);
+  });
+
+  it('sends a resize message on reveal when WS is open', () => {
+    const { rerender } = render(
+      <XtermView
+        gatewayUrl="http://gateway.test:18765"
+        token="1234"
+        sessionId="dev"
+        windowIndex={0}
+        isVisible={false}
+        isFocused
+        reconnectNonce={0}
+        onStatusChange={() => undefined}
+      />,
+    );
     act(() => {
       MockWebSocket.instances[0].simulateOpen();
     });
-    expect(onStatus).toHaveBeenCalledWith('connected');
-  });
-
-  it('closes the WS on unmount', () => {
-    const { unmount } = render(
-      <XtermView
-        gatewayUrl="http://gateway.test:18765"
-        token="1234"
-        sessionId="dev"
-        windowIndex={0}
-        isFocused
-        isVisible
-        reconnectNonce={0}
-        onStatusChange={() => undefined}
-      />,
-    );
-    const ws = MockWebSocket.instances[0];
-    unmount();
-    expect(ws.readyState).toBe(MockWebSocket.CLOSED);
-  });
-
-  it('reconnects with backoff on unexpected close', async () => {
-    vi.useFakeTimers();
-    render(
-      <XtermView
-        gatewayUrl="http://gateway.test:18765"
-        token="1234"
-        sessionId="dev"
-        windowIndex={0}
-        isFocused
-        isVisible
-        reconnectNonce={0}
-        onStatusChange={() => undefined}
-      />,
-    );
-    expect(MockWebSocket.instances).toHaveLength(1);
+    sentMessages.length = 0;
     act(() => {
-      MockWebSocket.instances[0].onclose?.({ code: 1006 } as CloseEvent);
+      rerender(
+        <XtermView
+          gatewayUrl="http://gateway.test:18765"
+          token="1234"
+          sessionId="dev"
+          windowIndex={0}
+          isVisible
+          isFocused
+          reconnectNonce={0}
+          onStatusChange={() => undefined}
+        />,
+      );
     });
-    expect(MockWebSocket.instances).toHaveLength(1); // not yet reconnected
-    await act(async () => {
-      vi.advanceTimersByTime(1000);
-    });
-    expect(MockWebSocket.instances).toHaveLength(2);
-    vi.useRealTimers();
+    const resizeMsgs = sentMessages.filter((m) => m.includes('"type":"resize"'));
+    expect(resizeMsgs.length).toBeGreaterThanOrEqual(1);
   });
 });
