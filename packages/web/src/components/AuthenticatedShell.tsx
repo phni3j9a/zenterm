@@ -9,12 +9,14 @@ import type { FilesApiClient } from '@/components/files/filesApi';
 import { ApiClient } from '@/api/client';
 import { HttpError } from '@/api/errors';
 import { useAuthStore } from '@/stores/auth';
+import { useLayoutStore } from '@/stores/layout';
 import { usePaneStore } from '@/stores/pane';
 import { useSessionsStore, type SessionsApiClient } from '@/stores/sessions';
 import { useSessionViewStore } from '@/stores/sessionView';
 import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
+import { useShortcuts } from '@/hooks/useShortcuts';
 
 export function AuthenticatedShell() {
   const { tokens } = useTheme();
@@ -68,6 +70,23 @@ export function AuthenticatedShell() {
       usePaneStore.getState().suspendForSingle();
     }
   }, [isSessionsRoute]);
+
+  const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
+  const openPalette = useLayoutStore((s) => s.openPalette);
+  const openLayoutMenu = useLayoutStore((s) => s.openLayoutMenu);
+
+  useShortcuts({
+    toggleSidebar,
+    openPalette,
+    openSettings: () => navigate('/web/settings'),
+    jumpToWindow: () => undefined,
+    newWindow: () => undefined,
+    closeWindow: () => undefined,
+    focusNextPane: () => undefined,
+    focusPrevPane: () => undefined,
+    openLayoutMenu,
+    openSearch: () => undefined,
+  });
 
   if (!token || !gatewayUrl) return <Navigate to="/web/login" replace />;
 
