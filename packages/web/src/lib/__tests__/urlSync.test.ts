@@ -40,4 +40,9 @@ describe('parseSessionRoute', () => {
       windowIndex: 0,
     });
   });
+
+  it('returns null when session id has malformed percent-encoding', () => {
+    expect(parseSessionRoute('/web/sessions/%E0%A4%A')).toBeNull();
+    expect(parseSessionRoute('/web/sessions/%2/window/1')).toBeNull();
+  });
 });
