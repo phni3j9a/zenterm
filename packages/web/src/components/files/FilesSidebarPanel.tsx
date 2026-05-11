@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { FileEntry } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { useFilesStore } from '@/stores/files';
+import type { FilesClipboard } from '@/stores/files';
 import { useFilesPreviewStore } from '@/stores/filesPreview';
 import { useUiStore } from '@/stores/ui';
 import { buildEntryPath } from '@/lib/filesPath';
@@ -14,6 +15,9 @@ import { FilesList } from './FilesList';
 import { FilesContextMenu } from './FilesContextMenu';
 import { FilesNewNameDialog } from './FilesNewNameDialog';
 import { FilesDetailsDialog } from './FilesDetailsDialog';
+import { FilesSelectionHeader } from './FilesSelectionHeader';
+import { FilesBulkActionBar } from './FilesBulkActionBar';
+import { FilesPasteBar } from './FilesPasteBar';
 import { loadDirectory, type FilesApiClient } from './filesApi';
 
 interface Props {
@@ -27,6 +31,8 @@ export function FilesSidebarPanel({ client }: Props) {
   const showHidden = useFilesStore((s) => s.showHidden);
   const loading = useFilesStore((s) => s.loading);
   const error = useFilesStore((s) => s.error);
+  const selectionMode = useFilesStore((s) => s.selectionMode);
+  const clipboard = useFilesStore((s) => s.clipboard);
 
   useEffect(() => {
     void loadDirectory(client, currentPath, showHidden);
@@ -109,7 +115,69 @@ export function FilesSidebarPanel({ client }: Props) {
     setNewFileOpen(false);
   };
 
+  const handleLongPress = (entry: FileEntry) => {
+    useFilesStore.getState().enterSelectionMode(entry.name);
+  };
+
+  const doCopy = (names: string[]) => {
+    const items = names.map((n) => buildEntryPath(useFilesStore.getState().currentPath, n));
+    useFilesStore.getState().setClipboard({ items, mode: 'copy' });
+    useFilesStore.getState().exitSelectionMode();
+    pushToast({ type: 'success', message: t('files.copySuccess') });
+  };
+
+  const doCut = (names: string[]) => {
+    const items = names.map((n) => buildEntryPath(useFilesStore.getState().currentPath, n));
+    useFilesStore.getState().setClipboard({ items, mode: 'cut' });
+    useFilesStore.getState().exitSelectionMode();
+    pushToast({ type: 'success', message: t('files.cutSuccess') });
+  };
+
+  const doBulkDelete = (names: string[]) => {
+    showConfirm({
+      title: t('files.deleteConfirmTitle'),
+      message: t('files.deleteConfirmMultiple', { count: names.length }),
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          for (const n of names) {
+            await client.deleteFile(buildEntryPath(useFilesStore.getState().currentPath, n));
+          }
+          pushToast({ type: 'success', message: t('files.deleteSuccess') });
+          useFilesStore.getState().exitSelectionMode();
+          await refresh();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          pushToast({ type: 'error', message: `${t('files.deleteFailed')}: ${msg}` });
+        }
+      },
+    });
+  };
+
+  const doPaste = async (cb: FilesClipboard) => {
+    const dest = useFilesStore.getState().currentPath;
+    try {
+      if (cb.mode === 'copy') {
+        await client.copyFiles(cb.items, dest);
+      } else {
+        await client.moveFiles(cb.items, dest);
+      }
+      pushToast({ type: 'success', message: t('files.pasteSuccess') });
+      useFilesStore.getState().clearClipboard();
+      await refresh();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      pushToast({ type: 'error', message: `${t('files.pasteFailed')}: ${msg}` });
+    }
+  };
+
   const handleOpen = (entry: FileEntry) => {
+    // In selection mode, clicking a row toggles selection instead of opening
+    if (useFilesStore.getState().selectionMode) {
+      useFilesStore.getState().toggleSelection(entry.name);
+      return;
+    }
+
     const isDir = entry.type === 'directory'
       || (entry.type === 'symlink' && entry.resolvedType === 'directory');
 
@@ -149,6 +217,8 @@ export function FilesSidebarPanel({ client }: Props) {
         onNewFolder={() => setMkdirOpen(true)}
       />
       <FilesBreadcrumbs path={currentPath} onNavigate={(p) => useFilesStore.getState().setCurrentPath(p)} />
+      {selectionMode && <FilesSelectionHeader />}
+      {clipboard && <FilesPasteBar onPaste={doPaste} />}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {loading && (
           <div style={{ padding: tokens.spacing.md, color: tokens.colors.textMuted }}>{t('common.loading')}</div>
@@ -162,10 +232,13 @@ export function FilesSidebarPanel({ client }: Props) {
           <FilesList
             onOpen={handleOpen}
             onContextMenu={handleContextMenu}
-            onLongPress={() => { /* wired in Sub-phase 2c-6 */ }}
+            onLongPress={handleLongPress}
           />
         )}
       </div>
+      {selectionMode && (
+        <FilesBulkActionBar onCopy={doCopy} onCut={doCut} onDelete={doBulkDelete} />
+      )}
       {contextMenu && (
         <FilesContextMenu
           entry={contextMenu.entry}
@@ -173,11 +246,11 @@ export function FilesSidebarPanel({ client }: Props) {
           y={contextMenu.y}
           onClose={() => setContextMenu(null)}
           onRename={(e) => setRenameTarget(e)}
-          onCopy={() => { /* wired in Sub-phase 2c-6 */ }}
-          onCut={() => { /* wired in Sub-phase 2c-6 */ }}
+          onCopy={(e) => doCopy([e.name])}
+          onCut={(e) => doCut([e.name])}
           onDelete={doDelete}
           onDetails={(e) => setDetailsTarget(e)}
-          onSelect={() => { /* wired in Sub-phase 2c-6 */ }}
+          onSelect={(e) => useFilesStore.getState().enterSelectionMode(e.name)}
         />
       )}
       <FilesNewNameDialog
