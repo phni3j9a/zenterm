@@ -7,6 +7,7 @@ import { FilesSidebarPanel } from './files/FilesSidebarPanel';
 import type { FilesApiClient } from './files/filesApi';
 import { useTheme } from '@/theme';
 import { useEventsStore } from '@/stores/events';
+import { useLayoutStore } from '@/stores/layout';
 
 type ActivePanel = 'sessions' | 'files' | 'settings';
 
@@ -44,6 +45,7 @@ export function Sidebar(props: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const activePanel = deriveActivePanel(location.pathname);
+  const collapsed = useLayoutStore((s) => s.sidebarCollapsed);
 
   const renderPanel = () => {
     if (activePanel === 'settings') return <SettingsPanel />;
@@ -68,11 +70,13 @@ export function Sidebar(props: SidebarProps) {
 
   return (
     <aside
+      role="complementary"
+      aria-hidden={collapsed || undefined}
       style={{
-        width: SIDEBAR_WIDTH,
+        width: collapsed ? 0 : SIDEBAR_WIDTH,
         flexShrink: 0,
         background: tokens.colors.bgElevated,
-        borderRight: `1px solid ${tokens.colors.borderSubtle}`,
+        borderRight: collapsed ? 'none' : `1px solid ${tokens.colors.borderSubtle}`,
         display: 'grid',
         gridTemplateRows: '1fr 56px',
         height: '100vh',
@@ -80,48 +84,52 @@ export function Sidebar(props: SidebarProps) {
         boxSizing: 'border-box',
       }}
     >
-      <div aria-label={`${activePanel} panel`} style={{ overflowY: 'auto' }}>
-        {renderPanel()}
-      </div>
-      <nav
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-around',
-          borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-          background: tokens.colors.bgElevated,
-          position: 'relative',
-        }}
-      >
-        <button
-          type="button"
-          aria-label="Sessions tab"
-          aria-pressed={activePanel === 'sessions'}
-          onClick={() => navigate('/web/sessions')}
-          style={tabButtonStyle(activePanel === 'sessions')}
-        >
-          ⌘ {t('sidebar.tabs.sessions')}
-        </button>
-        <button
-          type="button"
-          aria-label="Files tab"
-          aria-pressed={activePanel === 'files'}
-          onClick={() => navigate('/web/files')}
-          style={tabButtonStyle(activePanel === 'files')}
-        >
-          📁 {t('sidebar.tabs.files')}
-        </button>
-        <button
-          type="button"
-          aria-label="Settings tab"
-          aria-pressed={activePanel === 'settings'}
-          onClick={() => navigate('/web/settings')}
-          style={tabButtonStyle(activePanel === 'settings')}
-        >
-          ⚙ {t('sidebar.tabs.settings')}
-        </button>
-        <EventsStatusDot />
-      </nav>
+      {collapsed ? null : (
+        <>
+          <div aria-label={`${activePanel} panel`} style={{ overflowY: 'auto' }}>
+            {renderPanel()}
+          </div>
+          <nav
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-around',
+              borderTop: `1px solid ${tokens.colors.borderSubtle}`,
+              background: tokens.colors.bgElevated,
+              position: 'relative',
+            }}
+          >
+            <button
+              type="button"
+              aria-label="Sessions tab"
+              aria-pressed={activePanel === 'sessions'}
+              onClick={() => navigate('/web/sessions')}
+              style={tabButtonStyle(activePanel === 'sessions')}
+            >
+              ⌘ {t('sidebar.tabs.sessions')}
+            </button>
+            <button
+              type="button"
+              aria-label="Files tab"
+              aria-pressed={activePanel === 'files'}
+              onClick={() => navigate('/web/files')}
+              style={tabButtonStyle(activePanel === 'files')}
+            >
+              📁 {t('sidebar.tabs.files')}
+            </button>
+            <button
+              type="button"
+              aria-label="Settings tab"
+              aria-pressed={activePanel === 'settings'}
+              onClick={() => navigate('/web/settings')}
+              style={tabButtonStyle(activePanel === 'settings')}
+            >
+              ⚙ {t('sidebar.tabs.settings')}
+            </button>
+            <EventsStatusDot />
+          </nav>
+        </>
+      )}
     </aside>
   );
 }
