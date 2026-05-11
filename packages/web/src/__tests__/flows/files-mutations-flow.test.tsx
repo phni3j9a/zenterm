@@ -96,4 +96,23 @@ describe('Files mutations flow', () => {
 
     expect(useFilesPreviewStore.getState().selectedPath).toBeNull();
   });
+
+  it('updates preview store path when active file is renamed', async () => {
+    const client = makeClient();
+    const { useFilesPreviewStore } = await import('@/stores/filesPreview');
+    useFilesPreviewStore.getState().selectFile('~/a.ts', 'a.ts', 'text');
+
+    render(<FilesSidebarPanel client={client as any} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
+
+    fireEvent.contextMenu(screen.getByRole('button', { name: /a\.ts/ }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: /rename/i }));
+
+    const input = await screen.findByDisplayValue('a.ts');
+    fireEvent.change(input, { target: { value: 'b.ts' } });
+    fireEvent.click(screen.getByRole('button', { name: /^ok$/i }));
+
+    await waitFor(() => expect(useFilesPreviewStore.getState().selectedName).toBe('b.ts'));
+    expect(useFilesPreviewStore.getState().selectedPath).toBe('~/b.ts');
+  });
 });

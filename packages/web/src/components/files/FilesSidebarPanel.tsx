@@ -71,9 +71,15 @@ export function FilesSidebarPanel({ client }: Props) {
 
   const doRename = async (newName: string) => {
     if (!renameTarget) return;
+    const oldPath = buildEntryPath(useFilesStore.getState().currentPath, renameTarget.name);
+    const newPath = buildEntryPath(useFilesStore.getState().currentPath, newName);
     try {
-      await client.renameFile(buildEntryPath(useFilesStore.getState().currentPath, renameTarget.name), newName);
+      await client.renameFile(oldPath, newName);
       pushToast({ type: 'success', message: t('files.renameSuccess') });
+      if (useFilesPreviewStore.getState().selectedPath === oldPath) {
+        const kind = useFilesPreviewStore.getState().selectedKind;
+        if (kind) useFilesPreviewStore.getState().selectFile(newPath, newName, kind);
+      }
       setRenameTarget(null);
       await refresh();
     } catch (err) {
