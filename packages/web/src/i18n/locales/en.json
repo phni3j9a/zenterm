@@ -173,6 +173,10 @@
     "mkdirFailedDesc": "Could not create folder.",
     "detailsSize": "Size: {{size}}",
     "detailsModified": "Modified: {{date}}",
-    "detailsPermissions": "Permissions: {{permissions}}"
+    "detailsPermissions": "Permissions: {{permissions}}",
+    "selectedCount": "{{count}} selected",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "clipboardItems": "{{count}} item(s) on clipboard"
   }
 }

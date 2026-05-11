@@ -173,6 +173,10 @@
     "mkdirFailedDesc": "フォルダを作成できませんでした。",
     "detailsSize": "サイズ: {{size}}",
     "detailsModified": "更新日時: {{date}}",
-    "detailsPermissions": "権限: {{permissions}}"
+    "detailsPermissions": "権限: {{permissions}}",
+    "selectedCount": "{{count}} 件選択中",
+    "selectAll": "全選択",
+    "deselectAll": "選択解除",
+    "clipboardItems": "{{count}} 件をクリップボード"
   }
 }
