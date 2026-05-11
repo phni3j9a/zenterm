@@ -137,6 +137,9 @@
     "downloadFailedDesc": "Could not download file.",
     "rendered": "Rendered",
     "source": "Source",
-    "loadFailedDesc": "Could not load file content."
+    "loadFailedDesc": "Could not load file content.",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }

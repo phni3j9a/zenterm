@@ -137,6 +137,9 @@
     "downloadFailedDesc": "ファイルをダウンロードできませんでした。",
     "rendered": "レンダリング",
     "source": "ソース",
-    "loadFailedDesc": "ファイル内容を読み込めませんでした。"
+    "loadFailedDesc": "ファイル内容を読み込めませんでした。",
+    "edit": "編集",
+    "save": "保存",
+    "cancel": "キャンセル"
   }
 }
