@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 export interface LoginFormProps {
@@ -8,6 +9,7 @@ export interface LoginFormProps {
 
 export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [token, setToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,7 +42,7 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
       }}
     >
       <h2 style={{ margin: 0, marginBottom: tokens.spacing.lg, fontSize: tokens.typography.heading.fontSize }}>
-        ZenTerm Web
+        {t('login.title')}
       </h2>
       {gatewayUrl && (
         <p style={{ fontSize: tokens.typography.small.fontSize, color: tokens.colors.textMuted, margin: 0, marginBottom: tokens.spacing.lg, fontFamily: tokens.typography.mono.fontFamily }}>
@@ -48,12 +50,13 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
         </p>
       )}
       <label style={{ display: 'block', marginBottom: tokens.spacing.sm, fontSize: tokens.typography.smallMedium.fontSize, color: tokens.colors.textSecondary }}>
-        Token
+        {t('login.tokenLabel')}
         <input
           autoFocus
           inputMode="numeric"
           pattern="\d*"
           maxLength={4}
+          placeholder={t('login.tokenPlaceholder')}
           value={token}
           onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 4))}
           style={{
@@ -96,7 +99,7 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
           opacity: token.length === 4 && !submitting ? 1 : 0.5,
         }}
       >
-        {submitting ? '…' : 'Connect'}
+        {submitting ? '…' : t('login.submit')}
       </button>
     </form>
   );

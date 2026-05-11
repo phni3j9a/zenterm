@@ -7,7 +7,7 @@ describe('LoginForm', () => {
   it('disables submit until 4 digits entered', async () => {
     const onSubmit = vi.fn();
     render(<LoginForm onSubmit={onSubmit} />);
-    const submit = screen.getByRole('button', { name: /Connect/i });
+    const submit = screen.getByRole('button', { name: /Sign in/i });
     expect(submit).toBeDisabled();
 
     const input = screen.getByLabelText(/Token/i);
@@ -30,7 +30,7 @@ describe('LoginForm', () => {
     render(<LoginForm onSubmit={onSubmit} />);
     const input = screen.getByLabelText(/Token/i);
     await userEvent.type(input, '5678');
-    await userEvent.click(screen.getByRole('button', { name: /Connect/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Sign in/i }));
     expect(onSubmit).toHaveBeenCalledWith('5678');
   });
 
@@ -38,7 +38,7 @@ describe('LoginForm', () => {
     const onSubmit = vi.fn().mockRejectedValue(new Error('Token が違います'));
     render(<LoginForm onSubmit={onSubmit} />);
     await userEvent.type(screen.getByLabelText(/Token/i), '0000');
-    await userEvent.click(screen.getByRole('button', { name: /Connect/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Sign in/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/Token が違います/);
   });
 

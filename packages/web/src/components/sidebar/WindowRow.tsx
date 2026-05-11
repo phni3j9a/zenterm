@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TmuxWindow } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { InlineEdit } from '@/components/ui/InlineEdit';
-import { validateSessionOrWindowName } from '@/lib/validateName';
+import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
 import { RowActionsMenu } from './RowActionsMenu';
 
 export interface WindowRowProps {
@@ -29,6 +30,7 @@ export function WindowRow({
   onRequestDelete,
 }: WindowRowProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<RowMode>('idle');
   const [menuOpen, setMenuOpen] = useState(false);
   const [hover, setHover] = useState(false);
@@ -59,8 +61,8 @@ export function WindowRow({
         {mode === 'editing-name' ? (
           <InlineEdit
             value={window.name}
-            validate={validateSessionOrWindowName}
-            ariaLabel="window 名を編集"
+            validate={(name) => { const e = validateSessionOrWindowName(name); return e ? t(nameValidationKey(e)) : null; }}
+            ariaLabel={t('common.rename') + ' ' + window.name}
             onSave={async (next) => {
               await onRename(sessionDisplayName, window.index, next);
               setMode('idle');
@@ -74,7 +76,7 @@ export function WindowRow({
       <button
         ref={kebabRef}
         type="button"
-        aria-label={`Actions for window ${window.name}`}
+        aria-label={t('sessions.actionsFor', { type: 'window', name: window.name })}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         onClick={(e) => {
@@ -96,9 +98,9 @@ export function WindowRow({
         open={menuOpen}
         anchorEl={kebabRef.current}
         items={[
-          { label: 'Rename', onClick: () => setMode('editing-name') },
+          { label: t('common.rename'), onClick: () => setMode('editing-name') },
           {
-            label: 'Delete',
+            label: t('common.delete'),
             onClick: () => onRequestDelete(sessionDisplayName, window),
             destructive: true,
           },

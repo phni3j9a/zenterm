@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 export interface ConfirmDialogProps {
@@ -16,13 +17,16 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = '削除',
-  cancelLabel = 'キャンセル',
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
+  const resolvedConfirmLabel = confirmLabel ?? t('common.delete');
+  const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const titleId = useId();
@@ -95,7 +99,7 @@ export function ConfirmDialog({
               cursor: 'pointer',
             }}
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </button>
           <button
             type="button"
@@ -110,7 +114,7 @@ export function ConfirmDialog({
               fontWeight: 600,
             }}
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </button>
         </div>
       </div>

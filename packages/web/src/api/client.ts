@@ -1,4 +1,4 @@
-import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
+import type { ClaudeLimitsResponse, CodexLimitsResponse, SystemStatus, TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { HttpError } from './errors';
 
 export class ApiClient {
@@ -106,5 +106,17 @@ export class ApiClient {
       'DELETE',
       `/api/sessions/${encodeURIComponent(sessionId)}/windows/${windowIndex}`,
     );
+  }
+
+  getSystemStatus(): Promise<SystemStatus> {
+    return this.request<SystemStatus>('GET', '/api/system/status');
+  }
+
+  getClaudeLimits(): Promise<ClaudeLimitsResponse> {
+    return this.request<ClaudeLimitsResponse>('GET', '/api/claude/limits');
+  }
+
+  getCodexLimits(): Promise<CodexLimitsResponse> {
+    return this.request<CodexLimitsResponse>('GET', '/api/codex/limits');
   }
 }

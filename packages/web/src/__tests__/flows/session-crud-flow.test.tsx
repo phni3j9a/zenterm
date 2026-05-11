@@ -80,7 +80,7 @@ function renderApp() {
 }
 
 describe('Session CRUD flows', () => {
-  it('creates a session via "+ 新規セッション"', async () => {
+  it('creates a session via "+ New session"', async () => {
     const created = { name: 'zen_x', displayName: 'x', created: 1, cwd: '/', windows: [] };
     mockFetch((url, init) => {
       if (url.endsWith('/api/sessions') && (init?.method ?? 'GET') === 'GET') {
@@ -93,9 +93,9 @@ describe('Session CRUD flows', () => {
     });
 
     renderApp();
-    await waitFor(() => screen.getByRole('button', { name: /新規セッション/ }));
-    await userEvent.click(screen.getByRole('button', { name: /新規セッション/ }));
-    await userEvent.type(screen.getByRole('textbox', { name: /新規セッション名/ }), 'x{Enter}');
+    await waitFor(() => screen.getByRole('button', { name: /New session/i }));
+    await userEvent.click(screen.getByRole('button', { name: /New session/i }));
+    await userEvent.type(screen.getByRole('textbox', { name: /New session/i }), 'x{Enter}');
 
     await waitFor(() => expect(useSessionsStore.getState().sessions).toHaveLength(1));
     expect(useSessionsStore.getState().sessions[0].displayName).toBe('x');
@@ -125,7 +125,7 @@ describe('Session CRUD flows', () => {
     await waitFor(() => screen.getByText('a'));
     await userEvent.click(screen.getByLabelText(/Actions for session a/));
     await userEvent.click(screen.getByRole('menuitem', { name: /Rename/ }));
-    const input = screen.getByRole('textbox', { name: /セッション名を編集/ });
+    const input = screen.getByRole('textbox', { name: /Rename/i });
     await userEvent.clear(input);
     await userEvent.type(input, 'renamed{Enter}');
 
@@ -157,7 +157,7 @@ describe('Session CRUD flows', () => {
     await waitFor(() => screen.getByText('a'));
     await userEvent.click(screen.getByLabelText(/Actions for session a/));
     await userEvent.click(screen.getByRole('menuitem', { name: /Rename/ }));
-    const input = screen.getByRole('textbox', { name: /セッション名を編集/ });
+    const input = screen.getByRole('textbox', { name: /Rename/i });
     await userEvent.clear(input);
     await userEvent.type(input, 'renamed{Enter}');
 
@@ -197,8 +197,8 @@ describe('Session CRUD flows', () => {
     await userEvent.click(screen.getByLabelText(/Actions for session a/));
     await userEvent.click(screen.getByRole('menuitem', { name: /Delete/ }));
 
-    expect(screen.getByText(/a を削除しますか/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '削除' }));
+    expect(screen.getByText(/Delete session/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Delete/i }));
 
     await waitFor(() =>
       expect(useSessionsStore.getState().sessions.map((s) => s.displayName)).toEqual(['b']),

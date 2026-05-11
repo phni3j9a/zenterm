@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LoginForm } from '@/components/LoginForm';
 import { ApiClient } from '@/api/client';
 import { useAuthStore } from '@/stores/auth';
@@ -6,6 +7,7 @@ import { useTheme } from '@/theme';
 
 export function LoginRoute() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const login = useAuthStore((s) => s.login);
   const { tokens } = useTheme();
 
@@ -15,7 +17,7 @@ export function LoginRoute() {
     const client = new ApiClient(gatewayUrl, token);
     const ok = await client.verifyToken();
     if (!ok) {
-      throw new Error('Token が違います。Gateway 起動時に表示された 4 桁を入力してください。');
+      throw new Error(t('login.invalid'));
     }
     login(token, gatewayUrl);
     navigate('/web/sessions', { replace: true });

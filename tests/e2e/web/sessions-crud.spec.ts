@@ -56,13 +56,18 @@ test.afterAll(async () => {
 });
 
 test('creates a session through the sidebar UI', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
   await page.getByLabel(/Token/i).fill(TOKEN);
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible();
 
-  await page.getByRole('button', { name: /新規セッション/ }).click();
-  await page.getByRole('textbox', { name: /新規セッション名/ }).fill('e2e_create');
+  await page.getByRole('button', { name: /New session/ }).click();
+  await page.getByRole('textbox', { name: /New session/ }).fill('e2e_create');
   await page.keyboard.press('Enter');
 
   await expect(page.getByText('e2e_create')).toBeVisible({ timeout: 5000 });
@@ -81,15 +86,20 @@ test('renames a session through kebab menu', async ({ page }) => {
     body: JSON.stringify({ name: 'e2e_rename' }),
   });
 
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
   await page.getByLabel(/Token/i).fill(TOKEN);
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByText('e2e_rename')).toBeVisible();
 
   await page.getByText('e2e_rename').hover();
   await page.getByLabel('Actions for session e2e_rename').click({ force: true });
   await page.getByRole('menuitem', { name: /Rename/ }).click();
-  const input = page.getByRole('textbox', { name: /セッション名を編集/ });
+  const input = page.getByRole('textbox', { name: /Rename e2e_rename/ });
   await input.fill('e2e_renamed');
   await page.keyboard.press('Enter');
 
@@ -103,16 +113,21 @@ test('deletes a session through kebab → confirm', async ({ page }) => {
     body: JSON.stringify({ name: 'e2e_delete' }),
   });
 
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
   await page.getByLabel(/Token/i).fill(TOKEN);
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByText('e2e_delete')).toBeVisible();
 
   await page.getByText('e2e_delete').hover();
   await page.getByLabel('Actions for session e2e_delete').click({ force: true });
   await page.getByRole('menuitem', { name: /Delete/ }).click();
-  await expect(page.getByText(/e2e_delete を削除しますか/)).toBeVisible();
-  await page.getByRole('button', { name: '削除' }).click();
+  await expect(page.getByText(/Delete session/)).toBeVisible();
+  await page.getByRole('button', { name: /^Delete$/ }).click();
 
   // Wait for session row to disappear (the button whose name starts with e2e_delete)
   await expect(page.getByRole('button', { name: /^e2e_delete/ })).not.toBeVisible({ timeout: 5000 });

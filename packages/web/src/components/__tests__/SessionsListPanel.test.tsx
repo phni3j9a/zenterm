@@ -70,7 +70,7 @@ describe('SessionsListPanel', () => {
         {...noopActions}
       />,
     );
-    expect(screen.getByText(/読み込み中/)).toBeInTheDocument();
+    expect(screen.getByText(/Loading/i)).toBeInTheDocument();
   });
 
   it('shows empty state when sessions array is empty', () => {
@@ -84,7 +84,7 @@ describe('SessionsListPanel', () => {
         {...noopActions}
       />,
     );
-    expect(screen.getByText(/セッションなし/)).toBeInTheDocument();
+    expect(screen.getByText(/No sessions/i)).toBeInTheDocument();
   });
 
   it('shows error state', () => {
@@ -98,7 +98,7 @@ describe('SessionsListPanel', () => {
         {...noopActions}
       />,
     );
-    expect(screen.getByText(/読み込めませんでした/)).toBeInTheDocument();
+    expect(screen.getByText(/Failed to load sessions/i)).toBeInTheDocument();
   });
 
   it('expanding a session reveals + window button', async () => {
@@ -113,10 +113,10 @@ describe('SessionsListPanel', () => {
       />,
     );
     await userEvent.click(screen.getByLabelText(/Expand windows/));
-    expect(screen.getByRole('button', { name: /\+ window/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /\+ New window/i })).toBeInTheDocument();
   });
 
-  it('always shows + 新規セッション in footer', () => {
+  it('always shows + New session in footer', () => {
     render(
       <SessionsListPanel
         sessions={sessions}
@@ -127,6 +127,6 @@ describe('SessionsListPanel', () => {
         {...noopActions}
       />,
     );
-    expect(screen.getByRole('button', { name: /新規セッション/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /New session/i })).toBeInTheDocument();
   });
 });

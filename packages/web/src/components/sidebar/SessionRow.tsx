@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TmuxSession } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { InlineEdit } from '@/components/ui/InlineEdit';
-import { validateSessionOrWindowName } from '@/lib/validateName';
+import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
 import { RowActionsMenu } from './RowActionsMenu';
 
 export interface SessionRowProps {
@@ -27,6 +28,7 @@ export function SessionRow({
   onRequestDelete,
 }: SessionRowProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<RowMode>('idle');
   const [menuOpen, setMenuOpen] = useState(false);
   const [hover, setHover] = useState(false);
@@ -72,8 +74,8 @@ export function SessionRow({
           {mode === 'editing-name' ? (
             <InlineEdit
               value={session.displayName}
-              validate={validateSessionOrWindowName}
-              ariaLabel="セッション名を編集"
+              validate={(name) => { const e = validateSessionOrWindowName(name); return e ? t(nameValidationKey(e)) : null; }}
+              ariaLabel={t('common.rename') + ' ' + session.displayName}
               onSave={async (next) => {
                 await onRename(session.displayName, next);
                 setMode('idle');
@@ -106,7 +108,7 @@ export function SessionRow({
           <span
             role="button"
             tabIndex={0}
-            aria-label={isExpanded ? 'Collapse windows' : 'Expand windows'}
+            aria-label={isExpanded ? t('sessions.collapseWindows') : t('sessions.expandWindows')}
             onClick={(e) => {
               e.stopPropagation();
               onToggleExpand(session.name);
@@ -131,7 +133,7 @@ export function SessionRow({
         <button
           ref={kebabRef}
           type="button"
-          aria-label={`Actions for session ${session.displayName}`}
+          aria-label={t('sessions.actionsFor', { type: 'session', name: session.displayName })}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           onClick={(e) => {
@@ -155,8 +157,8 @@ export function SessionRow({
         open={menuOpen}
         anchorEl={kebabRef.current}
         items={[
-          { label: 'Rename', onClick: () => setMode('editing-name') },
-          { label: 'Delete', onClick: () => onRequestDelete(session), destructive: true },
+          { label: t('common.rename'), onClick: () => setMode('editing-name') },
+          { label: t('common.delete'), onClick: () => onRequestDelete(session), destructive: true },
         ]}
         onClose={() => setMenuOpen(false)}
       />

@@ -55,9 +55,14 @@ test('opens a terminal and sees command output', async ({ page }) => {
   });
   expect(created.ok).toBe(true);
 
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
   await page.getByLabel(/Token/i).fill(TOKEN);
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 
   // Click the session

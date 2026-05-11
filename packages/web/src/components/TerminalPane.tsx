@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { XtermView, type TerminalStatus } from './terminal/XtermView';
 import { useTheme } from '@/theme';
 
@@ -15,7 +16,8 @@ export function TerminalPane({
   sessionId,
   windowIndex,
 }: TerminalPaneProps) {
-  const { tokens, mode } = useTheme();
+  const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<TerminalStatus>('disconnected');
 
   const statusColor: string = (() => {
@@ -43,14 +45,10 @@ export function TerminalPane({
           justifyContent: 'center',
         }}
       >
-        Select a session from the sidebar to start.
+        {t('terminal.selectPrompt')}
       </main>
     );
   }
-
-  const themeMode = mode === 'system'
-    ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
-    : mode;
 
   return (
     <section
@@ -81,7 +79,7 @@ export function TerminalPane({
         </span>
         <span style={{ flex: 1 }} />
         <span
-          aria-label={`Connection ${status}`}
+          aria-label={`Connection ${t(`terminal.status.${status}` as 'terminal.status.connected')}`}
           style={{
             width: 8,
             height: 8,
@@ -97,8 +95,6 @@ export function TerminalPane({
           sessionId={sessionId}
           windowIndex={windowIndex}
           isFocused
-          theme={themeMode}
-          fontSize={14}
           onStatusChange={setStatus}
         />
       </div>

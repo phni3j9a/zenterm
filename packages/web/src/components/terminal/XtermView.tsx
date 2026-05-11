@@ -7,6 +7,8 @@ import '@xterm/xterm/css/xterm.css';
 
 import { terminalColorsDark, terminalColorsLight } from '@/theme/terminalColors';
 import { FONT_FAMILY_MONO } from '@/theme/tokens';
+import { useTheme } from '@/theme';
+import { useSettingsStore } from '@/stores/settings';
 import { createImeDedup } from '@/lib/imeDedup';
 import { createReconnectBackoff } from '@/lib/reconnectBackoff';
 import {
@@ -24,8 +26,6 @@ export interface XtermViewProps {
   sessionId: string;
   windowIndex: number;
   isFocused: boolean;
-  theme: 'dark' | 'light';
-  fontSize: number;
   onStatusChange: (status: TerminalStatus) => void;
 }
 
@@ -35,10 +35,10 @@ export function XtermView({
   sessionId,
   windowIndex,
   isFocused,
-  theme,
-  fontSize,
   onStatusChange,
 }: XtermViewProps) {
+  const { resolvedTheme } = useTheme();
+  const fontSize = useSettingsStore((s) => s.fontSize);
   const onStatusChangeRef = useRef(onStatusChange);
   useEffect(() => {
     onStatusChangeRef.current = onStatusChange;
@@ -58,7 +58,7 @@ export function XtermView({
     const container = containerRef.current;
     if (!container) return;
 
-    const palette = theme === 'light' ? terminalColorsLight : terminalColorsDark;
+    const palette = resolvedTheme === 'light' ? terminalColorsLight : terminalColorsDark;
     const term = new Terminal({
       allowProposedApi: true,
       fontFamily: FONT_FAMILY_MONO,
@@ -91,10 +91,10 @@ export function XtermView({
   useEffect(() => {
     const term = termRef.current;
     if (!term) return;
-    term.options.theme = theme === 'light' ? terminalColorsLight : terminalColorsDark;
+    term.options.theme = resolvedTheme === 'light' ? terminalColorsLight : terminalColorsDark;
     term.options.fontSize = fontSize;
     fitRef.current?.fit();
-  }, [theme, fontSize]);
+  }, [resolvedTheme, fontSize]);
 
   // Apply focus
   useEffect(() => {
@@ -215,7 +215,8 @@ export function XtermView({
       style={{
         width: '100%',
         height: '100%',
-        background: theme === 'light' ? terminalColorsLight.background : terminalColorsDark.background,
+        background:
+          resolvedTheme === 'light' ? terminalColorsLight.background : terminalColorsDark.background,
       }}
     />
   );

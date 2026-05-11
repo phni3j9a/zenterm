@@ -41,7 +41,7 @@ describe('ConfirmDialog', () => {
         onCancel={vi.fn()}
       />,
     );
-    expect(screen.getByText('Delete')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Delete' })).toBeInTheDocument();
     expect(screen.getByText('Sure?')).toBeInTheDocument();
   });
 
@@ -81,7 +81,7 @@ describe('ConfirmDialog', () => {
     render(
       <ConfirmDialog open title="t" message="m" onConfirm={vi.fn()} onCancel={vi.fn()} />,
     );
-    expect(screen.getByRole('button', { name: 'キャンセル' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '削除' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Delete/i })).toBeInTheDocument();
   });
 });

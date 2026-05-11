@@ -62,9 +62,14 @@ test('creates, renames, and deletes a window in a session', async ({ page }) => 
     body: JSON.stringify({ name: 'e2e_win' }),
   });
 
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'system', language: 'en', fontSize: 14 }, version: 1,
+    }));
+  });
   await page.goto(`${baseUrl}/web`);
   await page.getByLabel(/Token/i).fill(TOKEN);
-  await page.getByRole('button', { name: /Connect/i }).click();
+  await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByText('e2e_win')).toBeVisible();
 
   // Pre-create a 2nd window via API so the expand chevron will appear
@@ -77,13 +82,13 @@ test('creates, renames, and deletes a window in a session', async ({ page }) => 
   // Wait for events refetch to surface the second window in the UI
   await page.waitForTimeout(1000);
 
-  // Now expand the session to reveal "+ window" and the existing windows
+  // Now expand the session to reveal "+ New window" and the existing windows
   await page.getByLabel(/Expand windows/).click();
-  await expect(page.getByRole('button', { name: /\+ window/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /\+ New window/ })).toBeVisible();
 
   // Create a new window through the UI
-  await page.getByRole('button', { name: /\+ window/ }).click();
-  await page.getByRole('textbox', { name: /新規 window 名/ }).fill('logs');
+  await page.getByRole('button', { name: /\+ New window/ }).click();
+  await page.getByRole('textbox', { name: /New window/ }).fill('logs');
   await page.keyboard.press('Enter');
   await expect(page.getByText('logs')).toBeVisible({ timeout: 5000 });
 
@@ -91,7 +96,7 @@ test('creates, renames, and deletes a window in a session', async ({ page }) => 
   await page.getByText('second').hover();
   await page.getByLabel('Actions for window second').click({ force: true });
   await page.getByRole('menuitem', { name: /Rename/ }).click();
-  const renameInput = page.getByRole('textbox', { name: /window 名を編集/ });
+  const renameInput = page.getByRole('textbox', { name: /Rename second/ });
   await renameInput.fill('renamed');
   await page.keyboard.press('Enter');
   await expect(page.getByText('renamed')).toBeVisible({ timeout: 5000 });
@@ -100,8 +105,8 @@ test('creates, renames, and deletes a window in a session', async ({ page }) => 
   await page.getByText('logs').hover();
   await page.getByLabel('Actions for window logs').click({ force: true });
   await page.getByRole('menuitem', { name: /Delete/ }).click();
-  await expect(page.getByText(/logs を削除しますか/)).toBeVisible();
-  await page.getByRole('button', { name: '削除' }).click();
+  await expect(page.getByText(/Delete window/)).toBeVisible();
+  await page.getByRole('button', { name: /^Delete$/ }).click();
   // Use a strict locator to avoid matching the dialog text
   await expect(page.getByRole('button', { name: /^logs/ })).not.toBeVisible({ timeout: 5000 });
 });

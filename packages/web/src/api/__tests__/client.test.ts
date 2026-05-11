@@ -183,4 +183,71 @@ describe('ApiClient', () => {
     expect(url).toBe('http://gateway.test:18765/api/sessions/dev/windows/1');
     expect((init as RequestInit).method).toBe('DELETE');
   });
+
+  describe('ApiClient.getSystemStatus', () => {
+    it('GETs /api/system/status with Bearer', async () => {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            cpu: { usage: 5, cores: 6, model: 'i5', loadAvg: [0.4, 0.5, 0.6] },
+            memory: { total: 32e9, used: 6e9, free: 26e9, percent: 18 },
+            disk: { total: 256e9, used: 100e9, free: 156e9, percent: 39 },
+            temperature: null,
+            uptime: 1000,
+            gatewayVersion: '0.5.7',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+      const client = new ApiClient(baseUrl, token);
+      const res = await client.getSystemStatus();
+      expect(res.gatewayVersion).toBe('0.5.7');
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toBe('http://gateway.test:18765/api/system/status');
+      expect((init as RequestInit).method).toBe('GET');
+      expect((init as RequestInit).headers).toMatchObject({
+        Authorization: 'Bearer 1234',
+      });
+    });
+
+    it('throws HttpError on 401', async () => {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }));
+      const client = new ApiClient(baseUrl, token);
+      await expect(client.getSystemStatus()).rejects.toMatchObject({
+        status: 401,
+      });
+    });
+  });
+
+  describe('ApiClient.getClaudeLimits', () => {
+    it('GETs /api/claude/limits', async () => {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce({
+        ok: true, status: 200,
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        json: async () => ({ state: 'unconfigured' }),
+      });
+      const c = new ApiClient(baseUrl, token);
+      const res = await c.getClaudeLimits();
+      expect(res).toEqual({ state: 'unconfigured' });
+      expect(fetchMock).toHaveBeenCalledWith('http://gateway.test:18765/api/claude/limits', expect.any(Object));
+    });
+  });
+
+  describe('ApiClient.getCodexLimits', () => {
+    it('GETs /api/codex/limits', async () => {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+      fetchMock.mockResolvedValueOnce({
+        ok: true, status: 200,
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        json: async () => ({ state: 'unconfigured' }),
+      });
+      const c = new ApiClient(baseUrl, token);
+      const res = await c.getCodexLimits();
+      expect(res).toEqual({ state: 'unconfigured' });
+      expect(fetchMock).toHaveBeenCalledWith('http://gateway.test:18765/api/codex/limits', expect.any(Object));
+    });
+  });
 });

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { SessionRow } from './sidebar/SessionRow';
@@ -40,6 +41,7 @@ export function SessionsListPanel({
   onRequestDeleteWindow,
 }: SessionsListPanelProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggle = (name: string): void => {
@@ -75,7 +77,7 @@ export function SessionsListPanel({
 
       {loading && sessions.length === 0 && (
         <div style={{ padding: tokens.spacing.md, color: tokens.colors.textMuted }}>
-          読み込み中…
+          {t('common.loading')}
         </div>
       )}
 
@@ -89,7 +91,7 @@ export function SessionsListPanel({
             gap: tokens.spacing.sm,
           }}
         >
-          <span>読み込めませんでした: {error}</span>
+          <span>{t('sessions.loadFailed', { error })}</span>
         </div>
       )}
 
@@ -101,7 +103,7 @@ export function SessionsListPanel({
             textAlign: 'center',
           }}
         >
-          セッションなし
+          {t('sessions.empty')}
         </div>
       )}
 

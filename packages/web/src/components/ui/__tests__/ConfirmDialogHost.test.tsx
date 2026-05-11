@@ -33,7 +33,7 @@ describe('ConfirmDialogHost', () => {
         onConfirm: vi.fn(),
       });
     });
-    expect(screen.getByText('Delete')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Delete' })).toBeInTheDocument();
   });
 
   it('confirm invokes callback then hides dialog', async () => {

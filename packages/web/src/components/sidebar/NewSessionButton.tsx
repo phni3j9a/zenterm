@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
-import { validateSessionOrWindowName } from '@/lib/validateName';
+import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
 
 export interface NewSessionButtonProps {
   onCreate: (name?: string) => void | Promise<void>;
@@ -8,6 +9,7 @@ export interface NewSessionButtonProps {
 
 export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +27,9 @@ export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
       setText('');
       return;
     }
-    const validationError = validateSessionOrWindowName(trimmed);
-    if (validationError) {
-      setError(validationError);
+    const errCode = validateSessionOrWindowName(trimmed);
+    if (errCode) {
+      setError(t(nameValidationKey(errCode)));
       return;
     }
     void onCreate(trimmed);
@@ -53,7 +55,7 @@ export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
           textAlign: 'left',
         }}
       >
-        + 新規セッション
+        + {t('sessions.newSession')}
       </button>
     );
   }
@@ -64,8 +66,8 @@ export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
         ref={inputRef}
         type="text"
         value={text}
-        placeholder="セッション名 (空で自動)"
-        aria-label="新規セッション名"
+        placeholder={t('sessions.namePlaceholder')}
+        aria-label={t('sessions.newSession')}
         aria-invalid={error ? 'true' : 'false'}
         onChange={(e) => {
           setText(e.target.value);
