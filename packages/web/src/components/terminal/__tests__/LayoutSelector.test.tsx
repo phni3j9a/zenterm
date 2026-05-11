@@ -3,12 +3,14 @@ import { render, fireEvent, screen } from '@testing-library/react';
 import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { usePaneStore } from '@/stores/pane';
+import { useLayoutStore } from '@/stores/layout';
 import { LayoutSelector } from '../LayoutSelector';
 
 beforeEach(() => {
   useSettingsStore.setState({ language: 'en', fontSize: 14 } as any);
   initI18n();
   window.localStorage.clear();
+  useLayoutStore.setState({ sidebarCollapsed: false, paletteOpen: false, layoutMenuOpen: false });
   usePaneStore.setState({
     layout: 'single',
     panes: [null],

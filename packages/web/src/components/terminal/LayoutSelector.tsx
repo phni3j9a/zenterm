@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { usePaneStore } from '@/stores/pane';
+import { useLayoutStore } from '@/stores/layout';
 import { LAYOUT_MODES, type LayoutMode } from '@/lib/paneLayout';
 
 const I18N_KEY: Record<LayoutMode, string> = {
@@ -19,19 +20,21 @@ export function LayoutSelector() {
   const setLayout = usePaneStore((s) => s.setLayout);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const [open, setOpen] = useState(false);
+  const open = useLayoutStore((s) => s.layoutMenuOpen);
+  const openMenu = useLayoutStore((s) => s.openLayoutMenu);
+  const closeMenu = useLayoutStore((s) => s.closeLayoutMenu);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') closeMenu();
     };
     const onPointer = (e: PointerEvent) => {
       const target = e.target as Node | null;
       if (!target) return;
       if (menuRef.current?.contains(target)) return;
       if (buttonRef.current?.contains(target)) return;
-      setOpen(false);
+      closeMenu();
     };
     window.addEventListener('keydown', onKey);
     window.addEventListener('pointerdown', onPointer);
@@ -49,7 +52,7 @@ export function LayoutSelector() {
         aria-label={t('terminal.layout.menuLabel')}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => open ? closeMenu() : openMenu()}
         style={{
           background: tokens.colors.surface,
           color: tokens.colors.textPrimary,
@@ -88,7 +91,7 @@ export function LayoutSelector() {
               aria-checked={mode === layout}
               onClick={() => {
                 setLayout(mode);
-                setOpen(false);
+                closeMenu();
               }}
               style={{
                 display: 'block',

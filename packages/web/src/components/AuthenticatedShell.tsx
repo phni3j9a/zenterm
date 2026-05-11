@@ -17,6 +17,7 @@ import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
+import { SLOT_COUNT } from '@/lib/paneLayout';
 
 export function AuthenticatedShell() {
   const { tokens } = useTheme();
@@ -202,6 +203,21 @@ export function AuthenticatedShell() {
     });
   };
 
+  const cyclePane = (dir: 1 | -1) => {
+    const { panes, focusedIndex, layout, setFocusedIndex } = usePaneStore.getState();
+    const slotCount = SLOT_COUNT[layout];
+    const occupied: number[] = [];
+    for (let i = 0; i < slotCount; i++) if (panes[i]) occupied.push(i);
+    if (occupied.length === 0) return;
+    const here = occupied.indexOf(focusedIndex);
+    const startPos = here === -1 ? 0 : here;
+    const len = occupied.length;
+    const nextPos = (startPos + dir + len) % len;
+    setFocusedIndex(occupied[nextPos]);
+  };
+  const focusNextPane = () => cyclePane(1);
+  const focusPrevPane = () => cyclePane(-1);
+
   const jumpToWindow = (n: number) => {
     // n is 1-based ⌘1..⌘9; map to 0-based window index inside focused pane.
     const state = usePaneStore.getState();
@@ -241,8 +257,8 @@ export function AuthenticatedShell() {
     jumpToWindow,
     newWindow,
     closeWindow,
-    focusNextPane: () => undefined,
-    focusPrevPane: () => undefined,
+    focusNextPane,
+    focusPrevPane,
     openLayoutMenu,
     openSearch: () => undefined,
   });
