@@ -75,57 +75,31 @@ export function AuthenticatedShell() {
   const openPalette = useLayoutStore((s) => s.openPalette);
   const openLayoutMenu = useLayoutStore((s) => s.openLayoutMenu);
 
-  useShortcuts({
-    toggleSidebar,
-    openPalette,
-    openSettings: () => navigate('/web/settings'),
-    jumpToWindow: () => undefined,
-    newWindow: () => undefined,
-    closeWindow: () => undefined,
-    focusNextPane: () => undefined,
-    focusPrevPane: () => undefined,
-    openLayoutMenu,
-    openSearch: () => undefined,
-  });
+  // Build clients early so helpers below (used by shortcuts) can close over them.
+  // These are stable as long as token/gatewayUrl don't change between renders.
+  const baseClient = token && gatewayUrl ? new ApiClient(gatewayUrl, token) : null;
 
-  if (!token || !gatewayUrl) return <Navigate to="/web/login" replace />;
-
-  const baseClient = new ApiClient(gatewayUrl, token);
-
-  const wrappedClient: SessionsApiClient = {
-    listSessions: async () => {
-      try {
-        return await baseClient.listSessions();
-      } catch (err) {
-        if (err instanceof HttpError && err.status === 401) {
-          logout();
-          navigate('/web/login', { replace: true });
-        }
-        throw err;
+  const wrappedClient: SessionsApiClient | null = baseClient
+    ? {
+        listSessions: async () => {
+          try {
+            return await baseClient.listSessions();
+          } catch (err) {
+            if (err instanceof HttpError && err.status === 401) {
+              logout();
+              navigate('/web/login', { replace: true });
+            }
+            throw err;
+          }
+        },
+        createSession: baseClient.createSession.bind(baseClient),
+        renameSession: baseClient.renameSession.bind(baseClient),
+        killSession: baseClient.killSession.bind(baseClient),
+        createWindow: baseClient.createWindow.bind(baseClient),
+        renameWindow: baseClient.renameWindow.bind(baseClient),
+        killWindow: baseClient.killWindow.bind(baseClient),
       }
-    },
-    createSession: baseClient.createSession.bind(baseClient),
-    renameSession: baseClient.renameSession.bind(baseClient),
-    killSession: baseClient.killSession.bind(baseClient),
-    createWindow: baseClient.createWindow.bind(baseClient),
-    renameWindow: baseClient.renameWindow.bind(baseClient),
-    killWindow: baseClient.killWindow.bind(baseClient),
-  };
-
-  const isFilesRoute = location.pathname.startsWith('/web/files');
-
-  const filesClient: FilesApiClient = {
-    listFiles: baseClient.listFiles.bind(baseClient),
-    getFileContent: baseClient.getFileContent.bind(baseClient),
-    writeFileContent: baseClient.writeFileContent.bind(baseClient),
-    deleteFile: baseClient.deleteFile.bind(baseClient),
-    renameFile: baseClient.renameFile.bind(baseClient),
-    copyFiles: baseClient.copyFiles.bind(baseClient),
-    moveFiles: baseClient.moveFiles.bind(baseClient),
-    createDirectory: baseClient.createDirectory.bind(baseClient),
-    uploadFile: baseClient.uploadFile.bind(baseClient),
-    buildRawFileUrl: baseClient.buildRawFileUrl.bind(baseClient),
-  };
+    : null;
 
   const handleAuthError = (err: unknown): boolean => {
     if (err instanceof HttpError && err.status === 401) {
@@ -140,7 +114,7 @@ export function AuthenticatedShell() {
     if (handleAuthError(err)) return;
     if (err instanceof HttpError && err.status === 404) {
       pushToast({ type: 'error', message: t('sessions.loadFailed', { error: 'not found' }) });
-      void useSessionsStore.getState().refetch(wrappedClient);
+      if (wrappedClient) void useSessionsStore.getState().refetch(wrappedClient);
       return;
     }
     const message = err instanceof Error ? err.message : String(err);
@@ -148,6 +122,7 @@ export function AuthenticatedShell() {
   };
 
   const handleCreateSession = async (name?: string): Promise<void> => {
+    if (!wrappedClient) return;
     try {
       await useSessionsStore.getState().create(wrappedClient, { name });
     } catch (err) {
@@ -159,6 +134,7 @@ export function AuthenticatedShell() {
     currentDisplayName: string,
     newName: string,
   ): Promise<void> => {
+    if (!wrappedClient) return;
     try {
       await useSessionsStore.getState().rename(wrappedClient, currentDisplayName, newName);
     } catch (err) {
@@ -172,6 +148,7 @@ export function AuthenticatedShell() {
       message: t('sessions.deleteSessionMessage', { name: session.displayName }),
       destructive: true,
       onConfirm: async () => {
+        if (!wrappedClient) return;
         try {
           await useSessionsStore.getState().removeSession(wrappedClient, session.displayName);
         } catch (err) {
@@ -185,6 +162,7 @@ export function AuthenticatedShell() {
     sessionDisplayName: string,
     name?: string,
   ): Promise<void> => {
+    if (!wrappedClient) return;
     try {
       await useSessionsStore.getState().createWindow(wrappedClient, sessionDisplayName, { name });
     } catch (err) {
@@ -197,6 +175,7 @@ export function AuthenticatedShell() {
     windowIndex: number,
     newName: string,
   ): Promise<void> => {
+    if (!wrappedClient) return;
     try {
       await useSessionsStore.getState().renameWindow(wrappedClient, sessionDisplayName, windowIndex, newName);
     } catch (err) {
@@ -213,6 +192,7 @@ export function AuthenticatedShell() {
       message: t('sessions.deleteWindowMessage', { index: window.index, name: window.name }),
       destructive: true,
       onConfirm: async () => {
+        if (!wrappedClient) return;
         try {
           await useSessionsStore.getState().removeWindow(wrappedClient, sessionDisplayName, window.index);
         } catch (err) {
@@ -220,6 +200,68 @@ export function AuthenticatedShell() {
         }
       },
     });
+  };
+
+  const jumpToWindow = (n: number) => {
+    // n is 1-based ⌘1..⌘9; map to 0-based window index inside focused pane.
+    const state = usePaneStore.getState();
+    const focused = state.panes[state.focusedIndex];
+    if (!focused) return;
+    const session = useSessionsStore.getState().sessions.find((s) => s.displayName === focused.sessionId);
+    if (!session) return;
+    const target = session.windows?.find((w) => w.index === n - 1);
+    if (!target) return;
+    state.assignPane(state.focusedIndex, { sessionId: focused.sessionId, windowIndex: n - 1 });
+  };
+
+  const newWindow = () => {
+    const state = usePaneStore.getState();
+    const focused = state.panes[state.focusedIndex];
+    if (!focused) return;
+    const session = useSessionsStore.getState().sessions.find((s) => s.displayName === focused.sessionId);
+    if (!session) return;
+    void handleCreateWindow(session.displayName);
+  };
+
+  const closeWindow = () => {
+    const state = usePaneStore.getState();
+    const focused = state.panes[state.focusedIndex];
+    if (!focused) return;
+    const session = useSessionsStore.getState().sessions.find((s) => s.displayName === focused.sessionId);
+    if (!session) return;
+    const targetWindow = session.windows?.find((w) => w.index === focused.windowIndex);
+    if (!targetWindow) return;
+    handleRequestDeleteWindow(session.displayName, targetWindow);
+  };
+
+  useShortcuts({
+    toggleSidebar,
+    openPalette,
+    openSettings: () => navigate('/web/settings'),
+    jumpToWindow,
+    newWindow,
+    closeWindow,
+    focusNextPane: () => undefined,
+    focusPrevPane: () => undefined,
+    openLayoutMenu,
+    openSearch: () => undefined,
+  });
+
+  if (!token || !gatewayUrl) return <Navigate to="/web/login" replace />;
+
+  const isFilesRoute = location.pathname.startsWith('/web/files');
+
+  const filesClient: FilesApiClient = {
+    listFiles: baseClient!.listFiles.bind(baseClient!),
+    getFileContent: baseClient!.getFileContent.bind(baseClient!),
+    writeFileContent: baseClient!.writeFileContent.bind(baseClient!),
+    deleteFile: baseClient!.deleteFile.bind(baseClient!),
+    renameFile: baseClient!.renameFile.bind(baseClient!),
+    copyFiles: baseClient!.copyFiles.bind(baseClient!),
+    moveFiles: baseClient!.moveFiles.bind(baseClient!),
+    createDirectory: baseClient!.createDirectory.bind(baseClient!),
+    uploadFile: baseClient!.uploadFile.bind(baseClient!),
+    buildRawFileUrl: baseClient!.buildRawFileUrl.bind(baseClient!),
   };
 
   return (
