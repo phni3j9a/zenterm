@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FileEntry } from '@zenterm/shared';
@@ -18,6 +18,7 @@ import { FilesDetailsDialog } from './FilesDetailsDialog';
 import { FilesSelectionHeader } from './FilesSelectionHeader';
 import { FilesBulkActionBar } from './FilesBulkActionBar';
 import { FilesPasteBar } from './FilesPasteBar';
+import { FilesUploadDropZone } from './FilesUploadDropZone';
 import { loadDirectory, type FilesApiClient } from './filesApi';
 
 interface Props {
@@ -44,6 +45,7 @@ export function FilesSidebarPanel({ client }: Props) {
   const [mkdirOpen, setMkdirOpen] = useState(false);
   const [newFileOpen, setNewFileOpen] = useState(false);
   const [detailsTarget, setDetailsTarget] = useState<FileEntry | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const pushToast = useUiStore((s) => s.pushToast);
   const showConfirm = useUiStore((s) => s.showConfirm);
 
@@ -154,6 +156,20 @@ export function FilesSidebarPanel({ client }: Props) {
     });
   };
 
+  const doUploadFiles = async (files: File[]) => {
+    const dest = useFilesStore.getState().currentPath;
+    for (const f of files) {
+      try {
+        await client.uploadFile(f, dest);
+        pushToast({ type: 'success', message: t('files.uploadComplete') });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        pushToast({ type: 'error', message: `${t('files.uploadFailed')}: ${msg}` });
+      }
+    }
+    await refresh();
+  };
+
   const doPaste = async (cb: FilesClipboard) => {
     const dest = useFilesStore.getState().currentPath;
     try {
@@ -212,7 +228,7 @@ export function FilesSidebarPanel({ client }: Props) {
       style={{ display: 'flex', flexDirection: 'column', height: '100%', background: tokens.colors.bgElevated }}
     >
       <FilesToolbar
-        onUploadClick={() => { /* wired in Sub-phase 2c-7 */ }}
+        onUploadClick={() => uploadInputRef.current?.click()}
         onNewFile={() => setNewFileOpen(true)}
         onNewFolder={() => setMkdirOpen(true)}
       />
@@ -283,6 +299,19 @@ export function FilesSidebarPanel({ client }: Props) {
         locale={t('common.cancel') === 'キャンセル' ? 'ja-JP' : 'en-US'}
         onClose={() => setDetailsTarget(null)}
       />
+      <input
+        ref={uploadInputRef}
+        data-testid="files-upload-input"
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          if (files.length > 0) void doUploadFiles(files);
+          e.target.value = '';
+        }}
+      />
+      <FilesUploadDropZone onFiles={(files) => void doUploadFiles(files)} />
     </div>
   );
 }
