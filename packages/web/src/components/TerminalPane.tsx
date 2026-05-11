@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { XtermView, type TerminalStatus } from './terminal/XtermView';
+import {
+  XtermView,
+  type ReconnectInfo,
+  type TerminalStatus,
+} from './terminal/XtermView';
 import { useTheme } from '@/theme';
 
 export interface TerminalPaneProps {
@@ -21,6 +25,12 @@ export function TerminalPane({
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const [status, setStatus] = useState<TerminalStatus>('disconnected');
+  const [reconnectNonce, setReconnectNonce] = useState(0);
+  const [reconnectInfo, setReconnectInfo] = useState<ReconnectInfo | null>(null);
+
+  const handleReconnect = (): void => {
+    setReconnectNonce((n) => n + 1);
+  };
 
   const statusColor: string = (() => {
     switch (status) {
@@ -81,6 +91,40 @@ export function TerminalPane({
           · w{windowIndex}
         </span>
         <span style={{ flex: 1 }} />
+        {(status === 'disconnected' || status === 'reconnecting' || status === 'error') && (
+          <button
+            type="button"
+            aria-label={t('terminal.reconnect')}
+            onClick={handleReconnect}
+            style={{
+              background: tokens.colors.surface,
+              color: tokens.colors.textPrimary,
+              border: `1px solid ${tokens.colors.border}`,
+              padding: `4px 10px`,
+              borderRadius: tokens.radii.sm,
+              fontSize: tokens.typography.caption.fontSize,
+              cursor: 'pointer',
+              marginRight: tokens.spacing.sm,
+            }}
+          >
+            ↺ {t('terminal.reconnect')}
+          </button>
+        )}
+        {status === 'reconnecting' && reconnectInfo && !reconnectInfo.exhausted && (
+          <span
+            data-testid="terminal-reconnect-eta"
+            style={{
+              color: tokens.colors.textMuted,
+              fontSize: tokens.typography.caption.fontSize,
+              marginRight: tokens.spacing.sm,
+            }}
+          >
+            {t('terminal.reconnectingEta', {
+              seconds: Math.max(1, Math.ceil(reconnectInfo.etaMs / 1000)),
+              attempt: reconnectInfo.attempt,
+            })}
+          </span>
+        )}
         <span
           aria-label={`Connection ${t(`terminal.status.${status}` as 'terminal.status.connected')}`}
           style={{
@@ -99,8 +143,9 @@ export function TerminalPane({
           windowIndex={windowIndex}
           isFocused={isVisible}
           isVisible={isVisible}
-          reconnectNonce={0}
+          reconnectNonce={reconnectNonce}
           onStatusChange={setStatus}
+          onReconnectInfo={setReconnectInfo}
         />
       </div>
     </section>
