@@ -55,7 +55,7 @@ describe('TerminalPane header integration', () => {
     );
     expect(screen.getByText('dev')).toBeInTheDocument();
     expect(screen.getByText('editor')).toBeInTheDocument();
-    expect(screen.getByText(/\[w0\]/)).toBeInTheDocument();
+    expect(screen.getByText(/w0/)).toBeInTheDocument();
   });
 
   it('Copy ID button writes sessionId to navigator.clipboard and pushes a success toast', async () => {

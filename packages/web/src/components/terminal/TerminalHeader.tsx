@@ -4,6 +4,9 @@ import { useTheme } from '@/theme';
 import { MAX_FONT_SIZE, MIN_FONT_SIZE } from '@/stores/settings';
 import type { TerminalStatus, ReconnectInfo } from './XtermView';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { Badge } from '@/components/ui/Badge';
+import { IconButton } from '@/components/ui/IconButton';
+import { IconCopy, IconRefresh, IconWifi, IconWifiOff } from '@/components/ui/icons';
 
 export interface TerminalHeaderProps {
   sessionId: string;
@@ -39,12 +42,12 @@ export function TerminalHeader({
   const { tokens } = useTheme();
   const { t } = useTranslation();
 
-  const statusColor: string = (() => {
+  const badgeTone = (() => {
     switch (status) {
-      case 'connected': return tokens.colors.success;
-      case 'reconnecting': return tokens.colors.warning;
-      case 'error': return tokens.colors.error;
-      default: return tokens.colors.textMuted;
+      case 'connected': return 'success' as const;
+      case 'reconnecting': return 'warning' as const;
+      case 'error': return 'error' as const;
+      default: return 'neutral' as const;
     }
   })();
 
@@ -86,27 +89,15 @@ export function TerminalHeader({
         </span>
       )}
       <span style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.smallMedium.fontSize }}>
-        [w{windowIndex}]
+        w{windowIndex}
       </span>
       {layoutSlot}
-      <Tooltip label={t('terminal.copySessionId')}>
-        <button
-          type="button"
-          aria-label={t('terminal.copySessionId')}
-          onClick={onCopySessionId}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${tokens.colors.borderSubtle}`,
-            color: tokens.colors.textSecondary,
-            padding: `2px 8px`,
-            borderRadius: tokens.radii.sm,
-            fontSize: tokens.typography.caption.fontSize,
-            cursor: 'pointer',
-          }}
-        >
-          ID
-        </button>
-      </Tooltip>
+      <IconButton
+        icon={<IconCopy size={14} />}
+        label={t('terminal.copySessionId')}
+        size="sm"
+        onClick={onCopySessionId}
+      />
       <span style={{ flex: 1 }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.xs }}>
@@ -170,47 +161,25 @@ export function TerminalHeader({
       )}
 
       {showReconnectBtn && (
-        <Tooltip label={t('terminal.reconnect')}>
-          <button
-            type="button"
-            aria-label={t('terminal.reconnect')}
-            onClick={onReconnect}
-            style={{
-              background: tokens.colors.surface,
-              color: tokens.colors.textPrimary,
-              border: `1px solid ${tokens.colors.border}`,
-              padding: `4px 10px`,
-              borderRadius: tokens.radii.sm,
-              fontSize: tokens.typography.caption.fontSize,
-              cursor: 'pointer',
-              marginLeft: tokens.spacing.sm,
-            }}
-          >
-            ↺ {t('terminal.reconnect')}
-          </button>
-        </Tooltip>
+        <IconButton
+          icon={<IconRefresh size={14} />}
+          label={t('terminal.reconnect')}
+          size="sm"
+          variant="outline"
+          onClick={onReconnect}
+        />
       )}
 
       <span
         aria-label={`Connection ${t(`terminal.status.${status}` as 'terminal.status.connected')}`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: tokens.spacing.xs,
-          marginLeft: tokens.spacing.sm,
-        }}
+        style={{ marginLeft: tokens.spacing.sm }}
       >
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: statusColor,
-          }}
-        />
-        <span style={{ color: tokens.colors.textSecondary, fontSize: tokens.typography.caption.fontSize }}>
+        <Badge
+          tone={badgeTone}
+          icon={status === 'connected' ? <IconWifi size={12} /> : <IconWifiOff size={12} />}
+        >
           {t(`terminal.status.${status}` as 'terminal.status.connected')}
-        </span>
+        </Badge>
       </span>
     </header>
   );
