@@ -101,13 +101,15 @@ zenterm-gateway info     # show local + Tailscale URL
 ```
 packages/
 ├── gateway/   Fastify + WebSocket + node-pty ターミナルゲートウェイ
+├── web/       PC ブラウザ向け SPA (React 19 + Vite + xterm.js)、Gateway の /web/* で配信
 └── shared/    WebSocket メッセージ型・共通型定義 (Single Source of Truth)
 ```
 
 | パッケージ | 技術スタック |
 |-----------|-------------|
 | **gateway** | Node.js, TypeScript, Fastify 5, ws, node-pty, tmux, zod |
-| **shared** | TypeScript 型定義のみ — gateway / mobile で共有 |
+| **web**     | React 19, Vite 5, TypeScript, react-router, zustand, xterm.js v6, lucide-react, i18next |
+| **shared**  | TypeScript 型定義のみ — gateway / web / mobile で共有 |
 
 ## Requirements
 
@@ -252,15 +254,46 @@ Web ブラウザからアクセスする場合は `Web (LAN)` または `Web (Ts
 # Gateway 開発サーバー (ホットリロード)
 npm run dev:gateway
 
-# テスト
+# Web 開発サーバー (Vite HMR、別ターミナル)
+npm run dev --workspace=@zenterm/web
+
+# Gateway ユニットテスト
 cd packages/gateway && npx vitest
+
+# Web ユニットテスト
+cd packages/web && npx vitest
+```
+
+### E2E (Docker 隔離、必須)
+
+PC Web の e2e は必ず Docker container 内で実行します。Host で直接 playwright を走らせると、
+gateway が spawn する tmux が `/tmp/tmux-$EUID/default` を介して host の tmux と共有され、
+playwright が落ちた瞬間に開発者の tmux セッションごと巻き添えで死ぬ事故が起きます。
+container 内 tmux は tmpfs `/tmp` に閉じ込められ、host からは到達不能です。
+
+```bash
+# 全 49 spec を Docker で走らせる (初回は image build で +3 分)
+scripts/e2e-docker.sh
+
+# 特定 spec のみ
+scripts/e2e-docker.sh tests/e2e/web/login.spec.ts
+
+# image rebuild をスキップ (web src を変えていない場合)
+ZENTERM_E2E_NO_BUILD=1 scripts/e2e-docker.sh
+
+# 開発用 gateway を container 内で起動 (host:18766 → container:18765)
+scripts/dev-docker.sh
+# → http://localhost:18766/web/login にブラウザでアクセス
 ```
 
 ### Build
 
 ```bash
-# Gateway をビルド
+# Gateway をビルド (web bundle も `packages/gateway/public/web/` に同梱)
 npm run build:gateway
+
+# Web のみビルド
+npm run build --workspace=@zenterm/web
 
 # GitHub Pages 用の LP を gateway/public から同期
 npm run sync:pages
@@ -340,15 +373,19 @@ location / {
 
 ## Roadmap
 
+### PC Web (packages/web) 再構築
+
 | Phase | 内容 | 状態 |
 |-------|------|------|
-| **1** | Web 基盤 (ターミナル, セッション管理, ファイルブラウザ, 自動再接続) | ✅ Done |
-| **2** | UX 磨き込み (キーボードショートカット, ターミナル内検索, コピペ改善) | 🔄 In Progress |
-| **3** | ファイルマネージャ強化 (検索, コンテキストメニュー, プレビュー, ファイル操作) | 🔄 In Progress |
-| **4** | ペイン分割 (横/縦分割, tmux 連携) | Planned |
-| **5** | システムモニタリング UI (CPU/メモリ/ディスク/温度) | Planned |
-| **6** | 多言語対応 i18n (EN, JA 他 8 言語) | Planned |
-| **7** | 高度な機能 (マルチサーバー, 通知, カスタムテーマ) | Planned |
+| **1** | Web 基盤 (ターミナル, セッション管理, 自動再接続) | ✅ Done |
+| **2a-d** | UX 磨き込み (キーボードショートカット, 検索, コピペ, テーマ) | ✅ Done |
+| **3** | ペイン分割 (4 ペイン, tmux 連携) | ✅ Done |
+| **4a-b** | ファイルマネージャ (検索, コンテキストメニュー, プレビュー, ファイル操作) | ✅ Done |
+| **5a-b** | i18n 8 言語 + ディープリンク + a11y + 性能 | ✅ Done |
+| **6** | UI/UX 仕上げ (共通プリミティブ, lucide-react, LeftRail, EmptyState, Onboarding, focus-ring) | ✅ Done |
+| **7** | Docker 隔離 e2e 基盤 (host tmux 保護) | ✅ Done |
+
+すべて main マージ済、タグ: `web-pc-phase-{1, 2a, 2b, 2c, 2d, 3, 4a, 4b, 5a, 5b, 6, 7}-done`
 
 詳細は [docs/roadmap.md](docs/roadmap.md) を参照してください。
 
