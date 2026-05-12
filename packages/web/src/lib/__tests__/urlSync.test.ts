@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSessionRoute } from '../urlSync';
+import { parseSessionRoute, buildSessionPath } from '../urlSync';
 
 describe('parseSessionRoute', () => {
   it('returns null for non-matching pathname', () => {
@@ -44,5 +44,20 @@ describe('parseSessionRoute', () => {
   it('returns null when session id has malformed percent-encoding', () => {
     expect(parseSessionRoute('/web/sessions/%E0%A4%A')).toBeNull();
     expect(parseSessionRoute('/web/sessions/%2/window/1')).toBeNull();
+  });
+});
+
+describe('buildSessionPath', () => {
+  it('builds /web/sessions/<id> when windowIndex is 0', () => {
+    expect(buildSessionPath('work', 0)).toBe('/web/sessions/work');
+  });
+  it('builds /web/sessions/<id>/window/<idx> when windowIndex > 0', () => {
+    expect(buildSessionPath('work', 2)).toBe('/web/sessions/work/window/2');
+  });
+  it('encodes special chars in sessionId', () => {
+    expect(buildSessionPath('my session/1', 0)).toBe('/web/sessions/my%20session%2F1');
+  });
+  it('treats negative windowIndex as 0', () => {
+    expect(buildSessionPath('work', -1)).toBe('/web/sessions/work');
   });
 });

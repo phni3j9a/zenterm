@@ -14,6 +14,12 @@ function safeDecode(s: string): string | null {
   }
 }
 
+export function buildSessionPath(sessionId: string, windowIndex: number): string {
+  const sid = encodeURIComponent(sessionId);
+  if (windowIndex <= 0) return `/web/sessions/${sid}`;
+  return `/web/sessions/${sid}/window/${windowIndex}`;
+}
+
 export function parseSessionRoute(pathname: string): ParsedSessionRoute | null {
   const wm = SESSION_WINDOW_RE.exec(pathname);
   if (wm) {

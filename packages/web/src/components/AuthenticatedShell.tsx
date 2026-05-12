@@ -19,7 +19,7 @@ import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
 import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
-import { parseSessionRoute } from '@/lib/urlSync';
+import { parseSessionRoute, buildSessionPath } from '@/lib/urlSync';
 import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
@@ -40,6 +40,12 @@ export function AuthenticatedShell() {
   const pushToast = useUiStore((s) => s.pushToast);
   const currentLayout = usePaneStore((s) => s.layout);
 
+  // react-router-dom v7 useNavigateUnstable returns a new function reference
+  // whenever location changes. Storing in a ref prevents effects that close over
+  // navigate from re-running (and e.g. re-fetching) on every navigation.
+  const navigateFnRef = useRef(navigate);
+  navigateFnRef.current = navigate;
+
   useEventsSubscription();
 
   useEffect(() => {
@@ -52,7 +58,7 @@ export function AuthenticatedShell() {
         } catch (err) {
           if (err instanceof HttpError && err.status === 401) {
             logout();
-            navigate('/web/login', { replace: true });
+            navigateFnRef.current('/web/login', { replace: true });
           }
           throw err;
         }
@@ -65,7 +71,7 @@ export function AuthenticatedShell() {
       killWindow: base.killWindow.bind(base),
     };
     void useSessionsStore.getState().refetch(wrapped);
-  }, [token, gatewayUrl, logout, navigate]);
+  }, [token, gatewayUrl, logout]);
 
   const isSessionsRoute = location.pathname.startsWith('/web/sessions');
   useEffect(() => {
@@ -103,6 +109,23 @@ export function AuthenticatedShell() {
     });
     lastSyncedPath.current = location.pathname;
   }, [location.pathname, sessions]);
+
+  // Reverse sync: focused pane → URL.
+  // Avoid loop with URL→store sync by checking pathname equality before navigating.
+  // Only active on /web/sessions routes (Files / Settings tabs are untouched).
+  // pathnameRef avoids adding location.pathname to the reverse-sync effect deps.
+  const pathnameRef = useRef(location.pathname);
+  pathnameRef.current = location.pathname;
+
+  const focusedPane = usePaneStore((s) => s.panes[s.focusedIndex]);
+  useEffect(() => {
+    if (!isSessionsRoute) return;
+    if (!focusedPane) return;
+    const desired = buildSessionPath(focusedPane.sessionId, focusedPane.windowIndex);
+    if (pathnameRef.current === desired) return;
+    lastSyncedPath.current = desired;
+    navigateFnRef.current(desired, { replace: true });
+  }, [focusedPane?.sessionId, focusedPane?.windowIndex, isSessionsRoute]);
 
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const openPalette = useLayoutStore((s) => s.openPalette);
