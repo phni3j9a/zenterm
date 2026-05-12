@@ -4,3 +4,26 @@
 @media (prefers-reduced-motion: reduce) {
   @keyframes zen-spin { from, to { transform: none; } }
 }
+
+/* ===== Phase 6 H12 transitions ===== */
+.zen-fade-enter {
+  opacity: 0;
+}
+.zen-fade-enter-active {
+  opacity: 1;
+  transition: opacity 150ms ease-out;
+}
+.zen-fade-leave {
+  opacity: 1;
+}
+.zen-fade-leave-active {
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zen-fade-enter-active,
+  .zen-fade-leave-active {
+    transition: none;
+  }
+}
