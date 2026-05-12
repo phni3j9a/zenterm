@@ -11,7 +11,7 @@ export interface TrailingDebounced {
  */
 export function createTrailingDebounce(fn: () => void, windowMs: number): TrailingDebounced {
   let lastFireAt = -windowMs;
-  let trailingTimer: number | null = null;
+  let trailingTimer: ReturnType<typeof setTimeout> | null = null;
 
   const trigger: TrailingDebounced = (() => {
     const now = performance.now();
@@ -22,7 +22,7 @@ export function createTrailingDebounce(fn: () => void, windowMs: number): Traili
       return;
     }
     if (trailingTimer !== null) return;
-    trailingTimer = window.setTimeout(() => {
+    trailingTimer = setTimeout(() => {
       trailingTimer = null;
       lastFireAt = performance.now();
       fn();
@@ -31,7 +31,7 @@ export function createTrailingDebounce(fn: () => void, windowMs: number): Traili
 
   trigger.cancel = () => {
     if (trailingTimer !== null) {
-      window.clearTimeout(trailingTimer);
+      clearTimeout(trailingTimer);
       trailingTimer = null;
     }
   };

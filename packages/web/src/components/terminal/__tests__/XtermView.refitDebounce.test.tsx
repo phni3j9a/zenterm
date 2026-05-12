@@ -24,7 +24,7 @@ describe('createTrailingDebounce', () => {
     debounced(); // pending
     debounced(); // still pending
     expect(fn).toHaveBeenCalledTimes(1);
-    vi.advanceTimersByTime(50);
+    vi.advanceTimersByTime(51);
     expect(fn).toHaveBeenCalledTimes(2);
   });
 

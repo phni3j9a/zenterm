@@ -414,8 +414,9 @@ export function XtermView({
     };
 
     // Trailing debounce window: 50ms. 先頭即実行 + 連続発火を 1 回にまとめる。
+    let rafHandle = 0;
     const debouncedFit = createTrailingDebounce(() => {
-      requestAnimationFrame(doFit);
+      rafHandle = requestAnimationFrame(doFit);
     }, 50);
 
     const ro = new ResizeObserver(() => {
@@ -426,6 +427,7 @@ export function XtermView({
     return () => {
       ro.disconnect();
       debouncedFit.cancel();
+      if (rafHandle !== 0) cancelAnimationFrame(rafHandle);
     };
   }, []);
 
