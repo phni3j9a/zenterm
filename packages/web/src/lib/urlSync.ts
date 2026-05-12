@@ -16,7 +16,7 @@ function safeDecode(s: string): string | null {
 
 export function buildSessionPath(sessionId: string, windowIndex: number): string {
   const sid = encodeURIComponent(sessionId);
-  if (windowIndex <= 0) return `/web/sessions/${sid}`;
+  if (!Number.isInteger(windowIndex) || windowIndex <= 0) return `/web/sessions/${sid}`;
   return `/web/sessions/${sid}/window/${windowIndex}`;
 }
 

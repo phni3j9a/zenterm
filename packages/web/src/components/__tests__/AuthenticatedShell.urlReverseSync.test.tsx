@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, act, screen } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 
 // xterm mocks required by TerminalPane which is rendered inside AuthenticatedShell
 vi.mock('@xterm/xterm', () => ({
@@ -36,43 +36,74 @@ vi.mock('@xterm/addon-web-links', () => ({
 }));
 vi.mock('@xterm/xterm/css/xterm.css', () => ({ default: '' }));
 
+vi.mock('@/lib/events/client', () => ({
+  TmuxEventsClient: class { start() {} stop() {} },
+}));
+
+vi.mock('@/api/client', () => ({
+  ApiClient: class {
+    async listSessions() {
+      return [{
+        name: 'dev', displayName: 'dev', created: 0,
+        windows: [
+          { index: 0, name: 'w0', active: true, zoomed: false, paneCount: 1, cwd: '/tmp' },
+          { index: 2, name: 'w2', active: false, zoomed: false, paneCount: 1, cwd: '/tmp' },
+        ],
+        cwd: '/tmp',
+      }];
+    }
+    async createSession() { return {}; }
+    async renameSession() { return {}; }
+    async killSession() { return { ok: true }; }
+    async createWindow() { return {}; }
+    async renameWindow() { return {}; }
+    async killWindow() { return { ok: true }; }
+    async listFiles() { return { path: '/', entries: [] }; }
+    async getFileContent() { return { path: '', content: '', lines: 0, truncated: false }; }
+    async writeFileContent() { return { path: '', bytes: 0 }; }
+    async deleteFile() { return { path: '', deleted: true }; }
+    async renameFile() { return { oldPath: '', newPath: '' }; }
+    async copyFiles() { return { copied: [] }; }
+    async moveFiles() { return { moved: [] }; }
+    async createDirectory() { return { path: '', created: true }; }
+    async uploadFile() { return { success: true, path: '', filename: '', size: 0, mimetype: '' }; }
+    buildRawFileUrl() { return ''; }
+  },
+}));
+
 import { AuthenticatedShell } from '../AuthenticatedShell';
 import { useAuthStore } from '@/stores/auth';
 import { useSessionsStore } from '@/stores/sessions';
 import { usePaneStore } from '@/stores/pane';
 
-const FULL_RATIOS = {
-  single: [],
-  'cols-2': [0.5],
-  'cols-3': [1 / 3, 0.5],
-  'grid-2x2': [0.5, 0.5],
-  'main-side-2': [0.6, 0.5],
-};
+function LocationProbe() {
+  const loc = useLocation();
+  return <div data-testid="pathname">{loc.pathname}</div>;
+}
 
 describe('AuthenticatedShell URL reverse sync', () => {
   beforeEach(() => {
     localStorage.clear();
-    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://localhost' });
+    useAuthStore.setState({ token: '4812', gatewayUrl: 'http://localhost' });
     useSessionsStore.setState({
-      sessions: [
-        {
-          name: 'zen_dev',
-          displayName: 'dev',
-          created: 0,
-          cwd: '/tmp',
-          windows: [{ index: 0, name: 'w0', active: true, zoomed: false, paneCount: 1, cwd: '/tmp' }],
-        },
-      ],
+      sessions: [{
+        sessionId: 'dev', displayName: 'dev', name: 'dev',
+        windows: [
+          { index: 0, name: 'w0', active: true, zoomed: false, paneCount: 1, cwd: '/tmp' },
+          { index: 2, name: 'w2', active: false, zoomed: false, paneCount: 1, cwd: '/tmp' },
+        ],
+        cwd: '/tmp', created: 0,
+      } as any],
       loading: false,
       error: null,
-    });
+    } as any);
     usePaneStore.setState({
       layout: 'single',
       panes: [null],
       focusedIndex: 0,
-      ratios: FULL_RATIOS,
+      ratios: { single: [], 'cols-2': [0.5], 'cols-3': [0.33, 0.66], 'grid-2x2': [0.5, 0.5], 'main-side-2': [0.6, 0.5] },
       savedLayout: null,
-    });
+    } as any);
     vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
     vi.stubGlobal('WebSocket', class {
       static OPEN = 1;
@@ -94,51 +125,45 @@ describe('AuthenticatedShell URL reverse sync', () => {
     }));
   });
 
-  it('pane store reflects assignment after assignPane is called', async () => {
+  it('pushes URL to /web/sessions/:id when focused pane is assigned (window 0)', async () => {
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
         <AuthenticatedShell />
+        <LocationProbe />
       </MemoryRouter>,
     );
-
     await act(async () => {
       usePaneStore.getState().assignPane(0, { sessionId: 'dev', windowIndex: 0 });
-      await Promise.resolve();
+      await new Promise((r) => setTimeout(r, 10));
     });
-
-    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'dev', windowIndex: 0 });
+    expect(screen.getByTestId('pathname').textContent).toBe('/web/sessions/dev');
   });
 
-  it('pane store reflects window index assignment', async () => {
-    // Pre-set a session with multiple windows
-    useSessionsStore.setState({
-      sessions: [
-        {
-          name: 'zen_dev',
-          displayName: 'dev',
-          created: 0,
-          cwd: '/tmp',
-          windows: [
-            { index: 0, name: 'w0', active: true, zoomed: false, paneCount: 1, cwd: '/tmp' },
-            { index: 2, name: 'w2', active: false, zoomed: false, paneCount: 1, cwd: '/tmp' },
-          ],
-        },
-      ],
-      loading: false,
-      error: null,
-    });
-
+  it('pushes URL to /web/sessions/:id/window/:idx when windowIndex > 0', async () => {
     render(
-      <MemoryRouter initialEntries={['/web/sessions/dev']}>
+      <MemoryRouter initialEntries={['/web/sessions']}>
         <AuthenticatedShell />
+        <LocationProbe />
       </MemoryRouter>,
     );
-
     await act(async () => {
       usePaneStore.getState().assignPane(0, { sessionId: 'dev', windowIndex: 2 });
-      await Promise.resolve();
+      await new Promise((r) => setTimeout(r, 10));
     });
+    expect(screen.getByTestId('pathname').textContent).toBe('/web/sessions/dev/window/2');
+  });
 
-    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'dev', windowIndex: 2 });
+  it('does not push URL when not on /web/sessions route', async () => {
+    render(
+      <MemoryRouter initialEntries={['/web/files']}>
+        <AuthenticatedShell />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      usePaneStore.getState().assignPane(0, { sessionId: 'dev', windowIndex: 0 });
+      await new Promise((r) => setTimeout(r, 10));
+    });
+    expect(screen.getByTestId('pathname').textContent).toBe('/web/files');
   });
 });

@@ -60,4 +60,10 @@ describe('buildSessionPath', () => {
   it('treats negative windowIndex as 0', () => {
     expect(buildSessionPath('work', -1)).toBe('/web/sessions/work');
   });
+  it('treats NaN windowIndex as 0', () => {
+    expect(buildSessionPath('work', Number.NaN)).toBe('/web/sessions/work');
+  });
+  it('treats non-integer windowIndex as 0', () => {
+    expect(buildSessionPath('work', 1.5)).toBe('/web/sessions/work');
+  });
 });

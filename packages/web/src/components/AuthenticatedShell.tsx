@@ -170,7 +170,7 @@ export function AuthenticatedShell() {
           } catch (err) {
             if (err instanceof HttpError && err.status === 401) {
               logout();
-              navigate('/web/login', { replace: true });
+              navigateFnRef.current('/web/login', { replace: true });
             }
             throw err;
           }
@@ -187,7 +187,7 @@ export function AuthenticatedShell() {
   const handleAuthError = (err: unknown): boolean => {
     if (err instanceof HttpError && err.status === 401) {
       logout();
-      navigate('/web/login', { replace: true });
+      navigateFnRef.current('/web/login', { replace: true });
       return true;
     }
     return false;
