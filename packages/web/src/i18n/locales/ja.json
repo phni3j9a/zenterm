@@ -152,6 +152,18 @@
       "stale": "{{age}} 前に更新"
     }
   },
+  "shell": {
+    "leftRail": {
+      "label": "プライマリナビゲーション",
+      "rateLimitsWarning": "レート制限の警告"
+    },
+    "tabs": {
+      "sessions": "セッション",
+      "files": "ファイル",
+      "settings": "設定",
+      "logout": "ログアウト"
+    }
+  },
   "palette": {
     "title": "コマンドパレット",
     "placeholder": "コマンドかセッション名を入力…",

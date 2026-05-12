@@ -97,8 +97,14 @@ describe('Settings gateway flow', () => {
         <App />
       </MemoryRouter>,
     );
-    await waitFor(() => expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /logout/i }));
+    // Phase 6 G5: LeftRail adds a second logout button; use getAllByRole and pick the
+    // settings-panel logout (GatewaySection) which is inside the complementary aside.
+    const aside = await waitFor(() => screen.getByRole('complementary'));
+    const logoutBtns = screen.getAllByRole('button', { name: /logout/i });
+    expect(logoutBtns.length).toBeGreaterThanOrEqual(1);
+    // The GatewaySection logout is inside the aside; the LeftRail logout is outside.
+    const settingsLogout = logoutBtns.find((btn) => aside.contains(btn)) ?? logoutBtns[0];
+    fireEvent.click(settingsLogout);
     const confirm = useUiStore.getState().confirmDialog;
     expect(confirm).not.toBeNull();
     confirm?.onConfirm();

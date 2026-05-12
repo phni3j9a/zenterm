@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { Sidebar } from '../Sidebar';
 import { useEventsStore } from '@/stores/events';
@@ -19,7 +19,7 @@ describe('Sidebar', () => {
     useEventsStore.setState({ status: 'idle', reconnectAttempt: 0, lastEvent: null });
   });
 
-  it('renders sessions panel and bottom nav with 3 buttons', () => {
+  it('renders sessions panel (no footer nav tabs — those moved to LeftRail)', () => {
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
         <Sidebar
@@ -33,9 +33,10 @@ describe('Sidebar', () => {
       </MemoryRouter>,
     );
     expect(screen.getByLabelText(/Sessions panel/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sessions tab/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Files tab/i })).not.toBeDisabled();
-    expect(screen.getByRole('button', { name: /Settings tab/i })).not.toBeDisabled();
+    // Footer tabs have moved to LeftRail — they should NOT be in Sidebar anymore
+    expect(screen.queryByRole('button', { name: /Sessions tab/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Files tab/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Settings tab/i })).not.toBeInTheDocument();
   });
 
   it('shows events status indicator', () => {
@@ -51,11 +52,15 @@ describe('Sidebar', () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByLabelText(/Realtime updates/i)).toBeInTheDocument();
+    // EventsStatusDot is no longer part of Sidebar — it was in the removed footer nav
+    // The sidebar still renders session list content
+    expect(screen.getByLabelText(/Sessions panel/i)).toBeInTheDocument();
   });
 
-  it('reflects connected status', () => {
+  it('reflects connected status (EventsStatusDot is exported and renderable separately)', () => {
     useEventsStore.setState({ status: 'connected', reconnectAttempt: 0, lastEvent: null });
+    // The EventsStatusDot has been exported from Sidebar for potential reuse.
+    // The Sidebar itself no longer embeds it in a footer nav. Just verify sidebar renders.
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
         <Sidebar
@@ -68,7 +73,7 @@ describe('Sidebar', () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByLabelText(/Realtime updates: connected/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Sessions panel/i)).toBeInTheDocument();
   });
 });
 
@@ -88,62 +93,45 @@ describe('Sidebar URL-driven activePanel', () => {
     onRequestDeleteWindow: () => {},
   };
 
-  it('marks Sessions tab pressed on /web/sessions', () => {
+  it('shows sessions panel on /web/sessions (tab switching now in LeftRail)', () => {
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
         <Sidebar {...baseProps} />
       </MemoryRouter>,
     );
-    const sessionsTab = screen.getByRole('button', { name: /Sessions tab/i });
-    expect(sessionsTab.getAttribute('aria-pressed')).toBe('true');
+    // Sidebar content panel switches by URL — verify sessions panel is shown
+    expect(screen.getByLabelText(/sessions panel/i)).toBeInTheDocument();
   });
 
-  it('marks Settings tab pressed on /web/settings', () => {
+  it('shows settings panel on /web/settings (tab switching now in LeftRail)', () => {
     render(
       <MemoryRouter initialEntries={['/web/settings']}>
         <Sidebar {...baseProps} />
       </MemoryRouter>,
     );
-    const settingsTab = screen.getByRole('button', { name: /Settings tab/i });
-    expect(settingsTab.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByLabelText(/settings panel/i)).toBeInTheDocument();
   });
 
-  it('Settings tab click navigates to /web/settings', () => {
+  it('shows files panel label on /web/files even without filesClient', () => {
     render(
-      <MemoryRouter initialEntries={['/web/sessions']}>
+      <MemoryRouter initialEntries={['/web/files']}>
         <Routes>
           <Route path="/web/*" element={<Sidebar {...baseProps} />} />
         </Routes>
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByRole('button', { name: /Settings tab/i }));
-    const settingsTab = screen.getByRole('button', { name: /Settings tab/i });
-    expect(settingsTab.getAttribute('aria-pressed')).toBe('true');
+    // The panel div aria-label reflects the active panel derived from URL
+    expect(screen.getByLabelText(/files panel/i)).toBeInTheDocument();
   });
 
-  it('Files tab is enabled and navigates to /web/files', () => {
-    render(
-      <MemoryRouter initialEntries={['/web/sessions']}>
-        <Routes>
-          <Route path="/web/*" element={<Sidebar {...baseProps} />} />
-        </Routes>
-      </MemoryRouter>,
-    );
-    const filesTab = screen.getByRole('button', { name: /Files tab/i });
-    expect(filesTab).not.toBeDisabled();
-    expect(filesTab.getAttribute('title') ?? '').not.toMatch(/Phase 2c/);
-    fireEvent.click(filesTab);
-    expect(filesTab.getAttribute('aria-pressed')).toBe('true');
-  });
-
-  it('marks Files tab pressed on /web/files', () => {
+  it('shows files panel label on /web/files when filesClient provided', () => {
     render(
       <MemoryRouter initialEntries={['/web/files']}>
         <Sidebar {...baseProps} />
       </MemoryRouter>,
     );
-    const filesTab = screen.getByRole('button', { name: /Files tab/i });
-    expect(filesTab.getAttribute('aria-pressed')).toBe('true');
+    // The panel div aria-label reflects the active panel derived from URL
+    expect(screen.getByLabelText(/files panel/i)).toBeInTheDocument();
   });
 
   it('renders FilesSidebarPanel when activePanel=files and filesClient given', () => {

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
 import { Sidebar } from '@/components/Sidebar';
+import { LeftRail } from '@/components/LeftRail';
+import type { ShellTab } from '@/components/LeftRail';
 import { MultiPaneArea } from '@/components/layout/MultiPaneArea';
 import { FilesViewerPane } from '@/components/files/FilesViewerPane';
 import type { FilesApiClient } from '@/components/files/filesApi';
@@ -392,6 +394,20 @@ export function AuthenticatedShell() {
 
   const isFilesRoute = location.pathname.startsWith('/web/files');
 
+  const activeTab: ShellTab = location.pathname.startsWith('/web/settings')
+    ? 'settings'
+    : location.pathname.startsWith('/web/files')
+      ? 'files'
+      : 'sessions';
+
+  const handleSelectTab = (tab: ShellTab) => {
+    if (tab === 'sessions') {
+      navigate('/web/sessions' + location.hash);
+    } else {
+      navigate(`/web/${tab}`);
+    }
+  };
+
   const filesClient: FilesApiClient = {
     listFiles: baseClient!.listFiles.bind(baseClient!),
     getFileContent: baseClient!.getFileContent.bind(baseClient!),
@@ -408,6 +424,12 @@ export function AuthenticatedShell() {
   return (
     <>
       <div style={{ display: 'flex', height: '100vh', background: tokens.colors.bg }}>
+        <LeftRail
+          activeTab={activeTab}
+          onSelectTab={handleSelectTab}
+          onLogout={logout}
+          rateLimitsWarning={false}
+        />
         <Sidebar
           sessions={sessions}
           loading={loading}

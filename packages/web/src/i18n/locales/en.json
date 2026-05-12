@@ -152,6 +152,18 @@
       "stale": "Last updated {{age}} ago"
     }
   },
+  "shell": {
+    "leftRail": {
+      "label": "Primary navigation",
+      "rateLimitsWarning": "Rate limits warning"
+    },
+    "tabs": {
+      "sessions": "Sessions",
+      "files": "Files",
+      "settings": "Settings",
+      "logout": "Logout"
+    }
+  },
   "palette": {
     "title": "Command Palette",
     "placeholder": "Type a command or session name…",

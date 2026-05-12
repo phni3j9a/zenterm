@@ -105,7 +105,11 @@
     "appearance": {
       "title": "외관",
       "theme": "테마",
-      "themeOptions": { "light": "라이트", "dark": "다크", "system": "시스템" },
+      "themeOptions": {
+        "light": "라이트",
+        "dark": "다크",
+        "system": "시스템"
+      },
       "language": "언어"
     },
     "terminal": {
@@ -151,6 +155,18 @@
       "pending": "계산 중…",
       "unavailable": "사용 불가",
       "stale": "{{age}} 전 마지막 업데이트"
+    }
+  },
+  "shell": {
+    "leftRail": {
+      "label": "Primary navigation",
+      "rateLimitsWarning": "Rate limits warning"
+    },
+    "tabs": {
+      "sessions": "Sessions",
+      "files": "Files",
+      "settings": "Settings",
+      "logout": "Logout"
     }
   },
   "palette": {

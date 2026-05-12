@@ -105,7 +105,11 @@
     "appearance": {
       "title": "Apparence",
       "theme": "Thème",
-      "themeOptions": { "light": "Clair", "dark": "Sombre", "system": "Système" },
+      "themeOptions": {
+        "light": "Clair",
+        "dark": "Sombre",
+        "system": "Système"
+      },
       "language": "Langue"
     },
     "terminal": {
@@ -151,6 +155,18 @@
       "pending": "Calcul en cours…",
       "unavailable": "Indisponible",
       "stale": "Dernière mise à jour il y a {{age}}"
+    }
+  },
+  "shell": {
+    "leftRail": {
+      "label": "Primary navigation",
+      "rateLimitsWarning": "Rate limits warning"
+    },
+    "tabs": {
+      "sessions": "Sessions",
+      "files": "Files",
+      "settings": "Settings",
+      "logout": "Logout"
     }
   },
   "palette": {

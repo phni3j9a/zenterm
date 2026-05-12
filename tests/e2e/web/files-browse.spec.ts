@@ -53,7 +53,8 @@ test('browse: home → sub directory → breadcrumb back', async ({ page }) => {
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 
-  await page.getByRole('button', { name: /Files tab/i }).click();
+  // LeftRail (Phase 6 G5): tab switching moved from Sidebar footer to LeftRail tablist
+  await page.getByRole('tab', { name: /files/i }).click();
   await expect(page).toHaveURL(/\/web\/files$/);
 
   await expect(page.getByRole('button', { name: /^src$/ })).toBeVisible();
