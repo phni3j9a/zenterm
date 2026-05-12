@@ -51,7 +51,7 @@ test('copy and paste: source file copied into target directory', async ({ page }
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 
-  await page.getByRole('button', { name: /Files tab/i }).click();
+  await page.getByRole('tab', { name: /^files$/i }).click();
   await expect(page).toHaveURL(/\/web\/files$/);
 
   // Copy src.txt via context menu
