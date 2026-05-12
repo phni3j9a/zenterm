@@ -27,6 +27,11 @@ export function useTheme(): {
 
   const resolvedTheme = mode === 'system' ? systemTheme : mode;
   const tokens = resolvedTheme === 'light' ? lightTokens : darkTokens;
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--zen-focus-ring', tokens.colors.focusRing);
+  }, [tokens]);
+
   return { tokens, mode, resolvedTheme, setMode: setThemeMode };
 }
 

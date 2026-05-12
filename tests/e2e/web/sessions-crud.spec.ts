@@ -1,23 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { createGatewayEnv, fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
 const TOKEN = '4322';
 
 test.beforeAll(async () => {
-  const home = mkdtempSync(join(tmpdir(), 'zenterm-e2e-'));
-  mkdirSync(join(home, '.config', 'zenterm'), { recursive: true });
-  writeFileSync(
-    join(home, '.config', 'zenterm', '.env'),
-    `AUTH_TOKEN=${TOKEN}\nPORT=18797\nHOST=127.0.0.1\n`,
-  );
-
+  const { env } = createGatewayEnv({ port: 18797, token: TOKEN, label: 'zenterm-sessions' });
   gateway = spawn('node', ['packages/gateway/dist/index.js'], {
-    env: { ...process.env, HOME: home, PORT: '18797', HOST: '127.0.0.1', AUTH_TOKEN: TOKEN, LOG_LEVEL: 'error' },
+    env,
     stdio: 'inherit',
   });
   baseUrl = 'http://127.0.0.1:18797';
@@ -62,7 +54,7 @@ test('creates a session through the sidebar UI', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible();
 
@@ -92,7 +84,7 @@ test('renames a session through kebab menu', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByText('e2e_rename')).toBeVisible();
 
@@ -119,7 +111,7 @@ test('deletes a session through kebab → confirm', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByText('e2e_delete')).toBeVisible();
 

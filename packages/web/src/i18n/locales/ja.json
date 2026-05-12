@@ -24,6 +24,7 @@
   },
   "login": {
     "title": "ZenTerm にサインイン",
+    "tagline": "どこからでも tmux サーバーに接続",
     "tokenLabel": "トークン",
     "tokenPlaceholder": "4桁のトークン",
     "submit": "サインイン",
@@ -41,9 +42,17 @@
     "deleteWindowTitle": "ウィンドウを削除しますか？",
     "deleteWindowMessage": "ウィンドウ {{index}}「{{name}}」を閉じます。続行しますか？",
     "loadFailed": "セッション取得に失敗: {{error}}",
-    "empty": "セッションがまだありません — 上部で作成してください。",
+    "empty": {
+      "title": "セッションがありません",
+      "description": "+ ボタンで作成できます"
+    },
     "openInPane": {
       "label": "ペイン {{pane}} で開く"
+    },
+    "state": {
+      "active": "アクティブ",
+      "idle": "アイドル",
+      "detached": "未接続"
     }
   },
   "terminal": {
@@ -104,7 +113,11 @@
     "appearance": {
       "title": "外観",
       "theme": "テーマ",
-      "themeOptions": { "light": "ライト", "dark": "ダーク", "system": "システム" },
+      "themeOptions": {
+        "light": "ライト",
+        "dark": "ダーク",
+        "system": "システム"
+      },
       "language": "言語"
     },
     "terminal": {
@@ -152,10 +165,49 @@
       "stale": "{{age}} 前に更新"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "ベーシック",
+      "pro": "プロ",
+      "max": "マックス",
+      "unknown": "不明"
+    },
+    "planTooltip": "Anthropic レート制限プラン",
+    "setupGuide": "セットアップガイド"
+  },
+  "shell": {
+    "leftRail": {
+      "label": "プライマリナビゲーション",
+      "rateLimitsWarning": "レート制限の警告"
+    },
+    "tabs": {
+      "sessions": "セッション",
+      "files": "ファイル",
+      "settings": "設定",
+      "logout": "ログアウト"
+    },
+    "empty": {
+      "title": "セッションを選択",
+      "description": "サイドバーから選択して開始"
+    }
+  },
+  "multiPane": {
+    "empty": {
+      "title": "このペインにセッションを割り当てる",
+      "description": "サイドバーのセッションを右クリック"
+    }
+  },
   "palette": {
     "title": "コマンドパレット",
     "placeholder": "コマンドかセッション名を入力…",
     "noResults": "該当なし"
+  },
+  "onboarding": {
+    "title": "はじめに",
+    "step1": { "title": "Gateway を起動" },
+    "step2": { "title": "トークンを入力", "description": "Gateway 起動時に表示されるトークン" },
+    "step3": { "title": "セッションを作成", "description": "+ New Session で tmux を起動" },
+    "dismiss": "次回から表示しない"
   },
   "files": {
     "title": "ファイル",
@@ -230,6 +282,19 @@
     "uploadComplete": "アップロード完了",
     "uploadFailed": "アップロード失敗",
     "uploadFailedDesc": "ファイルをアップロードできませんでした。",
-    "uploadDropHint": "ここにドロップしてアップロード"
+    "uploadDropHint": "ここにドロップしてアップロード",
+    "toggleHidden": "隠しファイルを表示",
+    "upload": "アップロード",
+    "new": "新規",
+    "home": "ホーム",
+    "breadcrumb": "ファイル パンくず",
+    "empty": {
+      "title": "空のディレクトリ",
+      "description": "ファイルをドラッグして追加"
+    },
+    "viewerEmpty": {
+      "title": "ファイル未選択",
+      "description": "サイドバーからファイルを選択するとプレビューします"
+    }
   }
 }

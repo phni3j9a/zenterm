@@ -51,8 +51,14 @@ describe('FilesList', () => {
   });
 
   it('renders empty state text when entries are empty', () => {
-    useFilesStore.setState({ entries: [] });
+    useFilesStore.setState({ entries: [], loading: false });
     render(<FilesList onOpen={vi.fn()} onContextMenu={vi.fn()} onLongPress={vi.fn()} />);
     expect(screen.getByText(/empty directory/i)).toBeInTheDocument();
+  });
+
+  it('shows skeleton loading state when loading and entries are empty', () => {
+    useFilesStore.setState({ entries: [], loading: true });
+    render(<FilesList onOpen={vi.fn()} onContextMenu={vi.fn()} onLongPress={vi.fn()} />);
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 });

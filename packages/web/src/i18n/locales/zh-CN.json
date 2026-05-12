@@ -25,6 +25,7 @@
   },
   "login": {
     "title": "登录 ZenTerm",
+    "tagline": "Connect to your tmux server from anywhere",
     "tokenLabel": "令牌",
     "tokenPlaceholder": "4 位令牌",
     "submit": "登录",
@@ -42,9 +43,17 @@
     "deleteWindowTitle": "删除窗口？",
     "deleteWindowMessage": "这将关闭窗口 {{index}}「{{name}}」。继续？",
     "loadFailed": "加载会话失败：{{error}}",
-    "empty": "暂无会话 — 请在上方创建。",
+    "empty": {
+      "title": "No sessions yet",
+      "description": "Click + to create one"
+    },
     "openInPane": {
       "label": "在面板 {{pane}} 中打开"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {
@@ -105,7 +114,11 @@
     "appearance": {
       "title": "外观",
       "theme": "主题",
-      "themeOptions": { "light": "浅色", "dark": "深色", "system": "系统" },
+      "themeOptions": {
+        "light": "浅色",
+        "dark": "深色",
+        "system": "系统"
+      },
       "language": "语言"
     },
     "terminal": {
@@ -153,10 +166,49 @@
       "stale": "{{age}} 前更新"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "基础版",
+      "pro": "专业版",
+      "max": "最高版",
+      "unknown": "未知"
+    },
+    "planTooltip": "Anthropic 速率限制计划",
+    "setupGuide": "配置指南"
+  },
+  "shell": {
+    "leftRail": {
+      "label": "Primary navigation",
+      "rateLimitsWarning": "Rate limits warning"
+    },
+    "tabs": {
+      "sessions": "Sessions",
+      "files": "Files",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "empty": {
+      "title": "Select a session",
+      "description": "Choose one from the sidebar to start"
+    }
+  },
+  "multiPane": {
+    "empty": {
+      "title": "Assign a session to this pane",
+      "description": "Right-click a session in the sidebar"
+    }
+  },
   "palette": {
     "title": "命令面板",
     "placeholder": "输入命令或会话名称…",
     "noResults": "无匹配结果"
+  },
+  "onboarding": {
+    "title": "Get started",
+    "step1": { "title": "Start the Gateway" },
+    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
+    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "dismiss": "Don't show again"
   },
   "files": {
     "title": "文件",
@@ -231,6 +283,19 @@
     "uploadComplete": "上传完成",
     "uploadFailed": "上传失败",
     "uploadFailedDesc": "无法上传文件。",
-    "uploadDropHint": "将文件拖放到此处以上传"
+    "uploadDropHint": "将文件拖放到此处以上传",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

@@ -1,8 +1,8 @@
 import type { MouseEvent } from 'react';
 import type { FileEntry } from '@zenterm/shared';
 import { useTheme } from '@/theme';
-import { getFileIconType, type FileIconType } from '@/lib/filesIcon';
 import { formatFileSize } from '@/lib/filesFormat';
+import { IconFolder, IconFile, IconChevronRight } from '@/components/ui/icons';
 
 interface Props {
   entry: FileEntry;
@@ -13,18 +13,9 @@ interface Props {
   onLongPress: (entry: FileEntry) => void;
 }
 
-const ICON: Record<FileIconType, string> = {
-  folder: '📁',
-  code: '📝',
-  image: '🖼',
-  text: '📄',
-  symlink: '🔗',
-  other: '📦',
-};
-
 export function FilesItem({ entry, selected, selectionMode, onOpen, onContextMenu, onLongPress }: Props) {
   const { tokens } = useTheme();
-  const icon = ICON[getFileIconType(entry)];
+  const isDir = entry.type === 'directory';
 
   const handleClick = (e: MouseEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -67,20 +58,38 @@ export function FilesItem({ entry, selected, selectionMode, onOpen, onContextMen
           style={{ marginRight: tokens.spacing.xs }}
         />
       )}
-      <span aria-hidden style={{ width: 20 }}>{icon}</span>
+      <span
+        aria-hidden
+        style={{
+          width: 20,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          color: isDir ? tokens.colors.primaryMuted : tokens.colors.textSecondary,
+        }}
+      >
+        {isDir ? <IconFolder size={18} /> : <IconFile size={18} />}
+      </span>
       <span
         style={{
           flex: 1,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          fontSize: tokens.typography.bodyMedium.fontSize,
         }}
       >
         {entry.name}
       </span>
-      {entry.type !== 'directory' && (
+      {!isDir && (
         <span style={{ fontSize: tokens.typography.caption.fontSize, color: tokens.colors.textMuted }}>
           {formatFileSize(entry.size)}
+        </span>
+      )}
+      {isDir && (
+        <span aria-hidden style={{ color: tokens.colors.textMuted, display: 'inline-flex', alignItems: 'center' }}>
+          <IconChevronRight size={14} />
         </span>
       )}
     </button>

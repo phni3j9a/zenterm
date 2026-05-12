@@ -25,6 +25,7 @@
   },
   "login": {
     "title": "ZenTerm에 로그인",
+    "tagline": "Connect to your tmux server from anywhere",
     "tokenLabel": "토큰",
     "tokenPlaceholder": "4자리 토큰",
     "submit": "로그인",
@@ -42,9 +43,17 @@
     "deleteWindowTitle": "창을 삭제하시겠습니까?",
     "deleteWindowMessage": "창 {{index}} \"{{name}}\"을 닫습니다. 계속하시겠습니까?",
     "loadFailed": "세션 로드 실패: {{error}}",
-    "empty": "아직 세션이 없습니다 — 위에서 만들어 보세요.",
+    "empty": {
+      "title": "No sessions yet",
+      "description": "Click + to create one"
+    },
     "openInPane": {
       "label": "패널 {{pane}}에서 열기"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {
@@ -105,7 +114,11 @@
     "appearance": {
       "title": "외관",
       "theme": "테마",
-      "themeOptions": { "light": "라이트", "dark": "다크", "system": "시스템" },
+      "themeOptions": {
+        "light": "라이트",
+        "dark": "다크",
+        "system": "시스템"
+      },
       "language": "언어"
     },
     "terminal": {
@@ -153,10 +166,49 @@
       "stale": "{{age}} 전 마지막 업데이트"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "베이직",
+      "pro": "프로",
+      "max": "맥스",
+      "unknown": "알 수 없음"
+    },
+    "planTooltip": "Anthropic 요청 제한 플랜",
+    "setupGuide": "설정 가이드"
+  },
+  "shell": {
+    "leftRail": {
+      "label": "Primary navigation",
+      "rateLimitsWarning": "Rate limits warning"
+    },
+    "tabs": {
+      "sessions": "Sessions",
+      "files": "Files",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "empty": {
+      "title": "Select a session",
+      "description": "Choose one from the sidebar to start"
+    }
+  },
+  "multiPane": {
+    "empty": {
+      "title": "Assign a session to this pane",
+      "description": "Right-click a session in the sidebar"
+    }
+  },
   "palette": {
     "title": "명령 팔레트",
     "placeholder": "명령 또는 세션 이름 입력…",
     "noResults": "결과 없음"
+  },
+  "onboarding": {
+    "title": "Get started",
+    "step1": { "title": "Start the Gateway" },
+    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
+    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "dismiss": "Don't show again"
   },
   "files": {
     "title": "파일",
@@ -231,6 +283,19 @@
     "uploadComplete": "업로드 완료",
     "uploadFailed": "업로드 실패",
     "uploadFailedDesc": "파일을 업로드할 수 없습니다.",
-    "uploadDropHint": "업로드하려면 여기에 파일을 놓으세요"
+    "uploadDropHint": "업로드하려면 여기에 파일을 놓으세요",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

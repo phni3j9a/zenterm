@@ -1,5 +1,5 @@
 import type { TmuxSession, TmuxWindow } from '@zenterm/shared';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { SessionsListPanel } from './SessionsListPanel';
 import { SettingsPanel } from './settings/SettingsPanel';
@@ -8,7 +8,6 @@ import type { FilesApiClient } from './files/filesApi';
 import { useTheme } from '@/theme';
 import { useEventsStore } from '@/stores/events';
 import { useLayoutStore } from '@/stores/layout';
-import { Tooltip } from '@/components/ui/Tooltip';
 import { SidebarResizer } from './sidebar/SidebarResizer';
 
 type ActivePanel = 'sessions' | 'files' | 'settings';
@@ -41,9 +40,7 @@ function deriveActivePanel(pathname: string): ActivePanel {
 
 export function Sidebar(props: SidebarProps) {
   const { tokens } = useTheme();
-  const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
   const activePanel = deriveActivePanel(location.pathname);
   const collapsed = useLayoutStore((s) => s.sidebarCollapsed);
   const sidebarWidth = useLayoutStore((s) => s.sidebarWidth);
@@ -55,20 +52,6 @@ export function Sidebar(props: SidebarProps) {
     return <SessionsListPanel {...props} />;
   };
 
-  const tabButtonStyle = (active: boolean, disabled = false) => ({
-    background: 'none' as const,
-    border: 'none' as const,
-    color: active
-      ? tokens.colors.primary
-      : disabled
-        ? tokens.colors.textMuted
-        : tokens.colors.textSecondary,
-    fontSize: tokens.typography.caption.fontSize,
-    cursor: disabled ? ('not-allowed' as const) : ('pointer' as const),
-    padding: tokens.spacing.sm,
-    opacity: disabled ? 0.5 : 1,
-  });
-
   return (
     <aside
       role="complementary"
@@ -79,7 +62,7 @@ export function Sidebar(props: SidebarProps) {
         background: tokens.colors.bgElevated,
         borderRight: collapsed ? 'none' : `1px solid ${tokens.colors.borderSubtle}`,
         display: 'grid',
-        gridTemplateRows: '1fr 56px',
+        gridTemplateRows: '1fr',
         height: '100vh',
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -88,54 +71,14 @@ export function Sidebar(props: SidebarProps) {
     >
       {collapsed ? null : (
         <>
-          <div aria-label={`${activePanel} panel`} style={{ overflowY: 'auto' }}>
+          <div
+            id={`panel-${activePanel}`}
+            role="tabpanel"
+            aria-label={`${activePanel} panel`}
+            style={{ overflowY: 'auto' }}
+          >
             {renderPanel()}
           </div>
-          <nav
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-around',
-              borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-              background: tokens.colors.bgElevated,
-              position: 'relative',
-            }}
-          >
-            <Tooltip label={t('sidebar.tabs.sessions')}>
-              <button
-                type="button"
-                aria-label="Sessions tab"
-                aria-pressed={activePanel === 'sessions'}
-                onClick={() => navigate('/web/sessions')}
-                style={tabButtonStyle(activePanel === 'sessions')}
-              >
-                ⌘ {t('sidebar.tabs.sessions')}
-              </button>
-            </Tooltip>
-            <Tooltip label={t('sidebar.tabs.files')}>
-              <button
-                type="button"
-                aria-label="Files tab"
-                aria-pressed={activePanel === 'files'}
-                onClick={() => navigate('/web/files')}
-                style={tabButtonStyle(activePanel === 'files')}
-              >
-                📁 {t('sidebar.tabs.files')}
-              </button>
-            </Tooltip>
-            <Tooltip label={t('sidebar.tabs.settings')}>
-              <button
-                type="button"
-                aria-label="Settings tab"
-                aria-pressed={activePanel === 'settings'}
-                onClick={() => navigate('/web/settings')}
-                style={tabButtonStyle(activePanel === 'settings')}
-              >
-                ⚙ {t('sidebar.tabs.settings')}
-              </button>
-            </Tooltip>
-            <EventsStatusDot />
-          </nav>
           <SidebarResizer />
         </>
       )}
@@ -143,7 +86,7 @@ export function Sidebar(props: SidebarProps) {
   );
 }
 
-function EventsStatusDot() {
+export function EventsStatusDot() {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const status = useEventsStore((s) => s.status);

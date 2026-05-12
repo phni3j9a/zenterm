@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFilesStore } from '@/stores/files';
 import { useTheme } from '@/theme';
+import { IconButton } from '@/components/ui/IconButton';
+import { IconSort, IconEye, IconEyeOff, IconUpload, IconPlus } from '@/components/ui/icons';
 import { FilesSortMenu } from './FilesSortMenu';
 
 interface Props {
@@ -41,27 +43,40 @@ export function FilesToolbar({ onUploadClick, onNewFile, onNewFolder }: Props) {
       }}
     >
       <div style={{ position: 'relative' }}>
-        <button type="button" aria-label={t('files.sort')} title={t('files.toggleSort')} onClick={() => setSortOpen((b) => !b)} style={btn}>
-          ⇅ {t('files.sort')}
-        </button>
+        <IconButton
+          icon={<IconSort size={16} />}
+          label={t('files.sort')}
+          variant="ghost"
+          size="sm"
+          onClick={() => setSortOpen((b) => !b)}
+        />
         {sortOpen && <FilesSortMenu onClose={() => setSortOpen(false)} />}
       </div>
-      <button
-        type="button"
-        aria-label={t('files.toggleHiddenFiles')}
+      <IconButton
+        icon={showHidden ? <IconEyeOff size={16} /> : <IconEye size={16} />}
+        label={t('files.toggleHidden')}
+        variant="ghost"
+        size="sm"
         aria-pressed={showHidden}
         onClick={toggleShowHidden}
-        style={{ ...btn, color: showHidden ? tokens.colors.primary : tokens.colors.textSecondary }}
-      >
-        {showHidden ? '🙈' : '👁'} {t('files.toggleHiddenFiles')}
-      </button>
-      <button type="button" aria-label={t('files.uploadFile')} onClick={onUploadClick} style={btn}>
-        ⬆ {t('files.uploadFile')}
-      </button>
-      <div style={{ marginLeft: 'auto', position: 'relative' }}>
-        <button type="button" aria-label={t('files.createNewFile')} onClick={() => setNewOpen((b) => !b)} style={btn}>
-          ＋ New
-        </button>
+        style={{ color: showHidden ? tokens.colors.primary : undefined }}
+      />
+      <div style={{ flex: 1 }} />
+      <IconButton
+        icon={<IconUpload size={16} />}
+        label={t('files.upload')}
+        variant="outline"
+        size="sm"
+        onClick={onUploadClick}
+      />
+      <div style={{ position: 'relative' }}>
+        <IconButton
+          icon={<IconPlus size={16} />}
+          label={t('files.new')}
+          variant="primary"
+          size="sm"
+          onClick={() => setNewOpen((b) => !b)}
+        />
         {newOpen && (
           <div
             role="menu"

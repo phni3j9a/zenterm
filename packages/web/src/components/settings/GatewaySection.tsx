@@ -5,14 +5,16 @@ import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { buildPairingUrl } from '@/lib/qr';
+import { IconCopy, IconQrCode, IconRefresh, IconLogout } from '@/components/ui/icons';
 import { QrModal } from './QrModal';
 import { ReauthDialog } from './ReauthDialog';
 
 interface Props {
   gatewayVersion: string | null;
+  headingId?: string;
 }
 
-export function GatewaySection({ gatewayVersion }: Props) {
+export function GatewaySection({ gatewayVersion, headingId }: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const auth = useAuthStore();
@@ -47,30 +49,39 @@ export function GatewaySection({ gatewayVersion }: Props) {
     });
   };
 
-  const buttonStyle = (danger = false) => ({
+  const primaryBtn = {
     background: tokens.colors.surface,
-    border: `1px solid ${danger ? tokens.colors.error : tokens.colors.border}`,
-    color: danger ? tokens.colors.error : tokens.colors.textPrimary,
+    border: `1px solid ${tokens.colors.border}`,
+    color: tokens.colors.textPrimary,
     padding: `8px 12px`,
     borderRadius: tokens.radii.sm,
     cursor: 'pointer' as const,
-    width: '100%',
-    textAlign: 'left' as const,
-    marginTop: tokens.spacing.xs,
     fontSize: tokens.typography.small.fontSize,
-  });
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacing.xs,
+    justifyContent: 'center' as const,
+  };
+
+  const secondaryBtn = {
+    ...primaryBtn,
+    width: '100%',
+    justifyContent: 'flex-start' as const,
+    marginTop: tokens.spacing.sm,
+    color: tokens.colors.textSecondary,
+  };
+
+  const dangerBtn = {
+    ...secondaryBtn,
+    border: `1px solid ${tokens.colors.error}`,
+    color: tokens.colors.error,
+    marginTop: tokens.spacing.sm,
+  };
 
   return (
-    <section
-      role="region"
-      aria-label="Gateway"
-      style={{
-        marginTop: tokens.spacing.lg,
-        paddingTop: tokens.spacing.md,
-        borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-      }}
-    >
+    <section>
       <h3
+        id={headingId}
         style={{
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
@@ -105,16 +116,27 @@ export function GatewaySection({ gatewayVersion }: Props) {
         </dd>
       </dl>
 
-      <button type="button" onClick={handleCopy} style={buttonStyle()}>
-        {t('settings.gateway.copyUrl', 'Copy Web URL')}
-      </button>
-      <button type="button" onClick={() => setQrOpen(true)} style={buttonStyle()}>
-        {t('settings.gateway.showQr', 'Show mobile QR')}
-      </button>
-      <button type="button" onClick={() => setReauthOpen(true)} style={buttonStyle()}>
+      {/* Primary actions: 2-column grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm }}>
+        <button type="button" onClick={handleCopy} style={primaryBtn}>
+          <IconCopy size={14} />
+          {t('settings.gateway.copyUrl', 'Copy Web URL')}
+        </button>
+        <button type="button" onClick={() => setQrOpen(true)} style={primaryBtn}>
+          <IconQrCode size={14} />
+          {t('settings.gateway.showQr', 'Show mobile QR')}
+        </button>
+      </div>
+
+      {/* Secondary: Re-enter token */}
+      <button type="button" onClick={() => setReauthOpen(true)} style={secondaryBtn}>
+        <IconRefresh size={14} />
         {t('settings.gateway.reauth', 'Re-enter token')}
       </button>
-      <button type="button" onClick={handleLogout} style={buttonStyle(true)}>
+
+      {/* Danger: Logout */}
+      <button type="button" onClick={handleLogout} style={dangerBtn}>
+        <IconLogout size={14} />
         {t('settings.gateway.logout', 'Logout')}
       </button>
 

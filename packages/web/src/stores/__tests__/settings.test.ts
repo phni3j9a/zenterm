@@ -110,7 +110,7 @@ describe('useSettingsStore autoCopyOnSelect', () => {
     const raw = window.localStorage.getItem('zenterm-web-settings');
     expect(raw).toBeTruthy();
     expect(JSON.parse(raw!).state.autoCopyOnSelect).toBe(true);
-    expect(JSON.parse(raw!).version).toBe(2);
+    expect(JSON.parse(raw!).version).toBe(3);
   });
 
   it('migrates v1 persisted state by adding autoCopyOnSelect: false', async () => {

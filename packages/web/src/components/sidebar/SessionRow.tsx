@@ -4,6 +4,7 @@ import type { TmuxSession } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { InlineEdit } from '@/components/ui/InlineEdit';
 import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
+import { IconChevronRight, IconChevronDown, IconMore } from '@/components/ui/icons';
 import { RowActionsMenu } from './RowActionsMenu';
 
 export interface SessionRowProps {
@@ -41,6 +42,23 @@ export function SessionRow({
   const hasWindows = (session.windows?.length ?? 0) > 1;
   const showKebab = hover || menuOpen;
 
+  const stateDotColor = isActive
+    ? tokens.colors.primary
+    : (session.windows?.length ?? 0) > 0
+      ? tokens.colors.warning
+      : tokens.colors.textMuted;
+  const stateDotLabel = isActive
+    ? t('sessions.state.active')
+    : (session.windows?.length ?? 0) > 0
+      ? t('sessions.state.idle')
+      : t('sessions.state.detached');
+
+  const rowBackground = isActive
+    ? tokens.colors.primarySubtle
+    : hover
+      ? tokens.colors.surfaceHover
+      : 'transparent';
+
   return (
     <div
       onMouseEnter={() => setHover(true)}
@@ -57,20 +75,24 @@ export function SessionRow({
           gap: tokens.spacing.sm,
           padding: tokens.spacing.sm,
           margin: 0,
-          background: isActive ? tokens.colors.primarySubtle : 'transparent',
+          background: rowBackground,
+          boxShadow: isActive ? tokens.shadows.sm : 'none',
           color: tokens.colors.textPrimary,
           border: 'none',
           borderRadius: tokens.radii.sm,
           cursor: 'pointer',
           textAlign: 'left',
+          transition: 'background 100ms',
         }}
       >
         <span
+          data-testid="session-row-state-dot"
+          aria-label={stateDotLabel}
           style={{
-            width: 6,
-            height: 6,
+            width: 8,
+            height: 8,
             borderRadius: '50%',
-            background: tokens.colors.success,
+            background: stateDotColor,
             flexShrink: 0,
           }}
         />
@@ -88,7 +110,7 @@ export function SessionRow({
             />
           ) : (
             <>
-              <span style={{ display: 'block', fontSize: tokens.typography.bodyMedium.fontSize }}>
+              <span style={{ display: 'block', fontSize: tokens.typography.bodyMedium.fontSize, fontWeight: 600 }}>
                 {session.displayName}
               </span>
               <span
@@ -110,6 +132,7 @@ export function SessionRow({
         </span>
         {hasWindows && (
           <span
+            data-testid="session-row-chevron"
             role="button"
             tabIndex={0}
             aria-label={isExpanded ? t('sessions.collapseWindows') : t('sessions.expandWindows')}
@@ -128,10 +151,13 @@ export function SessionRow({
               padding: tokens.spacing.xs,
               color: tokens.colors.textMuted,
               cursor: 'pointer',
-              fontSize: tokens.typography.caption.fontSize,
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            {isExpanded ? '▾' : '▸'}
+            {isExpanded
+              ? <IconChevronDown size={14} />
+              : <IconChevronRight size={14} />}
           </span>
         )}
         <button
@@ -150,11 +176,12 @@ export function SessionRow({
             border: 'none',
             cursor: 'pointer',
             color: tokens.colors.textMuted,
-            fontSize: tokens.typography.bodyMedium.fontSize,
+            display: 'flex',
+            alignItems: 'center',
             visibility: showKebab ? 'visible' : 'hidden',
           }}
         >
-          ⋯
+          <IconMore size={16} />
         </button>
       </button>
       <RowActionsMenu

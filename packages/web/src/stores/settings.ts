@@ -33,10 +33,12 @@ interface SettingsState {
   language: Language;
   fontSize: number;
   autoCopyOnSelect: boolean;
+  dismissOnboarding: boolean;
   setThemeMode: (mode: ThemeMode) => void;
   setLanguage: (lang: Language) => void;
   setFontSize: (size: number) => void;
   setAutoCopyOnSelect: (value: boolean) => void;
+  setDismissOnboarding: (value: boolean) => void;
 }
 
 function clampFontSize(size: number): number {
@@ -54,6 +56,10 @@ interface PersistedV2 extends PersistedV1 {
   autoCopyOnSelect: boolean;
 }
 
+interface PersistedV3 extends PersistedV2 {
+  dismissOnboarding: boolean;
+}
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
@@ -61,29 +67,42 @@ export const useSettingsStore = create<SettingsState>()(
       language: 'ja',
       fontSize: DEFAULT_FONT_SIZE,
       autoCopyOnSelect: false,
+      dismissOnboarding: false,
       setThemeMode: (themeMode) => set({ themeMode }),
       setLanguage: (language) => set({ language }),
       setFontSize: (size) => set({ fontSize: clampFontSize(size) }),
       setAutoCopyOnSelect: (autoCopyOnSelect) => set({ autoCopyOnSelect }),
+      setDismissOnboarding: (dismissOnboarding) => set({ dismissOnboarding }),
     }),
     {
       name: 'zenterm-web-settings',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         themeMode: state.themeMode,
         language: state.language,
         fontSize: state.fontSize,
         autoCopyOnSelect: state.autoCopyOnSelect,
+        dismissOnboarding: state.dismissOnboarding,
       }),
-      migrate: (persistedState, version): PersistedV2 => {
-        const s = (persistedState ?? {}) as Partial<PersistedV2>;
+      migrate: (persistedState, version): PersistedV3 => {
+        const s = (persistedState ?? {}) as Partial<PersistedV3>;
         if (version < 2) {
           return {
             themeMode: s.themeMode ?? 'system',
             language: normalizeLanguage(s.language),
             fontSize: typeof s.fontSize === 'number' ? s.fontSize : DEFAULT_FONT_SIZE,
             autoCopyOnSelect: false,
+            dismissOnboarding: false,
+          };
+        }
+        if (version < 3) {
+          return {
+            themeMode: s.themeMode ?? 'system',
+            language: normalizeLanguage(s.language),
+            fontSize: typeof s.fontSize === 'number' ? s.fontSize : DEFAULT_FONT_SIZE,
+            autoCopyOnSelect: s.autoCopyOnSelect ?? false,
+            dismissOnboarding: false,
           };
         }
         return {
@@ -91,6 +110,7 @@ export const useSettingsStore = create<SettingsState>()(
           language: normalizeLanguage(s.language),
           fontSize: typeof s.fontSize === 'number' ? s.fontSize : DEFAULT_FONT_SIZE,
           autoCopyOnSelect: s.autoCopyOnSelect ?? false,
+          dismissOnboarding: s.dismissOnboarding ?? false,
         };
       },
       // onRehydrateStorage fires after migrate for the same-version path (where migrate

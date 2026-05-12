@@ -48,6 +48,21 @@ npm run build:gateway       # Gateway ビルド
 5. 作業完了後は PR またはレビュー可能な差分を作成し、確認後に `main` へマージする
 6. マージ後は不要になった作業ブランチを削除する
 
+## E2E テストの tmux 分離 (重要)
+
+gateway は `execFileSync('tmux', args)` を直接呼び、`-L`/`-S` のソケット指定をしない。
+そのため `HOME` だけ分離しても、tmux サーバはユーザーの作業用 (`/tmp/tmux-$EUID/default`)
+と共有されてしまう。`npx playwright test` が落ちた瞬間にユーザーの tmux セッション
+(例: `_zen_monitor`) ごと巻き添えで死ぬ事故の原因。
+
+**ルール: e2e spec で gateway を spawn する時は必ず `TMUX_TMPDIR` を独立した
+`mkdtempSync` ディレクトリに設定する。** これにより gateway 配下の tmux は
+`$TMUX_TMPDIR/tmux-$EUID/default` を使うようになり、ユーザー作業 tmux と完全分離される。
+
+実装ヘルパ `tests/e2e/web/helpers.ts` の `createGatewayEnv()` を使うこと。
+新規 spec を書く場合も必ずこのヘルパ経由で env を作る。直接 `HOME` だけ
+`mkdtempSync` する旧パターンは禁止。
+
 ## 注意事項
 - xterm.js v6 では `allowProposedApi: true` が必須
 - Mobile 用 xterm.js は CDN ではなく `public/terminal/lib/` に自前ホスト（iOS WebView の制約）

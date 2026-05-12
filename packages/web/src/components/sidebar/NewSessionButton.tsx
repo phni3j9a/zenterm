@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
+import { IconPlus } from '@/components/ui/icons';
 
 export interface NewSessionButtonProps {
   onCreate: (name?: string) => void | Promise<void>;
@@ -42,20 +43,27 @@ export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
     return (
       <button
         type="button"
+        aria-label={t('sessions.newSession')}
         onClick={() => setEditing(true)}
         style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: tokens.spacing.xs,
           width: '100%',
-          padding: tokens.spacing.sm,
-          background: 'transparent',
-          color: tokens.colors.textSecondary,
-          border: `1px dashed ${tokens.colors.borderSubtle}`,
-          borderRadius: tokens.radii.sm,
+          padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
+          background: tokens.colors.primary,
+          color: tokens.colors.textInverse,
+          border: 'none',
+          borderRadius: 999,
           cursor: 'pointer',
           fontSize: tokens.typography.smallMedium.fontSize,
-          textAlign: 'left',
+          fontWeight: 600,
+          boxShadow: tokens.shadows.sm,
         }}
       >
-        + {t('sessions.newSession')}
+        <IconPlus size={14} />
+        {t('sessions.newSession')}
       </button>
     );
   }

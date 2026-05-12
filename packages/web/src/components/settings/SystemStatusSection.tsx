@@ -12,6 +12,7 @@ export interface SystemStatusClient {
 interface Props {
   client: SystemStatusClient | null;
   onGatewayVersion: (version: string) => void;
+  headingId?: string;
 }
 
 function formatUptime(seconds: number): string {
@@ -28,7 +29,7 @@ function formatBytes(b: number): string {
   return `${gb.toFixed(1)} GB`;
 }
 
-export function SystemStatusSection({ client, onGatewayVersion }: Props) {
+export function SystemStatusSection({ client, onGatewayVersion, headingId }: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const [data, setData] = useState<SystemStatus | null>(null);
@@ -57,17 +58,12 @@ export function SystemStatusSection({ client, onGatewayVersion }: Props) {
     };
   }, [client, onGatewayVersion]);
 
+  const memPctClamped = data ? Math.max(0, Math.min(100, data.memory.percent)) : 0;
+
   return (
-    <section
-      role="region"
-      aria-label="System status"
-      style={{
-        marginTop: tokens.spacing.lg,
-        paddingTop: tokens.spacing.md,
-        borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-      }}
-    >
+    <section>
       <h3
+        id={headingId}
         style={{
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
@@ -80,19 +76,50 @@ export function SystemStatusSection({ client, onGatewayVersion }: Props) {
       </h3>
 
       {data ? (
-        <Row label={t('settings.systemStatus.uptime', 'Uptime')} value={formatUptime(data.uptime)} />
-      ) : null}
-      {data ? (
-        <Row
-          label={t('settings.systemStatus.loadAvg', 'Load avg')}
-          value={data.cpu.loadAvg.map((n) => n.toFixed(2)).join(' / ')}
-        />
-      ) : null}
-      {data ? (
-        <Row
-          label={t('settings.systemStatus.memory', 'Memory')}
-          value={`${formatBytes(data.memory.used)} / ${formatBytes(data.memory.total)} (${data.memory.percent}%)`}
-        />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: tokens.spacing.md }}>
+          {/* Uptime */}
+          <div>
+            <div style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.caption.fontSize, marginBottom: tokens.spacing.xs }}>
+              {t('settings.systemStatus.uptime', 'Uptime')}
+            </div>
+            <div style={{ color: tokens.colors.textPrimary, fontSize: tokens.typography.smallMedium.fontSize, fontVariantNumeric: 'tabular-nums' }}>
+              {formatUptime(data.uptime)}
+            </div>
+          </div>
+
+          {/* Load avg */}
+          <div>
+            <div style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.caption.fontSize, marginBottom: tokens.spacing.xs }}>
+              {t('settings.systemStatus.loadAvg', 'Load avg')}
+            </div>
+            <div style={{ color: tokens.colors.textPrimary, fontSize: tokens.typography.smallMedium.fontSize, fontVariantNumeric: 'tabular-nums' }}>
+              {data.cpu.loadAvg.map((n) => n.toFixed(2)).join(' / ')}
+            </div>
+          </div>
+
+          {/* Memory */}
+          <div>
+            <div style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.caption.fontSize, marginBottom: tokens.spacing.xs }}>
+              {t('settings.systemStatus.memory', 'Memory')}
+            </div>
+            <div style={{ color: tokens.colors.textPrimary, fontSize: tokens.typography.smallMedium.fontSize, fontVariantNumeric: 'tabular-nums' }}>
+              {`${formatBytes(data.memory.used)} / ${formatBytes(data.memory.total)} (${data.memory.percent}%)`}
+            </div>
+            <div style={{
+              height: 4,
+              borderRadius: 2,
+              background: tokens.colors.surface,
+              marginTop: tokens.spacing.xs,
+            }}>
+              <div style={{
+                width: `${memPctClamped}%`,
+                height: '100%',
+                background: tokens.colors.primary,
+                borderRadius: 2,
+              }} />
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {error ? (
@@ -106,17 +133,5 @@ export function SystemStatusSection({ client, onGatewayVersion }: Props) {
         </p>
       ) : null}
     </section>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  const { tokens } = useTheme();
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: `${tokens.spacing.xs}px 0` }}>
-      <span style={{ color: tokens.colors.textPrimary, fontSize: tokens.typography.smallMedium.fontSize }}>{label}</span>
-      <span style={{ color: tokens.colors.textSecondary, fontSize: tokens.typography.smallMedium.fontSize, fontVariantNumeric: 'tabular-nums' }}>
-        {value}
-      </span>
-    </div>
   );
 }

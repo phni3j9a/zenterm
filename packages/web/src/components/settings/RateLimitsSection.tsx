@@ -2,30 +2,25 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ApiClient } from '@/api/client';
 import { useTheme } from '@/theme';
+import { IconRefresh } from '@/components/ui/icons';
 import { ClaudeLimits } from './ClaudeLimits';
 import { CodexLimits } from './CodexLimits';
 
 interface Props {
   client: ApiClient;
+  headingId?: string;
 }
 
-export function RateLimitsSection({ client }: Props) {
+export function RateLimitsSection({ client, headingId }: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
-    <section
-      role="region"
-      aria-label="Rate limits"
-      style={{
-        marginTop: tokens.spacing.lg,
-        paddingTop: tokens.spacing.md,
-        borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-      }}
-    >
+    <section>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
         <h3
+          id={headingId}
           style={{
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
@@ -47,9 +42,13 @@ export function RateLimitsSection({ client }: Props) {
             color: tokens.colors.primary,
             fontSize: 11,
             cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
           }}
         >
-          ↻ {t('settings.rateLimits.refresh', 'Refresh')}
+          <IconRefresh size={12} />
+          {t('settings.rateLimits.refresh', 'Refresh')}
         </button>
       </div>
       <ClaudeLimits client={client} refreshKey={refreshKey} />

@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { createGatewayEnv, fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
@@ -10,21 +8,9 @@ const TOKEN = '4811';
 const PORT = 18811;
 
 test.beforeAll(async () => {
-  const home = mkdtempSync(join(tmpdir(), 'zenterm-e2e-'));
-  mkdirSync(join(home, '.config', 'zenterm'), { recursive: true });
-  writeFileSync(
-    join(home, '.config', 'zenterm', '.env'),
-    `AUTH_TOKEN=${TOKEN}\nPORT=${PORT}\nHOST=127.0.0.1\n`,
-  );
+  const { env } = createGatewayEnv({ port: PORT, token: TOKEN, label: 'zenterm-pane-split' });
   gateway = spawn('node', ['packages/gateway/dist/index.js'], {
-    env: {
-      ...process.env,
-      HOME: home,
-      PORT: String(PORT),
-      HOST: '127.0.0.1',
-      AUTH_TOKEN: TOKEN,
-      LOG_LEVEL: 'error',
-    },
+    env,
     stdio: 'inherit',
   });
   baseUrl = `http://127.0.0.1:${PORT}`;
@@ -77,7 +63,7 @@ test('switching layout to cols-2 renders 2 panes and Sidebar duplicate guard wor
   });
 
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 
@@ -157,7 +143,7 @@ test('cols-2 → single drops the non-focused pane', async ({ page }) => {
   }
 
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.locator('section[data-terminal-root="true"]')).toHaveCount(2, { timeout: 5000 });
 

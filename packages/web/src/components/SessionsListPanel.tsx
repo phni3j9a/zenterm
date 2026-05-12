@@ -7,6 +7,9 @@ import { SessionRow } from './sidebar/SessionRow';
 import { WindowRow } from './sidebar/WindowRow';
 import { NewSessionButton } from './sidebar/NewSessionButton';
 import { NewWindowButton } from './sidebar/NewWindowButton';
+import { EmptyState } from './ui/EmptyState';
+import { Skeleton } from './ui/Skeleton';
+import { IconTerminal } from './ui/icons';
 
 export interface SessionsListPanelProps {
   sessions: TmuxSession[];
@@ -68,8 +71,11 @@ export function SessionsListPanel({
       }}
     >
       <div
+        role="heading"
+        aria-level={2}
         style={{
-          fontSize: tokens.typography.caption.fontSize,
+          fontSize: tokens.typography.heading.fontSize,
+          fontWeight: tokens.typography.heading.fontWeight,
           textTransform: 'uppercase',
           letterSpacing: 1.5,
           color: tokens.colors.textMuted,
@@ -80,8 +86,26 @@ export function SessionsListPanel({
       </div>
 
       {loading && sessions.length === 0 && (
-        <div style={{ padding: tokens.spacing.md, color: tokens.colors.textMuted }}>
-          {t('common.loading')}
+        <div role="status" aria-label={t('common.loading')} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: tokens.spacing.sm,
+          padding: tokens.spacing.sm,
+        }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{
+              display: 'flex',
+              gap: tokens.spacing.md,
+              alignItems: 'center',
+              padding: tokens.spacing.sm,
+            }}>
+              <Skeleton width={8} height={8} radius={4} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: tokens.spacing.xs }}>
+                <Skeleton width="60%" height={16} />
+                <Skeleton width="80%" height={12} />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -100,15 +124,12 @@ export function SessionsListPanel({
       )}
 
       {!loading && !error && sessions.length === 0 && (
-        <div
-          style={{
-            padding: tokens.spacing.lg,
-            color: tokens.colors.textMuted,
-            textAlign: 'center',
-          }}
-        >
-          {t('sessions.empty')}
-        </div>
+        <EmptyState
+          icon={<IconTerminal size={32} />}
+          title={t('sessions.empty.title')}
+          description={t('sessions.empty.description')}
+          size="sm"
+        />
       )}
 
       {sessions.map((session) => {

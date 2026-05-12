@@ -9,6 +9,7 @@ export interface ColorTokens {
   bgElevated: string;
   surface: string;
   surfaceHover: string;
+  surfaceSunken: string;
   border: string;
   borderSubtle: string;
   textPrimary: string;
@@ -21,6 +22,8 @@ export interface ColorTokens {
   success: string;
   warning: string;
   error: string;
+  overlay: string;
+  focusRing: string;
 }
 
 export interface ThemeTokens {
@@ -44,6 +47,7 @@ export interface ThemeTokens {
     heading: { fontSize: number; lineHeight: number; fontWeight: 600 };
     mono: { fontFamily: string };
   };
+  shadows: { sm: string; md: string; lg: string };
 }
 
 export const darkTokens: ThemeTokens = {
@@ -52,6 +56,7 @@ export const darkTokens: ThemeTokens = {
     bgElevated: '#211F1B',
     surface: '#26241F',
     surfaceHover: '#302D27',
+    surfaceSunken: '#161512',
     border: '#3B3832',
     borderSubtle: '#2A2823',
     textPrimary: '#DBD6C8',
@@ -64,6 +69,8 @@ export const darkTokens: ThemeTokens = {
     success: '#94A687',
     warning: '#D4B86A',
     error: '#CC7070',
+    overlay: 'rgba(11, 10, 8, 0.6)',
+    focusRing: '#B6C8A4',
   },
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, '2xl': 24, '3xl': 32, '4xl': 48 },
   radii: { sm: 6, md: 10, lg: 14 },
@@ -75,6 +82,11 @@ export const darkTokens: ThemeTokens = {
     heading: { fontSize: 18, lineHeight: 24, fontWeight: 600 },
     mono: { fontFamily: FONT_FAMILY_MONO },
   },
+  shadows: {
+    sm: '0 1px 2px rgba(0, 0, 0, 0.18)',
+    md: '0 4px 12px rgba(0, 0, 0, 0.28)',
+    lg: '0 12px 32px rgba(0, 0, 0, 0.40)',
+  },
 };
 
 export const lightTokens: ThemeTokens = {
@@ -83,11 +95,12 @@ export const lightTokens: ThemeTokens = {
     bgElevated: '#FBFAF6',
     surface: '#EFEDE7',
     surfaceHover: '#E5E3DC',
+    surfaceSunken: '#D8D6CE',
     border: '#CFCBC1',
     borderSubtle: '#DEDBD2',
     textPrimary: '#2A2721',
     textSecondary: '#54504A',
-    textMuted: '#8A8478',
+    textMuted: '#736D60',
     textInverse: '#F5F4F0',
     primary: '#7B8B6F',
     primaryMuted: '#5C6E51',
@@ -95,8 +108,15 @@ export const lightTokens: ThemeTokens = {
     success: '#7B8B6F',
     warning: '#B89F56',
     error: '#B25A5A',
+    overlay: 'rgba(35, 33, 28, 0.40)',
+    focusRing: '#5C6E51',
   },
   spacing: darkTokens.spacing,
   radii: darkTokens.radii,
   typography: darkTokens.typography,
+  shadows: {
+    sm: '0 1px 2px rgba(35, 33, 28, 0.08)',
+    md: '0 4px 12px rgba(35, 33, 28, 0.12)',
+    lg: '0 12px 32px rgba(35, 33, 28, 0.20)',
+  },
 };

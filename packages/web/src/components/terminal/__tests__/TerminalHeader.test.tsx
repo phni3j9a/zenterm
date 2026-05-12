@@ -36,7 +36,7 @@ describe('TerminalHeader', () => {
     render(<TerminalHeader {...baseProps} />);
     expect(screen.getByText('dev')).toBeInTheDocument();
     expect(screen.getByText(/editor/)).toBeInTheDocument();
-    expect(screen.getByText(/\[w1\]/)).toBeInTheDocument();
+    expect(screen.getByText(/w1/)).toBeInTheDocument();
   });
 
   it('falls back to sessionId when displayName is empty', () => {

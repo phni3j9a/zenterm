@@ -25,6 +25,7 @@
   },
   "login": {
     "title": "Iniciar sesión en ZenTerm",
+    "tagline": "Connect to your tmux server from anywhere",
     "tokenLabel": "Token",
     "tokenPlaceholder": "Token de 4 dígitos",
     "submit": "Iniciar sesión",
@@ -42,9 +43,17 @@
     "deleteWindowTitle": "¿Eliminar ventana?",
     "deleteWindowMessage": "Esto cerrará la ventana {{index}} \"{{name}}\". ¿Continuar?",
     "loadFailed": "Error al cargar sesiones: {{error}}",
-    "empty": "Aún no hay sesiones — cree una arriba.",
+    "empty": {
+      "title": "No sessions yet",
+      "description": "Click + to create one"
+    },
     "openInPane": {
       "label": "Abrir en panel {{pane}}"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {
@@ -105,7 +114,11 @@
     "appearance": {
       "title": "Apariencia",
       "theme": "Tema",
-      "themeOptions": { "light": "Claro", "dark": "Oscuro", "system": "Sistema" },
+      "themeOptions": {
+        "light": "Claro",
+        "dark": "Oscuro",
+        "system": "Sistema"
+      },
       "language": "Idioma"
     },
     "terminal": {
@@ -153,10 +166,49 @@
       "stale": "Última actualización hace {{age}}"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "Básico",
+      "pro": "Pro",
+      "max": "Máx",
+      "unknown": "Desconocido"
+    },
+    "planTooltip": "Plan de límite de velocidad de Anthropic",
+    "setupGuide": "Guía de configuración"
+  },
+  "shell": {
+    "leftRail": {
+      "label": "Primary navigation",
+      "rateLimitsWarning": "Rate limits warning"
+    },
+    "tabs": {
+      "sessions": "Sessions",
+      "files": "Files",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "empty": {
+      "title": "Select a session",
+      "description": "Choose one from the sidebar to start"
+    }
+  },
+  "multiPane": {
+    "empty": {
+      "title": "Assign a session to this pane",
+      "description": "Right-click a session in the sidebar"
+    }
+  },
   "palette": {
     "title": "Paleta de comandos",
     "placeholder": "Escriba un comando o nombre de sesión…",
     "noResults": "Sin resultados"
+  },
+  "onboarding": {
+    "title": "Get started",
+    "step1": { "title": "Start the Gateway" },
+    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
+    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "dismiss": "Don't show again"
   },
   "files": {
     "title": "Archivos",
@@ -231,6 +283,19 @@
     "uploadComplete": "Subida completa",
     "uploadFailed": "Error al subir",
     "uploadFailedDesc": "No se pudo subir el archivo.",
-    "uploadDropHint": "Suelte archivos aquí para subir"
+    "uploadDropHint": "Suelte archivos aquí para subir",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

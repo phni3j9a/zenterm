@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ClaudeLimitsResponse, ClaudeAccountStatus } from '@zenterm/shared';
 import { useTheme } from '@/theme';
+import { Badge } from '@/components/ui/Badge';
+import { IconInfo } from '@/components/ui/icons';
 import { LimitsRow, type LimitsRowWindow } from './LimitsRow';
 
 export interface ClaudeLimitsClient {
@@ -33,6 +35,15 @@ function fmtAge(seconds: number): string {
   return `${h}h ${m % 60}m`;
 }
 
+function expandPlanLetter(letter: string, t: (key: string, fallback: string) => string): string {
+  switch (letter.toUpperCase()) {
+    case 'B': return t('rateLimits.plan.basic', 'Basic');
+    case 'P': return t('rateLimits.plan.pro', 'Pro');
+    case 'M': return t('rateLimits.plan.max', 'Max');
+    default: return letter.length === 1 ? t('rateLimits.plan.unknown', 'Unknown') : letter;
+  }
+}
+
 export function ClaudeLimits({ client, refreshKey }: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -61,9 +72,21 @@ export function ClaudeLimits({ client, refreshKey }: Props) {
           href={DOCS_URL}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: tokens.colors.primary, fontSize: 11, textDecoration: 'underline' }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            marginTop: tokens.spacing.xs,
+            padding: `6px 12px`,
+            background: tokens.colors.surface,
+            border: `1px solid ${tokens.colors.border}`,
+            borderRadius: tokens.radii.sm,
+            color: tokens.colors.primary,
+            fontSize: tokens.typography.small.fontSize,
+            textDecoration: 'none',
+            cursor: 'pointer',
+          }}
         >
-          {t('settings.rateLimits.openDocs', 'Setup guide')}
+          {t('rateLimits.setupGuide', 'Setup guide')}
         </a>
       </div>
     );
@@ -79,14 +102,20 @@ export function ClaudeLimits({ client, refreshKey }: Props) {
       {data.accounts.map((acc, i) => (
         <div key={acc.label}>
           {i > 0 ? <hr style={{ border: 0, borderTop: `1px solid ${tokens.colors.borderSubtle}`, margin: '4px 0 4px 16px' }} /> : null}
-          {renderAccount(acc, showLabels, t, tokens)}
+          {renderAccount(acc, showLabels, t, tokens, expandPlanLetter)}
         </div>
       ))}
     </div>
   );
 }
 
-function renderAccount(acc: ClaudeAccountStatus, showLabel: boolean, t: any, tokens: any) {
+function renderAccount(
+  acc: ClaudeAccountStatus,
+  showLabel: boolean,
+  t: any,
+  tokens: any,
+  expandPlan: (letter: string, t: any) => string,
+) {
   const labelText = showLabel ? acc.label : undefined;
   if (acc.state === 'unavailable') {
     return (
@@ -112,12 +141,26 @@ function renderAccount(acc: ClaudeAccountStatus, showLabel: boolean, t: any, tok
   const windows: LimitsRowWindow[] = [];
   if (acc.fiveHour) windows.push({ shortLabel: '5h', percent: acc.fiveHour.usedPercentage, resetsInText: fmtRel(acc.fiveHour.resetsAt - nowSec()) });
   if (acc.sevenDay) windows.push({ shortLabel: '7d', percent: acc.sevenDay.usedPercentage, resetsInText: fmtRel(acc.sevenDay.resetsAt - nowSec()) });
+
+  // Plan badge: if acc has a plan field (single letter or full name), render Badge
+  const planRaw: string | undefined = (acc as any).plan;
+  const planLabel = planRaw ? expandPlan(planRaw, t) : undefined;
+
   return (
-    <LimitsRow
-      accountLabel={labelText}
-      windows={windows}
-      stale={acc.stale}
-      staleText={acc.stale ? t('settings.rateLimits.stale', { age: fmtAge(acc.ageSeconds), defaultValue: 'Last updated {{age}} ago' }) : undefined}
-    />
+    <div>
+      {planLabel ? (
+        <div style={{ marginBottom: 4 }}>
+          <Badge tone="info" icon={<IconInfo size={10} />}>
+            {planLabel}
+          </Badge>
+        </div>
+      ) : null}
+      <LimitsRow
+        accountLabel={labelText}
+        windows={windows}
+        stale={acc.stale}
+        staleText={acc.stale ? t('settings.rateLimits.stale', { age: fmtAge(acc.ageSeconds), defaultValue: 'Last updated {{age}} ago' }) : undefined}
+      />
+    </div>
   );
 }

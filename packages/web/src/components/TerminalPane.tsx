@@ -12,6 +12,8 @@ import { LayoutSelector } from './terminal/LayoutSelector';
 import { TerminalSearch, type TerminalSearchApi } from '@/components/terminal/TerminalSearch';
 import { TerminalDropZone } from './terminal/TerminalDropZone';
 import { useTheme } from '@/theme';
+import { EmptyState } from './ui/EmptyState';
+import { IconTerminal } from './ui/icons';
 import {
   DEFAULT_FONT_SIZE,
   MAX_FONT_SIZE,
@@ -21,6 +23,7 @@ import {
 import { useSessionsStore } from '@/stores/sessions';
 import { useUiStore } from '@/stores/ui';
 import { useLayoutStore } from '@/stores/layout';
+import { OnboardingGuide } from './onboarding/OnboardingGuide';
 
 export interface TerminalPaneProps {
   gatewayUrl: string;
@@ -75,8 +78,11 @@ export function TerminalPane({
 
   const fontSize = useSettingsStore((s) => s.fontSize);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
+  const dismissOnboarding = useSettingsStore((s) => s.dismissOnboarding);
+  const setDismissOnboarding = useSettingsStore((s) => s.setDismissOnboarding);
   const pushToast = useUiStore((s) => s.pushToast);
 
+  const sessions = useSessionsStore((s) => s.sessions);
   const session = useSessionsStore((s) =>
     sessionId && Array.isArray(s.sessions)
       ? s.sessions.find((sess) => sess.displayName === sessionId)
@@ -113,6 +119,8 @@ export function TerminalPane({
   };
 
   if (sessionId === null || windowIndex === null) {
+    const sessionsCount = Array.isArray(sessions) ? sessions.length : 0;
+    const showOnboarding = !dismissOnboarding && sessionsCount === 0;
     return (
       <main
         style={{
@@ -124,7 +132,19 @@ export function TerminalPane({
           justifyContent: 'center',
         }}
       >
-        {t('terminal.selectPrompt')}
+        {showOnboarding ? (
+          <OnboardingGuide
+            tokenEntered={true}
+            sessionsCount={sessionsCount}
+            onDismiss={() => setDismissOnboarding(true)}
+          />
+        ) : (
+          <EmptyState
+            icon={<IconTerminal size={32} />}
+            title={t('shell.empty.title')}
+            description={t('shell.empty.description')}
+          />
+        )}
       </main>
     );
   }

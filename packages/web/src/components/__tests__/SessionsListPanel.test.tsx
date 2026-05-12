@@ -70,7 +70,7 @@ describe('SessionsListPanel', () => {
         {...noopActions}
       />,
     );
-    expect(screen.getByText(/Loading/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('shows empty state when sessions array is empty', () => {
