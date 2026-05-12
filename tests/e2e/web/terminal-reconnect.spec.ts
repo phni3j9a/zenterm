@@ -1,22 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { fillOtp } from './helpers';
+import { createGatewayEnv, fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
 const TOKEN = '4808';
 const PORT = 18808;
-let home: string;
+let gatewayEnv: NodeJS.ProcessEnv;
 
 async function startGateway(): Promise<void> {
   gateway = spawn('node', ['packages/gateway/dist/index.js'], {
-    env: {
-      ...process.env, HOME: home, PORT: String(PORT), HOST: '127.0.0.1',
-      AUTH_TOKEN: TOKEN, LOG_LEVEL: 'error',
-    },
+    env: gatewayEnv,
     stdio: 'inherit',
   });
   for (let i = 0; i < 30; i++) {
@@ -30,12 +24,7 @@ async function startGateway(): Promise<void> {
 }
 
 test.beforeAll(async () => {
-  home = mkdtempSync(join(tmpdir(), 'zenterm-e2e-'));
-  mkdirSync(join(home, '.config', 'zenterm'), { recursive: true });
-  writeFileSync(
-    join(home, '.config', 'zenterm', '.env'),
-    `AUTH_TOKEN=${TOKEN}\nPORT=${PORT}\nHOST=127.0.0.1\n`,
-  );
+  ({ env: gatewayEnv } = createGatewayEnv({ port: PORT, token: TOKEN, label: 'zenterm-term-reconnect' }));
   baseUrl = `http://127.0.0.1:${PORT}`;
   await startGateway();
 });

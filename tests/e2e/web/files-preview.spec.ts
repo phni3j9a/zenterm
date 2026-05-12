@@ -1,9 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fillOtp } from './helpers';
+import { createGatewayEnv, fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
@@ -12,14 +11,13 @@ const PORT = 18801;
 let home: string;
 
 test.beforeAll(async () => {
-  home = mkdtempSync(join(tmpdir(), 'zenterm-e2e-'));
-  mkdirSync(join(home, '.config', 'zenterm'), { recursive: true });
-  writeFileSync(join(home, '.config', 'zenterm', '.env'), `AUTH_TOKEN=${TOKEN}\nPORT=${PORT}\nHOST=127.0.0.1\n`);
+  let env: NodeJS.ProcessEnv;
+  ({ home, env } = createGatewayEnv({ port: PORT, token: TOKEN, label: 'zenterm-files-preview' }));
 
   writeFileSync(join(home, 'note.txt'), 'line one\nline two\nline three\n');
 
   gateway = spawn('node', ['packages/gateway/dist/index.js'], {
-    env: { ...process.env, HOME: home, PORT: String(PORT), HOST: '127.0.0.1', AUTH_TOKEN: TOKEN, LOG_LEVEL: 'error' },
+    env,
     stdio: 'inherit',
   });
   baseUrl = `http://127.0.0.1:${PORT}`;

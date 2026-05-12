@@ -1,27 +1,22 @@
 import { test, expect } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fillOtp } from './helpers';
+import { createGatewayEnv, fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
 const TOKEN = '4800';
 const PORT = 18800;
-let home: string;
-
 test.beforeAll(async () => {
-  home = mkdtempSync(join(tmpdir(), 'zenterm-e2e-'));
-  mkdirSync(join(home, '.config', 'zenterm'), { recursive: true });
-  writeFileSync(join(home, '.config', 'zenterm', '.env'), `AUTH_TOKEN=${TOKEN}\nPORT=${PORT}\nHOST=127.0.0.1\n`);
+  const { home, env } = createGatewayEnv({ port: PORT, token: TOKEN, label: 'zenterm-files-browse' });
 
   mkdirSync(join(home, 'src'), { recursive: true });
   writeFileSync(join(home, 'README.md'), '# hello world\n');
   writeFileSync(join(home, 'src', 'a.ts'), 'export const x = 1;\n');
 
   gateway = spawn('node', ['packages/gateway/dist/index.js'], {
-    env: { ...process.env, HOME: home, PORT: String(PORT), HOST: '127.0.0.1', AUTH_TOKEN: TOKEN, LOG_LEVEL: 'error' },
+    env,
     stdio: 'inherit',
   });
   baseUrl = `http://127.0.0.1:${PORT}`;
