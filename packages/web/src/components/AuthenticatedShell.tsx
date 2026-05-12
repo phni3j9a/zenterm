@@ -428,7 +428,7 @@ export function AuthenticatedShell() {
           activeTab={activeTab}
           onSelectTab={handleSelectTab}
           onLogout={logout}
-          rateLimitsWarning={false}
+          rateLimitsWarning={false /* Wired in Phase 6 G9 (Settings/RateLimits) */}
         />
         <Sidebar
           sessions={sessions}
