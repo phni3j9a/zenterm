@@ -33,6 +33,11 @@
 | 60 秒後の UI 応答性 | Sidebar drag / Tab 切替が < 100ms で反応 | ___ |
 | ペインの xterm.buffer.active.length | 5000 で頭打ち | ___ |
 
+> **WS frames/sec の測り方**: DevTools Network → WS タブでは fps が直接表示されないため、5 秒間に観測されたフレーム数を数えて 5 で割る。または以下を DevTools Console で実行して件数を取得:
+> ```js
+> performance.getEntriesByType('resource').filter(r => r.name.startsWith('ws://') || r.name.startsWith('wss://'))
+> ```
+
 ## Pass 条件
 
 - 60 秒間 OOM crash しない
