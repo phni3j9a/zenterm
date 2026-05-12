@@ -1,6 +1,6 @@
 {
   "name": "zenterm-gateway",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Mobile terminal gateway — access your server from the ZenTerm app",
   "type": "module",
   "bin": {
