@@ -7,6 +7,8 @@ import { SessionRow } from './sidebar/SessionRow';
 import { WindowRow } from './sidebar/WindowRow';
 import { NewSessionButton } from './sidebar/NewSessionButton';
 import { NewWindowButton } from './sidebar/NewWindowButton';
+import { EmptyState } from './ui/EmptyState';
+import { IconTerminal } from './ui/icons';
 
 export interface SessionsListPanelProps {
   sessions: TmuxSession[];
@@ -103,15 +105,12 @@ export function SessionsListPanel({
       )}
 
       {!loading && !error && sessions.length === 0 && (
-        <div
-          style={{
-            padding: tokens.spacing.lg,
-            color: tokens.colors.textMuted,
-            textAlign: 'center',
-          }}
-        >
-          {t('sessions.empty')}
-        </div>
+        <EmptyState
+          icon={<IconTerminal size={32} />}
+          title={t('sessions.empty.title')}
+          description={t('sessions.empty.description')}
+          size="sm"
+        />
       )}
 
       {sessions.map((session) => {

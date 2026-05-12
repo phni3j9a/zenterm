@@ -43,7 +43,10 @@
     "deleteWindowTitle": "Supprimer la fenêtre ?",
     "deleteWindowMessage": "Cela fermera la fenêtre {{index}} « {{name}} ». Continuer ?",
     "loadFailed": "Échec du chargement des sessions : {{error}}",
-    "empty": "Aucune session pour l'instant — créez-en une ci-dessus.",
+    "empty": {
+      "title": "No sessions yet",
+      "description": "Click + to create one"
+    },
     "openInPane": {
       "label": "Ouvrir dans le volet {{pane}}"
     },
@@ -183,6 +186,16 @@
       "files": "Files",
       "settings": "Settings",
       "logout": "Logout"
+    },
+    "empty": {
+      "title": "Select a session",
+      "description": "Choose one from the sidebar to start"
+    }
+  },
+  "multiPane": {
+    "empty": {
+      "title": "Assign a session to this pane",
+      "description": "Right-click a session in the sidebar"
     }
   },
   "palette": {

@@ -42,7 +42,10 @@
     "deleteWindowTitle": "ウィンドウを削除しますか？",
     "deleteWindowMessage": "ウィンドウ {{index}}「{{name}}」を閉じます。続行しますか？",
     "loadFailed": "セッション取得に失敗: {{error}}",
-    "empty": "セッションがまだありません — 上部で作成してください。",
+    "empty": {
+      "title": "セッションがありません",
+      "description": "+ ボタンで作成できます"
+    },
     "openInPane": {
       "label": "ペイン {{pane}} で開く"
     },
@@ -182,6 +185,16 @@
       "files": "ファイル",
       "settings": "設定",
       "logout": "ログアウト"
+    },
+    "empty": {
+      "title": "セッションを選択",
+      "description": "サイドバーから選択して開始"
+    }
+  },
+  "multiPane": {
+    "empty": {
+      "title": "このペインにセッションを割り当てる",
+      "description": "サイドバーのセッションを右クリック"
     }
   },
   "palette": {

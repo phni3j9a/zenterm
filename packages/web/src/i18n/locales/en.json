@@ -42,7 +42,10 @@
     "deleteWindowTitle": "Delete window?",
     "deleteWindowMessage": "This will close window {{index}} \"{{name}}\". Continue?",
     "loadFailed": "Failed to load sessions: {{error}}",
-    "empty": "No sessions yet — create one above.",
+    "empty": {
+      "title": "No sessions yet",
+      "description": "Click + to create one"
+    },
     "openInPane": {
       "label": "Open in pane {{pane}}"
     },
@@ -182,6 +185,16 @@
       "files": "Files",
       "settings": "Settings",
       "logout": "Logout"
+    },
+    "empty": {
+      "title": "Select a session",
+      "description": "Choose one from the sidebar to start"
+    }
+  },
+  "multiPane": {
+    "empty": {
+      "title": "Assign a session to this pane",
+      "description": "Right-click a session in the sidebar"
     }
   },
   "palette": {

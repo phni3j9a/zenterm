@@ -12,6 +12,8 @@ import { LayoutSelector } from './terminal/LayoutSelector';
 import { TerminalSearch, type TerminalSearchApi } from '@/components/terminal/TerminalSearch';
 import { TerminalDropZone } from './terminal/TerminalDropZone';
 import { useTheme } from '@/theme';
+import { EmptyState } from './ui/EmptyState';
+import { IconTerminal } from './ui/icons';
 import {
   DEFAULT_FONT_SIZE,
   MAX_FONT_SIZE,
@@ -124,7 +126,11 @@ export function TerminalPane({
           justifyContent: 'center',
         }}
       >
-        {t('terminal.selectPrompt')}
+        <EmptyState
+          icon={<IconTerminal size={32} />}
+          title={t('shell.empty.title')}
+          description={t('shell.empty.description')}
+        />
       </main>
     );
   }
