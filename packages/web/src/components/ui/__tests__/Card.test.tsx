@@ -10,8 +10,6 @@ describe('Card', () => {
 
   it('defaults to variant=elevated with box-shadow', () => {
     render(<Card>content</Card>);
-    const el = screen.getByText('content').parentElement ?? screen.getByText('content');
-    // The wrapping div is the card itself
     const card = screen.getByText('content');
     expect(card).toHaveAttribute('data-variant', 'elevated');
     expect(card.style.boxShadow).not.toBe('none');
