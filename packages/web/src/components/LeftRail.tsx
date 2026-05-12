@@ -46,9 +46,7 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
   };
 
   return (
-    <div
-      role="tablist"
-      aria-orientation="vertical"
+    <nav
       aria-label={t('shell.leftRail.label', 'Primary navigation')}
       style={{
         width: 64,
@@ -64,6 +62,7 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
         paddingBottom: tokens.spacing.sm,
       }}
     >
+      <div role="tablist" aria-orientation="vertical" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {TABS.map(({ id, Icon, labelKey, fallback }, index) => {
         const isActive = activeTab === id;
         const isSettings = id === 'settings';
@@ -115,6 +114,7 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
           </Tooltip>
         );
       })}
+      </div>
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
@@ -146,6 +146,6 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
           <IconLogout size={20} />
         </button>
       </Tooltip>
-    </div>
+    </nav>
   );
 }
