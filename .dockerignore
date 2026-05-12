@@ -1,0 +1,42 @@
+# Keep the build context small so `docker build -f Dockerfile.e2e .` is fast.
+# Anything excluded here is not copied into the image at all.
+
+# Host node_modules — image rebuilds these with `npm ci` for Linux/glibc
+node_modules
+**/node_modules
+
+# VCS metadata
+.git
+.gitignore
+
+# Playwright artifacts (host-generated, not test inputs)
+playwright-artifacts
+playwright-report
+
+# Build outputs — rebuilt inside the image
+**/dist
+packages/gateway/public/web
+
+# Demo / docs / heavy assets not needed for e2e
+demo
+docs/screenshots
+docs/superpowers/specs
+docs/superpowers/plans
+
+# Secrets / local env
+.env
+.env.local
+*.local
+
+# Editor / OS junk
+.vscode
+.idea
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+.cache
+.tmp
