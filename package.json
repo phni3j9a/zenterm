@@ -14,7 +14,8 @@
     "build:web": "npm run build -w packages/web",
     "test:web": "npm run test -w packages/web",
     "sync:pages": "node scripts/sync-pages-from-gateway.mjs",
-    "mock:zen-light": "node scripts/generate-zen-light-mockups.mjs"
+    "mock:zen-light": "node scripts/generate-zen-light-mockups.mjs",
+    "stress:web": "bash scripts/stress/spawn-yes.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
