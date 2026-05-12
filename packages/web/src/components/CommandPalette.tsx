@@ -151,7 +151,6 @@ export function CommandPalette() {
             color: tokens.colors.textPrimary,
             padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
             fontSize: tokens.typography.bodyMedium.fontSize,
-            outline: 'none',
           }}
         />
         <ul

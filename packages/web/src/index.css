@@ -27,3 +27,21 @@
     transition: none;
   }
 }
+
+/* ===== Phase 6 H13 focus ring ===== */
+:root {
+  --zen-focus-ring: #B6C8A4;
+}
+
+:focus-visible {
+  outline: 2px solid var(--zen-focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Reset for elements that already have a meaningful focus indicator
+   (e.g., terminal canvas) — keep these opt-outs minimal. */
+.xterm:focus-visible,
+.xterm-helper-textarea:focus-visible {
+  outline: none;
+}

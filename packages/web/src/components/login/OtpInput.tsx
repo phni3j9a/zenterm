@@ -87,7 +87,6 @@ export function OtpInput({ length = 4, value, onChange, autoFocus, ...aria }: Ot
             color: tokens.colors.textPrimary,
             border: `2px solid ${value[i] ? tokens.colors.primary : tokens.colors.border}`,
             borderRadius: tokens.radii.md,
-            outline: 'none',
             transition: 'border-color 120ms',
           }}
         />
