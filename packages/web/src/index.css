@@ -1,0 +1,6 @@
+@keyframes zen-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes zen-spin { from, to { transform: none; } }
+}
