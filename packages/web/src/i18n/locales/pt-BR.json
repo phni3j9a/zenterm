@@ -163,6 +163,16 @@
       "stale": "Última atualização há {{age}}"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "Básico",
+      "pro": "Pro",
+      "max": "Máx",
+      "unknown": "Desconhecido"
+    },
+    "planTooltip": "Plano de limite de taxa Anthropic",
+    "setupGuide": "Guia de configuração"
+  },
   "shell": {
     "leftRail": {
       "label": "Primary navigation",

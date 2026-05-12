@@ -163,6 +163,16 @@
       "stale": "Dernière mise à jour il y a {{age}}"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "Basique",
+      "pro": "Pro",
+      "max": "Max",
+      "unknown": "Inconnu"
+    },
+    "planTooltip": "Plan de limite de débit Anthropic",
+    "setupGuide": "Guide de configuration"
+  },
   "shell": {
     "leftRail": {
       "label": "Primary navigation",

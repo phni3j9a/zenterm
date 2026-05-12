@@ -163,6 +163,16 @@
       "stale": "Zuletzt aktualisiert vor {{age}}"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "Basic",
+      "pro": "Pro",
+      "max": "Max",
+      "unknown": "Unbekannt"
+    },
+    "planTooltip": "Anthropic Ratenlimit-Plan",
+    "setupGuide": "Einrichtungsanleitung"
+  },
   "shell": {
     "leftRail": {
       "label": "Primary navigation",

@@ -163,6 +163,16 @@
       "stale": "{{age}} 전 마지막 업데이트"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "베이직",
+      "pro": "프로",
+      "max": "맥스",
+      "unknown": "알 수 없음"
+    },
+    "planTooltip": "Anthropic 요청 제한 플랜",
+    "setupGuide": "설정 가이드"
+  },
   "shell": {
     "leftRail": {
       "label": "Primary navigation",

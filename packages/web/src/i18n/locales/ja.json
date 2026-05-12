@@ -162,6 +162,16 @@
       "stale": "{{age}} 前に更新"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "ベーシック",
+      "pro": "プロ",
+      "max": "マックス",
+      "unknown": "不明"
+    },
+    "planTooltip": "Anthropic レート制限プラン",
+    "setupGuide": "セットアップガイド"
+  },
   "shell": {
     "leftRail": {
       "label": "プライマリナビゲーション",

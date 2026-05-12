@@ -163,6 +163,16 @@
       "stale": "{{age}} 前更新"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "基础版",
+      "pro": "专业版",
+      "max": "最高版",
+      "unknown": "未知"
+    },
+    "planTooltip": "Anthropic 速率限制计划",
+    "setupGuide": "配置指南"
+  },
   "shell": {
     "leftRail": {
       "label": "Primary navigation",

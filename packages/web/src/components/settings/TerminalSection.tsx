@@ -2,7 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { useSettingsStore, MIN_FONT_SIZE, MAX_FONT_SIZE } from '@/stores/settings';
 import { useTheme } from '@/theme';
 
-export function TerminalSection() {
+interface TerminalSectionProps {
+  headingId?: string;
+}
+
+export function TerminalSection({ headingId }: TerminalSectionProps = {}) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const fontSize = useSettingsStore((s) => s.fontSize);
@@ -22,16 +26,9 @@ export function TerminalSection() {
   });
 
   return (
-    <section
-      role="region"
-      aria-label="Terminal"
-      style={{
-        marginTop: tokens.spacing.lg,
-        paddingTop: tokens.spacing.md,
-        borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-      }}
-    >
+    <section>
       <h3
+        id={headingId}
         style={{
           textTransform: 'uppercase',
           letterSpacing: '0.08em',

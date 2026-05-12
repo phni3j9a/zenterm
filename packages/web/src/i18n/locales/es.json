@@ -163,6 +163,16 @@
       "stale": "Última actualización hace {{age}}"
     }
   },
+  "rateLimits": {
+    "plan": {
+      "basic": "Básico",
+      "pro": "Pro",
+      "max": "Máx",
+      "unknown": "Desconocido"
+    },
+    "planTooltip": "Plan de límite de velocidad de Anthropic",
+    "setupGuide": "Guía de configuración"
+  },
   "shell": {
     "leftRail": {
       "label": "Primary navigation",

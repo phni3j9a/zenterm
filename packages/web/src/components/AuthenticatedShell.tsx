@@ -18,6 +18,7 @@ import { useSessionViewStore } from '@/stores/sessionView';
 import { useUiStore } from '@/stores/ui';
 import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
+import { useRateLimitsWarning } from '@/hooks/useRateLimitsWarning';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
 import { SLOT_COUNT, upgradeLayout } from '@/lib/paneLayout';
@@ -50,6 +51,7 @@ export function AuthenticatedShell() {
   navigateFnRef.current = navigate;
 
   useEventsSubscription();
+  const rateLimitsWarning = useRateLimitsWarning();
 
   useEffect(() => {
     if (!token || !gatewayUrl) return;
@@ -428,7 +430,7 @@ export function AuthenticatedShell() {
           activeTab={activeTab}
           onSelectTab={handleSelectTab}
           onLogout={logout}
-          rateLimitsWarning={false /* Wired in Phase 6 G9 (Settings/RateLimits) */}
+          rateLimitsWarning={rateLimitsWarning}
         />
         <Sidebar
           sessions={sessions}

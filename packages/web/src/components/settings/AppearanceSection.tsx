@@ -11,7 +11,11 @@ const THEME_OPTIONS: { value: ThemeMode; key: string; defaultLabel: string }[] =
 const LANGUAGE_ORDER: Language[] = ['ja', 'en', 'es', 'fr', 'de', 'pt-BR', 'zh-CN', 'ko'];
 const LANGUAGE_OPTIONS = LANGUAGE_ORDER.map((value) => ({ value, label: LANGUAGE_LABELS[value] }));
 
-export function AppearanceSection() {
+interface AppearanceSectionProps {
+  headingId?: string;
+}
+
+export function AppearanceSection({ headingId }: AppearanceSectionProps = {}) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const themeMode = useSettingsStore((s) => s.themeMode);
@@ -20,16 +24,9 @@ export function AppearanceSection() {
   const setLanguage = useSettingsStore((s) => s.setLanguage);
 
   return (
-    <section
-      role="region"
-      aria-label="Appearance"
-      style={{
-        marginTop: tokens.spacing.lg,
-        paddingTop: tokens.spacing.md,
-        borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-      }}
-    >
+    <section>
       <h3
+        id={headingId}
         style={{
           textTransform: 'uppercase',
           letterSpacing: '0.08em',

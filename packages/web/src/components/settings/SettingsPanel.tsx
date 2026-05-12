@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ApiClient } from '@/api/client';
 import { useAuthStore } from '@/stores/auth';
 import { useTheme } from '@/theme';
+import { Card } from '@/components/ui/Card';
 import { AppearanceSection } from './AppearanceSection';
 import { TerminalSection } from './TerminalSection';
 import { GatewaySection } from './GatewaySection';
@@ -11,16 +12,9 @@ import { RateLimitsSection } from './RateLimitsSection';
 function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLabel: string }) {
   const { tokens } = useTheme();
   return (
-    <section
-      role="region"
-      aria-label={ariaLabel}
-      style={{
-        marginTop: tokens.spacing.lg,
-        paddingTop: tokens.spacing.md,
-        borderTop: `1px solid ${tokens.colors.borderSubtle}`,
-      }}
-    >
+    <Card variant="elevated" padding="lg" aria-labelledby="settings-rate-limits">
       <h3
+        id="settings-rate-limits"
         style={{
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
@@ -32,9 +26,9 @@ function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLab
         {titleKey}
       </h3>
       <div style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.small.fontSize }}>
-        (placeholder)
+        {ariaLabel}
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -49,12 +43,33 @@ export function SettingsPanel() {
   }, [auth.gatewayUrl, auth.token]);
 
   return (
-    <div style={{ padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.xl}px`, height: '100%', overflowY: 'auto' }}>
-      <AppearanceSection />
-      <TerminalSection />
-      <GatewaySection gatewayVersion={gatewayVersion} />
-      <SystemStatusSection client={client} onGatewayVersion={setGatewayVersion} />
-      {client ? <RateLimitsSection client={client} /> : <SectionPlaceholder titleKey="Rate limits" ariaLabel="Rate limits" />}
+    <div style={{
+      padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.xl}px`,
+      height: '100%',
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: tokens.spacing.lg,
+    }}>
+      <Card variant="elevated" padding="lg" aria-labelledby="settings-appearance">
+        <AppearanceSection headingId="settings-appearance" />
+      </Card>
+      <Card variant="elevated" padding="lg" aria-labelledby="settings-terminal">
+        <TerminalSection headingId="settings-terminal" />
+      </Card>
+      <Card variant="elevated" padding="lg" aria-labelledby="settings-gateway">
+        <GatewaySection gatewayVersion={gatewayVersion} headingId="settings-gateway" />
+      </Card>
+      <Card variant="elevated" padding="lg" aria-labelledby="settings-system-status">
+        <SystemStatusSection client={client} onGatewayVersion={setGatewayVersion} headingId="settings-system-status" />
+      </Card>
+      {client ? (
+        <Card variant="elevated" padding="lg" aria-labelledby="settings-rate-limits">
+          <RateLimitsSection client={client} headingId="settings-rate-limits" />
+        </Card>
+      ) : (
+        <SectionPlaceholder titleKey="Rate limits" ariaLabel="Rate limits" />
+      )}
     </div>
   );
 }
