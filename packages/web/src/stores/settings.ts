@@ -6,6 +6,17 @@ export type Language = 'en' | 'ja' | 'es' | 'fr' | 'de' | 'pt-BR' | 'zh-CN' | 'k
 
 export const SUPPORTED_LANGUAGES: readonly Language[] = ['en', 'ja', 'es', 'fr', 'de', 'pt-BR', 'zh-CN', 'ko'];
 
+export const LANGUAGE_LABELS: Record<Language, string> = {
+  ja: '日本語',
+  en: 'English',
+  es: 'Español',
+  fr: 'Français',
+  de: 'Deutsch',
+  'pt-BR': 'Português (BR)',
+  'zh-CN': '简体中文',
+  ko: '한국어',
+};
+
 function normalizeLanguage(value: unknown): Language {
   if (typeof value !== 'string') return 'ja';
   return (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
@@ -82,9 +93,12 @@ export const useSettingsStore = create<SettingsState>()(
           autoCopyOnSelect: s.autoCopyOnSelect ?? false,
         };
       },
+      // onRehydrateStorage fires after migrate for the same-version path (where migrate
+      // is not called by zustand). Use setState() to properly notify subscribers instead
+      // of mutating state in-place.
       onRehydrateStorage: () => (state) => {
         if (state && !SUPPORTED_LANGUAGES.includes(state.language)) {
-          state.language = 'ja';
+          useSettingsStore.setState({ language: 'ja' });
         }
       },
     },

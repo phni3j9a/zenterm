@@ -64,12 +64,24 @@ describe('settings — 8 languages support', () => {
     expect(useSettingsStore.getState().language).toBe('ko');
   });
 
-  it('migrate falls back to ja for unknown language string', () => {
+  it('rehydrates with ja fallback when persisted language is invalid (current version)', () => {
     localStorage.setItem(
       'zenterm-web-settings',
       JSON.stringify({
         state: { themeMode: 'dark', language: 'xx-XX', fontSize: 14, autoCopyOnSelect: false },
         version: 2,
+      }),
+    );
+    useSettingsStore.persist.rehydrate();
+    expect(useSettingsStore.getState().language).toBe('ja');
+  });
+
+  it('migrate (v1 → v2) falls back to ja for unknown language string', () => {
+    localStorage.setItem(
+      'zenterm-web-settings',
+      JSON.stringify({
+        state: { themeMode: 'dark', language: 'qq-QQ', fontSize: 16 },
+        version: 1,
       }),
     );
     useSettingsStore.persist.rehydrate();

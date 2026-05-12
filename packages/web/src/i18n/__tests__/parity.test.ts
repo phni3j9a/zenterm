@@ -15,7 +15,9 @@ function collectKeys(obj: unknown, prefix = ''): string[] {
     if (k.startsWith('_')) continue;
     const full = prefix ? `${prefix}.${k}` : k;
     if (typeof v === 'string') keys.push(full);
-    else if (typeof v === 'object' && v !== null) keys.push(...collectKeys(v, full));
+    else if (Array.isArray(v)) {
+      throw new Error(`Unexpected array at key ${full}; locale dicts should be plain objects`);
+    } else if (typeof v === 'object' && v !== null) keys.push(...collectKeys(v, full));
   }
   return keys.sort();
 }

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import i18next from 'i18next';
 import { initI18n } from '../index';
 import { useSettingsStore } from '@/stores/settings';
@@ -6,20 +6,27 @@ import { useSettingsStore } from '@/stores/settings';
 describe('initI18n — 8 languages', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.resetModules();
   });
 
-  it('initializes with es when settings says es', () => {
+  it('initializes with es when settings says es', async () => {
+    const { useSettingsStore } = await import('@/stores/settings');
     useSettingsStore.setState({ language: 'es' });
+    const i18nextModule = await import('i18next');
+    const { initI18n } = await import('../index');
     initI18n();
-    expect(i18next.language).toBe('es');
+    expect(i18nextModule.default.language).toBe('es');
   });
 
   it('switches to ko on setLanguage', async () => {
+    const { useSettingsStore } = await import('@/stores/settings');
     useSettingsStore.setState({ language: 'en' });
+    const i18nextModule = await import('i18next');
+    const { initI18n } = await import('../index');
     initI18n();
     useSettingsStore.getState().setLanguage('ko');
     await new Promise((r) => setTimeout(r, 10));
-    expect(i18next.language).toBe('ko');
+    expect(i18nextModule.default.language).toBe('ko');
   });
 });
 
