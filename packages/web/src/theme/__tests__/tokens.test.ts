@@ -62,4 +62,16 @@ describe('tokens contrast', () => {
     expect(darkTokens.colors.focusRing).toMatch(/^#/);
     expect(lightTokens.colors.focusRing).toMatch(/^#/);
   });
+  it('dark: focusRing has >= 3:1 contrast vs bg (WCAG AA non-text)', () => {
+    expect(ratio(darkTokens.colors.focusRing, darkTokens.colors.bg)).toBeGreaterThanOrEqual(3);
+  });
+  it('light: focusRing has >= 3:1 contrast vs bg (WCAG AA non-text)', () => {
+    expect(ratio(lightTokens.colors.focusRing, lightTokens.colors.bg)).toBeGreaterThanOrEqual(3);
+  });
+  it('dark: surfaceSunken is darker than bg (depth going inward)', () => {
+    expect(relLuminance(darkTokens.colors.surfaceSunken)).toBeLessThan(relLuminance(darkTokens.colors.bg));
+  });
+  it('light: surfaceSunken is darker than surface (depth going inward)', () => {
+    expect(relLuminance(lightTokens.colors.surfaceSunken)).toBeLessThan(relLuminance(lightTokens.colors.surface));
+  });
 });
