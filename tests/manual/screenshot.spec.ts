@@ -47,21 +47,29 @@ test('shot: sessions', async ({ page }) => {
 });
 
 test('shot: files', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await login(page);
   await page.getByLabel(/Token/i).fill(TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
+  // Wait for authenticated shell to render before navigating away
+  await page.locator('aside[role="complementary"]').waitFor({ timeout: 5000 });
   await page.goto(`${BASE_URL}/web/files`);
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: `${OUT}/web-pc-files.png` });
+  // Wait for the files breadcrumbs nav to confirm we're on the files view
+  await page.locator('nav[aria-label="Files breadcrumbs"]').waitFor({ timeout: 5000 });
+  await page.screenshot({ path: `${OUT}/web-pc-files.png`, fullPage: false });
 });
 
 test('shot: settings', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await login(page);
   await page.getByLabel(/Token/i).fill(TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
+  // Wait for authenticated shell to render before navigating away
+  await page.locator('aside[role="complementary"]').waitFor({ timeout: 5000 });
   await page.goto(`${BASE_URL}/web/settings`);
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: `${OUT}/web-pc-settings.png` });
+  // Wait for the appearance section to confirm we're on the settings view
+  await page.locator('[role="region"][aria-label="Appearance"]').waitFor({ timeout: 5000 });
+  await page.screenshot({ path: `${OUT}/web-pc-settings.png`, fullPage: false });
 });
 
 test('shot: multi-pane', async ({ page }) => {
