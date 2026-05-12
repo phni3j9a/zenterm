@@ -17,6 +17,7 @@ import {
   useSettingsStore,
 } from '@/stores/settings';
 import { createImeDedup } from '@/lib/imeDedup';
+import { createTrailingDebounce } from './refitDebounce';
 import {
   createReconnectBackoff,
   type BackoffStep,
@@ -399,26 +400,34 @@ export function XtermView({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    let raf = 0;
+
+    const doFit = () => {
+      const fit = fitRef.current;
+      const term = termRef.current;
+      const ws = wsRef.current;
+      if (!fit || !term) return;
+      fit.fit();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(encodeResize(term.cols, term.rows));
+        lastSentSizeRef.current = { cols: term.cols, rows: term.rows };
+      }
+    };
+
+    // Trailing debounce window: 50ms. 先頭即実行 + 連続発火を 1 回にまとめる。
+    let rafHandle = 0;
+    const debouncedFit = createTrailingDebounce(() => {
+      rafHandle = requestAnimationFrame(doFit);
+    }, 50);
+
     const ro = new ResizeObserver(() => {
       if (!isVisibleRef.current) return;
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const fit = fitRef.current;
-        const term = termRef.current;
-        const ws = wsRef.current;
-        if (!fit || !term) return;
-        fit.fit();
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(encodeResize(term.cols, term.rows));
-          lastSentSizeRef.current = { cols: term.cols, rows: term.rows };
-        }
-      });
+      debouncedFit();
     });
     ro.observe(container);
     return () => {
       ro.disconnect();
-      cancelAnimationFrame(raf);
+      debouncedFit.cancel();
+      if (rafHandle !== 0) cancelAnimationFrame(rafHandle);
     };
   }, []);
 

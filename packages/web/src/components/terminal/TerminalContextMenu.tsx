@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '@/theme';
+import { ContextMenu, type ContextMenuItem } from '@/components/ui/ContextMenu';
 
 export interface TerminalContextMenuProps {
   open: boolean;
@@ -31,116 +30,28 @@ export function TerminalContextMenu({
   canCreateNewPane,
   onClose,
 }: TerminalContextMenuProps) {
-  const { tokens } = useTheme();
   const { t } = useTranslation();
-  const ref = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') onClose();
-    };
-    const onMouseDown = (ev: MouseEvent) => {
-      if (!ref.current) return;
-      if (ev.target instanceof Node && ref.current.contains(ev.target)) return;
-      onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    window.addEventListener('mousedown', onMouseDown);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('mousedown', onMouseDown);
-    };
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  const itemStyle = (disabled: boolean) => ({
-    padding: `${tokens.spacing.xs}px ${tokens.spacing.md}px`,
-    cursor: disabled ? ('not-allowed' as const) : ('pointer' as const),
-    color: disabled ? tokens.colors.textMuted : tokens.colors.textPrimary,
-    fontSize: tokens.typography.smallMedium.fontSize,
-    background: 'transparent',
-    border: 'none',
-    width: '100%',
-    textAlign: 'left' as const,
-    opacity: disabled ? 0.5 : 1,
-  });
-
-  const handleClick = (cb: () => void) => () => {
-    cb();
-    onClose();
-  };
+  const items: ContextMenuItem[] = [
+    { id: 'copy', label: t('terminal.menu.copy'), onSelect: onCopy, disabled: !hasSelection },
+    { id: 'paste', label: t('terminal.menu.paste'), onSelect: onPaste },
+    { id: 'clear', label: t('terminal.menu.clear'), onSelect: onClear },
+    { id: 'search', label: t('terminal.menu.search'), onSelect: onSearch },
+    { id: 'reconnect', label: t('terminal.menu.reconnect'), onSelect: onReconnect },
+    {
+      id: 'newPane',
+      label: t('terminal.menu.newPane'),
+      onSelect: onNewPane,
+      disabled: !canCreateNewPane,
+    },
+  ];
 
   return (
-    <div
-      ref={ref}
-      role="menu"
-      style={{
-        position: 'fixed',
-        left: x,
-        top: y,
-        background: tokens.colors.bgElevated,
-        border: `1px solid ${tokens.colors.border}`,
-        borderRadius: tokens.radii.md,
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
-        padding: tokens.spacing.xs,
-        zIndex: 1000,
-        minWidth: 160,
-      }}
-    >
-      <button
-        type="button"
-        role="menuitem"
-        aria-disabled={!hasSelection}
-        disabled={!hasSelection}
-        onClick={handleClick(onCopy)}
-        style={itemStyle(!hasSelection)}
-      >
-        {t('terminal.menu.copy')}
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        onClick={handleClick(onPaste)}
-        style={itemStyle(false)}
-      >
-        {t('terminal.menu.paste')}
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        onClick={handleClick(onClear)}
-        style={itemStyle(false)}
-      >
-        {t('terminal.menu.clear')}
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        onClick={handleClick(onSearch)}
-        style={itemStyle(false)}
-      >
-        {t('terminal.menu.search')}
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        onClick={handleClick(onReconnect)}
-        style={itemStyle(false)}
-      >
-        {t('terminal.menu.reconnect')}
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        aria-disabled={!canCreateNewPane}
-        disabled={!canCreateNewPane}
-        onClick={canCreateNewPane ? handleClick(onNewPane) : undefined}
-        style={itemStyle(!canCreateNewPane)}
-      >
-        {t('terminal.menu.newPane')}
-      </button>
-    </div>
+    <ContextMenu
+      open={open}
+      anchorPoint={{ x, y }}
+      items={items}
+      onClose={onClose}
+    />
   );
 }

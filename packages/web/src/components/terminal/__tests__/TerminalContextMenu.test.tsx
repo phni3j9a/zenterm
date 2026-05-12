@@ -140,7 +140,7 @@ describe('TerminalContextMenu', () => {
         />
       </>,
     );
-    fireEvent.mouseDown(screen.getByTestId('outside'));
+    fireEvent.pointerDown(screen.getByTestId('outside'));
     expect(onClose).toHaveBeenCalled();
   });
 

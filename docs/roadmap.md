@@ -1,6 +1,10 @@
 # ZenTerm Browser Rebuild
 
-> 最終更新: 2026-05-06
+## Status: 完了 (2026-05-12 web-pc-phase-5b-done)
+
+Phase 1〜5 全て main にマージ済。タグ: `web-pc-phase-{1, 2a, 2b, 2c, 2d, 3, 4a, 4b, 5a, 5b}-done`
+
+> 最終更新: 2026-05-12
 
 旧 `packages/web` 実装は、ブラウザ版を作り直すため削除済み。
 
