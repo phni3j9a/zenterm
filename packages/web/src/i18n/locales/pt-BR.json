@@ -253,6 +253,19 @@
     "uploadComplete": "Envio concluído",
     "uploadFailed": "Falha no envio",
     "uploadFailedDesc": "Não foi possível enviar o arquivo.",
-    "uploadDropHint": "Solte arquivos aqui para enviar"
+    "uploadDropHint": "Solte arquivos aqui para enviar",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

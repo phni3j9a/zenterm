@@ -110,7 +110,11 @@
     "appearance": {
       "title": "外観",
       "theme": "テーマ",
-      "themeOptions": { "light": "ライト", "dark": "ダーク", "system": "システム" },
+      "themeOptions": {
+        "light": "ライト",
+        "dark": "ダーク",
+        "system": "システム"
+      },
       "language": "言語"
     },
     "terminal": {
@@ -248,6 +252,19 @@
     "uploadComplete": "アップロード完了",
     "uploadFailed": "アップロード失敗",
     "uploadFailedDesc": "ファイルをアップロードできませんでした。",
-    "uploadDropHint": "ここにドロップしてアップロード"
+    "uploadDropHint": "ここにドロップしてアップロード",
+    "toggleHidden": "隠しファイルを表示",
+    "upload": "アップロード",
+    "new": "新規",
+    "home": "ホーム",
+    "breadcrumb": "ファイル パンくず",
+    "empty": {
+      "title": "空のディレクトリ",
+      "description": "ファイルをドラッグして追加"
+    },
+    "viewerEmpty": {
+      "title": "ファイル未選択",
+      "description": "サイドバーからファイルを選択するとプレビューします"
+    }
   }
 }

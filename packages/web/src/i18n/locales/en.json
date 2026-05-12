@@ -110,7 +110,11 @@
     "appearance": {
       "title": "Appearance",
       "theme": "Theme",
-      "themeOptions": { "light": "Light", "dark": "Dark", "system": "System" },
+      "themeOptions": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
       "language": "Language"
     },
     "terminal": {
@@ -248,6 +252,19 @@
     "uploadComplete": "Upload complete",
     "uploadFailed": "Upload failed",
     "uploadFailedDesc": "Could not upload file.",
-    "uploadDropHint": "Drop files here to upload"
+    "uploadDropHint": "Drop files here to upload",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

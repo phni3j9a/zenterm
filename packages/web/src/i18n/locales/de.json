@@ -253,6 +253,19 @@
     "uploadComplete": "Hochladen abgeschlossen",
     "uploadFailed": "Hochladen fehlgeschlagen",
     "uploadFailedDesc": "Datei konnte nicht hochgeladen werden.",
-    "uploadDropHint": "Dateien hier ablegen zum Hochladen"
+    "uploadDropHint": "Dateien hier ablegen zum Hochladen",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

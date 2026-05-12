@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { FileEntry } from '@zenterm/shared';
 import { useFilesStore } from '@/stores/files';
 import { sortFiles } from '@/lib/filesSort';
-import { useTheme } from '@/theme';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { IconFolderOpen } from '@/components/ui/icons';
 import { FilesItem } from './FilesItem';
 
 interface Props {
@@ -13,7 +14,6 @@ interface Props {
 }
 
 export function FilesList({ onOpen, onContextMenu, onLongPress }: Props) {
-  const { tokens } = useTheme();
   const { t } = useTranslation();
   const entries = useFilesStore((s) => s.entries);
   const sortMode = useFilesStore((s) => s.sortMode);
@@ -26,12 +26,12 @@ export function FilesList({ onOpen, onContextMenu, onLongPress }: Props) {
 
   if (sorted.length === 0) {
     return (
-      <div style={{ padding: tokens.spacing.lg, color: tokens.colors.textMuted, textAlign: 'center' }}>
-        <div style={{ fontSize: tokens.typography.bodyMedium.fontSize }}>{t('files.emptyDirectoryTitle')}</div>
-        <div style={{ fontSize: tokens.typography.caption.fontSize, marginTop: tokens.spacing.xs }}>
-          {t('files.emptyDirectoryDescription')}
-        </div>
-      </div>
+      <EmptyState
+        icon={<IconFolderOpen size={32} />}
+        title={t('files.empty.title')}
+        description={t('files.empty.description')}
+        size="sm"
+      />
     );
   }
 

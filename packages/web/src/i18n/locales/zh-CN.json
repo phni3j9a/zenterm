@@ -253,6 +253,19 @@
     "uploadComplete": "上传完成",
     "uploadFailed": "上传失败",
     "uploadFailedDesc": "无法上传文件。",
-    "uploadDropHint": "将文件拖放到此处以上传"
+    "uploadDropHint": "将文件拖放到此处以上传",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

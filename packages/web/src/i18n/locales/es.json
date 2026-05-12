@@ -253,6 +253,19 @@
     "uploadComplete": "Subida completa",
     "uploadFailed": "Error al subir",
     "uploadFailedDesc": "No se pudo subir el archivo.",
-    "uploadDropHint": "Suelte archivos aquí para subir"
+    "uploadDropHint": "Suelte archivos aquí para subir",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

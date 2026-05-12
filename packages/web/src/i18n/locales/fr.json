@@ -253,6 +253,19 @@
     "uploadComplete": "Téléversement terminé",
     "uploadFailed": "Échec du téléversement",
     "uploadFailedDesc": "Impossible de téléverser le fichier.",
-    "uploadDropHint": "Déposez des fichiers ici pour téléverser"
+    "uploadDropHint": "Déposez des fichiers ici pour téléverser",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }

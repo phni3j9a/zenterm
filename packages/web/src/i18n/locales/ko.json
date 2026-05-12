@@ -253,6 +253,19 @@
     "uploadComplete": "업로드 완료",
     "uploadFailed": "업로드 실패",
     "uploadFailedDesc": "파일을 업로드할 수 없습니다.",
-    "uploadDropHint": "업로드하려면 여기에 파일을 놓으세요"
+    "uploadDropHint": "업로드하려면 여기에 파일을 놓으세요",
+    "toggleHidden": "Toggle hidden files",
+    "upload": "Upload",
+    "new": "New",
+    "home": "Home",
+    "breadcrumb": "Files breadcrumbs",
+    "empty": {
+      "title": "Empty directory",
+      "description": "Drag files here to upload"
+    },
+    "viewerEmpty": {
+      "title": "No file selected",
+      "description": "Select a file in the sidebar to preview"
+    }
   }
 }
