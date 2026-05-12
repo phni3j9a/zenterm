@@ -102,6 +102,19 @@ describe('FilesRoute deep link', () => {
     });
   });
 
+  it('preserves "~" prefix for home-relative deep links', async () => {
+    render(
+      <MemoryRouter initialEntries={['/web/files/~/src']}>
+        <Routes>
+          <Route path="/web/files/*" element={<FilesRoute />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await waitFor(() => {
+      expect(useFilesStore.getState().currentPath).toBe('~/src');
+    });
+  });
+
   it('rejects malformed pct-encoding and keeps default cwd', async () => {
     render(
       <MemoryRouter initialEntries={['/web/files/%2/bad']}>

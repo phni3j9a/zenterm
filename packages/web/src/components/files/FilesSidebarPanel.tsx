@@ -34,7 +34,7 @@ export function FilesSidebarPanel({ client }: Props) {
 
   const navigateTo = (path: string) => {
     useFilesStore.getState().setCurrentPath(path);
-    const url = path === '~' ? '/web/files' : `/web/files${encodeURI(path).replace(/^\/+/, '/')}`;
+    const url = path === '~' ? '/web/files' : `/web/files/${encodeURI(path).replace(/^\/+/, '')}`;
     navigate(url, { replace: true });
   };
   const showHidden = useFilesStore((s) => s.showHidden);
