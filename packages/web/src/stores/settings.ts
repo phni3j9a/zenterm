@@ -2,7 +2,16 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type Language = 'en' | 'ja';
+export type Language = 'en' | 'ja' | 'es' | 'fr' | 'de' | 'pt-BR' | 'zh-CN' | 'ko';
+
+export const SUPPORTED_LANGUAGES: readonly Language[] = ['en', 'ja', 'es', 'fr', 'de', 'pt-BR', 'zh-CN', 'ko'];
+
+function normalizeLanguage(value: unknown): Language {
+  if (typeof value !== 'string') return 'ja';
+  return (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
+    ? (value as Language)
+    : 'ja';
+}
 
 export const MIN_FONT_SIZE = 10;
 export const MAX_FONT_SIZE = 20;
@@ -61,17 +70,22 @@ export const useSettingsStore = create<SettingsState>()(
         if (version < 2) {
           return {
             themeMode: s.themeMode ?? 'system',
-            language: s.language ?? 'ja',
+            language: normalizeLanguage(s.language),
             fontSize: typeof s.fontSize === 'number' ? s.fontSize : DEFAULT_FONT_SIZE,
             autoCopyOnSelect: false,
           };
         }
         return {
           themeMode: s.themeMode ?? 'system',
-          language: s.language ?? 'ja',
+          language: normalizeLanguage(s.language),
           fontSize: typeof s.fontSize === 'number' ? s.fontSize : DEFAULT_FONT_SIZE,
           autoCopyOnSelect: s.autoCopyOnSelect ?? false,
         };
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state && !SUPPORTED_LANGUAGES.includes(state.language)) {
+          state.language = 'ja';
+        }
       },
     },
   ),

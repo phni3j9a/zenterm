@@ -3,6 +3,26 @@ import i18next from 'i18next';
 import { initI18n } from '../index';
 import { useSettingsStore } from '@/stores/settings';
 
+describe('initI18n — 8 languages', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('initializes with es when settings says es', () => {
+    useSettingsStore.setState({ language: 'es' });
+    initI18n();
+    expect(i18next.language).toBe('es');
+  });
+
+  it('switches to ko on setLanguage', async () => {
+    useSettingsStore.setState({ language: 'en' });
+    initI18n();
+    useSettingsStore.getState().setLanguage('ko');
+    await new Promise((r) => setTimeout(r, 10));
+    expect(i18next.language).toBe('ko');
+  });
+});
+
 describe('initI18n', () => {
   beforeEach(() => {
     window.localStorage.clear();

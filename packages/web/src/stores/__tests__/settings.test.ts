@@ -49,6 +49,34 @@ describe('useSettingsStore', () => {
   });
 });
 
+describe('settings — 8 languages support', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('accepts es language', () => {
+    useSettingsStore.getState().setLanguage('es');
+    expect(useSettingsStore.getState().language).toBe('es');
+  });
+
+  it('accepts ko language', () => {
+    useSettingsStore.getState().setLanguage('ko');
+    expect(useSettingsStore.getState().language).toBe('ko');
+  });
+
+  it('migrate falls back to ja for unknown language string', () => {
+    localStorage.setItem(
+      'zenterm-web-settings',
+      JSON.stringify({
+        state: { themeMode: 'dark', language: 'xx-XX', fontSize: 14, autoCopyOnSelect: false },
+        version: 2,
+      }),
+    );
+    useSettingsStore.persist.rehydrate();
+    expect(useSettingsStore.getState().language).toBe('ja');
+  });
+});
+
 describe('useSettingsStore autoCopyOnSelect', () => {
   beforeEach(() => {
     window.localStorage.clear();

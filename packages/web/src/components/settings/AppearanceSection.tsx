@@ -11,6 +11,12 @@ const THEME_OPTIONS: { value: ThemeMode; key: string; defaultLabel: string }[] =
 const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: 'ja', label: '日本語' },
   { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'pt-BR', label: 'Português (BR)' },
+  { value: 'zh-CN', label: '简体中文' },
+  { value: 'ko', label: '한국어' },
 ];
 
 export function AppearanceSection() {
