@@ -58,8 +58,8 @@ test('theme toggle persists across reload', async ({ page }) => {
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 
-  // Navigate to Settings
-  await page.getByRole('button', { name: /settings tab/i }).click();
+  // Navigate to Settings (Phase 6 G5: LeftRail uses role="tab")
+  await page.getByRole('tab', { name: /^settings$/i }).click();
   await expect(page).toHaveURL(/\/web\/settings$/);
 
   // Click Light button
