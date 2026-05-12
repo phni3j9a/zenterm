@@ -42,7 +42,7 @@ const loginAndGoToSettings = async (page: import('@playwright/test').Page, url: 
   await fillOtp(page, token);
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
-  await page.getByRole('button', { name: /settings tab/i }).click();
+  await page.getByRole('tab', { name: /^settings$/i }).click();
   await expect(page).toHaveURL(/\/web\/settings$/);
 };
 
@@ -68,8 +68,10 @@ test('Logout returns to /web/login', async ({ page }) => {
   await page.addInitScript(initEnglish);
   await loginAndGoToSettings(page, baseUrl, TOKEN);
 
-  // Click Logout button
-  await page.getByRole('button', { name: /^logout$/i }).click();
+  // Click Logout button inside the Gateway section (Phase 6 G5: LeftRail also
+  // has a Logout button with aria-label="Logout", so scope to the Gateway region).
+  const gatewayRegion = page.getByRole('region', { name: /gateway/i });
+  await gatewayRegion.getByRole('button', { name: /^logout$/i }).click();
 
   // A confirm dialog should appear — click the confirm button (label: "Logout")
   const confirmDialog = page.getByRole('dialog');

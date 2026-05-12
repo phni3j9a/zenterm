@@ -79,13 +79,13 @@ test('terminal scrollback survives Files navigation', async ({ page }) => {
   await page.keyboard.press('Enter');
   await expect(page.locator('.xterm-rows')).toContainText(marker, { timeout: 5000 });
 
-  // Navigate to Files.
-  await page.getByRole('button', { name: /Files tab/i }).click();
+  // Navigate to Files (Phase 6 G5: LeftRail uses role="tab")
+  await page.getByRole('tab', { name: /^files$/i }).click();
   await expect(page).toHaveURL(/\/web\/files$/);
   await expect(page.getByRole('button', { name: /^README\.md$/ })).toBeVisible({ timeout: 5000 });
 
   // Navigate back to Sessions.
-  await page.getByRole('button', { name: /Sessions tab/i }).click();
+  await page.getByRole('tab', { name: /^sessions$/i }).click();
   await expect(page).toHaveURL(/\/web\/sessions$/);
 
   // Connection should still be Connected (no reconnect happened).

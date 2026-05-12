@@ -1,0 +1,65 @@
+# syntax=docker/dockerfile:1.7
+#
+# ZenTerm e2e / dev container image
+#
+# Base: Microsoft Playwright official image (Ubuntu 24.04 noble + Chromium + Node)
+#       — same Ubuntu/glibc as the Mac mini host, ensures node-pty binaries are
+#       portable host ↔ container in either direction.
+#
+# Purpose:
+#   - Automated e2e (non-interactive, `scripts/e2e-docker.sh`)
+#   - Interactive development (handcraft testing, `scripts/dev-docker.sh`)
+#
+# Why containerize:
+#   The gateway invokes `tmux` directly via execFileSync without -L/-S socket
+#   isolation. On a workstation that's already running tmux (e.g. our Mac mini),
+#   a crashing playwright run would compete for /tmp/tmux-$EUID/default and
+#   take down the developer's working tmux sessions. Running inside a container
+#   gives PID/mount/network isolation so the gateway's tmux child processes can
+#   *never* reach the host's tmux socket.
+#
+FROM mcr.microsoft.com/playwright:v1.58.2-noble
+
+# Install tmux (gateway dependency) + node-pty build toolchain.
+# git is needed for some transient npm postinstalls; procps for `ps` debugging.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      tmux \
+      python3 \
+      make \
+      g++ \
+      procps \
+      git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work
+
+# === Dependency layer (cached across code-only changes) ===
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/gateway/package.json packages/gateway/
+COPY packages/web/package.json packages/web/
+
+# npm ci compiles node-pty native bindings against the container's Linux/glibc,
+# which won't match the host's Mac binaries — that's intentional. e2e runs use
+# this Linux-built node-pty exclusively.
+RUN npm ci
+
+# Install Playwright browsers if not already in the base image (it is, but
+# pin explicitly so a base-image refresh can't silently drop Chromium).
+RUN npx playwright install --with-deps chromium
+
+# === Source layer ===
+COPY . .
+
+# === Build artifacts ===
+# gateway/dist + web bundle into packages/gateway/public/web/, exactly as the
+# host build does. Specs spawn `node packages/gateway/dist/index.js`.
+RUN npm run build:gateway && \
+    npm run build --workspace=@zenterm/web
+
+# Healthcheck disabled — e2e runs are short-lived and not service-oriented.
+
+# Default entrypoint runs the full e2e suite. Override at runtime to scope to
+# a single spec:  docker run ... zenterm-e2e:latest npx playwright test tests/e2e/web/login.spec.ts
+CMD ["npx", "playwright", "test"]

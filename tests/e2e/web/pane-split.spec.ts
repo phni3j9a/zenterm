@@ -74,8 +74,9 @@ test('switching layout to cols-2 renders 2 panes and Sidebar duplicate guard wor
   await page.getByRole('menuitemradio', { name: /2 cols/i }).click();
 
   // After switching to cols-2 with only pane 0 assigned, pane 1 is empty
-  // (rendered as <main> with selectPrompt text). Focus it, then assign e2e-pane-b.
-  const emptyPane = page.getByText(/Select a session from the sidebar/i);
+  // (rendered as <main> with EmptyState — Phase 6 G6 uses shell.empty.description
+  // "Choose one from the sidebar to start"). Focus it, then assign e2e-pane-b.
+  const emptyPane = page.getByText(/Choose one from the sidebar/i);
   await expect(emptyPane).toBeVisible({ timeout: 5000 });
   await emptyPane.click();
 

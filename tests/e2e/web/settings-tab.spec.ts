@@ -45,12 +45,12 @@ test('switching to Settings tab navigates to /web/settings and keeps TerminalPan
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 
-  // Click Settings tab
-  await page.getByRole('button', { name: /settings tab/i }).click();
+  // Click Settings tab (Phase 6 G5: LeftRail uses role="tab")
+  await page.getByRole('tab', { name: /^settings$/i }).click();
   await expect(page).toHaveURL(/\/web\/settings$/);
   await expect(page.getByRole('region', { name: /appearance/i })).toBeVisible();
 
   // Click Sessions tab to navigate back
-  await page.getByRole('button', { name: /sessions tab/i }).click();
+  await page.getByRole('tab', { name: /^sessions$/i }).click();
   await expect(page).toHaveURL(/\/web\/sessions/);
 });

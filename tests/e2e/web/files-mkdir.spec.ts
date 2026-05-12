@@ -48,12 +48,12 @@ test('mkdir: create new folder via toolbar', async ({ page }) => {
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 
-  await page.getByRole('button', { name: /Files tab/i }).click();
+  await page.getByRole('tab', { name: /^files$/i }).click();
   await expect(page).toHaveURL(/\/web\/files$/);
 
-  // Open the New menu (the toolbar button has aria-label "New File").
-  // Use exact name to avoid matching the menuitem with the same label.
-  await page.getByRole('button', { name: 'New File', exact: true }).click();
+  // Open the New menu (Phase 6 G7: toolbar plus button has aria-label "New",
+  // and the dropdown contains "New File" / "New Folder" menuitems).
+  await page.getByRole('button', { name: 'New', exact: true }).click();
   await page.getByRole('menuitem', { name: /^New Folder$/ }).click();
 
   const dialogInput = page.getByRole('textbox', { name: /folder name/ });

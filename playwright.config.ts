@@ -8,6 +8,10 @@ export default defineConfig({
   // All specs share the same tmux server, so concurrent spec execution
   // causes cross-spec session cleanup races. Run spec files serially.
   workers: 1,
+  // The dockerized e2e suite occasionally hits Chromium renderer SIGSEGV
+  // (no GPU available) in xterm-heavy tests. One retry rides over the
+  // renderer crash without masking real assertion failures.
+  retries: 1,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
     baseURL: 'http://localhost:18765',

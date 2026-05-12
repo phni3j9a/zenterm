@@ -19,7 +19,7 @@ export function FilesRoute() {
     if (!splat) return;
     const decoded = safeDecode(splat);
     if (decoded === null) return;
-    const path = decoded.startsWith('/') ? decoded : `/${decoded}`;
+    const path = decoded.startsWith('~') || decoded.startsWith('/') ? decoded : `/${decoded}`;
     useFilesStore.getState().setCurrentPath(path);
   }, [splat]);
 
