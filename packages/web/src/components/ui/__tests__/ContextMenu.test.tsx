@@ -5,6 +5,7 @@ import { ContextMenu, type ContextMenuItem } from '../ContextMenu';
 const baseItems: ContextMenuItem[] = [
   { id: 'copy', label: 'Copy', onSelect: vi.fn() },
   { id: 'paste', label: 'Paste', onSelect: vi.fn() },
+  { id: 'del', label: 'Delete', onSelect: vi.fn(), disabled: true },
 ];
 
 describe('ContextMenu', () => {
@@ -103,5 +104,32 @@ describe('ContextMenu', () => {
       <ContextMenu open anchorPoint={{ x: 0, y: 0 }} items={items} onClose={vi.fn()} />,
     );
     expect(screen.getByText('⌘C')).toBeInTheDocument();
+  });
+
+  it('ArrowDown / ArrowUp move focus through items', () => {
+    render(
+      <ContextMenu open={true} anchorPoint={{ x: 0, y: 0 }} onClose={vi.fn()} items={baseItems} ariaLabel="m" />,
+    );
+    const menu = screen.getByRole('menu');
+    const items = screen.getAllByRole('menuitem');
+    expect(document.activeElement).toBe(items[0]);
+    fireEvent.keyDown(menu, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(items[1]);
+    fireEvent.keyDown(menu, { key: 'ArrowDown' });
+    // items[2] is disabled, so focus should skip to wrap-around items[0]
+    expect(document.activeElement).toBe(items[0]);
+    fireEvent.keyDown(menu, { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(items[1]);
+  });
+
+  it('viewport edge flip: anchorPoint near right edge → menu shifts left', () => {
+    Object.defineProperty(window, 'innerWidth', { value: 800, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 600, configurable: true });
+    render(
+      <ContextMenu open={true} anchorPoint={{ x: 790, y: 10 }} onClose={vi.fn()} items={baseItems} ariaLabel="m" />,
+    );
+    const menu = screen.getByRole('menu') as HTMLElement;
+    const left = parseFloat(menu.style.left || '0');
+    expect(left).toBeLessThanOrEqual(800 - 160);
   });
 });

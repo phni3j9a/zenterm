@@ -50,8 +50,36 @@ export function ContextMenu({
 
   useEffect(() => {
     if (!open) return;
+
+    // Focus the first enabled menuitem when menu opens
+    const menuEl = menuRef.current;
+    if (menuEl) {
+      const allItems = Array.from(menuEl.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+      const firstEnabled = allItems.find((el) => el.getAttribute('aria-disabled') !== 'true');
+      firstEnabled?.focus();
+    }
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const menuEl = menuRef.current;
+        if (!menuEl) return;
+        const allItems = Array.from(menuEl.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+        const enabledItems = allItems.filter((el) => el.getAttribute('aria-disabled') !== 'true');
+        if (enabledItems.length === 0) return;
+        const currentIndex = enabledItems.indexOf(document.activeElement as HTMLElement);
+        if (e.key === 'ArrowDown') {
+          const next = (currentIndex + 1) % enabledItems.length;
+          enabledItems[next].focus();
+        } else {
+          const prev = (currentIndex - 1 + enabledItems.length) % enabledItems.length;
+          enabledItems[prev].focus();
+        }
+      }
     };
     const onPointer = (e: PointerEvent) => {
       const target = e.target as Node | null;
@@ -60,11 +88,9 @@ export function ContextMenu({
     };
     window.addEventListener('keydown', onKey);
     window.addEventListener('pointerdown', onPointer);
-    window.addEventListener('mousedown', onPointer as unknown as EventListener);
     return () => {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('pointerdown', onPointer);
-      window.removeEventListener('mousedown', onPointer as unknown as EventListener);
     };
   }, [open, onClose]);
 
