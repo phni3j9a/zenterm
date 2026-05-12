@@ -71,7 +71,12 @@ export function Sidebar(props: SidebarProps) {
     >
       {collapsed ? null : (
         <>
-          <div aria-label={`${activePanel} panel`} style={{ overflowY: 'auto' }}>
+          <div
+            id={`panel-${activePanel}`}
+            role="tabpanel"
+            aria-label={`${activePanel} panel`}
+            style={{ overflowY: 'auto' }}
+          >
             {renderPanel()}
           </div>
           <SidebarResizer />
