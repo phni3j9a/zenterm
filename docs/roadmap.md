@@ -1,8 +1,10 @@
 # ZenTerm Browser Rebuild
 
-## Status: 完了 (2026-05-12 web-pc-phase-5b-done)
+## Status: 完了 (2026-05-12 web-pc-phase-6-done)
 
-Phase 1〜5 全て main にマージ済。タグ: `web-pc-phase-{1, 2a, 2b, 2c, 2d, 3, 4a, 4b, 5a, 5b}-done`
+Phase 1〜6 全て main にマージ済。タグ: `web-pc-phase-{1, 2a, 2b, 2c, 2d, 3, 4a, 4b, 5a, 5b, 6}-done`
+
+Phase 6 では UI/UX 完成度を総仕上げ: 共通 UI プリミティブ 7 件 + lucide-react アイコン基盤 + LeftRail 縦タブバー + Login/Sessions/Files/Terminal/Settings の画面別リファイン + EmptyState 統一 + Onboarding 3 ステップガイド + reduced-motion 対応 transition + `:focus-visible` 統一。あわせて e2e の tmux socket 分離 (TMUX_TMPDIR) で開発者作業中の tmux を保護。
 
 > 最終更新: 2026-05-12
 
