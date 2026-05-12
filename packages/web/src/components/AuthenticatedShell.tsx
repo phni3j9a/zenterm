@@ -18,7 +18,7 @@ import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
-import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
+import { SLOT_COUNT, upgradeLayout } from '@/lib/paneLayout';
 import { parseSessionRoute, buildSessionPath } from '@/lib/urlSync';
 import { decode as decodeFragment, encode as encodeFragment } from '@/lib/paneStateFragment';
 import { CommandPalette } from './CommandPalette';
@@ -308,17 +308,13 @@ export function AuthenticatedShell() {
     });
   };
 
-  const upgradeLayout = (current: LayoutMode): LayoutMode | null => {
-    if (current === 'single') return 'cols-2';
-    if (current === 'cols-2') return 'cols-3';
-    if (current === 'cols-3') return 'grid-2x2';
-    return null;
-  };
-
   const newPaneFromCurrent = () => {
     const state = usePaneStore.getState();
     const next = upgradeLayout(state.layout);
-    if (!next) return;
+    if (!next) {
+      pushToast({ type: 'info', message: t('terminal.newPaneLimit') });
+      return;
+    }
     state.setLayout(next);
     const fresh = usePaneStore.getState();
     const slotCount = SLOT_COUNT[next];
