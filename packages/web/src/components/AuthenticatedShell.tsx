@@ -20,6 +20,7 @@ import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
 import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
 import { parseSessionRoute, buildSessionPath } from '@/lib/urlSync';
+import { decode as decodeFragment, encode as encodeFragment } from '@/lib/paneStateFragment';
 import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
@@ -83,6 +84,7 @@ export function AuthenticatedShell() {
   }, [isSessionsRoute]);
 
   const lastSyncedPath = useRef<string | null>(null);
+  const lastSyncedHash = useRef<string | null>(null);
   useEffect(() => {
     if (lastSyncedPath.current === location.pathname) return;
     const parsed = parseSessionRoute(location.pathname);
@@ -110,22 +112,43 @@ export function AuthenticatedShell() {
     lastSyncedPath.current = location.pathname;
   }, [location.pathname, sessions]);
 
-  // Reverse sync: focused pane → URL.
-  // Avoid loop with URL→store sync by checking pathname equality before navigating.
-  // Only active on /web/sessions routes (Files / Settings tabs are untouched).
-  // pathnameRef avoids adding location.pathname to the reverse-sync effect deps.
-  const pathnameRef = useRef(location.pathname);
-  pathnameRef.current = location.pathname;
+  // Hash → store sync: applies pane fragment from URL hash on mount / hash change.
+  // Runs after the path→store sync so it doesn't fight on initial render.
+  useEffect(() => {
+    if (lastSyncedHash.current === location.hash) return;
+    lastSyncedHash.current = location.hash;
+    if (!location.hash) return;
+    const parsed = decodeFragment(location.hash);
+    if (!parsed) return;
+    const store = usePaneStore.getState();
+    if (store.layout !== parsed.layout) store.setLayout(parsed.layout);
+    for (let i = 0; i < parsed.panes.length; i++) {
+      store.assignPane(i, parsed.panes[i]);
+    }
+  }, [location.hash]);
 
+  // Reverse sync: focused pane + pane state → URL (path + hash).
+  // Avoid loop with URL→store syncs by checking full desired URL before navigating.
+  // Only active on /web/sessions routes (Files / Settings tabs are untouched).
+  const layout = usePaneStore((s) => s.layout);
+  const allPanes = usePaneStore((s) => s.panes);
   const focusedPane = usePaneStore((s) => s.panes[s.focusedIndex]);
   useEffect(() => {
     if (!isSessionsRoute) return;
     if (!focusedPane) return;
-    const desired = buildSessionPath(focusedPane.sessionId, focusedPane.windowIndex);
-    if (pathnameRef.current === desired) return;
-    lastSyncedPath.current = desired;
+    const desiredPath = buildSessionPath(focusedPane.sessionId, focusedPane.windowIndex);
+    const isSinglePaneState =
+      layout === 'single' && allPanes.length === 1 && allPanes[0] !== null;
+    const desiredHash = isSinglePaneState
+      ? ''
+      : `#${encodeFragment({ layout, panes: allPanes })}`;
+    const desired = desiredPath + desiredHash;
+    const current = location.pathname + location.hash;
+    if (current === desired) return;
+    lastSyncedPath.current = desiredPath;
+    lastSyncedHash.current = desiredHash;
     navigateFnRef.current(desired, { replace: true });
-  }, [focusedPane?.sessionId, focusedPane?.windowIndex, isSessionsRoute]);
+  }, [focusedPane?.sessionId, focusedPane?.windowIndex, layout, allPanes, isSessionsRoute]);
 
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const openPalette = useLayoutStore((s) => s.openPalette);
