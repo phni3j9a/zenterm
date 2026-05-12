@@ -46,6 +46,11 @@
     "empty": "Aucune session pour l'instant — créez-en une ci-dessus.",
     "openInPane": {
       "label": "Ouvrir dans le volet {{pane}}"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {

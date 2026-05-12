@@ -46,6 +46,11 @@
     "empty": "Nenhuma sessão ainda — crie uma acima.",
     "openInPane": {
       "label": "Abrir no painel {{pane}}"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {

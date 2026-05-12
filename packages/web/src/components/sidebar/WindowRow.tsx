@@ -4,6 +4,7 @@ import type { TmuxWindow } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { InlineEdit } from '@/components/ui/InlineEdit';
 import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
+import { IconMore } from '@/components/ui/icons';
 import { RowActionsMenu } from './RowActionsMenu';
 
 export interface WindowRowProps {
@@ -111,10 +112,12 @@ export function WindowRow({
           border: 'none',
           cursor: 'pointer',
           color: tokens.colors.textMuted,
+          display: 'flex',
+          alignItems: 'center',
           visibility: showKebab ? 'visible' : 'hidden',
         }}
       >
-        ⋯
+        <IconMore size={16} />
       </button>
       <RowActionsMenu
         open={menuOpen}

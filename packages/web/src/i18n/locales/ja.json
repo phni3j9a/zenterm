@@ -45,6 +45,11 @@
     "empty": "セッションがまだありません — 上部で作成してください。",
     "openInPane": {
       "label": "ペイン {{pane}} で開く"
+    },
+    "state": {
+      "active": "アクティブ",
+      "idle": "アイドル",
+      "detached": "未接続"
     }
   },
   "terminal": {

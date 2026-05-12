@@ -46,6 +46,11 @@
     "empty": "아직 세션이 없습니다 — 위에서 만들어 보세요.",
     "openInPane": {
       "label": "패널 {{pane}}에서 열기"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {

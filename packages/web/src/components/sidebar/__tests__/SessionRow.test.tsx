@@ -15,6 +15,14 @@ const session: TmuxSession = {
   ],
 };
 
+const sessionNoWindows: TmuxSession = {
+  name: 'zen_empty',
+  displayName: 'empty',
+  created: 1,
+  cwd: '/home/me',
+  windows: [],
+};
+
 describe('SessionRow', () => {
   it('renders displayName and cwd', () => {
     render(
@@ -171,5 +179,56 @@ describe('SessionRow', () => {
     );
     await userEvent.click(screen.getByLabelText(/Actions for session dev/i));
     expect(screen.queryByRole('menuitem', { name: /open in pane|pane \d/i })).toBeNull();
+  });
+
+  it('renders state dot with aria-label "Active" when isActive is true', () => {
+    render(
+      <SessionRow
+        session={session}
+        isActive={true}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onSelect={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('session-row-state-dot')).toHaveAttribute('aria-label', 'Active');
+  });
+
+  it('renders state dot with aria-label "Detached" when session has no windows and not active', () => {
+    render(
+      <SessionRow
+        session={sessionNoWindows}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onSelect={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('session-row-state-dot')).toHaveAttribute('aria-label', 'Detached');
+  });
+
+  it('renders chevron toggle with data-testid when session has multiple windows', () => {
+    render(
+      <SessionRow
+        session={session}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onSelect={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('session-row-chevron')).toBeInTheDocument();
   });
 });

@@ -46,6 +46,11 @@
     "empty": "Noch keine Sitzungen — erstellen Sie eine oben.",
     "openInPane": {
       "label": "In Bereich {{pane}} öffnen"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {

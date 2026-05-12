@@ -46,6 +46,11 @@
     "empty": "Aún no hay sesiones — cree una arriba.",
     "openInPane": {
       "label": "Abrir en panel {{pane}}"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {

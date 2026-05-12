@@ -68,8 +68,11 @@ export function SessionsListPanel({
       }}
     >
       <div
+        role="heading"
+        aria-level={2}
         style={{
-          fontSize: tokens.typography.caption.fontSize,
+          fontSize: tokens.typography.heading.fontSize,
+          fontWeight: tokens.typography.heading.fontWeight,
           textTransform: 'uppercase',
           letterSpacing: 1.5,
           color: tokens.colors.textMuted,

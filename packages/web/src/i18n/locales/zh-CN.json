@@ -46,6 +46,11 @@
     "empty": "暂无会话 — 请在上方创建。",
     "openInPane": {
       "label": "在面板 {{pane}} 中打开"
+    },
+    "state": {
+      "active": "Active",
+      "idle": "Idle",
+      "detached": "Detached"
     }
   },
   "terminal": {
