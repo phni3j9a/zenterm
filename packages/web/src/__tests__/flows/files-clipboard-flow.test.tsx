@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { useFilesStore } from '@/stores/files';
@@ -42,7 +43,7 @@ describe('Files clipboard flow', () => {
 
   it('Ctrl+Click enters selection mode and selects entry', async () => {
     const client = makeClient();
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /a\.ts/ }), { ctrlKey: true });
     expect(useFilesStore.getState().selectionMode).toBe(true);
@@ -51,7 +52,7 @@ describe('Files clipboard flow', () => {
 
   it('copy → store clipboard with copy mode → toast', async () => {
     const client = makeClient();
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /a\.ts/ }), { ctrlKey: true });
     fireEvent.click(screen.getByRole('button', { name: /b\.ts/ }));
@@ -68,7 +69,7 @@ describe('Files clipboard flow', () => {
     const client = makeClient();
     useFilesStore.setState({ clipboard: { items: ['~/a.ts'], mode: 'copy' } });
     useFilesStore.setState({ currentPath: '~' });
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /^paste$/i })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /^paste$/i }));
     await waitFor(() => expect(client.copyFiles).toHaveBeenCalledWith(['~/a.ts'], '~'));
@@ -77,7 +78,7 @@ describe('Files clipboard flow', () => {
   it('paste in cut mode calls moveFiles and clears clipboard', async () => {
     const client = makeClient();
     useFilesStore.setState({ clipboard: { items: ['~/a.ts'], mode: 'cut' }, currentPath: '~/sub' });
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /^paste$/i })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /^paste$/i }));
     await waitFor(() => expect(client.moveFiles).toHaveBeenCalledWith(['~/a.ts'], '~/sub'));
@@ -87,7 +88,7 @@ describe('Files clipboard flow', () => {
   it('bulk delete calls deleteFile for each selected item', async () => {
     const client = makeClient();
     client.deleteFile = vi.fn().mockResolvedValue({ path: '', deleted: true });
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /a\.ts/ }), { ctrlKey: true });

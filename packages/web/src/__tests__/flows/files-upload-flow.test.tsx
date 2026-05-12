@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { useFilesStore } from '@/stores/files';
@@ -30,7 +31,7 @@ describe('Files upload flow', () => {
 
   it('clicking Upload triggers hidden file input → selecting file calls uploadFile', async () => {
     const client = makeClient();
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(client.listFiles).toHaveBeenCalled());
 
     const input = screen.getByTestId('files-upload-input') as HTMLInputElement;
@@ -45,7 +46,7 @@ describe('Files upload flow', () => {
 
   it('drag-drop file fires uploadFile', async () => {
     const client = makeClient();
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(client.listFiles).toHaveBeenCalled());
     fireEvent.dragEnter(window, { dataTransfer: { types: ['Files'] } });
     const overlay = await screen.findByText(/drop files/i);
@@ -57,7 +58,7 @@ describe('Files upload flow', () => {
   it('shows error toast on upload failure', async () => {
     const client = makeClient();
     client.uploadFile = vi.fn().mockRejectedValue(new Error('boom'));
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(client.listFiles).toHaveBeenCalled());
 
     const input = screen.getByTestId('files-upload-input') as HTMLInputElement;
