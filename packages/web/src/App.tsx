@@ -58,6 +58,14 @@ export function App() {
             </RequireAuth>
           }
         />
+        <Route
+          path="/web/files/*"
+          element={
+            <RequireAuth>
+              <FilesRoute />
+            </RequireAuth>
+          }
+        />
         <Route path="/web" element={<Navigate to="/web/sessions" replace />} />
         <Route path="*" element={<Navigate to="/web" replace />} />
       </Routes>
