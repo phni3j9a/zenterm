@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { useSettingsStore } from '@/stores/settings';
 
 // Same xterm.js mocks as XtermView test — TerminalPane mounts XtermView
 vi.mock('@xterm/xterm', () => ({
@@ -78,6 +79,8 @@ beforeEach(() => {
       removeEventListener: vi.fn(),
     }),
   });
+  // Dismiss onboarding so the empty-state test sees EmptyState, not OnboardingGuide.
+  useSettingsStore.setState({ dismissOnboarding: true });
 });
 
 afterEach(() => {

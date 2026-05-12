@@ -203,6 +203,13 @@
     "placeholder": "Digite um comando ou nome de sessão…",
     "noResults": "Sem resultados"
   },
+  "onboarding": {
+    "title": "Get started",
+    "step1": { "title": "Start the Gateway" },
+    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
+    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "dismiss": "Don't show again"
+  },
   "files": {
     "title": "Arquivos",
     "noServerConfigured": "Gateway não configurado.",

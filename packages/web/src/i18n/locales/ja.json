@@ -202,6 +202,13 @@
     "placeholder": "コマンドかセッション名を入力…",
     "noResults": "該当なし"
   },
+  "onboarding": {
+    "title": "はじめに",
+    "step1": { "title": "Gateway を起動" },
+    "step2": { "title": "トークンを入力", "description": "Gateway 起動時に表示されるトークン" },
+    "step3": { "title": "セッションを作成", "description": "+ New Session で tmux を起動" },
+    "dismiss": "次回から表示しない"
+  },
   "files": {
     "title": "ファイル",
     "noServerConfigured": "Gateway が未設定です。",
