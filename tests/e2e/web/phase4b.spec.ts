@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
@@ -43,7 +44,7 @@ async function loginAndWait(page: Page, path = '/web') {
     }));
   });
   await page.goto(`${baseUrl}${path}`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
   // Sidebar 表示確認
   await expect(page.locator('aside[role="complementary"]')).toBeVisible({ timeout: 5000 });
@@ -90,8 +91,8 @@ test('deep link /web/sessions/:id redirects through login and lands on target', 
     }));
   });
   await page.goto(`${baseUrl}/web/sessions/work`);
-  await expect(page.getByLabel(/Token/i)).toBeVisible({ timeout: 5000 });
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await expect(page.getByLabel('Digit 1')).toBeVisible({ timeout: 5000 });
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
   await page.waitForURL(/\/web\/sessions\/work/, { timeout: 5000 });
   expect(page.url()).toContain('/web/sessions/work');

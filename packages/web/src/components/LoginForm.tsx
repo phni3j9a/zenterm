@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
+import { OtpInput } from './login/OtpInput';
+import { Card } from './ui/Card';
+import { IconTerminal, IconAlertTriangle } from './ui/icons';
 
 export interface LoginFormProps {
   onSubmit: (token: string) => Promise<void>;
@@ -14,7 +17,7 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     if (token.length !== 4) return;
     setSubmitting(true);
@@ -29,78 +32,89 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        background: tokens.colors.surface,
-        color: tokens.colors.textPrimary,
-        padding: tokens.spacing['2xl'],
-        borderRadius: tokens.radii.lg,
-        width: '100%',
-        maxWidth: 360,
-        boxSizing: 'border-box',
-      }}
-    >
-      <h2 style={{ margin: 0, marginBottom: tokens.spacing.lg, fontSize: tokens.typography.heading.fontSize }}>
-        {t('login.title')}
-      </h2>
-      {gatewayUrl && (
-        <p style={{ fontSize: tokens.typography.small.fontSize, color: tokens.colors.textMuted, margin: 0, marginBottom: tokens.spacing.lg, fontFamily: tokens.typography.mono.fontFamily }}>
-          {gatewayUrl}
-        </p>
-      )}
-      <label style={{ display: 'block', marginBottom: tokens.spacing.sm, fontSize: tokens.typography.smallMedium.fontSize, color: tokens.colors.textSecondary }}>
-        {t('login.tokenLabel')}
-        <input
-          autoFocus
-          inputMode="numeric"
-          pattern="\d*"
-          maxLength={4}
-          placeholder={t('login.tokenPlaceholder')}
-          value={token}
-          onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 4))}
-          style={{
-            display: 'block',
-            marginTop: tokens.spacing.sm,
-            width: '100%',
-            padding: tokens.spacing.md,
-            fontSize: 24,
-            letterSpacing: 8,
-            textAlign: 'center',
-            fontFamily: tokens.typography.mono.fontFamily,
-            background: tokens.colors.bg,
+    <Card variant="elevated" padding="lg" style={{ width: '100%', maxWidth: 420 }}>
+      <form onSubmit={handleSubmit}>
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg,
+        }}>
+          <div style={{ color: tokens.colors.primary }}>
+            <IconTerminal size={36} aria-hidden />
+          </div>
+          <h2 style={{
+            margin: 0,
+            fontSize: tokens.typography.heading.fontSize,
             color: tokens.colors.textPrimary,
-            border: `1px solid ${tokens.colors.border}`,
-            borderRadius: tokens.radii.md,
-            boxSizing: 'border-box',
+          }}>
+            {t('login.title')}
+          </h2>
+          <p style={{
+            margin: 0,
+            fontSize: tokens.typography.small.fontSize,
+            color: tokens.colors.textMuted,
+            textAlign: 'center',
+          }}>
+            {t('login.tagline')}
+          </p>
+        </div>
+
+        {gatewayUrl && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: tokens.spacing.lg }}>
+            <span style={{
+              fontSize: tokens.typography.small.fontSize,
+              color: tokens.colors.textSecondary,
+              fontFamily: tokens.typography.mono.fontFamily,
+              padding: `${tokens.spacing.xs}px ${tokens.spacing.sm}px`,
+              background: tokens.colors.surface,
+              borderRadius: tokens.radii.sm,
+            }}>{gatewayUrl}</span>
+          </div>
+        )}
+
+        <div style={{ marginBottom: tokens.spacing.md }}>
+          <label style={{
+            display: 'block', textAlign: 'center',
+            marginBottom: tokens.spacing.sm,
+            fontSize: tokens.typography.smallMedium.fontSize,
+            color: tokens.colors.textSecondary,
+          }}>{t('login.tokenLabel')}</label>
+          <OtpInput
+            value={token}
+            onChange={setToken}
+            autoFocus
+            aria-invalid={Boolean(error)}
+            aria-label={t('login.tokenLabel')}
+          />
+        </div>
+
+        {error && (
+          <div role="alert" style={{
+            display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
+            color: tokens.colors.error,
+            fontSize: tokens.typography.small.fontSize,
+            marginBottom: tokens.spacing.md,
+          }}>
+            <IconAlertTriangle size={16} aria-hidden />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={token.length !== 4 || submitting}
+          style={{
+            width: '100%', padding: tokens.spacing.md,
+            background: tokens.colors.primary, color: tokens.colors.textInverse,
+            border: 'none', borderRadius: tokens.radii.md,
+            fontSize: tokens.typography.bodyMedium.fontSize, fontWeight: 600,
+            cursor: token.length === 4 && !submitting ? 'pointer' : 'not-allowed',
+            opacity: token.length === 4 && !submitting ? 1 : 0.5,
+            boxShadow: tokens.shadows.sm,
           }}
-          aria-invalid={Boolean(error)}
-        />
-      </label>
-      {error && (
-        <p role="alert" style={{ color: tokens.colors.error, fontSize: tokens.typography.small.fontSize, margin: `${tokens.spacing.sm}px 0` }}>
-          {error}
-        </p>
-      )}
-      <button
-        type="submit"
-        disabled={token.length !== 4 || submitting}
-        style={{
-          width: '100%',
-          padding: tokens.spacing.md,
-          marginTop: tokens.spacing.md,
-          background: tokens.colors.primary,
-          color: tokens.colors.textInverse,
-          border: 'none',
-          borderRadius: tokens.radii.md,
-          fontSize: tokens.typography.bodyMedium.fontSize,
-          fontWeight: 600,
-          cursor: token.length === 4 && !submitting ? 'pointer' : 'not-allowed',
-          opacity: token.length === 4 && !submitting ? 1 : 0.5,
-        }}
-      >
-        {submitting ? '…' : t('login.submit')}
-      </button>
-    </form>
+        >
+          {submitting ? '…' : t('login.submit')}
+        </button>
+      </form>
+    </Card>
   );
 }

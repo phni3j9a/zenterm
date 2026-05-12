@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
+import { fillOtp } from './helpers';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -47,7 +48,7 @@ test('login with valid token navigates to sessions screen', async ({ page }) => 
   });
   await page.goto(`${baseUrl}/web`);
   await expect(page.getByRole('heading', { name: /Sign in to ZenTerm/i })).toBeVisible();
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
 });
@@ -59,7 +60,7 @@ test('login with wrong token shows error', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill('0000');
+  await fillOtp(page, '0000');
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByRole('alert')).toBeVisible();
 });

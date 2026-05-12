@@ -24,6 +24,7 @@
   },
   "login": {
     "title": "Sign in to ZenTerm",
+    "tagline": "Connect to your tmux server from anywhere",
     "tokenLabel": "Token",
     "tokenPlaceholder": "4-digit token",
     "submit": "Sign in",

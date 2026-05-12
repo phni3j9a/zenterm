@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
@@ -44,7 +45,7 @@ const initEnglish = () => {
 
 const loginAndGoToSettings = async (page: import('@playwright/test').Page, url: string, token: string) => {
   await page.goto(`${url}/web`);
-  await page.getByLabel(/Token/i).fill(token);
+  await fillOtp(page, token);
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible({ timeout: 5000 });
   await page.getByRole('button', { name: /settings tab/i }).click();

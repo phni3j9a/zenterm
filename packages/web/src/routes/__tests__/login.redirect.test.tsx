@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { LoginRoute } from '../login';
 import { useAuthStore } from '@/stores/auth';
@@ -10,6 +11,13 @@ vi.mock('@/api/client', () => ({
     async verifyToken() { return true; }
   },
 }));
+
+/** Paste a 4-digit token into the OTP input (fills all boxes). */
+async function pasteOtp(digits: string) {
+  const boxes = screen.getAllByRole('textbox') as HTMLInputElement[];
+  boxes[0].focus();
+  await userEvent.paste(digits);
+}
 
 function Wrap({ initial }: { initial: string }) {
   return (
@@ -32,8 +40,8 @@ describe('LoginRoute redirect preserve', () => {
 
   it('redirects to default /web/sessions when no state.from', async () => {
     render(<Wrap initial="/web/login" />);
-    fireEvent.change(screen.getByLabelText(/token/i), { target: { value: '4812' } });
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await pasteOtp('4812');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
     await waitFor(() => expect(screen.getByTestId('dest')).toHaveTextContent('sessions'));
   });
 
@@ -46,8 +54,8 @@ describe('LoginRoute redirect preserve', () => {
         </Routes>
       </MemoryRouter>,
     );
-    fireEvent.change(screen.getByLabelText(/token/i), { target: { value: '4812' } });
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await pasteOtp('4812');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
     await waitFor(() => expect(screen.getByTestId('dest')).toHaveTextContent('sessions/work'));
   });
 
@@ -60,8 +68,8 @@ describe('LoginRoute redirect preserve', () => {
         </Routes>
       </MemoryRouter>,
     );
-    fireEvent.change(screen.getByLabelText(/token/i), { target: { value: '4812' } });
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await pasteOtp('4812');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
     await waitFor(() => expect(screen.getByTestId('dest')).toHaveTextContent('sessions'));
   });
 });

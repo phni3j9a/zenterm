@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
@@ -62,7 +63,7 @@ test('creates a session through the sidebar UI', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByLabel(/Sessions panel/i)).toBeVisible();
 
@@ -92,7 +93,7 @@ test('renames a session through kebab menu', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByText('e2e_rename')).toBeVisible();
 
@@ -119,7 +120,7 @@ test('deletes a session through kebab → confirm', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /Sign in/i }).click();
   await expect(page.getByText('e2e_delete')).toBeVisible();
 

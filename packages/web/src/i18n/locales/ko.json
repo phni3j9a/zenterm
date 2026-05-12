@@ -25,6 +25,7 @@
   },
   "login": {
     "title": "ZenTerm에 로그인",
+    "tagline": "Connect to your tmux server from anywhere",
     "tokenLabel": "토큰",
     "tokenPlaceholder": "4자리 토큰",
     "submit": "로그인",

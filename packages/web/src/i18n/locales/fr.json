@@ -25,6 +25,7 @@
   },
   "login": {
     "title": "Se connecter à ZenTerm",
+    "tagline": "Connect to your tmux server from anywhere",
     "tokenLabel": "Jeton",
     "tokenPlaceholder": "Jeton à 4 chiffres",
     "submit": "Se connecter",

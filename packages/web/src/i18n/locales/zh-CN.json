@@ -25,6 +25,7 @@
   },
   "login": {
     "title": "登录 ZenTerm",
+    "tagline": "Connect to your tmux server from anywhere",
     "tokenLabel": "令牌",
     "tokenPlaceholder": "4 位令牌",
     "submit": "登录",

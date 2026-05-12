@@ -51,7 +51,11 @@ async function loginAndWait(page: import('@playwright/test').Page, path = '/web/
     }));
   });
   await page.goto(`${baseUrl}${path}`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  // Fill each OTP digit box individually (new OTP input design in Phase 6 G4)
+  const digits = TOKEN.split('');
+  for (let i = 0; i < digits.length; i++) {
+    await page.getByLabel(`Digit ${i + 1}`).fill(digits[i]);
+  }
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.locator('aside[role="complementary"]')).toBeVisible({ timeout: 5000 });
 }
@@ -65,7 +69,7 @@ test('a11y: login page (unauthenticated)', async ({ page }) => {
     }));
   });
   await page.goto(`${baseUrl}/web/login`);
-  await expect(page.getByLabel(/Token/i)).toBeVisible();
+  await expect(page.getByLabel('Digit 1')).toBeVisible();
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   const blocking = results.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious');
   expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);

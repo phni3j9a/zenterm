@@ -5,6 +5,13 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { LoginRoute } from '../login';
 import { useAuthStore } from '@/stores/auth';
 
+/** Paste a 4-digit token into the OTP input (fills all boxes). */
+async function pasteOtp(digits: string) {
+  const boxes = screen.getAllByRole('textbox') as HTMLInputElement[];
+  boxes[0].focus();
+  await userEvent.paste(digits);
+}
+
 describe('LoginRoute', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -32,7 +39,7 @@ describe('LoginRoute', () => {
         </Routes>
       </MemoryRouter>,
     );
-    await userEvent.type(screen.getByLabelText(/Token/i), '1234');
+    await pasteOtp('1234');
     await userEvent.click(screen.getByRole('button', { name: /Sign in/i }));
     expect(await screen.findByText('Sessions Screen')).toBeInTheDocument();
     expect(useAuthStore.getState().token).toBe('1234');
@@ -51,7 +58,7 @@ describe('LoginRoute', () => {
         </Routes>
       </MemoryRouter>,
     );
-    await userEvent.type(screen.getByLabelText(/Token/i), '0000');
+    await pasteOtp('0000');
     await userEvent.click(screen.getByRole('button', { name: /Sign in/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/Invalid token/i);
     expect(useAuthStore.getState().token).toBeNull();

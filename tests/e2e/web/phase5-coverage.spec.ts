@@ -15,6 +15,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fillOtp } from './helpers';
 
 let gateway: ChildProcess;
 let baseUrl: string;
@@ -87,7 +88,7 @@ async function loginAndWait(page: import('@playwright/test').Page, path = '/web/
     );
   });
   await page.goto(`${baseUrl}${path}`);
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.locator('aside[role="complementary"]')).toBeVisible({ timeout: 5000 });
 }
@@ -126,9 +127,9 @@ async function navigateToSession(
 
   // Authenticate if the login page appeared
   try {
-    const tokenInput = page.getByLabel(/Token/i);
-    await tokenInput.waitFor({ state: 'visible', timeout: 1500 });
-    await tokenInput.fill(TOKEN);
+    const digitOne = page.getByLabel('Digit 1');
+    await digitOne.waitFor({ state: 'visible', timeout: 1500 });
+    await fillOtp(page, TOKEN);
     await page.getByRole('button', { name: /sign in/i }).click();
     await expect(page.locator('aside[role="complementary"]')).toBeVisible({ timeout: 5000 });
   } catch {
@@ -319,7 +320,7 @@ test('URL hash fragment restores cols-2 layout on direct navigation', async ({ p
   await page.goto(`${baseUrl}/web/sessions/${encodeURIComponent(sidA)}${fragment}`);
 
   // Authenticate (fresh page, no auth in localStorage yet)
-  await page.getByLabel(/Token/i).fill(TOKEN);
+  await fillOtp(page, TOKEN);
   await page.getByRole('button', { name: /sign in/i }).click();
   await expect(page.locator('aside[role="complementary"]')).toBeVisible({ timeout: 5000 });
 

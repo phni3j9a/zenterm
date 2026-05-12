@@ -24,6 +24,7 @@
   },
   "login": {
     "title": "ZenTerm にサインイン",
+    "tagline": "どこからでも tmux サーバーに接続",
     "tokenLabel": "トークン",
     "tokenPlaceholder": "4桁のトークン",
     "submit": "サインイン",
