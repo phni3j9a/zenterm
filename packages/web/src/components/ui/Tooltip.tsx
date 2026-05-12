@@ -78,7 +78,9 @@ export function Tooltip({ label, children, placement = 'top' }: TooltipProps) {
       childProps.onBlur?.(ev);
       handleLeave();
     },
-    'aria-describedby': visible ? id : childProps['aria-describedby'],
+    'aria-describedby': visible
+      ? [childProps['aria-describedby'], id].filter(Boolean).join(' ') || undefined
+      : childProps['aria-describedby'],
   });
 
   return (

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { FileEntry } from '@zenterm/shared';
 import { useTheme } from '@/theme';
@@ -28,7 +29,14 @@ interface Props {
 export function FilesSidebarPanel({ client }: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const currentPath = useFilesStore((s) => s.currentPath);
+
+  const navigateTo = (path: string) => {
+    useFilesStore.getState().setCurrentPath(path);
+    const url = path === '~' ? '/web/files' : `/web/files${encodeURI(path).replace(/^\/+/, '/')}`;
+    navigate(url, { replace: true });
+  };
   const showHidden = useFilesStore((s) => s.showHidden);
   const loading = useFilesStore((s) => s.loading);
   const error = useFilesStore((s) => s.error);
@@ -199,7 +207,7 @@ export function FilesSidebarPanel({ client }: Props) {
 
     const proceed = () => {
       if (isDir) {
-        useFilesStore.getState().setCurrentPath(buildEntryPath(currentPath, entry.name));
+        navigateTo(buildEntryPath(currentPath, entry.name));
         return;
       }
       const kind = getPreviewKind(entry.name);
@@ -232,7 +240,7 @@ export function FilesSidebarPanel({ client }: Props) {
         onNewFile={() => setNewFileOpen(true)}
         onNewFolder={() => setMkdirOpen(true)}
       />
-      <FilesBreadcrumbs path={currentPath} onNavigate={(p) => useFilesStore.getState().setCurrentPath(p)} />
+      <FilesBreadcrumbs path={currentPath} onNavigate={(p) => navigateTo(p)} />
       {selectionMode && <FilesSelectionHeader />}
       {clipboard && <FilesPasteBar onPaste={doPaste} />}
       <div style={{ flex: 1, overflowY: 'auto' }}>

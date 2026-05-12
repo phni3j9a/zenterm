@@ -49,6 +49,46 @@ describe('useSettingsStore', () => {
   });
 });
 
+describe('settings — 8 languages support', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('accepts es language', () => {
+    useSettingsStore.getState().setLanguage('es');
+    expect(useSettingsStore.getState().language).toBe('es');
+  });
+
+  it('accepts ko language', () => {
+    useSettingsStore.getState().setLanguage('ko');
+    expect(useSettingsStore.getState().language).toBe('ko');
+  });
+
+  it('rehydrates with ja fallback when persisted language is invalid (current version)', () => {
+    localStorage.setItem(
+      'zenterm-web-settings',
+      JSON.stringify({
+        state: { themeMode: 'dark', language: 'xx-XX', fontSize: 14, autoCopyOnSelect: false },
+        version: 2,
+      }),
+    );
+    useSettingsStore.persist.rehydrate();
+    expect(useSettingsStore.getState().language).toBe('ja');
+  });
+
+  it('migrate (v1 → v2) falls back to ja for unknown language string', () => {
+    localStorage.setItem(
+      'zenterm-web-settings',
+      JSON.stringify({
+        state: { themeMode: 'dark', language: 'qq-QQ', fontSize: 16 },
+        version: 1,
+      }),
+    );
+    useSettingsStore.persist.rehydrate();
+    expect(useSettingsStore.getState().language).toBe('ja');
+  });
+});
+
 describe('useSettingsStore autoCopyOnSelect', () => {
   beforeEach(() => {
     window.localStorage.clear();

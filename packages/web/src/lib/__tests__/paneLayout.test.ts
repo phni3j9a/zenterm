@@ -6,6 +6,7 @@ import {
   DEFAULT_RATIOS,
   clampRatio,
   dropExtraPanes,
+  upgradeLayout,
 } from '../paneLayout';
 
 describe('paneLayout constants', () => {
@@ -125,4 +126,12 @@ describe('dropExtraPanes', () => {
     expect(result.panes).toEqual([]);
     expect(result.focusedIndex).toBe(0);
   });
+});
+
+describe('upgradeLayout', () => {
+  it('single → cols-2', () => expect(upgradeLayout('single')).toBe('cols-2'));
+  it('cols-2 → cols-3', () => expect(upgradeLayout('cols-2')).toBe('cols-3'));
+  it('cols-3 → grid-2x2', () => expect(upgradeLayout('cols-3')).toBe('grid-2x2'));
+  it('grid-2x2 → null (at max)', () => expect(upgradeLayout('grid-2x2')).toBeNull());
+  it('main-side-2 → null (custom layout, no upgrade)', () => expect(upgradeLayout('main-side-2')).toBeNull());
 });

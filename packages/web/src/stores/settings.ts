@@ -2,7 +2,27 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type Language = 'en' | 'ja';
+export type Language = 'en' | 'ja' | 'es' | 'fr' | 'de' | 'pt-BR' | 'zh-CN' | 'ko';
+
+export const SUPPORTED_LANGUAGES: readonly Language[] = ['en', 'ja', 'es', 'fr', 'de', 'pt-BR', 'zh-CN', 'ko'];
+
+export const LANGUAGE_LABELS: Record<Language, string> = {
+  ja: '日本語',
+  en: 'English',
+  es: 'Español',
+  fr: 'Français',
+  de: 'Deutsch',
+  'pt-BR': 'Português (BR)',
+  'zh-CN': '简体中文',
+  ko: '한국어',
+};
+
+function normalizeLanguage(value: unknown): Language {
+  if (typeof value !== 'string') return 'ja';
+  return (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
+    ? (value as Language)
+    : 'ja';
+}
 
 export const MIN_FONT_SIZE = 10;
 export const MAX_FONT_SIZE = 20;
@@ -61,17 +81,25 @@ export const useSettingsStore = create<SettingsState>()(
         if (version < 2) {
           return {
             themeMode: s.themeMode ?? 'system',
-            language: s.language ?? 'ja',
+            language: normalizeLanguage(s.language),
             fontSize: typeof s.fontSize === 'number' ? s.fontSize : DEFAULT_FONT_SIZE,
             autoCopyOnSelect: false,
           };
         }
         return {
           themeMode: s.themeMode ?? 'system',
-          language: s.language ?? 'ja',
+          language: normalizeLanguage(s.language),
           fontSize: typeof s.fontSize === 'number' ? s.fontSize : DEFAULT_FONT_SIZE,
           autoCopyOnSelect: s.autoCopyOnSelect ?? false,
         };
+      },
+      // onRehydrateStorage fires after migrate for the same-version path (where migrate
+      // is not called by zustand). Use setState() to properly notify subscribers instead
+      // of mutating state in-place.
+      onRehydrateStorage: () => (state) => {
+        if (state && !SUPPORTED_LANGUAGES.includes(state.language)) {
+          useSettingsStore.setState({ language: 'ja' });
+        }
       },
     },
   ),

@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { useFilesStore } from '@/stores/files';
@@ -39,7 +40,7 @@ describe('Files mutations flow', () => {
 
   it('mkdir from toolbar New menu', async () => {
     const client = makeClient();
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /^new/i }));
@@ -56,7 +57,7 @@ describe('Files mutations flow', () => {
 
   it('delete via context menu shows confirm and calls deleteFile on confirm', async () => {
     const client = makeClient();
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /a\.ts/ }));
@@ -69,7 +70,7 @@ describe('Files mutations flow', () => {
 
   it('rename via context menu opens dialog and calls renameFile', async () => {
     const client = makeClient();
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /a\.ts/ }));
@@ -87,7 +88,7 @@ describe('Files mutations flow', () => {
     const { useFilesPreviewStore } = await import('@/stores/filesPreview');
     useFilesPreviewStore.getState().selectFile('~/a.ts', 'a.ts', 'text');
 
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /a\.ts/ }));
@@ -102,7 +103,7 @@ describe('Files mutations flow', () => {
     const { useFilesPreviewStore } = await import('@/stores/filesPreview');
     useFilesPreviewStore.getState().selectFile('~/a.ts', 'a.ts', 'text');
 
-    render(<FilesSidebarPanel client={client as any} />);
+    render(<MemoryRouter initialEntries={['/web/files']}><FilesSidebarPanel client={client as any} /></MemoryRouter>);
     await waitFor(() => expect(screen.getByRole('button', { name: /a\.ts/ })).toBeInTheDocument());
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /a\.ts/ }));

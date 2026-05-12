@@ -18,8 +18,9 @@ import { useTheme } from '@/theme';
 import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
-import { SLOT_COUNT, type LayoutMode } from '@/lib/paneLayout';
-import { parseSessionRoute } from '@/lib/urlSync';
+import { SLOT_COUNT, upgradeLayout } from '@/lib/paneLayout';
+import { parseSessionRoute, buildSessionPath } from '@/lib/urlSync';
+import { decode as decodeFragment, encode as encodeFragment } from '@/lib/paneStateFragment';
 import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
@@ -40,6 +41,12 @@ export function AuthenticatedShell() {
   const pushToast = useUiStore((s) => s.pushToast);
   const currentLayout = usePaneStore((s) => s.layout);
 
+  // react-router-dom v7 useNavigateUnstable returns a new function reference
+  // whenever location changes. Storing in a ref prevents effects that close over
+  // navigate from re-running (and e.g. re-fetching) on every navigation.
+  const navigateFnRef = useRef(navigate);
+  navigateFnRef.current = navigate;
+
   useEventsSubscription();
 
   useEffect(() => {
@@ -52,7 +59,7 @@ export function AuthenticatedShell() {
         } catch (err) {
           if (err instanceof HttpError && err.status === 401) {
             logout();
-            navigate('/web/login', { replace: true });
+            navigateFnRef.current('/web/login', { replace: true });
           }
           throw err;
         }
@@ -65,7 +72,7 @@ export function AuthenticatedShell() {
       killWindow: base.killWindow.bind(base),
     };
     void useSessionsStore.getState().refetch(wrapped);
-  }, [token, gatewayUrl, logout, navigate]);
+  }, [token, gatewayUrl, logout]);
 
   const isSessionsRoute = location.pathname.startsWith('/web/sessions');
   useEffect(() => {
@@ -77,6 +84,7 @@ export function AuthenticatedShell() {
   }, [isSessionsRoute]);
 
   const lastSyncedPath = useRef<string | null>(null);
+  const lastSyncedHash = useRef<string | null>(null);
   useEffect(() => {
     if (lastSyncedPath.current === location.pathname) return;
     const parsed = parseSessionRoute(location.pathname);
@@ -103,6 +111,44 @@ export function AuthenticatedShell() {
     });
     lastSyncedPath.current = location.pathname;
   }, [location.pathname, sessions]);
+
+  // Hash → store sync: applies pane fragment from URL hash on mount / hash change.
+  // Runs after the path→store sync so it doesn't fight on initial render.
+  useEffect(() => {
+    if (lastSyncedHash.current === location.hash) return;
+    lastSyncedHash.current = location.hash;
+    if (!location.hash) return;
+    const parsed = decodeFragment(location.hash);
+    if (!parsed) return;
+    const store = usePaneStore.getState();
+    if (store.layout !== parsed.layout) store.setLayout(parsed.layout);
+    for (let i = 0; i < parsed.panes.length; i++) {
+      store.assignPane(i, parsed.panes[i]);
+    }
+  }, [location.hash]);
+
+  // Reverse sync: focused pane + pane state → URL (path + hash).
+  // Avoid loop with URL→store syncs by checking full desired URL before navigating.
+  // Only active on /web/sessions routes (Files / Settings tabs are untouched).
+  const layout = usePaneStore((s) => s.layout);
+  const allPanes = usePaneStore((s) => s.panes);
+  const focusedPane = usePaneStore((s) => s.panes[s.focusedIndex]);
+  useEffect(() => {
+    if (!isSessionsRoute) return;
+    if (!focusedPane) return;
+    const desiredPath = buildSessionPath(focusedPane.sessionId, focusedPane.windowIndex);
+    const isSinglePaneState =
+      layout === 'single' && allPanes.length === 1 && allPanes[0] !== null;
+    const desiredHash = isSinglePaneState
+      ? ''
+      : `#${encodeFragment({ layout, panes: allPanes })}`;
+    const desired = desiredPath + desiredHash;
+    const current = location.pathname + location.hash;
+    if (current === desired) return;
+    lastSyncedPath.current = desiredPath;
+    lastSyncedHash.current = desiredHash;
+    navigateFnRef.current(desired, { replace: true });
+  }, [focusedPane?.sessionId, focusedPane?.windowIndex, layout, allPanes, isSessionsRoute]);
 
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const openPalette = useLayoutStore((s) => s.openPalette);
@@ -147,7 +193,7 @@ export function AuthenticatedShell() {
           } catch (err) {
             if (err instanceof HttpError && err.status === 401) {
               logout();
-              navigate('/web/login', { replace: true });
+              navigateFnRef.current('/web/login', { replace: true });
             }
             throw err;
           }
@@ -164,7 +210,7 @@ export function AuthenticatedShell() {
   const handleAuthError = (err: unknown): boolean => {
     if (err instanceof HttpError && err.status === 401) {
       logout();
-      navigate('/web/login', { replace: true });
+      navigateFnRef.current('/web/login', { replace: true });
       return true;
     }
     return false;
@@ -262,17 +308,13 @@ export function AuthenticatedShell() {
     });
   };
 
-  const upgradeLayout = (current: LayoutMode): LayoutMode | null => {
-    if (current === 'single') return 'cols-2';
-    if (current === 'cols-2') return 'cols-3';
-    if (current === 'cols-3') return 'grid-2x2';
-    return null;
-  };
-
   const newPaneFromCurrent = () => {
     const state = usePaneStore.getState();
     const next = upgradeLayout(state.layout);
-    if (!next) return;
+    if (!next) {
+      pushToast({ type: 'info', message: t('terminal.newPaneLimit') });
+      return;
+    }
     state.setLayout(next);
     const fresh = usePaneStore.getState();
     const slotCount = SLOT_COUNT[next];

@@ -80,13 +80,19 @@ test('Sidebar drag resizer changes width and persists across reload', async ({ p
   expect(Math.abs((reloaded?.width ?? 0) - newWidth)).toBeLessThanOrEqual(2);
 });
 
-test('deep link /web/sessions/:id navigates without crash', async ({ page }) => {
-  // ※ 既存セッションが必須ではない。session が無くても URL parser がクラッシュしない + Sidebar が表示される、というスモークテスト。
-  // ログイン後は /web/sessions にリダイレクトされる (Phase 5 で redirect 先 preserve を実装予定)。
-  // ここでは: アプリがクラッシュせず Sidebar が表示されることを確認する。
-  await loginAndWait(page, '/web/sessions/ghost');
-  // Sidebar が正常に表示される (クラッシュしていない証明)
-  await expect(page.locator('aside[role="complementary"]')).toBeVisible();
-  // /web/sessions 配下の URL であること (ghost が存在しないため /web/sessions にフォールバック)
-  expect(page.url()).toContain('/web/sessions');
+test('deep link /web/sessions/:id redirects through login and lands on target', async ({ page }) => {
+  // Phase 5a の state.from preservation により、未認証で deep link を踏むと
+  // /web/login へ redirect → ログイン後に元の URL へ戻る。
+  await page.addInitScript(() => {
+    localStorage.setItem('zenterm-web-settings', JSON.stringify({
+      state: { themeMode: 'dark', language: 'en', fontSize: 14, autoCopyOnSelect: false },
+      version: 2,
+    }));
+  });
+  await page.goto(`${baseUrl}/web/sessions/work`);
+  await expect(page.getByLabel(/Token/i)).toBeVisible({ timeout: 5000 });
+  await page.getByLabel(/Token/i).fill(TOKEN);
+  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.waitForURL(/\/web\/sessions\/work/, { timeout: 5000 });
+  expect(page.url()).toContain('/web/sessions/work');
 });

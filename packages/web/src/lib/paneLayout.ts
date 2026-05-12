@@ -50,6 +50,13 @@ export interface DropExtraResult {
   focusedIndex: number;
 }
 
+export function upgradeLayout(current: LayoutMode): LayoutMode | null {
+  if (current === 'single') return 'cols-2';
+  if (current === 'cols-2') return 'cols-3';
+  if (current === 'cols-3') return 'grid-2x2';
+  return null;
+}
+
 export function dropExtraPanes(
   current: (PaneTarget | null)[],
   focusedIndex: number,

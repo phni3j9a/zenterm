@@ -18,6 +18,7 @@ export function SidebarResizer() {
   const pendingRef = useRef<number | null>(null);
   const moveHandlerRef = useRef<((e: PointerEvent) => void) | null>(null);
   const upHandlerRef = useRef<(() => void) | null>(null);
+  const handleRef = useRef<HTMLDivElement | null>(null);
 
   const commit = useCallback(() => {
     rafRef.current = null;
@@ -44,9 +45,12 @@ export function SidebarResizer() {
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     draggingRef.current = true;
+    const handle = handleRef.current;
+    const aside = handle?.closest('aside') ?? null;
+    const asideLeft = aside ? aside.getBoundingClientRect().left : 0;
     const onMove = (ev: PointerEvent) => {
       if (!draggingRef.current) return;
-      pendingRef.current = ev.clientX;
+      pendingRef.current = ev.clientX - asideLeft;
       if (rafRef.current === null) {
         rafRef.current = requestAnimationFrame(commit);
       }
@@ -81,6 +85,7 @@ export function SidebarResizer() {
 
   return (
     <div
+      ref={handleRef}
       role="separator"
       aria-orientation="vertical"
       aria-valuemin={SIDEBAR_WIDTH_MIN}

@@ -91,7 +91,8 @@
     "uploadProgress": "アップロード中 {{current}} ({{completed}}/{{total}})",
     "uploadDone": "{{count}} ファイルをアップロードしました",
     "uploadError": "アップロード失敗: {{message}}",
-    "uploadBusy": "別のアップロードが進行中です"
+    "uploadBusy": "別のアップロードが進行中です",
+    "newPaneLimit": "ペイン数の上限に達しました"
   },
   "validation": {
     "nameEmpty": "名前は必須です",
