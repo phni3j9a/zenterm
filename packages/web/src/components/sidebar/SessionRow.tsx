@@ -39,7 +39,7 @@ export function SessionRow({
   const [hover, setHover] = useState(false);
   const kebabRef = useRef<HTMLButtonElement | null>(null);
 
-  const hasWindows = (session.windows?.length ?? 0) > 1;
+  const hasWindows = (session.windows?.length ?? 0) > 0;
   const showKebab = hover || menuOpen;
 
   const stateDotColor = isActive

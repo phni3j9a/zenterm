@@ -23,6 +23,16 @@ const sessionNoWindows: TmuxSession = {
   windows: [],
 };
 
+const sessionSingleWindow: TmuxSession = {
+  name: 'zen_solo',
+  displayName: 'solo',
+  created: 1,
+  cwd: '/home/me',
+  windows: [
+    { index: 0, name: 'main', active: true, zoomed: false, paneCount: 1, cwd: '/home/me' },
+  ],
+};
+
 describe('SessionRow', () => {
   it('renders displayName and cwd', () => {
     render(
@@ -230,5 +240,39 @@ describe('SessionRow', () => {
       />,
     );
     expect(screen.getByTestId('session-row-chevron')).toBeInTheDocument();
+  });
+
+  it('renders chevron toggle even when session has a single window', () => {
+    render(
+      <SessionRow
+        session={sessionSingleWindow}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onSelect={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('session-row-chevron')).toBeInTheDocument();
+  });
+
+  it('does not render chevron toggle when session has zero windows', () => {
+    render(
+      <SessionRow
+        session={sessionNoWindows}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onSelect={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId('session-row-chevron')).toBeNull();
   });
 });
