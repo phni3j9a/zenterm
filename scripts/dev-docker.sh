@@ -5,13 +5,13 @@
 # the gateway's tmux side-effects stay isolated to the container.
 #
 # Usage:
-#   scripts/dev-docker.sh                       # default: token=dev1234, host:18766 → container:18765
+#   scripts/dev-docker.sh                       # default: token=1234, host:18766 → container:18765
 #   AUTH_TOKEN=4242 scripts/dev-docker.sh       # custom token
 #   ZENTERM_DEV_PORT=19000 scripts/dev-docker.sh  # custom host port
 #
 # Inside the container you can:
 #   - Open http://localhost:<ZENTERM_DEV_PORT>/web/login from the host browser
-#     and authenticate with $AUTH_TOKEN (default dev1234).
+#     and authenticate with $AUTH_TOKEN (default 1234).
 #   - Drop to a shell: docker exec -it $(docker ps -q -f ancestor=zenterm-e2e:latest) bash
 #
 # Notes:
@@ -27,7 +27,7 @@ cd "$(dirname "$0")/.."
 
 IMAGE_TAG="${ZENTERM_E2E_IMAGE:-zenterm-e2e:latest}"
 HOST_PORT="${ZENTERM_DEV_PORT:-18766}"
-TOKEN="${AUTH_TOKEN:-dev1234}"
+TOKEN="${AUTH_TOKEN:-1234}"
 
 if [[ "${ZENTERM_E2E_NO_BUILD:-0}" != "1" ]]; then
   echo "[dev-docker] Ensuring image $IMAGE_TAG is up to date…"
