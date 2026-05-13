@@ -2,10 +2,8 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import {
   type LayoutMode,
+  LAYOUT_MODES,
   SLOT_COUNT,
-  SPLITTER_COUNT,
-  DEFAULT_RATIOS,
-  clampRatio,
   dropExtraPanes,
 } from '@/lib/paneLayout';
 
@@ -18,35 +16,29 @@ interface PaneState {
   layout: LayoutMode;
   panes: (PaneTarget | null)[];
   focusedIndex: number;
-  ratios: Record<LayoutMode, number[]>;
   savedLayout: LayoutMode | null;
 
   setLayout: (mode: LayoutMode) => void;
   setFocusedIndex: (idx: number) => void;
   assignPane: (idx: number, target: PaneTarget | null) => void;
   openInFocusedPane: (target: PaneTarget) => void;
-  setRatio: (mode: LayoutMode, splitterIdx: number, value: number) => void;
   isOccupied: (target: PaneTarget, excludeIdx?: number) => boolean;
   suspendForSingle: () => void;
   resume: () => void;
 }
 
-function defaultRatiosClone(): Record<LayoutMode, number[]> {
-  return {
-    single: [...DEFAULT_RATIOS.single],
-    'cols-2': [...DEFAULT_RATIOS['cols-2']],
-    'cols-3': [...DEFAULT_RATIOS['cols-3']],
-    'grid-2x2': [...DEFAULT_RATIOS['grid-2x2']],
-    'main-side-2': [...DEFAULT_RATIOS['main-side-2']],
-  };
-}
-
-interface PersistedV1 {
+interface PersistedV2 {
   layout: LayoutMode;
   panes: (PaneTarget | null)[];
   focusedIndex: number;
-  ratios: Record<LayoutMode, number[]>;
   savedLayout: LayoutMode | null;
+}
+
+function isLayoutMode(value: unknown): value is LayoutMode {
+  return (
+    typeof value === 'string' &&
+    (LAYOUT_MODES as readonly string[]).includes(value)
+  );
 }
 
 export const usePaneStore = create<PaneState>()(
@@ -55,7 +47,6 @@ export const usePaneStore = create<PaneState>()(
       layout: 'single',
       panes: [null],
       focusedIndex: 0,
-      ratios: defaultRatiosClone(),
       savedLayout: null,
 
       setLayout: (mode) => {
@@ -91,14 +82,6 @@ export const usePaneStore = create<PaneState>()(
         get().assignPane(focusedIndex, target);
       },
 
-      setRatio: (mode, splitterIdx, value) => {
-        if (splitterIdx < 0 || splitterIdx >= SPLITTER_COUNT[mode]) return;
-        const { ratios } = get();
-        const nextForMode = ratios[mode].slice();
-        nextForMode[splitterIdx] = clampRatio(value);
-        set({ ratios: { ...ratios, [mode]: nextForMode } });
-      },
-
       isOccupied: (target, excludeIdx) => {
         const { panes } = get();
         return panes.some(
@@ -126,24 +109,25 @@ export const usePaneStore = create<PaneState>()(
     }),
     {
       name: 'zenterm-web-pane',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         layout: s.layout,
         panes: s.panes,
         focusedIndex: s.focusedIndex,
-        ratios: s.ratios,
         savedLayout: s.savedLayout,
       }),
-      migrate: (persisted, _version): PersistedV1 => {
-        const s = (persisted ?? {}) as Partial<PersistedV1>;
-        return {
-          layout: s.layout ?? 'single',
-          panes: Array.isArray(s.panes) ? s.panes : [null],
-          focusedIndex: typeof s.focusedIndex === 'number' ? s.focusedIndex : 0,
-          ratios: s.ratios ?? defaultRatiosClone(),
-          savedLayout: s.savedLayout ?? null,
+      migrate: (persisted, _version): PersistedV2 => {
+        const s = (persisted ?? {}) as Partial<PersistedV2> & {
+          // v1 fields (dropped in v2): ratios
+          ratios?: unknown;
         };
+        const layout = isLayoutMode(s.layout) ? s.layout : 'single';
+        const savedLayout = isLayoutMode(s.savedLayout) ? s.savedLayout : null;
+        const panes = Array.isArray(s.panes) ? s.panes : [null];
+        const focusedIndex =
+          typeof s.focusedIndex === 'number' ? s.focusedIndex : 0;
+        return { layout, panes, focusedIndex, savedLayout };
       },
     },
   ),

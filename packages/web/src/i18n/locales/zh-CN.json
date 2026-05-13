@@ -85,8 +85,7 @@
       "single": "单窗格",
       "cols2": "两列",
       "cols3": "三列",
-      "grid2x2": "2x2 网格",
-      "mainSide2": "主 + 2 侧"
+      "grid2x2": "2x2 网格"
     },
     "search": {
       "placeholder": "搜索…",

@@ -5,19 +5,11 @@ import { SLOT_COUNT } from '@/lib/paneLayout';
 const target = (id: string, w = 0) => ({ sessionId: id, windowIndex: w });
 
 beforeEach(() => {
-  // Reset persisted state to defaults
   window.localStorage.clear();
   usePaneStore.setState({
     layout: 'single',
     panes: [null],
     focusedIndex: 0,
-    ratios: {
-      single: [],
-      'cols-2': [0.5],
-      'cols-3': [1 / 3, 0.5],
-      'grid-2x2': [0.5, 0.5],
-      'main-side-2': [0.6, 0.5],
-    },
     savedLayout: null,
   });
 });
@@ -113,40 +105,6 @@ describe('isOccupied', () => {
   });
 });
 
-describe('setRatio', () => {
-  it('範囲内の値を保存', () => {
-    usePaneStore.getState().setRatio('cols-2', 0, 0.7);
-    expect(usePaneStore.getState().ratios['cols-2']).toEqual([0.7]);
-  });
-
-  it('範囲外は clamp', () => {
-    usePaneStore.getState().setRatio('cols-2', 0, 1.5);
-    expect(usePaneStore.getState().ratios['cols-2']).toEqual([0.9]);
-    usePaneStore.getState().setRatio('cols-2', 0, -0.5);
-    expect(usePaneStore.getState().ratios['cols-2']).toEqual([0.1]);
-  });
-
-  it('splitter idx が範囲外なら no-op', () => {
-    const before = usePaneStore.getState().ratios['cols-2'];
-    usePaneStore.getState().setRatio('cols-2', 5, 0.4);
-    expect(usePaneStore.getState().ratios['cols-2']).toEqual(before);
-  });
-
-  it('別モードの ratios には影響を与えない', () => {
-    const before = {
-      'cols-3': usePaneStore.getState().ratios['cols-3'].slice(),
-      'grid-2x2': usePaneStore.getState().ratios['grid-2x2'].slice(),
-      'main-side-2': usePaneStore.getState().ratios['main-side-2'].slice(),
-    };
-    usePaneStore.getState().setRatio('cols-2', 0, 0.75);
-    const after = usePaneStore.getState().ratios;
-    expect(after['cols-3']).toEqual(before['cols-3']);
-    expect(after['grid-2x2']).toEqual(before['grid-2x2']);
-    expect(after['main-side-2']).toEqual(before['main-side-2']);
-    expect(after['cols-2']).toEqual([0.75]);
-  });
-});
-
 describe('suspendForSingle / resume', () => {
   it('現 layout を savedLayout に退避し single に切替', () => {
     usePaneStore.getState().setLayout('cols-2');
@@ -158,7 +116,7 @@ describe('suspendForSingle / resume', () => {
     const s = usePaneStore.getState();
     expect(s.layout).toBe('single');
     expect(s.savedLayout).toBe('cols-2');
-    expect(s.panes).toEqual([target('b')]); // focused (idx=1) を残した
+    expect(s.panes).toEqual([target('b')]);
   });
 
   it('savedLayout を resume で復元', () => {
@@ -167,7 +125,6 @@ describe('suspendForSingle / resume', () => {
     usePaneStore.getState().assignPane(1, target('b'));
     usePaneStore.getState().setFocusedIndex(1);
     usePaneStore.getState().suspendForSingle();
-    // suspend 中に直接 layout を弄らない前提
     usePaneStore.getState().resume();
     const s = usePaneStore.getState();
     expect(s.layout).toBe('cols-2');
@@ -190,22 +147,21 @@ describe('suspendForSingle / resume', () => {
 });
 
 describe('persist round-trip', () => {
-  it('panes / layout / ratios が localStorage に書かれる', () => {
+  it('panes / layout が localStorage に書かれる', () => {
     usePaneStore.getState().setLayout('cols-2');
     usePaneStore.getState().assignPane(0, target('a'));
-    usePaneStore.getState().setRatio('cols-2', 0, 0.7);
     const raw = window.localStorage.getItem('zenterm-web-pane');
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw as string);
     expect(parsed.state.layout).toBe('cols-2');
     expect(parsed.state.panes[0]).toEqual(target('a'));
-    expect(parsed.state.ratios['cols-2']).toEqual([0.7]);
+    expect(parsed.state.ratios).toBeUndefined();
   });
 });
 
 describe('SLOT_COUNT contract', () => {
   it('setLayout 後の panes.length は SLOT_COUNT に一致', () => {
-    for (const mode of ['single', 'cols-2', 'cols-3', 'grid-2x2', 'main-side-2'] as const) {
+    for (const mode of ['single', 'cols-2', 'cols-3', 'grid-2x2'] as const) {
       usePaneStore.getState().setLayout(mode);
       expect(usePaneStore.getState().panes.length).toBe(SLOT_COUNT[mode]);
     }
@@ -213,8 +169,7 @@ describe('SLOT_COUNT contract', () => {
 });
 
 describe('persist hydration', () => {
-  it('seeded localStorage state is applied via migrate on next read', async () => {
-    // Seed a v1 persisted state directly
+  it('v1 永続化データ (ratios 付き) を migrate で v2 に変換し ratios を捨てる', async () => {
     window.localStorage.setItem(
       'zenterm-web-pane',
       JSON.stringify({
@@ -239,7 +194,6 @@ describe('persist hydration', () => {
         version: 1,
       }),
     );
-    // Trigger rehydration manually (zustand persist API)
     await usePaneStore.persist.rehydrate();
     const s = usePaneStore.getState();
     expect(s.layout).toBe('grid-2x2');
@@ -250,11 +204,29 @@ describe('persist hydration', () => {
       null,
     ]);
     expect(s.focusedIndex).toBe(2);
-    expect(s.ratios['grid-2x2']).toEqual([0.42, 0.58]);
+    expect((s as unknown as { ratios?: unknown }).ratios).toBeUndefined();
+  });
+
+  it('v1 永続化データで layout が削除済の main-side-2 なら single にフォールバック', async () => {
+    window.localStorage.setItem(
+      'zenterm-web-pane',
+      JSON.stringify({
+        state: {
+          layout: 'main-side-2',
+          panes: [null, null, null],
+          focusedIndex: 0,
+          ratios: {},
+          savedLayout: null,
+        },
+        version: 1,
+      }),
+    );
+    await usePaneStore.persist.rehydrate();
+    const s = usePaneStore.getState();
+    expect(s.layout).toBe('single');
   });
 
   it('migrate fills missing fields with defaults', async () => {
-    // Seed a corrupt/partial state (missing focusedIndex and ratios)
     window.localStorage.setItem(
       'zenterm-web-pane',
       JSON.stringify({
@@ -269,7 +241,6 @@ describe('persist hydration', () => {
     const s = usePaneStore.getState();
     expect(s.layout).toBe('cols-2');
     expect(s.focusedIndex).toBe(0);
-    expect(s.ratios['cols-2']).toEqual([0.5]);
     expect(s.savedLayout).toBeNull();
   });
 });

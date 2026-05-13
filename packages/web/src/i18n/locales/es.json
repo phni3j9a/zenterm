@@ -85,8 +85,7 @@
       "single": "Individual",
       "cols2": "2 columnas",
       "cols3": "3 columnas",
-      "grid2x2": "Cuadrícula 2x2",
-      "mainSide2": "Principal + 2 laterales"
+      "grid2x2": "Cuadrícula 2x2"
     },
     "search": {
       "placeholder": "Buscar…",

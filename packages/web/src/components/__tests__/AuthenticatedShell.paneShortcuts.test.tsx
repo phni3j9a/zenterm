@@ -78,7 +78,6 @@ describe('Pane focus shortcuts', () => {
         null, null,
       ],
       focusedIndex: 0,
-      ratios: { single: [], 'cols-2': [0.5], 'cols-3': [0.5, 0.5], 'grid-2x2': [0.5], 'main-side-2': [0.6, 0.5] },
       savedLayout: null,
     } as never);
   });

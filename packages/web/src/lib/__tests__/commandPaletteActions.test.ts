@@ -30,7 +30,7 @@ describe('buildCommandPaletteActions', () => {
     expect(ids).toContain('action:layout:cols-2');
     expect(ids).toContain('action:layout:cols-3');
     expect(ids).toContain('action:layout:grid-2x2');
-    expect(ids).toContain('action:layout:main-side-2');
+    expect(ids).not.toContain('action:layout:main-side-2');
     expect(ids).toContain('action:theme:light');
     expect(ids).toContain('action:theme:dark');
     expect(ids).toContain('action:theme:system');

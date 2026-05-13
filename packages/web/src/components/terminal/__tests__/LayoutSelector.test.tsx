@@ -15,26 +15,19 @@ beforeEach(() => {
     layout: 'single',
     panes: [null],
     focusedIndex: 0,
-    ratios: {
-      single: [],
-      'cols-2': [0.5],
-      'cols-3': [1 / 3, 0.5],
-      'grid-2x2': [0.5, 0.5],
-      'main-side-2': [0.6, 0.5],
-    },
     savedLayout: null,
   });
 });
 
 describe('LayoutSelector', () => {
-  it('ボタンクリックで 5 種のメニュー項目が出る', () => {
+  it('ボタンクリックで 4 種のメニュー項目が出る (main-side-2 は廃止)', () => {
     render(<LayoutSelector />);
     fireEvent.click(screen.getByRole('button', { name: /layout/i }));
     expect(screen.getByRole('menuitemradio', { name: /single/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitemradio', { name: /2 cols/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitemradio', { name: /3 cols/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitemradio', { name: /2x2/i })).toBeInTheDocument();
-    expect(screen.getByRole('menuitemradio', { name: /main \+ 2 side/i })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitemradio', { name: /main \+ 2 side/i })).toBeNull();
   });
 
   it('メニュー項目クリックで paneStore.setLayout が呼ばれる', () => {

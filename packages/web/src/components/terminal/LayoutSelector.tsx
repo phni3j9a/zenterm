@@ -10,7 +10,6 @@ const I18N_KEY: Record<LayoutMode, string> = {
   'cols-2': 'terminal.layout.cols2',
   'cols-3': 'terminal.layout.cols3',
   'grid-2x2': 'terminal.layout.grid2x2',
-  'main-side-2': 'terminal.layout.mainSide2',
 };
 
 export function LayoutSelector() {

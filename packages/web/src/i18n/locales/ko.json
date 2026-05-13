@@ -85,8 +85,7 @@
       "single": "단일",
       "cols2": "2열",
       "cols3": "3열",
-      "grid2x2": "2x2 격자",
-      "mainSide2": "주 + 보조 2"
+      "grid2x2": "2x2 격자"
     },
     "search": {
       "placeholder": "검색…",
