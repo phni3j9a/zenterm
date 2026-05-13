@@ -30,7 +30,10 @@ export function useTheme(): {
 
   useEffect(() => {
     document.documentElement.style.setProperty('--zen-focus-ring', tokens.colors.focusRing);
-  }, [tokens]);
+    document.documentElement.style.background = tokens.colors.bg;
+    document.body.style.background = tokens.colors.bg;
+    document.documentElement.style.colorScheme = resolvedTheme;
+  }, [tokens, resolvedTheme]);
 
   return { tokens, mode, resolvedTheme, setMode: setThemeMode };
 }
