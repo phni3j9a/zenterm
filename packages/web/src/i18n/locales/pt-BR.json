@@ -85,8 +85,7 @@
       "single": "Único",
       "cols2": "2 colunas",
       "cols3": "3 colunas",
-      "grid2x2": "Grade 2x2",
-      "mainSide2": "Principal + 2 laterais"
+      "grid2x2": "Grade 2x2"
     },
     "search": {
       "placeholder": "Pesquisar…",

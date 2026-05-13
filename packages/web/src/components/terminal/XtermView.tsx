@@ -29,6 +29,23 @@ import {
   parseServerMessage,
 } from '@/lib/terminalProtocol';
 
+// FitAddon は整数 cols/rows に丸めるため、xterm-screen がコンテナよりわずかに
+// 狭くなる。差分を左右パディングに均等に振って中央寄せする (モバイル版と同等)。
+function fitAndCenter(container: HTMLElement | null, fit: FitAddon | null): void {
+  if (!container || !fit) return;
+  container.style.paddingLeft = '';
+  container.style.paddingRight = '';
+  fit.fit();
+  const xtermScreen = container.querySelector<HTMLElement>('.xterm-screen');
+  if (!xtermScreen) return;
+  const remainder = container.clientWidth - xtermScreen.clientWidth;
+  if (remainder > 1) {
+    const pad = Math.floor(remainder / 2);
+    container.style.paddingLeft = `${pad}px`;
+    container.style.paddingRight = `${remainder - pad}px`;
+  }
+}
+
 export type TerminalStatus = 'connected' | 'disconnected' | 'error' | 'reconnecting';
 
 export interface ReconnectInfo {
@@ -131,7 +148,7 @@ export function XtermView({
     term.loadAddon(search);
 
     term.open(container);
-    fit.fit();
+    fitAndCenter(container, fit);
     termRef.current = term;
     fitRef.current = fit;
 
@@ -181,7 +198,7 @@ export function XtermView({
     term.options.theme = resolvedTheme === 'light' ? terminalColorsLight : terminalColorsDark;
     term.options.fontSize = fontSize;
     if (isVisibleRef.current) {
-      fitRef.current?.fit();
+      fitAndCenter(containerRef.current, fitRef.current);
     }
   }, [resolvedTheme, fontSize]);
 
@@ -284,7 +301,7 @@ export function XtermView({
     const fit = fitRef.current;
     if (!term || !fit) return;
     const raf = window.requestAnimationFrame(() => {
-      fit.fit();
+      fitAndCenter(containerRef.current, fit);
       term.refresh(0, term.rows - 1);
       if (isFocused) term.focus();
       const ws = wsRef.current;
@@ -322,7 +339,7 @@ export function XtermView({
         backoffRef.current.reset();
         onReconnectInfoRef.current?.(null);
         term.reset();
-        if (isVisibleRef.current) fitRef.current?.fit();
+        if (isVisibleRef.current) fitAndCenter(containerRef.current, fitRef.current);
         ws.send(encodeResize(term.cols, term.rows));
         lastSentSizeRef.current = { cols: term.cols, rows: term.rows };
         onStatusChangeRef.current('connected');
@@ -406,7 +423,7 @@ export function XtermView({
       const term = termRef.current;
       const ws = wsRef.current;
       if (!fit || !term) return;
-      fit.fit();
+      fitAndCenter(container, fit);
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(encodeResize(term.cols, term.rows));
         lastSentSizeRef.current = { cols: term.cols, rows: term.rows };
@@ -444,6 +461,7 @@ export function XtermView({
       style={{
         width: '100%',
         height: '100%',
+        boxSizing: 'border-box',
         background:
           resolvedTheme === 'light' ? terminalColorsLight.background : terminalColorsDark.background,
       }}

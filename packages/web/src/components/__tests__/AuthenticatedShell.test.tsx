@@ -122,13 +122,6 @@ describe('AuthenticatedShell', () => {
       layout: 'single',
       panes: [null],
       focusedIndex: 0,
-      ratios: {
-        single: [],
-        'cols-2': [0.5],
-        'cols-3': [1 / 3, 0.5],
-        'grid-2x2': [0.5, 0.5],
-        'main-side-2': [0.6, 0.5],
-      },
       savedLayout: null,
     });
     useSessionsStore.setState({
@@ -155,13 +148,6 @@ describe('AuthenticatedShell', () => {
       layout: 'single',
       panes: [null],
       focusedIndex: 0,
-      ratios: {
-        single: [],
-        'cols-2': [0.5],
-        'cols-3': [1 / 3, 0.5],
-        'grid-2x2': [0.5, 0.5],
-        'main-side-2': [0.6, 0.5],
-      },
       savedLayout: null,
     });
     useSessionsStore.setState({
@@ -196,13 +182,6 @@ describe('AuthenticatedShell', () => {
       layout: 'single',
       panes: [null],
       focusedIndex: 0,
-      ratios: {
-        single: [],
-        'cols-2': [0.5],
-        'cols-3': [1 / 3, 0.5],
-        'grid-2x2': [0.5, 0.5],
-        'main-side-2': [0.6, 0.5],
-      },
       savedLayout: null,
     });
     useSessionsStore.setState({
@@ -228,13 +207,6 @@ describe('AuthenticatedShell', () => {
       layout: 'cols-2',
       panes: [{ sessionId: 'a', windowIndex: 0 }, { sessionId: 'b', windowIndex: 0 }],
       focusedIndex: 0,
-      ratios: {
-        single: [],
-        'cols-2': [0.5],
-        'cols-3': [1 / 3, 0.5],
-        'grid-2x2': [0.5, 0.5],
-        'main-side-2': [0.6, 0.5],
-      },
       savedLayout: null,
     });
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({

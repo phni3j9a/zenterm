@@ -28,7 +28,6 @@ const LAYOUTS: { mode: LayoutMode; label: string }[] = [
   { mode: 'cols-2', label: '2 columns' },
   { mode: 'cols-3', label: '3 columns' },
   { mode: 'grid-2x2', label: '2x2 grid' },
-  { mode: 'main-side-2', label: 'Main + 2 side' },
 ];
 
 const THEMES: { mode: ThemeMode; label: string }[] = [
