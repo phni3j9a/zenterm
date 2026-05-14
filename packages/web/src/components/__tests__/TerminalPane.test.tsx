@@ -1,6 +1,22 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { useSettingsStore } from '@/stores/settings';
+import type { UploadProgressApi } from '@/hooks/useUploadProgress';
+
+function makeProgress(): UploadProgressApi {
+  return {
+    active: false,
+    total: 0,
+    completed: 0,
+    currentFile: undefined,
+    error: undefined,
+    begin: vi.fn(),
+    markStart: vi.fn(),
+    markDone: vi.fn(),
+    fail: vi.fn(),
+    finish: vi.fn(),
+  };
+}
 
 // Same xterm.js mocks as XtermView test — TerminalPane mounts XtermView
 vi.mock('@xterm/xterm', () => ({
@@ -98,6 +114,8 @@ describe('TerminalPane', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     expect(screen.getByText(/Select a session/i)).toBeInTheDocument();
@@ -113,6 +131,8 @@ describe('TerminalPane', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     expect(screen.getByText(/dev/)).toBeInTheDocument();
@@ -129,6 +149,8 @@ describe('TerminalPane', () => {
         paneIndex={0}
         isFocused
         isVisible={false}
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     const root = container.querySelector('section[data-terminal-root="true"]');
@@ -146,6 +168,8 @@ describe('TerminalPane', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     const root = container.querySelector('section[data-terminal-root="true"]');

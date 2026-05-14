@@ -4,6 +4,22 @@ import { useSessionsStore } from '@/stores/sessions';
 import { useSettingsStore } from '@/stores/settings';
 import { useUiStore } from '@/stores/ui';
 import { initI18n } from '@/i18n';
+import type { UploadProgressApi } from '@/hooks/useUploadProgress';
+
+function makeProgress(): UploadProgressApi {
+  return {
+    active: false,
+    total: 0,
+    completed: 0,
+    currentFile: undefined,
+    error: undefined,
+    begin: vi.fn(),
+    markStart: vi.fn(),
+    markDone: vi.fn(),
+    fail: vi.fn(),
+    finish: vi.fn(),
+  };
+}
 
 vi.mock('@/components/terminal/XtermView', () => ({
   XtermView: () => <div data-testid="mock-xterm" />,
@@ -51,6 +67,8 @@ describe('TerminalPane header integration', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     expect(screen.getByText('dev')).toBeInTheDocument();
@@ -72,6 +90,8 @@ describe('TerminalPane header integration', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     await act(async () => {
@@ -94,6 +114,8 @@ describe('TerminalPane header integration', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /increase font size/i }));
@@ -110,6 +132,8 @@ describe('TerminalPane header integration', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     expect(screen.getByRole('button', { name: /change layout/i })).toBeInTheDocument();
@@ -125,6 +149,8 @@ describe('TerminalPane header integration', () => {
         paneIndex={0}
         isFocused={false}
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     expect(screen.queryByRole('button', { name: /change layout/i })).toBeNull();

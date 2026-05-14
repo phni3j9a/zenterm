@@ -165,30 +165,6 @@ export function AuthenticatedShell() {
 
   const uploadProgress = useUploadProgress();
 
-  const handleTerminalDrop = async (files: File[], cwd: string): Promise<void> => {
-    if (!baseClient) return;
-    if (uploadProgress.active) {
-      pushToast({ type: 'error', message: t('terminal.uploadBusy') });
-      return;
-    }
-    uploadProgress.begin(files.length);
-    for (const file of files) {
-      uploadProgress.markStart(file.name);
-      try {
-        await baseClient.uploadFile(file, cwd);
-        uploadProgress.markDone();
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        uploadProgress.fail(msg);
-        pushToast({ type: 'error', message: t('terminal.uploadError', { message: msg }) });
-        setTimeout(() => uploadProgress.finish(), 3000);
-        return;
-      }
-    }
-    pushToast({ type: 'success', message: t('terminal.uploadDone', { count: files.length }) });
-    setTimeout(() => uploadProgress.finish(), 1500);
-  };
-
   const wrappedClient: SessionsApiClient | null = baseClient
     ? {
         listSessions: async () => {
@@ -455,14 +431,8 @@ export function AuthenticatedShell() {
             onSearch={() => useLayoutStore.getState().openSearch()}
             onNewPane={newPaneFromCurrent}
             canCreateNewPane={canCreateNewPane}
-            onDropFiles={handleTerminalDrop}
-            uploadProgress={{
-              active: uploadProgress.active,
-              total: uploadProgress.total,
-              completed: uploadProgress.completed,
-              currentFile: uploadProgress.currentFile,
-              error: uploadProgress.error,
-            }}
+            apiClient={baseClient}
+            uploadProgress={uploadProgress}
           />
           {isFilesRoute && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>

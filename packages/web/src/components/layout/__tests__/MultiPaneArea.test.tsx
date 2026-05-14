@@ -2,6 +2,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { usePaneStore } from '@/stores/pane';
 import { MultiPaneArea } from '../MultiPaneArea';
+import type { UploadProgressApi } from '@/hooks/useUploadProgress';
+
+function makeProgress(): UploadProgressApi {
+  return {
+    active: false,
+    total: 0,
+    completed: 0,
+    currentFile: undefined,
+    error: undefined,
+    begin: vi.fn(),
+    markStart: vi.fn(),
+    markDone: vi.fn(),
+    fail: vi.fn(),
+    finish: vi.fn(),
+  };
+}
 
 vi.mock('@/components/TerminalPane', () => ({
   TerminalPane: ({
@@ -36,7 +52,7 @@ beforeEach(() => {
 
 function renderArea(isVisible = true) {
   return render(
-    <MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={isVisible} />,
+    <MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={isVisible} apiClient={null} uploadProgress={makeProgress()} />,
   );
 }
 
@@ -110,7 +126,7 @@ describe('MultiPaneArea', () => {
     const beforeP0 = screen.getByTestId('pane-0');
     const beforeP1 = screen.getByTestId('pane-1');
     usePaneStore.getState().setFocusedIndex(1);
-    rerender(<MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={true} />);
+    rerender(<MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={true} apiClient={null} uploadProgress={makeProgress()} />);
     expect(screen.getByTestId('pane-0')).toBe(beforeP0);
     expect(screen.getByTestId('pane-1')).toBe(beforeP1);
   });

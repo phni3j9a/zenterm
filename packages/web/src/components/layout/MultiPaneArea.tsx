@@ -1,14 +1,9 @@
 import { type CSSProperties, type ReactNode } from 'react';
 import { TerminalPane } from '@/components/TerminalPane';
 import { usePaneStore } from '@/stores/pane';
-import { useSessionsStore } from '@/stores/sessions';
 import type { LayoutMode } from '@/lib/paneLayout';
-
-// NOTE: Layout switches cause TerminalPane to remount because the surrounding
-// grid structure changes. Within a given layout, focus changes preserve pane
-// identity. xterm scrollback is lost on layout switch and the terminal
-// reconnects via the WebSocket reconnect logic. tmux sessions are unaffected
-// (server-side state).
+import type { ApiClient } from '@/api/client';
+import type { UploadProgressApi } from '@/hooks/useUploadProgress';
 
 export interface MultiPaneAreaProps {
   gatewayUrl: string;
@@ -17,14 +12,8 @@ export interface MultiPaneAreaProps {
   onSearch?: () => void;
   onNewPane?: () => void;
   canCreateNewPane?: boolean;
-  onDropFiles?: (files: File[], cwd: string) => void;
-  uploadProgress?: {
-    active: boolean;
-    total: number;
-    completed: number;
-    currentFile?: string;
-    error?: string;
-  };
+  apiClient: ApiClient | null;
+  uploadProgress: UploadProgressApi;
 }
 
 const GRID_TEMPLATE: Record<LayoutMode, Pick<CSSProperties, 'gridTemplateColumns' | 'gridTemplateRows'>> = {
@@ -34,19 +23,23 @@ const GRID_TEMPLATE: Record<LayoutMode, Pick<CSSProperties, 'gridTemplateColumns
   'grid-2x2': { gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr' },
 };
 
-export function MultiPaneArea({ gatewayUrl, token, isVisible, onSearch, onNewPane, canCreateNewPane = false, onDropFiles, uploadProgress }: MultiPaneAreaProps) {
+export function MultiPaneArea({
+  gatewayUrl,
+  token,
+  isVisible,
+  onSearch,
+  onNewPane,
+  canCreateNewPane = false,
+  apiClient,
+  uploadProgress,
+}: MultiPaneAreaProps) {
   const layout = usePaneStore((s) => s.layout);
   const panes = usePaneStore((s) => s.panes);
   const focusedIndex = usePaneStore((s) => s.focusedIndex);
   const setFocusedIndex = usePaneStore((s) => s.setFocusedIndex);
-  const sessions = useSessionsStore((s) => s.sessions);
 
   const slot = (idx: number): ReactNode => {
     const pane = panes[idx];
-    const session = Array.isArray(sessions)
-      ? sessions.find((s) => s.displayName === pane?.sessionId)
-      : undefined;
-    const sessionCwd = session?.cwd;
     return (
       <div
         key={`pane-${idx}`}
@@ -64,8 +57,7 @@ export function MultiPaneArea({ gatewayUrl, token, isVisible, onSearch, onNewPan
           onSearch={onSearch}
           onNewPane={onNewPane}
           canCreateNewPane={canCreateNewPane}
-          sessionCwd={sessionCwd}
-          onDropFiles={onDropFiles}
+          apiClient={apiClient}
           uploadProgress={uploadProgress}
         />
       </div>

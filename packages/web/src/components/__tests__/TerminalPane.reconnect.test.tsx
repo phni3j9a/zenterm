@@ -1,5 +1,21 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent, screen, act } from '@testing-library/react';
+import type { UploadProgressApi } from '@/hooks/useUploadProgress';
+
+function makeProgress(): UploadProgressApi {
+  return {
+    active: false,
+    total: 0,
+    completed: 0,
+    currentFile: undefined,
+    error: undefined,
+    begin: vi.fn(),
+    markStart: vi.fn(),
+    markDone: vi.fn(),
+    fail: vi.fn(),
+    finish: vi.fn(),
+  };
+}
 
 const xtermProps: any[] = [];
 vi.mock('@/components/terminal/XtermView', () => ({
@@ -36,6 +52,8 @@ describe('TerminalPane Reconnect button', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     expect(screen.getByTestId('mock-xterm').getAttribute('data-nonce')).toBe('0');
@@ -51,6 +69,8 @@ describe('TerminalPane Reconnect button', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     // Force the status to "disconnected" by invoking the captured callback.
@@ -76,6 +96,8 @@ describe('TerminalPane Reconnect button', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     const last = xtermProps.at(-1);

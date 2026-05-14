@@ -2,6 +2,22 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, fireEvent, screen, act } from '@testing-library/react';
 import { useSettingsStore } from '@/stores/settings';
 import { initI18n } from '@/i18n';
+import type { UploadProgressApi } from '@/hooks/useUploadProgress';
+
+function makeProgress(): UploadProgressApi {
+  return {
+    active: false,
+    total: 0,
+    completed: 0,
+    currentFile: undefined,
+    error: undefined,
+    begin: vi.fn(),
+    markStart: vi.fn(),
+    markDone: vi.fn(),
+    fail: vi.fn(),
+    finish: vi.fn(),
+  };
+}
 
 const captured: any[] = [];
 vi.mock('@/components/terminal/XtermView', () => ({
@@ -44,6 +60,8 @@ describe('TerminalPane context menu', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     fireEvent.contextMenu(screen.getByTestId('mock-xterm'));
@@ -63,6 +81,8 @@ describe('TerminalPane context menu', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     const initialNonce = captured[0].reconnectNonce;
@@ -83,6 +103,8 @@ describe('TerminalPane context menu', () => {
         paneIndex={0}
         isFocused
         isVisible
+        apiClient={null}
+        uploadProgress={makeProgress()}
       />,
     );
     act(() => {
