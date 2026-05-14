@@ -24,13 +24,11 @@ vi.mock('@/components/TerminalPane', () => ({
     sessionId,
     paneIndex,
     isFocused,
-    isVisible,
-  }: { sessionId: string | null; paneIndex: number; isFocused: boolean; isVisible: boolean }) => (
+  }: { sessionId: string | null; paneIndex: number; isFocused: boolean }) => (
     <div
       data-testid={`pane-${paneIndex}`}
       data-session={sessionId ?? ''}
       data-focused={String(isFocused)}
-      data-visible={String(isVisible)}
     />
   ),
 }));
@@ -49,12 +47,11 @@ beforeEach(() => {
   });
 });
 
-function renderArea(isVisible = true) {
+function renderArea() {
   return render(
     <MultiPaneArea
       gatewayUrl="http://gw"
       token="tok"
-      isVisible={isVisible}
       apiClient={null}
       filesClient={null}
       uploadProgress={makeProgress()}
@@ -108,13 +105,6 @@ describe('MultiPaneArea', () => {
     expect(grid.style.gridTemplateRows).toBe('1fr 1fr');
   });
 
-  it('isVisible=false のとき全 pane が data-visible=false', () => {
-    usePaneStore.getState().setLayout('cols-2');
-    renderArea(false);
-    expect(screen.getByTestId('pane-0').getAttribute('data-visible')).toBe('false');
-    expect(screen.getByTestId('pane-1').getAttribute('data-visible')).toBe('false');
-  });
-
   it('pane クリックで focusedIndex が変わる', () => {
     usePaneStore.getState().setLayout('cols-2');
     usePaneStore.getState().setFocusedIndex(0);
@@ -136,7 +126,6 @@ describe('MultiPaneArea', () => {
       <MultiPaneArea
         gatewayUrl="http://gw"
         token="tok"
-        isVisible={true}
         apiClient={null}
         filesClient={null}
         uploadProgress={makeProgress()}

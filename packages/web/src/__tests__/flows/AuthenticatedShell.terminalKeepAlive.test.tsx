@@ -62,6 +62,7 @@ class MockWebSocket {
 
 import { AuthenticatedShell } from '@/components/AuthenticatedShell';
 import { useAuthStore } from '@/stores/auth';
+import { usePaneStore } from '@/stores/pane';
 import { useSessionViewStore } from '@/stores/sessionView';
 
 beforeEach(() => {
@@ -88,6 +89,13 @@ beforeEach(() => {
   });
   useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example.com:18765' });
   useSessionViewStore.setState({ activeSessionId: 'dev', activeWindowIndex: 0 });
+  // Seed the pane store so MultiPaneArea actually constructs a Terminal instance.
+  // Without this the focused pane is null and TerminalPane renders the empty state.
+  usePaneStore.setState({
+    layout: 'single',
+    panes: [{ kind: 'terminal', sessionId: 'dev', windowIndex: 0 }],
+    focusedIndex: 0,
+  });
 });
 
 describe('AuthenticatedShell terminal keep-alive', () => {

@@ -78,7 +78,12 @@ import { usePaneStore } from '@/stores/pane';
 
 function LocationProbe() {
   const loc = useLocation();
-  return <div data-testid="pathname">{loc.pathname}</div>;
+  return (
+    <>
+      <div data-testid="pathname">{loc.pathname}</div>
+      <div data-testid="hash">{loc.hash}</div>
+    </>
+  );
 }
 
 describe('AuthenticatedShell URL reverse sync', () => {
@@ -124,7 +129,7 @@ describe('AuthenticatedShell URL reverse sync', () => {
     }));
   });
 
-  it('pushes URL to /web/sessions/:id when focused pane is assigned (window 0)', async () => {
+  it('leaves hash empty for single layout with one filled pane (no fragment needed)', async () => {
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
         <AuthenticatedShell />
@@ -132,13 +137,14 @@ describe('AuthenticatedShell URL reverse sync', () => {
       </MemoryRouter>,
     );
     await act(async () => {
-      usePaneStore.getState().assignPane(0, { sessionId: 'dev', windowIndex: 0 });
+      usePaneStore.getState().assignPane(0, { kind: 'terminal', sessionId: 'dev', windowIndex: 0 });
       await new Promise((r) => setTimeout(r, 10));
     });
-    expect(screen.getByTestId('pathname').textContent).toBe('/web/sessions/dev');
+    expect(screen.getByTestId('pathname').textContent).toBe('/web/sessions');
+    expect(screen.getByTestId('hash').textContent).toBe('');
   });
 
-  it('pushes URL to /web/sessions/:id/window/:idx when windowIndex > 0', async () => {
+  it('writes pane fragment into URL hash when layout becomes multi-pane', async () => {
     render(
       <MemoryRouter initialEntries={['/web/sessions']}>
         <AuthenticatedShell />
@@ -146,13 +152,16 @@ describe('AuthenticatedShell URL reverse sync', () => {
       </MemoryRouter>,
     );
     await act(async () => {
-      usePaneStore.getState().assignPane(0, { sessionId: 'dev', windowIndex: 2 });
+      usePaneStore.getState().setLayout('cols-2');
+      usePaneStore.getState().assignPane(0, { kind: 'terminal', sessionId: 'dev', windowIndex: 0 });
+      usePaneStore.getState().assignPane(1, { kind: 'terminal', sessionId: 'dev', windowIndex: 2 });
       await new Promise((r) => setTimeout(r, 10));
     });
-    expect(screen.getByTestId('pathname').textContent).toBe('/web/sessions/dev/window/2');
+    expect(screen.getByTestId('pathname').textContent).toBe('/web/sessions');
+    expect(screen.getByTestId('hash').textContent).toBe('#l=cols-2&p=t:dev.0,t:dev.2');
   });
 
-  it('does not push URL when not on /web/sessions route', async () => {
+  it('keeps path unchanged on /web/files when pane is reassigned (path is router-only)', async () => {
     render(
       <MemoryRouter initialEntries={['/web/files']}>
         <AuthenticatedShell />
@@ -160,7 +169,7 @@ describe('AuthenticatedShell URL reverse sync', () => {
       </MemoryRouter>,
     );
     await act(async () => {
-      usePaneStore.getState().assignPane(0, { sessionId: 'dev', windowIndex: 0 });
+      usePaneStore.getState().assignPane(0, { kind: 'terminal', sessionId: 'dev', windowIndex: 0 });
       await new Promise((r) => setTimeout(r, 10));
     });
     expect(screen.getByTestId('pathname').textContent).toBe('/web/files');

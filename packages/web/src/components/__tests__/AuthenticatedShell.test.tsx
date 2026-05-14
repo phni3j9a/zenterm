@@ -88,10 +88,16 @@ describe('AuthenticatedShell', () => {
     expect(screen.getAllByLabelText(/Sessions/i).length).toBeGreaterThan(0);
   });
 
-  it('keeps TerminalPane mounted (hidden) when navigated to /web/files', async () => {
+  it('keeps MultiPaneArea mounted (visible) when navigated to /web/files', async () => {
     useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
     useFilesStore.getState().reset();
     useSessionViewStore.setState({ activeSessionId: 'dev', activeWindowIndex: 0 });
+    const { usePaneStore } = await import('@/stores/pane');
+    usePaneStore.setState({
+      layout: 'single',
+      panes: [{ kind: 'terminal', sessionId: 'dev', windowIndex: 0 }],
+      focusedIndex: 0,
+    });
     // FilesSidebarPanel + FilesList expect a FileListResponse shape on /web/files.
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
@@ -109,120 +115,16 @@ describe('AuthenticatedShell', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    // TerminalPane real (non-empty-state) root must exist with display:none.
+    // After the unified-pane refactor MultiPaneArea is always rendered (no longer
+    // hidden by /web/files overlay). TerminalPane root must exist and be visible.
     const terminalRoot = container.querySelector('section[data-terminal-root="true"]');
     expect(terminalRoot).not.toBeNull();
-    expect((terminalRoot as HTMLElement).style.display).toBe('none');
+    expect((terminalRoot as HTMLElement).style.display).not.toBe('none');
   });
 
-  it('opens session from /web/sessions/:id URL', async () => {
-    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
-    const { usePaneStore } = await import('@/stores/pane');
-    usePaneStore.setState({
-      layout: 'single',
-      panes: [null],
-      focusedIndex: 0,
-      savedLayout: null,
-    });
-    useSessionsStore.setState({
-      sessions: [
-        { name: 'zen_work', displayName: 'work', created: 0, cwd: '~', windows: [{ index: 0, name: 'bash', active: true, zoomed: false, paneCount: 1, cwd: '~' }] },
-        { name: 'zen_play', displayName: 'play', created: 0, cwd: '~', windows: [{ index: 0, name: 'bash', active: true, zoomed: false, paneCount: 1, cwd: '~' }] },
-      ],
-      loading: false,
-      error: null,
-    });
-    render(
-      <MemoryRouter initialEntries={['/web/sessions/work']}>
-        <AuthenticatedShell />
-      </MemoryRouter>,
-    );
-    await act(async () => { await Promise.resolve(); });
-    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'work', windowIndex: 0 });
-  });
-
-  it('opens specific window from /web/sessions/:id/window/:index', async () => {
-    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
-    const { usePaneStore } = await import('@/stores/pane');
-    usePaneStore.setState({
-      layout: 'single',
-      panes: [null],
-      focusedIndex: 0,
-      savedLayout: null,
-    });
-    useSessionsStore.setState({
-      sessions: [
-        {
-          name: 'zen_work',
-          displayName: 'work',
-          created: 0,
-          cwd: '~',
-          windows: [
-            { index: 0, name: 'bash', active: false, zoomed: false, paneCount: 1, cwd: '~' },
-            { index: 2, name: 'vim', active: true, zoomed: false, paneCount: 1, cwd: '~' },
-          ],
-        },
-      ],
-      loading: false,
-      error: null,
-    });
-    render(
-      <MemoryRouter initialEntries={['/web/sessions/work/window/2']}>
-        <AuthenticatedShell />
-      </MemoryRouter>,
-    );
-    await act(async () => { await Promise.resolve(); });
-    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'work', windowIndex: 2 });
-  });
-
-  it('ignores URL whose session does not exist', async () => {
-    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
-    const { usePaneStore } = await import('@/stores/pane');
-    usePaneStore.setState({
-      layout: 'single',
-      panes: [null],
-      focusedIndex: 0,
-      savedLayout: null,
-    });
-    useSessionsStore.setState({
-      sessions: [
-        { name: 'zen_work', displayName: 'work', created: 0, cwd: '~', windows: [{ index: 0, name: 'bash', active: true, zoomed: false, paneCount: 1, cwd: '~' }] },
-      ],
-      loading: false,
-      error: null,
-    });
-    render(
-      <MemoryRouter initialEntries={['/web/sessions/ghost']}>
-        <AuthenticatedShell />
-      </MemoryRouter>,
-    );
-    await act(async () => { await Promise.resolve(); });
-    expect(usePaneStore.getState().panes[0]).toBeNull();
-  });
-
-  it('suspends current layout to single when route leaves /web/sessions', async () => {
-    useAuthStore.setState({ token: 'tok', gatewayUrl: 'http://example' });
-    const { usePaneStore } = await import('@/stores/pane');
-    usePaneStore.setState({
-      layout: 'cols-2',
-      panes: [{ sessionId: 'a', windowIndex: 0 }, { sessionId: 'b', windowIndex: 0 }],
-      focusedIndex: 0,
-      savedLayout: null,
-    });
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      headers: new Headers({ 'Content-Type': 'application/json' }),
-      json: async () => ({ entries: [], path: '~' }),
-      text: async () => '{"entries":[],"path":"~"}',
-    }));
-    render(
-      <MemoryRouter initialEntries={['/web/files']}>
-        <AuthenticatedShell />
-      </MemoryRouter>,
-    );
-    await act(async () => { await Promise.resolve(); });
-    expect(usePaneStore.getState().layout).toBe('single');
-    expect(usePaneStore.getState().savedLayout).toBe('cols-2');
-  });
+  // Note: path→store sync ("opens session from /web/sessions/:id URL" / window
+  // variants, "ignores URL whose session does not exist") was removed when the
+  // unified-pane refactor relocated URL state to the hash fragment. URL-based
+  // legacy redirects are reintroduced in Task 10. Layout suspend/resume on tab
+  // switch was also removed (panes are now kept mounted across all tabs).
 });

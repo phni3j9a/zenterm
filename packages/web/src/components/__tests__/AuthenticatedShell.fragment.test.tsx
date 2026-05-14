@@ -116,8 +116,8 @@ describe('AuthenticatedShell URL hash → paneStore sync', () => {
     const s = usePaneStore.getState();
     expect(s.layout).toBe('cols-2');
     expect(s.panes).toEqual([
-      { sessionId: 'a', windowIndex: 0 },
-      { sessionId: 'b', windowIndex: 0 },
+      { kind: 'terminal', sessionId: 'a', windowIndex: 0 },
+      { kind: 'terminal', sessionId: 'b', windowIndex: 0 },
     ]);
   });
 

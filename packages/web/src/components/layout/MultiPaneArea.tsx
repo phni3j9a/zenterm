@@ -10,7 +10,6 @@ import type { UploadProgressApi } from '@/hooks/useUploadProgress';
 export interface MultiPaneAreaProps {
   gatewayUrl: string;
   token: string;
-  isVisible: boolean;
   onSearch?: () => void;
   onNewPane?: () => void;
   canCreateNewPane?: boolean;
@@ -30,7 +29,6 @@ const GRID_TEMPLATE: Record<LayoutMode, Pick<CSSProperties, 'gridTemplateColumns
 export function MultiPaneArea({
   gatewayUrl,
   token,
-  isVisible,
   onSearch,
   onNewPane,
   canCreateNewPane = false,
@@ -79,7 +77,7 @@ export function MultiPaneArea({
         windowIndex={windowIndex}
         paneIndex={idx}
         isFocused={idx === focusedIndex}
-        isVisible={isVisible}
+        isVisible={true}
         onSearch={onSearch}
         onNewPane={onNewPane}
         canCreateNewPane={canCreateNewPane}

@@ -6,7 +6,6 @@ import { Sidebar } from '@/components/Sidebar';
 import { LeftRail } from '@/components/LeftRail';
 import type { ShellTab } from '@/components/LeftRail';
 import { MultiPaneArea } from '@/components/layout/MultiPaneArea';
-import { FilesViewerPane } from '@/components/files/FilesViewerPane';
 import type { FilesApiClient } from '@/components/files/filesApi';
 import { ApiClient } from '@/api/client';
 import { HttpError } from '@/api/errors';
@@ -22,7 +21,6 @@ import { useRateLimitsWarning } from '@/hooks/useRateLimitsWarning';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
 import { SLOT_COUNT, upgradeLayout } from '@/lib/paneLayout';
-import { parseSessionRoute, buildSessionPath } from '@/lib/urlSync';
 import { decode as decodeFragment, encode as encodeFragment } from '@/lib/paneStateFragment';
 import { CommandPalette } from './CommandPalette';
 
@@ -78,46 +76,9 @@ export function AuthenticatedShell() {
     void useSessionsStore.getState().refetch(wrapped);
   }, [token, gatewayUrl, logout]);
 
-  const isSessionsRoute = location.pathname.startsWith('/web/sessions');
-  useEffect(() => {
-    if (isSessionsRoute) {
-      usePaneStore.getState().resume();
-    } else {
-      usePaneStore.getState().suspendForSingle();
-    }
-  }, [isSessionsRoute]);
-
-  const lastSyncedPath = useRef<string | null>(null);
   const lastSyncedHash = useRef<string | null>(null);
-  useEffect(() => {
-    if (lastSyncedPath.current === location.pathname) return;
-    const parsed = parseSessionRoute(location.pathname);
-    if (!parsed) {
-      lastSyncedPath.current = location.pathname;
-      return;
-    }
-    if (!Array.isArray(sessions) || sessions.length === 0) {
-      return;
-    }
-    const exists = sessions.some((s) => s.displayName === parsed.sessionId);
-    if (!exists) {
-      lastSyncedPath.current = location.pathname;
-      return;
-    }
-    const sess = sessions.find((s) => s.displayName === parsed.sessionId);
-    const wins = sess?.windows ?? [];
-    const targetIdx = wins.some((w) => w.index === parsed.windowIndex)
-      ? parsed.windowIndex
-      : wins[0]?.index ?? parsed.windowIndex;
-    usePaneStore.getState().openInFocusedPane({
-      sessionId: parsed.sessionId,
-      windowIndex: targetIdx,
-    });
-    lastSyncedPath.current = location.pathname;
-  }, [location.pathname, sessions]);
 
   // Hash → store sync: applies pane fragment from URL hash on mount / hash change.
-  // Runs after the path→store sync so it doesn't fight on initial render.
   useEffect(() => {
     if (lastSyncedHash.current === location.hash) return;
     lastSyncedHash.current = location.hash;
@@ -131,28 +92,22 @@ export function AuthenticatedShell() {
     }
   }, [location.hash]);
 
-  // Reverse sync: focused pane + pane state → URL (path + hash).
-  // Avoid loop with URL→store syncs by checking full desired URL before navigating.
-  // Only active on /web/sessions routes (Files / Settings tabs are untouched).
+  // Store → URL sync: write pane state into URL hash. Path is left untouched
+  // so tab switching (sessions / files / settings) is purely a router concern.
   const layout = usePaneStore((s) => s.layout);
   const allPanes = usePaneStore((s) => s.panes);
-  const focusedPane = usePaneStore((s) => s.panes[s.focusedIndex]);
   useEffect(() => {
-    if (!isSessionsRoute) return;
-    if (!focusedPane) return;
-    const desiredPath = buildSessionPath(focusedPane.sessionId, focusedPane.windowIndex);
     const isSinglePaneState =
       layout === 'single' && allPanes.length === 1 && allPanes[0] !== null;
     const desiredHash = isSinglePaneState
       ? ''
       : `#${encodeFragment({ layout, panes: allPanes })}`;
-    const desired = desiredPath + desiredHash;
+    const desired = location.pathname + desiredHash;
     const current = location.pathname + location.hash;
     if (current === desired) return;
-    lastSyncedPath.current = desiredPath;
     lastSyncedHash.current = desiredHash;
     navigateFnRef.current(desired, { replace: true });
-  }, [focusedPane?.sessionId, focusedPane?.windowIndex, layout, allPanes, isSessionsRoute]);
+  }, [layout, allPanes, location.pathname, location.hash]);
 
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const openPalette = useLayoutStore((s) => s.openPalette);
@@ -370,8 +325,6 @@ export function AuthenticatedShell() {
 
   const canCreateNewPane = upgradeLayout(currentLayout) !== null;
 
-  const isFilesRoute = location.pathname.startsWith('/web/files');
-
   const activeTab: ShellTab = location.pathname.startsWith('/web/settings')
     ? 'settings'
     : location.pathname.startsWith('/web/files')
@@ -427,7 +380,6 @@ export function AuthenticatedShell() {
           <MultiPaneArea
             gatewayUrl={gatewayUrl}
             token={token}
-            isVisible={!isFilesRoute}
             onSearch={() => useLayoutStore.getState().openSearch()}
             onNewPane={newPaneFromCurrent}
             canCreateNewPane={canCreateNewPane}
@@ -439,11 +391,6 @@ export function AuthenticatedShell() {
               navigateFnRef.current('/web/login', { replace: true });
             }}
           />
-          {isFilesRoute && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
-              <FilesViewerPane client={filesClient} token={token} />
-            </div>
-          )}
         </div>
       </div>
       <CommandPalette />
