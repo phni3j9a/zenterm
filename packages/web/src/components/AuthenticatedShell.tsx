@@ -22,6 +22,7 @@ import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
 import { SLOT_COUNT, upgradeLayout } from '@/lib/paneLayout';
 import { decode as decodeFragment, encode as encodeFragment } from '@/lib/paneStateFragment';
+import { parseSessionRoute } from '@/lib/urlSync';
 import { CommandPalette } from './CommandPalette';
 
 export function AuthenticatedShell() {
@@ -77,6 +78,25 @@ export function AuthenticatedShell() {
   }, [token, gatewayUrl, logout]);
 
   const lastSyncedHash = useRef<string | null>(null);
+
+  // Legacy URL migration: absorb /web/sessions/:id/window/:idx exactly once on
+  // mount, hydrate the focused pane with terminal kind, and rewrite the path to
+  // /web/sessions (preserving any hash fragment). Subsequent navigations do not
+  // re-run this — pane state is the source of truth and the path stays static.
+  const didLegacyMigrationRef = useRef(false);
+  useEffect(() => {
+    if (didLegacyMigrationRef.current) return;
+    didLegacyMigrationRef.current = true;
+    const parsed = parseSessionRoute(location.pathname);
+    if (!parsed) return;
+    usePaneStore.getState().openInFocusedPane({
+      kind: 'terminal',
+      sessionId: parsed.sessionId,
+      windowIndex: parsed.windowIndex,
+    });
+    navigateFnRef.current('/web/sessions' + location.hash, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Hash → store sync: applies pane fragment from URL hash on mount / hash change.
   useEffect(() => {
