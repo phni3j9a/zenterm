@@ -5,6 +5,7 @@ import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { useFilesStore } from '@/stores/files';
 import { useFilesPreviewStore } from '@/stores/filesPreview';
+import { usePaneStore } from '@/stores/pane';
 import { FilesSidebarPanel } from '../FilesSidebarPanel';
 
 const renderInRouter = (ui: React.ReactElement) =>
@@ -29,6 +30,11 @@ describe('FilesSidebarPanel', () => {
   beforeEach(() => {
     useFilesStore.getState().reset();
     useFilesPreviewStore.getState().clear();
+    usePaneStore.setState({
+      layout: 'single',
+      panes: [null],
+      focusedIndex: 0,
+    });
   });
 
   it('on mount fetches the current path and renders entries', async () => {
@@ -48,13 +54,14 @@ describe('FilesSidebarPanel', () => {
     await waitFor(() => expect(client.listFiles).toHaveBeenLastCalledWith('~/src', false));
   });
 
-  it('clicking a text file selects it in preview store', async () => {
+  it('ファイル行クリックで pane store の focused pane に file ターゲットが入る', async () => {
     const client = makeClient();
     renderInRouter(<FilesSidebarPanel client={client as any} />);
     await waitFor(() => expect(screen.getByRole('button', { name: /README\.md/ })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /README\.md/ }));
-    expect(useFilesPreviewStore.getState().selectedName).toBe('README.md');
-    expect(useFilesPreviewStore.getState().selectedKind).toBe('markdown');
+    const state = usePaneStore.getState();
+    const pane = state.panes[state.focusedIndex];
+    expect(pane).toEqual({ kind: 'file', path: '~/README.md' });
   });
 
   it('breadcrumb home click resets to ~', async () => {
@@ -67,23 +74,4 @@ describe('FilesSidebarPanel', () => {
     await waitFor(() => expect(client.listFiles).toHaveBeenLastCalledWith('~', false));
   });
 
-  it('shows unsaved-changes confirm when switching while dirty', async () => {
-    const client = makeClient();
-    renderInRouter(<FilesSidebarPanel client={client as any} />);
-    await waitFor(() => expect(screen.getByRole('button', { name: /README\.md/ })).toBeInTheDocument());
-
-    // Simulate dirty edit state on a different file
-    useFilesPreviewStore.getState().selectFile('~/other.ts', 'other.ts', 'text');
-    useFilesPreviewStore.getState().setText('a', 1, false);
-    useFilesPreviewStore.getState().startEditing();
-    useFilesPreviewStore.getState().setEditContent('changed');
-
-    // Click README.md in the list
-    fireEvent.click(screen.getByRole('button', { name: /README\.md/ }));
-
-    // The confirm dialog should be queued
-    const { useUiStore } = await import('@/stores/ui');
-    expect(useUiStore.getState().confirmDialog).not.toBeNull();
-    expect(useUiStore.getState().confirmDialog?.title).toMatch(/unsaved/i);
-  });
 });

@@ -7,6 +7,7 @@ import { useTheme } from '@/theme';
 import { useFilesStore } from '@/stores/files';
 import type { FilesClipboard } from '@/stores/files';
 import { useFilesPreviewStore } from '@/stores/filesPreview';
+import { usePaneStore } from '@/stores/pane';
 import { useUiStore } from '@/stores/ui';
 import { buildEntryPath } from '@/lib/filesPath';
 import { getPreviewKind } from '@/lib/filesIcon';
@@ -196,38 +197,18 @@ export function FilesSidebarPanel({ client }: Props) {
   };
 
   const handleOpen = (entry: FileEntry) => {
-    // In selection mode, clicking a row toggles selection instead of opening
     if (useFilesStore.getState().selectionMode) {
       useFilesStore.getState().toggleSelection(entry.name);
       return;
     }
-
     const isDir = entry.type === 'directory'
       || (entry.type === 'symlink' && entry.resolvedType === 'directory');
-
-    const proceed = () => {
-      if (isDir) {
-        navigateTo(buildEntryPath(currentPath, entry.name));
-        return;
-      }
-      const kind = getPreviewKind(entry.name);
-      useFilesPreviewStore.getState().selectFile(buildEntryPath(currentPath, entry.name), entry.name, kind);
-    };
-
-    const isDirty = useFilesPreviewStore.getState().isDirty;
-    if (isDirty) {
-      useUiStore.getState().showConfirm({
-        title: t('files.unsavedChangesTitle'),
-        message: t('files.unsavedChangesMessage'),
-        destructive: true,
-        onConfirm: () => {
-          useFilesPreviewStore.getState().cancelEditing();
-          proceed();
-        },
-      });
+    if (isDir) {
+      navigateTo(buildEntryPath(currentPath, entry.name));
       return;
     }
-    proceed();
+    const path = buildEntryPath(currentPath, entry.name);
+    usePaneStore.getState().openInFocusedPane({ kind: 'file', path });
   };
 
   return (
