@@ -26,7 +26,6 @@ export function FilePaneViewer({ path, client, token, onClose }: Props) {
   const [textContent, setTextContent] = useState<string | null>(null);
   const [textLines, setTextLines] = useState(0);
   const [textTruncated, setTextTruncated] = useState(false);
-  const [, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
@@ -39,7 +38,6 @@ export function FilePaneViewer({ path, client, token, onClose }: Props) {
   useEffect(() => {
     if (kind !== 'text' && kind !== 'markdown') return;
     const myId = ++fetchSeq.current;
-    setLoading(true);
     setError(null);
     (async () => {
       try {
@@ -51,13 +49,10 @@ export function FilePaneViewer({ path, client, token, onClose }: Props) {
       } catch (err) {
         if (myId !== fetchSeq.current) return;
         setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        if (myId === fetchSeq.current) setLoading(false);
       }
     })();
   }, [path, kind, client]);
 
-  // path が変わったら編集状態をリセット
   useEffect(() => {
     setIsEditing(false);
     setEditContent('');
