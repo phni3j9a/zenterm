@@ -19,6 +19,7 @@ vi.mock('@xterm/xterm', () => ({
       loadAddon: vi.fn(),
       getSelection: vi.fn(() => ''),
       clear: vi.fn(),
+      refresh: vi.fn(),
       options: {},
       cols: 80,
       rows: 24,
