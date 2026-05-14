@@ -60,7 +60,8 @@ test('theme toggle persists across reload', async ({ page }) => {
 
   // Navigate to Settings (Phase 6 G5: LeftRail uses role="tab")
   await page.getByRole('tab', { name: /^settings$/i }).click();
-  await expect(page).toHaveURL(/\/web\/settings$/);
+  // 新ペイン内表示モデルでは hash がペイン全状態の単一の真実源として常に付く
+  await expect(page).toHaveURL(/\/web\/settings(?:#.*)?$/);
 
   // Click Light button
   await page.getByRole('button', { name: /light/i }).click();
@@ -74,7 +75,7 @@ test('theme toggle persists across reload', async ({ page }) => {
   await page.reload();
 
   // Verify Settings tab is still selected and Light button is still pressed
-  await expect(page).toHaveURL(/\/web\/settings$/);
+  await expect(page).toHaveURL(/\/web\/settings(?:#.*)?$/);
   const lightBtn = page.getByRole('button', { name: /light/i });
   await expect(lightBtn).toHaveAttribute('aria-pressed', 'true');
 });

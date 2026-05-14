@@ -71,7 +71,8 @@ test('font size increases and persists across reload', async ({ page }) => {
 
   // Navigate to Settings (Phase 6 G5: LeftRail uses role="tab")
   await page.getByRole('tab', { name: /^settings$/i }).click();
-  await expect(page).toHaveURL(/\/web\/settings$/);
+  // 新ペイン内表示モデルでは hash がペイン全状態の単一の真実源として常に付く
+  await expect(page).toHaveURL(/\/web\/settings(?:#.*)?$/);
 
   // Click "Increase font size" twice (14 → 16)
   await page.getByRole('button', { name: /increase font size/i }).click();
@@ -88,7 +89,7 @@ test('font size increases and persists across reload', async ({ page }) => {
   await page.reload();
 
   // Verify font size is still 16 after reload (check localStorage)
-  await expect(page).toHaveURL(/\/web\/settings$/);
+  await expect(page).toHaveURL(/\/web\/settings(?:#.*)?$/);
   const storedAfterReload = await page.evaluate(() => localStorage.getItem('zenterm-web-settings'));
   expect(storedAfterReload).toContain('"fontSize":16');
 });
