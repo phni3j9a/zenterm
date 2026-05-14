@@ -15,22 +15,18 @@ interface PaneState {
   layout: LayoutMode;
   panes: (PaneTarget | null)[];
   focusedIndex: number;
-  savedLayout: LayoutMode | null;
 
   setLayout: (mode: LayoutMode) => void;
   setFocusedIndex: (idx: number) => void;
   assignPane: (idx: number, target: PaneTarget | null) => void;
   openInFocusedPane: (target: PaneTarget) => void;
   isOccupied: (target: PaneTarget, excludeIdx?: number) => boolean;
-  suspendForSingle: () => void;
-  resume: () => void;
 }
 
-interface PersistedV2 {
+interface PersistedV3 {
   layout: LayoutMode;
   panes: (PaneTarget | null)[];
   focusedIndex: number;
-  savedLayout: LayoutMode | null;
 }
 
 function isLayoutMode(value: unknown): value is LayoutMode {
@@ -40,13 +36,49 @@ function isLayoutMode(value: unknown): value is LayoutMode {
   );
 }
 
+export function migratePaneStoreV2ToV3(persisted: unknown): PersistedV3 {
+  const s = (persisted ?? {}) as {
+    layout?: unknown;
+    panes?: unknown;
+    focusedIndex?: unknown;
+  };
+  const layout = isLayoutMode(s.layout) ? s.layout : 'single';
+  const focusedIndex = typeof s.focusedIndex === 'number' ? s.focusedIndex : 0;
+  const rawPanes = Array.isArray(s.panes) ? s.panes : [null];
+  const panes: (PaneTarget | null)[] = rawPanes.map((p) => {
+    if (p === null || typeof p !== 'object') return null;
+    const cand = p as {
+      kind?: unknown;
+      sessionId?: unknown;
+      windowIndex?: unknown;
+      path?: unknown;
+    };
+    if (cand.kind === 'file' && typeof cand.path === 'string') {
+      return { kind: 'file', path: cand.path };
+    }
+    if (cand.kind === 'terminal' || cand.kind === undefined) {
+      if (
+        typeof cand.sessionId === 'string' &&
+        typeof cand.windowIndex === 'number'
+      ) {
+        return {
+          kind: 'terminal',
+          sessionId: cand.sessionId,
+          windowIndex: cand.windowIndex,
+        };
+      }
+    }
+    return null;
+  });
+  return { layout, panes, focusedIndex };
+}
+
 export const usePaneStore = create<PaneState>()(
   persist(
     (set, get) => ({
       layout: 'single',
       panes: [null],
       focusedIndex: 0,
-      savedLayout: null,
 
       setLayout: (mode) => {
         const { panes, focusedIndex } = get();
@@ -93,43 +125,17 @@ export const usePaneStore = create<PaneState>()(
             p.windowIndex === target.windowIndex,
         );
       },
-
-      suspendForSingle: () => {
-        const { layout } = get();
-        if (layout === 'single') return;
-        set({ savedLayout: layout });
-        get().setLayout('single');
-      },
-
-      resume: () => {
-        const { savedLayout } = get();
-        if (!savedLayout) return;
-        get().setLayout(savedLayout);
-        set({ savedLayout: null });
-      },
     }),
     {
       name: 'zenterm-web-pane',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         layout: s.layout,
         panes: s.panes,
         focusedIndex: s.focusedIndex,
-        savedLayout: s.savedLayout,
       }),
-      migrate: (persisted, _version): PersistedV2 => {
-        const s = (persisted ?? {}) as Partial<PersistedV2> & {
-          // v1 fields (dropped in v2): ratios
-          ratios?: unknown;
-        };
-        const layout = isLayoutMode(s.layout) ? s.layout : 'single';
-        const savedLayout = isLayoutMode(s.savedLayout) ? s.savedLayout : null;
-        const panes = Array.isArray(s.panes) ? s.panes : [null];
-        const focusedIndex =
-          typeof s.focusedIndex === 'number' ? s.focusedIndex : 0;
-        return { layout, panes, focusedIndex, savedLayout };
-      },
+      migrate: (persisted) => migratePaneStoreV2ToV3(persisted),
     },
   ),
 );

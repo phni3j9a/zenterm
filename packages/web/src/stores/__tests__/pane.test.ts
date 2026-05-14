@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { usePaneStore } from '../pane';
+import { usePaneStore, migratePaneStoreV2ToV3 } from '../pane';
 import { SLOT_COUNT } from '@/lib/paneLayout';
 
 const target = (id: string, w = 0) =>
@@ -11,7 +11,6 @@ beforeEach(() => {
     layout: 'single',
     panes: [null],
     focusedIndex: 0,
-    savedLayout: null,
   });
 });
 
@@ -113,47 +112,6 @@ describe('isOccupied', () => {
   });
 });
 
-describe('suspendForSingle / resume', () => {
-  it('現 layout を savedLayout に退避し single に切替', () => {
-    usePaneStore.getState().setLayout('cols-2');
-    usePaneStore.getState().assignPane(0, target('a'));
-    usePaneStore.getState().assignPane(1, target('b'));
-    usePaneStore.getState().setFocusedIndex(1);
-
-    usePaneStore.getState().suspendForSingle();
-    const s = usePaneStore.getState();
-    expect(s.layout).toBe('single');
-    expect(s.savedLayout).toBe('cols-2');
-    expect(s.panes).toEqual([target('b')]);
-  });
-
-  it('savedLayout を resume で復元', () => {
-    usePaneStore.getState().setLayout('cols-2');
-    usePaneStore.getState().assignPane(0, target('a'));
-    usePaneStore.getState().assignPane(1, target('b'));
-    usePaneStore.getState().setFocusedIndex(1);
-    usePaneStore.getState().suspendForSingle();
-    usePaneStore.getState().resume();
-    const s = usePaneStore.getState();
-    expect(s.layout).toBe('cols-2');
-    expect(s.savedLayout).toBe(null);
-    expect(s.panes.length).toBe(2);
-  });
-
-  it('savedLayout が null の場合 resume は no-op', () => {
-    usePaneStore.getState().setLayout('single');
-    usePaneStore.getState().resume();
-    expect(usePaneStore.getState().layout).toBe('single');
-    expect(usePaneStore.getState().savedLayout).toBe(null);
-  });
-
-  it('既に single のとき suspendForSingle は savedLayout を更新しない', () => {
-    usePaneStore.getState().setLayout('single');
-    usePaneStore.getState().suspendForSingle();
-    expect(usePaneStore.getState().savedLayout).toBe(null);
-  });
-});
-
 describe('persist round-trip', () => {
   it('panes / layout が localStorage に書かれる', () => {
     usePaneStore.getState().setLayout('cols-2');
@@ -162,7 +120,11 @@ describe('persist round-trip', () => {
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw as string);
     expect(parsed.state.layout).toBe('cols-2');
-    expect(parsed.state.panes[0]).toEqual(target('a'));
+    expect(parsed.state.panes[0]).toEqual({
+      kind: 'terminal',
+      sessionId: 'a',
+      windowIndex: 0,
+    });
     expect(parsed.state.ratios).toBeUndefined();
   });
 });
@@ -206,9 +168,9 @@ describe('persist hydration', () => {
     const s = usePaneStore.getState();
     expect(s.layout).toBe('grid-2x2');
     expect(s.panes).toEqual([
-      { sessionId: 'x', windowIndex: 0 },
+      { kind: 'terminal', sessionId: 'x', windowIndex: 0 },
       null,
-      { sessionId: 'y', windowIndex: 1 },
+      { kind: 'terminal', sessionId: 'y', windowIndex: 1 },
       null,
     ]);
     expect(s.focusedIndex).toBe(2);
@@ -249,7 +211,6 @@ describe('persist hydration', () => {
     const s = usePaneStore.getState();
     expect(s.layout).toBe('cols-2');
     expect(s.focusedIndex).toBe(0);
-    expect(s.savedLayout).toBeNull();
   });
 });
 
@@ -271,5 +232,28 @@ describe('PaneTarget kind discrimination', () => {
       kind: 'file',
       path: '/tmp/a.txt',
     });
+  });
+});
+
+describe('persist migration v2 -> v3', () => {
+  it('v2 panes に kind: terminal を補完し savedLayout を破棄する', () => {
+    const v2: unknown = {
+      layout: 'cols-2',
+      panes: [
+        { sessionId: 'demo', windowIndex: 0 },
+        null,
+      ],
+      focusedIndex: 0,
+      savedLayout: 'single',
+    };
+    // 直接 migrate 関数を import するため pane.ts から export を追加する必要あり
+    const migrated = migratePaneStoreV2ToV3(v2);
+    expect(migrated.panes[0]).toEqual({
+      kind: 'terminal',
+      sessionId: 'demo',
+      windowIndex: 0,
+    });
+    expect(migrated.panes[1]).toBeNull();
+    expect('savedLayout' in migrated).toBe(false);
   });
 });
