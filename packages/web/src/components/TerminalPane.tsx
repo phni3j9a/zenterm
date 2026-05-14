@@ -24,6 +24,9 @@ import { useSessionsStore } from '@/stores/sessions';
 import { useUiStore } from '@/stores/ui';
 import { useLayoutStore } from '@/stores/layout';
 import { OnboardingGuide } from './onboarding/OnboardingGuide';
+import type { ApiClient } from '@/api/client';
+import type { UploadProgressApi } from '@/hooks/useUploadProgress';
+import { useImageDispatch } from '@/hooks/useImageDispatch';
 
 export interface TerminalPaneProps {
   gatewayUrl: string;
@@ -36,15 +39,8 @@ export interface TerminalPaneProps {
   onSearch?: () => void;
   onNewPane?: () => void;
   canCreateNewPane?: boolean;
-  sessionCwd?: string;
-  onDropFiles?: (files: File[], cwd: string) => void;
-  uploadProgress?: {
-    active: boolean;
-    total: number;
-    completed: number;
-    currentFile?: string;
-    error?: string;
-  };
+  apiClient: ApiClient | null;
+  uploadProgress: UploadProgressApi;
 }
 
 export function TerminalPane({
@@ -58,11 +54,9 @@ export function TerminalPane({
   onSearch,
   onNewPane,
   canCreateNewPane = false,
-  sessionCwd,
-  onDropFiles,
+  apiClient,
   uploadProgress,
 }: TerminalPaneProps) {
-  // paneIndex is accepted for Tasks 6+ (focus routing, drag/drop) but not used in this component yet.
   void paneIndex;
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -81,6 +75,18 @@ export function TerminalPane({
   const dismissOnboarding = useSettingsStore((s) => s.dismissOnboarding);
   const setDismissOnboarding = useSettingsStore((s) => s.setDismissOnboarding);
   const pushToast = useUiStore((s) => s.pushToast);
+
+  const { dispatch } = useImageDispatch({
+    apiClient,
+    write: (text: string) => actionsRef.current?.write(text) ?? false,
+    uploadProgress,
+    pushToast,
+    t,
+  });
+
+  const handleFiles = (files: File[]): void => {
+    void dispatch(files);
+  };
 
   const sessions = useSessionsStore((s) => s.sessions);
   const session = useSessionsStore((s) =>
@@ -193,11 +199,12 @@ export function TerminalPane({
             onContextMenu={(info) => setMenu(info)}
             onActionsReady={(a) => { actionsRef.current = a; }}
             onSearchReady={setSearchApi}
+            onPasteImages={handleFiles}
           />
-          {isFocused && sessionCwd && onDropFiles && (
-            <TerminalDropZone cwd={sessionCwd} onFiles={onDropFiles} />
+          {isFocused && apiClient && (
+            <TerminalDropZone onFiles={handleFiles} />
           )}
-          {isFocused && uploadProgress?.active && (
+          {isFocused && uploadProgress.active && (
             <div
               role="status"
               aria-live="polite"
