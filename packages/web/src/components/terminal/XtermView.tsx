@@ -29,6 +29,20 @@ import {
   parseServerMessage,
 } from '@/lib/terminalProtocol';
 
+const IMAGE_MIME_EXT: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/bmp': 'bmp',
+  'image/svg+xml': 'svg',
+};
+
+function mimeToExt(mime: string): string {
+  return IMAGE_MIME_EXT[mime] ?? 'bin';
+}
+
 // FitAddon は整数 cols/rows に丸めるため、xterm-screen がコンテナよりわずかに
 // 狭くなる。差分を左右パディングに均等に振って中央寄せする (モバイル版と同等)。
 function fitAndCenter(container: HTMLElement | null, fit: FitAddon | null): void {
@@ -58,6 +72,8 @@ export interface TerminalActions {
   copy: () => void;
   paste: () => void;
   clear: () => void;
+  /** Send text bytes to the pty stdin. Returns true if sent, false if WS is not OPEN. */
+  write: (text: string) => boolean;
 }
 
 export interface XtermViewProps {
@@ -73,6 +89,8 @@ export interface XtermViewProps {
   onContextMenu?: (info: { x: number; y: number; hasSelection: boolean }) => void;
   onActionsReady?: (actions: TerminalActions) => void;
   onSearchReady?: (api: TerminalSearchApi) => void;
+  /** Called when clipboard image(s) are pasted (Ctrl/Cmd+Shift+V). */
+  onPasteImages?: (files: File[]) => void;
 }
 
 export function XtermView({
@@ -88,6 +106,7 @@ export function XtermView({
   onContextMenu,
   onActionsReady,
   onSearchReady,
+  onPasteImages,
 }: XtermViewProps) {
   const { resolvedTheme } = useTheme();
   const fontSize = useSettingsStore((s) => s.fontSize);
@@ -95,6 +114,7 @@ export function XtermView({
   const onReconnectInfoRef = useRef(onReconnectInfo);
   const onActionsReadyRef = useRef(onActionsReady);
   const onSearchReadyRef = useRef(onSearchReady);
+  const onPasteImagesRef = useRef(onPasteImages);
   useEffect(() => {
     onStatusChangeRef.current = onStatusChange;
   }, [onStatusChange]);
@@ -107,6 +127,7 @@ export function XtermView({
   useEffect(() => {
     onSearchReadyRef.current = onSearchReady;
   }, [onSearchReady]);
+  useEffect(() => { onPasteImagesRef.current = onPasteImages; }, [onPasteImages]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -152,6 +173,13 @@ export function XtermView({
     termRef.current = term;
     fitRef.current = fit;
 
+    const writeBytes = (text: string): boolean => {
+      const ws = wsRef.current;
+      if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+      ws.send(encodeInput(text));
+      return true;
+    };
+
     const actions: TerminalActions = {
       copy: () => {
         const sel = term.getSelection();
@@ -164,15 +192,13 @@ export function XtermView({
         if (!navigator.clipboard?.readText) return;
         void navigator.clipboard.readText().then((text) => {
           if (!text) return;
-          const ws = wsRef.current;
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(encodeInput(text));
-          }
+          writeBytes(text);
         }).catch(() => undefined);
       },
       clear: () => {
         term.clear();
       },
+      write: writeBytes,
     };
     onActionsReadyRef.current?.(actions);
 
@@ -227,17 +253,49 @@ export function XtermView({
         return false;
       }
 
-      // Ctrl+Shift+V — paste from clipboard
-      if (ev.ctrlKey && ev.shiftKey && (ev.key === 'V' || ev.key === 'v')) {
-        if (navigator.clipboard?.readText) {
-          void navigator.clipboard.readText().then((text) => {
-            if (!text) return;
-            const ws = wsRef.current;
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(encodeInput(text));
+      // Ctrl/Cmd+Shift+V — paste from clipboard (image-aware)
+      if (
+        (ev.ctrlKey || ev.metaKey) &&
+        ev.shiftKey &&
+        (ev.key === 'V' || ev.key === 'v')
+      ) {
+        void (async () => {
+          const clip = navigator.clipboard;
+          if (clip?.read) {
+            try {
+              const items = await clip.read();
+              const files: File[] = [];
+              for (let i = 0; i < items.length; i += 1) {
+                const item = items[i];
+                const imageType = item.types.find((t) => t.startsWith('image/'));
+                if (!imageType) continue;
+                const blob = await item.getType(imageType);
+                const ext = mimeToExt(imageType);
+                files.push(
+                  new File([blob], `image_${Date.now()}_${i}.${ext}`, { type: imageType }),
+                );
+              }
+              if (files.length > 0) {
+                onPasteImagesRef.current?.(files);
+                return;
+              }
+            } catch {
+              // NotAllowedError or other; fall through to text paste below
             }
-          }).catch(() => undefined);
-        }
+          }
+          if (clip?.readText) {
+            try {
+              const text = await clip.readText();
+              if (!text) return;
+              const ws = wsRef.current;
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(encodeInput(text));
+              }
+            } catch {
+              /* noop */
+            }
+          }
+        })();
         return false;
       }
 
