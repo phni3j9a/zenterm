@@ -47,26 +47,16 @@ export function migratePaneStoreV2ToV3(persisted: unknown): PersistedV3 {
   const rawPanes = Array.isArray(s.panes) ? s.panes : [null];
   const panes: (PaneTarget | null)[] = rawPanes.map((p) => {
     if (p === null || typeof p !== 'object') return null;
-    const cand = p as {
-      kind?: unknown;
-      sessionId?: unknown;
-      windowIndex?: unknown;
-      path?: unknown;
-    };
-    if (cand.kind === 'file' && typeof cand.path === 'string') {
-      return { kind: 'file', path: cand.path };
-    }
-    if (cand.kind === 'terminal' || cand.kind === undefined) {
-      if (
-        typeof cand.sessionId === 'string' &&
-        typeof cand.windowIndex === 'number'
-      ) {
-        return {
-          kind: 'terminal',
-          sessionId: cand.sessionId,
-          windowIndex: cand.windowIndex,
-        };
-      }
+    const cand = p as { sessionId?: unknown; windowIndex?: unknown };
+    if (
+      typeof cand.sessionId === 'string' &&
+      typeof cand.windowIndex === 'number'
+    ) {
+      return {
+        kind: 'terminal',
+        sessionId: cand.sessionId,
+        windowIndex: cand.windowIndex,
+      };
     }
     return null;
   });

@@ -246,7 +246,6 @@ describe('persist migration v2 -> v3', () => {
       focusedIndex: 0,
       savedLayout: 'single',
     };
-    // 直接 migrate 関数を import するため pane.ts から export を追加する必要あり
     const migrated = migratePaneStoreV2ToV3(v2);
     expect(migrated.panes[0]).toEqual({
       kind: 'terminal',
