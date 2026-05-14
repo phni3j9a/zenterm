@@ -7,10 +7,9 @@ import {
   dropExtraPanes,
 } from '@/lib/paneLayout';
 
-export interface PaneTarget {
-  sessionId: string;
-  windowIndex: number;
-}
+export type PaneTarget =
+  | { kind: 'terminal'; sessionId: string; windowIndex: number }
+  | { kind: 'file'; path: string };
 
 interface PaneState {
   layout: LayoutMode;
@@ -83,11 +82,13 @@ export const usePaneStore = create<PaneState>()(
       },
 
       isOccupied: (target, excludeIdx) => {
+        if (target.kind !== 'terminal') return false;
         const { panes } = get();
         return panes.some(
           (p, i) =>
             p !== null &&
             i !== excludeIdx &&
+            p.kind === 'terminal' &&
             p.sessionId === target.sessionId &&
             p.windowIndex === target.windowIndex,
         );

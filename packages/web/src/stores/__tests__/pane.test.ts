@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { usePaneStore } from '../pane';
 import { SLOT_COUNT } from '@/lib/paneLayout';
 
-const target = (id: string, w = 0) => ({ sessionId: id, windowIndex: w });
+const target = (id: string, w = 0) =>
+  ({ kind: 'terminal', sessionId: id, windowIndex: w }) as const;
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -102,6 +103,13 @@ describe('isOccupied', () => {
     usePaneStore.getState().setLayout('cols-2');
     usePaneStore.getState().assignPane(0, target('a', 0));
     expect(usePaneStore.getState().isOccupied(target('a', 1))).toBe(false);
+  });
+
+  it('isOccupied は file kind に対しては常に false', () => {
+    const s = usePaneStore.getState();
+    s.setLayout('cols-2');
+    s.assignPane(0, { kind: 'file', path: '/a' });
+    expect(s.isOccupied({ kind: 'file', path: '/a' })).toBe(false);
   });
 });
 
@@ -242,5 +250,26 @@ describe('persist hydration', () => {
     expect(s.layout).toBe('cols-2');
     expect(s.focusedIndex).toBe(0);
     expect(s.savedLayout).toBeNull();
+  });
+});
+
+describe('PaneTarget kind discrimination', () => {
+  it('terminal ターゲットを assign できる', () => {
+    const s = usePaneStore.getState();
+    s.assignPane(0, { kind: 'terminal', sessionId: 'demo', windowIndex: 0 });
+    expect(usePaneStore.getState().panes[0]).toEqual({
+      kind: 'terminal',
+      sessionId: 'demo',
+      windowIndex: 0,
+    });
+  });
+
+  it('file ターゲットを assign できる', () => {
+    const s = usePaneStore.getState();
+    s.assignPane(0, { kind: 'file', path: '/tmp/a.txt' });
+    expect(usePaneStore.getState().panes[0]).toEqual({
+      kind: 'file',
+      path: '/tmp/a.txt',
+    });
   });
 });
