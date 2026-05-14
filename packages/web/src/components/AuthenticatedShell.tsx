@@ -432,6 +432,7 @@ export function AuthenticatedShell() {
             onNewPane={newPaneFromCurrent}
             canCreateNewPane={canCreateNewPane}
             apiClient={baseClient}
+            filesClient={filesClient}
             uploadProgress={uploadProgress}
             onAuthError={() => {
               logout();

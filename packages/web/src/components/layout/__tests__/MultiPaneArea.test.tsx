@@ -51,7 +51,14 @@ beforeEach(() => {
 
 function renderArea(isVisible = true) {
   return render(
-    <MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={isVisible} apiClient={null} uploadProgress={makeProgress()} />,
+    <MultiPaneArea
+      gatewayUrl="http://gw"
+      token="tok"
+      isVisible={isVisible}
+      apiClient={null}
+      filesClient={null}
+      uploadProgress={makeProgress()}
+    />,
   );
 }
 
@@ -125,7 +132,16 @@ describe('MultiPaneArea', () => {
     const beforeP0 = screen.getByTestId('pane-0');
     const beforeP1 = screen.getByTestId('pane-1');
     usePaneStore.getState().setFocusedIndex(1);
-    rerender(<MultiPaneArea gatewayUrl="http://gw" token="tok" isVisible={true} apiClient={null} uploadProgress={makeProgress()} />);
+    rerender(
+      <MultiPaneArea
+        gatewayUrl="http://gw"
+        token="tok"
+        isVisible={true}
+        apiClient={null}
+        filesClient={null}
+        uploadProgress={makeProgress()}
+      />,
+    );
     expect(screen.getByTestId('pane-0')).toBe(beforeP0);
     expect(screen.getByTestId('pane-1')).toBe(beforeP1);
   });

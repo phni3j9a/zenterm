@@ -1,5 +1,7 @@
 import { type CSSProperties, type ReactNode } from 'react';
 import { TerminalPane } from '@/components/TerminalPane';
+import { FilePaneViewer } from '@/components/files/FilePaneViewer';
+import type { FilesApiClient } from '@/components/files/filesApi';
 import { usePaneStore } from '@/stores/pane';
 import type { LayoutMode } from '@/lib/paneLayout';
 import type { ApiClient } from '@/api/client';
@@ -13,6 +15,7 @@ export interface MultiPaneAreaProps {
   onNewPane?: () => void;
   canCreateNewPane?: boolean;
   apiClient: ApiClient | null;
+  filesClient: FilesApiClient | null;
   uploadProgress: UploadProgressApi;
   onAuthError?: () => void;
 }
@@ -32,6 +35,7 @@ export function MultiPaneArea({
   onNewPane,
   canCreateNewPane = false,
   apiClient,
+  filesClient,
   uploadProgress,
   onAuthError,
 }: MultiPaneAreaProps) {
@@ -53,9 +57,15 @@ export function MultiPaneArea({
     );
 
     if (pane && pane.kind === 'file') {
-      // Task 6 で FilePaneViewer を実装し、Task 7 でここに接続する。
-      // それまでは暫定 placeholder を表示する。
-      return wrap(<div style={{ color: '#888', padding: 16 }}>file: {pane.path}</div>);
+      if (!filesClient) return wrap(null);
+      return wrap(
+        <FilePaneViewer
+          path={pane.path}
+          client={filesClient}
+          token={token}
+          onClose={() => usePaneStore.getState().assignPane(idx, null)}
+        />,
+      );
     }
 
     // terminal kind または null(空ペイン)は従来通り TerminalPane に流す。
