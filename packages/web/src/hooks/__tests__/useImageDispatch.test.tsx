@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useImageDispatch, type ImageDispatchDeps } from '../useImageDispatch';
 import type { ApiClient } from '@/api/client';
 import type { UploadProgressApi } from '../useUploadProgress';
+import { HttpError } from '@/api/errors';
 
 function makeProgress(active = false): UploadProgressApi {
   return {
@@ -168,6 +169,39 @@ describe('useImageDispatch', () => {
     expect(deps.pushToast).toHaveBeenCalledWith({
       type: 'error',
       message: 'terminal.notConnected',
+    });
+  });
+
+  it('on HTTP 401 from uploadFile, calls onAuthError and skips uploadError toast', async () => {
+    const onAuthError = vi.fn();
+    const deps = makeDeps({ onAuthError });
+    (deps.apiClient!.uploadFile as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new HttpError(401, 'Unauthorized'),
+    );
+    const { result } = renderHook(() => useImageDispatch(deps));
+    const file = new File(['x'], 'a.png', { type: 'image/png' });
+    await act(async () => {
+      await result.current.dispatch([file]);
+    });
+    expect(onAuthError).toHaveBeenCalled();
+    // ensure no generic uploadError toast was pushed
+    const toastCalls = (deps.pushToast as ReturnType<typeof vi.fn>).mock.calls;
+    expect(toastCalls.find((c) => typeof c[0].message === 'string' && c[0].message.includes('terminal.uploadError'))).toBeUndefined();
+  });
+
+  it('on HTTP 413, shows uploadSizeExceeded toast instead of generic error', async () => {
+    const deps = makeDeps();
+    (deps.apiClient!.uploadFile as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new HttpError(413, 'Payload Too Large'),
+    );
+    const { result } = renderHook(() => useImageDispatch(deps));
+    const file = new File(['x'], 'a.png', { type: 'image/png' });
+    await act(async () => {
+      await result.current.dispatch([file]);
+    });
+    expect(deps.pushToast).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'terminal.uploadSizeExceeded',
     });
   });
 

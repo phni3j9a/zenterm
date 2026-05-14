@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
+import { useUiStore } from '@/stores/ui';
 
 vi.mock('@xterm/xterm', () => {
   const Terminal = vi.fn().mockImplementation(function () {
@@ -136,6 +137,41 @@ describe('XtermView paste extension', () => {
     const ev = new KeyboardEvent('keydown', { key: 'V', ctrlKey: true, shiftKey: true });
     lastHandler()(ev);
     await waitFor(() => expect(navigator.clipboard.readText).toHaveBeenCalled());
+  });
+
+  it('shows clipboardPermission toast on NotAllowedError, then falls back to text paste', async () => {
+    const pushToast = vi.fn();
+    useUiStore.setState({ pushToast });
+    const err = Object.assign(new Error('denied'), { name: 'NotAllowedError' });
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { read: vi.fn().mockRejectedValue(err), readText: vi.fn().mockResolvedValue('text-fallback') },
+    });
+    const onPasteImages = vi.fn();
+    render(<XtermView {...baseProps} onPasteImages={onPasteImages} />);
+    const ev = new KeyboardEvent('keydown', { key: 'V', ctrlKey: true, shiftKey: true });
+    lastHandler()(ev);
+    await waitFor(() => expect(pushToast).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'error' }),
+    ));
+    // message is either the raw i18n key or the resolved English translation
+    const errorMsg: string = (pushToast.mock.calls.find((c) => c[0].type === 'error') ?? [{}])[0].message as string;
+    expect(errorMsg).toMatch(/clipboardPermission|Allow clipboard access/);
+  });
+
+  it('shows clipboardUnsupported toast and falls back to text when clipboard.read is undefined', async () => {
+    const pushToast = vi.fn();
+    useUiStore.setState({ pushToast });
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { readText: vi.fn().mockResolvedValue('plain-text') }, // no read
+    });
+    render(<XtermView {...baseProps} onPasteImages={vi.fn()} />);
+    const ev = new KeyboardEvent('keydown', { key: 'V', ctrlKey: true, shiftKey: true });
+    lastHandler()(ev);
+    await waitFor(() => expect(pushToast).toHaveBeenCalled());
+    // message is either the raw i18n key or the resolved English translation
+    expect(pushToast.mock.calls[0][0].message).toMatch(/clipboardUnsupported|does not support clipboard/);
   });
 
   it('also handles Cmd+Shift+V on macOS', async () => {

@@ -41,6 +41,7 @@ export interface TerminalPaneProps {
   canCreateNewPane?: boolean;
   apiClient: ApiClient | null;
   uploadProgress: UploadProgressApi;
+  onAuthError?: () => void;
 }
 
 export function TerminalPane({
@@ -56,6 +57,7 @@ export function TerminalPane({
   canCreateNewPane = false,
   apiClient,
   uploadProgress,
+  onAuthError,
 }: TerminalPaneProps) {
   void paneIndex;
   const { tokens } = useTheme();
@@ -82,6 +84,7 @@ export function TerminalPane({
     uploadProgress,
     pushToast,
     t,
+    onAuthError,
   });
 
   const handleFiles = (files: File[]): void => {

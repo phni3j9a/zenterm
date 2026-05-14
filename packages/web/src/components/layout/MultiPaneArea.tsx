@@ -14,6 +14,7 @@ export interface MultiPaneAreaProps {
   canCreateNewPane?: boolean;
   apiClient: ApiClient | null;
   uploadProgress: UploadProgressApi;
+  onAuthError?: () => void;
 }
 
 const GRID_TEMPLATE: Record<LayoutMode, Pick<CSSProperties, 'gridTemplateColumns' | 'gridTemplateRows'>> = {
@@ -32,6 +33,7 @@ export function MultiPaneArea({
   canCreateNewPane = false,
   apiClient,
   uploadProgress,
+  onAuthError,
 }: MultiPaneAreaProps) {
   const layout = usePaneStore((s) => s.layout);
   const panes = usePaneStore((s) => s.panes);
@@ -59,6 +61,7 @@ export function MultiPaneArea({
           canCreateNewPane={canCreateNewPane}
           apiClient={apiClient}
           uploadProgress={uploadProgress}
+          onAuthError={onAuthError}
         />
       </div>
     );

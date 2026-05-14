@@ -433,6 +433,10 @@ export function AuthenticatedShell() {
             canCreateNewPane={canCreateNewPane}
             apiClient={baseClient}
             uploadProgress={uploadProgress}
+            onAuthError={() => {
+              logout();
+              navigateFnRef.current('/web/login', { replace: true });
+            }}
           />
           {isFilesRoute && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>

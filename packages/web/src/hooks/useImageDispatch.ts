@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import type { TFunction } from 'i18next';
 import type { ApiClient } from '@/api/client';
+import { HttpError } from '@/api/errors';
 import { shellQuote } from '@/lib/shellQuote';
 import type { UploadProgressApi } from './useUploadProgress';
 import type { ToastEntry } from '@/stores/ui';
@@ -12,6 +13,7 @@ export interface ImageDispatchDeps {
   uploadProgress: UploadProgressApi;
   pushToast: (toast: Omit<ToastEntry, 'id'>) => void;
   t: TFunction;
+  onAuthError?: () => void;
 }
 
 export interface ImageDispatchApi {
@@ -35,6 +37,18 @@ export function useImageDispatch(deps: ImageDispatchDeps): ImageDispatchApi {
           const res = await deps.apiClient.uploadFile(file);
           path = res.path;
         } catch (e) {
+          if (e instanceof HttpError && e.status === 401) {
+            deps.onAuthError?.();
+            setTimeout(() => deps.uploadProgress.finish(), 0);
+            return;
+          }
+          if (e instanceof HttpError && e.status === 413) {
+            const msg = deps.t('terminal.uploadSizeExceeded');
+            deps.uploadProgress.fail(msg);
+            deps.pushToast({ type: 'error', message: msg });
+            setTimeout(() => deps.uploadProgress.finish(), 3000);
+            return;
+          }
           const msg = e instanceof Error ? e.message : String(e);
           deps.uploadProgress.fail(msg);
           deps.pushToast({

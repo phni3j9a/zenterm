@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
@@ -16,6 +17,7 @@ import {
   MIN_FONT_SIZE,
   useSettingsStore,
 } from '@/stores/settings';
+import { useUiStore } from '@/stores/ui';
 import { createImeDedup } from '@/lib/imeDedup';
 import { createTrailingDebounce } from './refitDebounce';
 import {
@@ -110,6 +112,12 @@ export function XtermView({
 }: XtermViewProps) {
   const { resolvedTheme } = useTheme();
   const fontSize = useSettingsStore((s) => s.fontSize);
+  const { t } = useTranslation();
+  const pushToast = useUiStore((s) => s.pushToast);
+  const tRef = useRef(t);
+  const pushToastRef = useRef(pushToast);
+  useEffect(() => { tRef.current = t; }, [t]);
+  useEffect(() => { pushToastRef.current = pushToast; }, [pushToast]);
   const onStatusChangeRef = useRef(onStatusChange);
   const onReconnectInfoRef = useRef(onReconnectInfo);
   const onActionsReadyRef = useRef(onActionsReady);
@@ -261,7 +269,10 @@ export function XtermView({
       ) {
         void (async () => {
           const clip = navigator.clipboard;
-          if (clip?.read) {
+          if (!clip?.read) {
+            pushToastRef.current?.({ type: 'info', message: tRef.current?.('terminal.clipboardUnsupported') ?? '' });
+            // fall through to text path
+          } else {
             try {
               const items = await clip.read();
               const files: File[] = [];
@@ -279,8 +290,12 @@ export function XtermView({
                 onPasteImagesRef.current?.(files);
                 return;
               }
-            } catch {
-              // NotAllowedError or other; fall through to text paste below
+            } catch (err) {
+              const name = (err as { name?: unknown } | null)?.name;
+              if (name === 'NotAllowedError') {
+                pushToastRef.current?.({ type: 'error', message: tRef.current?.('terminal.clipboardPermission') ?? '' });
+              }
+              // fall through to text paste below
             }
           }
           if (clip?.readText) {
