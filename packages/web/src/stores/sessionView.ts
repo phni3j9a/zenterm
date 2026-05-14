@@ -12,6 +12,7 @@ interface SessionViewSnapshot {
 // Stable action handlers (do not depend on snapshot identity).
 const open: SessionViewSnapshot['open'] = (sessionId, windowIndex) => {
   usePaneStore.getState().openInFocusedPane({
+    kind: 'terminal',
     sessionId,
     windowIndex: (windowIndex ?? null) as number,
   });
@@ -25,8 +26,9 @@ const close: SessionViewSnapshot['close'] = () => {
 const setWindow: SessionViewSnapshot['setWindow'] = (windowIndex) => {
   const { panes: ps, focusedIndex: idx } = usePaneStore.getState();
   const current = ps[idx];
-  if (!current) return;
+  if (!current || current.kind !== 'terminal') return;
   usePaneStore.getState().assignPane(idx, {
+    kind: 'terminal',
     sessionId: current.sessionId,
     windowIndex,
   });
@@ -42,8 +44,8 @@ let cachedWindowIndex: number | null = null;
 function getSnapshot(): SessionViewSnapshot {
   const { panes, focusedIndex } = usePaneStore.getState();
   const focused = panes[focusedIndex] ?? null;
-  const sid = focused?.sessionId ?? null;
-  const widx = focused?.windowIndex ?? null;
+  const sid = focused && focused.kind === 'terminal' ? focused.sessionId : null;
+  const widx = focused && focused.kind === 'terminal' ? focused.windowIndex : null;
   if (
     cachedSnapshot !== null &&
     cachedSessionId === sid &&
@@ -87,6 +89,7 @@ export const useSessionViewStore = Object.assign(
         usePaneStore.getState().assignPane(idx, null);
       } else {
         usePaneStore.getState().assignPane(idx, {
+          kind: 'terminal',
           sessionId: sid,
           windowIndex: widx as number,
         });

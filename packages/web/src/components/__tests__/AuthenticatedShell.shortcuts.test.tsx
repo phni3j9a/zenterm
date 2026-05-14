@@ -57,9 +57,8 @@ function setup() {
   } as never);
   usePaneStore.setState({
     layout: 'single',
-    panes: [{ sessionId: 'sX', windowIndex: 0 }, null, null, null],
+    panes: [{ kind: 'terminal', sessionId: 'sX', windowIndex: 0 }, null, null, null],
     focusedIndex: 0,
-    savedLayout: null,
   } as never);
   useLayoutStore.setState({ sidebarCollapsed: false, paletteOpen: false, layoutMenuOpen: false });
   useUiStore.setState({ confirmDialog: null, toasts: [] });
@@ -101,7 +100,11 @@ describe('AuthenticatedShell shortcuts', () => {
       </MemoryRouter>,
     );
     act(() => dispatch({ key: '2', metaKey: true }));
-    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'sX', windowIndex: 1 });
+    expect(usePaneStore.getState().panes[0]).toEqual({
+      kind: 'terminal',
+      sessionId: 'sX',
+      windowIndex: 1,
+    });
   });
 
   it('⌘5 is no-op when target window does not exist', () => {
@@ -111,7 +114,11 @@ describe('AuthenticatedShell shortcuts', () => {
       </MemoryRouter>,
     );
     act(() => dispatch({ key: '5', metaKey: true }));
-    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'sX', windowIndex: 0 });
+    expect(usePaneStore.getState().panes[0]).toEqual({
+      kind: 'terminal',
+      sessionId: 'sX',
+      windowIndex: 0,
+    });
   });
 
   it('⌘W shows a confirm dialog (does not delete unconfirmed)', () => {

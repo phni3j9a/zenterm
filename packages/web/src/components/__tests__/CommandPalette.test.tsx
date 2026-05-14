@@ -76,6 +76,10 @@ describe('CommandPalette', () => {
     act(() => useLayoutStore.getState().openPalette());
     await user.type(screen.getByRole('combobox'), 'zztop');
     await user.keyboard('{Enter}');
-    expect(usePaneStore.getState().panes[0]).toEqual({ sessionId: 'zztop', windowIndex: 0 });
+    expect(usePaneStore.getState().panes[0]).toEqual({
+      kind: 'terminal',
+      sessionId: 'zztop',
+      windowIndex: 0,
+    });
   });
 });

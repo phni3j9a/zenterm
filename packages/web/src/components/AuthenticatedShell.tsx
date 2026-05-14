@@ -300,18 +300,22 @@ export function AuthenticatedShell() {
     // n is 1-based ⌘1..⌘9; map to 0-based window index inside focused pane.
     const state = usePaneStore.getState();
     const focused = state.panes[state.focusedIndex];
-    if (!focused) return;
+    if (!focused || focused.kind !== 'terminal') return;
     const session = useSessionsStore.getState().sessions.find((s) => s.displayName === focused.sessionId);
     if (!session) return;
     const target = session.windows?.find((w) => w.index === n - 1);
     if (!target) return;
-    state.assignPane(state.focusedIndex, { sessionId: focused.sessionId, windowIndex: n - 1 });
+    state.assignPane(state.focusedIndex, {
+      kind: 'terminal',
+      sessionId: focused.sessionId,
+      windowIndex: n - 1,
+    });
   };
 
   const newWindow = () => {
     const state = usePaneStore.getState();
     const focused = state.panes[state.focusedIndex];
-    if (!focused) return;
+    if (!focused || focused.kind !== 'terminal') return;
     const session = useSessionsStore.getState().sessions.find((s) => s.displayName === focused.sessionId);
     if (!session) return;
     void handleCreateWindow(session.displayName);
@@ -320,7 +324,7 @@ export function AuthenticatedShell() {
   const closeWindow = () => {
     const state = usePaneStore.getState();
     const focused = state.panes[state.focusedIndex];
-    if (!focused) return;
+    if (!focused || focused.kind !== 'terminal') return;
     const session = useSessionsStore.getState().sessions.find((s) => s.displayName === focused.sessionId);
     if (!session) return;
     const targetWindow = session.windows?.find((w) => w.index === focused.windowIndex);

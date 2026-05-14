@@ -15,7 +15,6 @@ beforeEach(() => {
     layout: 'single',
     panes: [null],
     focusedIndex: 0,
-    savedLayout: null,
   });
 });
 

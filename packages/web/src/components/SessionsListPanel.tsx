@@ -136,10 +136,15 @@ export function SessionsListPanel({
         const isActive = session.displayName === activeSessionId;
         const isExpanded = expanded.has(session.name);
         const defaultWindowIndex = session.windows?.[0]?.index ?? 0;
-        const sessionTarget = { sessionId: session.displayName, windowIndex: defaultWindowIndex };
+        const sessionTarget = {
+          kind: 'terminal' as const,
+          sessionId: session.displayName,
+          windowIndex: defaultWindowIndex,
+        };
         const sessionOccupyingIdx = panes.findIndex(
           (p) =>
             p !== null &&
+            p.kind === 'terminal' &&
             p.sessionId === sessionTarget.sessionId &&
             p.windowIndex === sessionTarget.windowIndex,
         );
@@ -168,10 +173,15 @@ export function SessionsListPanel({
                 }}
               >
                 {session.windows.map((w) => {
-                  const target = { sessionId: session.displayName, windowIndex: w.index };
+                  const target = {
+                    kind: 'terminal' as const,
+                    sessionId: session.displayName,
+                    windowIndex: w.index,
+                  };
                   const occupyingIdx = panes.findIndex(
                     (p) =>
                       p !== null &&
+                      p.kind === 'terminal' &&
                       p.sessionId === target.sessionId &&
                       p.windowIndex === target.windowIndex,
                   );

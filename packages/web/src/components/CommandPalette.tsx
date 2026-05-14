@@ -54,7 +54,7 @@ export function CommandPalette() {
       return {
         ...a,
         run: () => {
-          usePaneStore.getState().openInFocusedPane({ sessionId, windowIndex });
+          usePaneStore.getState().openInFocusedPane({ kind: 'terminal', sessionId, windowIndex });
         },
       };
     });
