@@ -48,7 +48,7 @@ describe('useImageDispatch', () => {
       await result.current.dispatch([]);
     });
     expect(deps.uploadProgress.begin).not.toHaveBeenCalled();
-    expect(deps.apiClient.uploadFile).not.toHaveBeenCalled();
+    expect(deps.apiClient!.uploadFile).not.toHaveBeenCalled();
     expect(deps.write).not.toHaveBeenCalled();
   });
 
@@ -60,12 +60,12 @@ describe('useImageDispatch', () => {
       await result.current.dispatch([file]);
     });
     expect(deps.pushToast).toHaveBeenCalledWith({ type: 'error', message: 'terminal.uploadBusy' });
-    expect(deps.apiClient.uploadFile).not.toHaveBeenCalled();
+    expect(deps.apiClient!.uploadFile).not.toHaveBeenCalled();
   });
 
   it('uploads a single file and writes the quoted path with trailing space', async () => {
     const deps = makeDeps();
-    (deps.apiClient.uploadFile as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (deps.apiClient!.uploadFile as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       path: '/home/u/uploads/zenterm/2026-05-14_120000_abcd.png',
       filename: '2026-05-14_120000_abcd.png',
@@ -92,7 +92,7 @@ describe('useImageDispatch', () => {
   it('uploads multiple files sequentially in order, writing each path with a space', async () => {
     const deps = makeDeps();
     const calls: string[] = [];
-    (deps.apiClient.uploadFile as ReturnType<typeof vi.fn>).mockImplementation(
+    (deps.apiClient!.uploadFile as ReturnType<typeof vi.fn>).mockImplementation(
       async (f: File) => {
         calls.push(`upload:${f.name}`);
         return {
@@ -124,7 +124,7 @@ describe('useImageDispatch', () => {
 
   it('on upload failure, calls fail+pushToast and aborts remaining files', async () => {
     const deps = makeDeps();
-    (deps.apiClient.uploadFile as ReturnType<typeof vi.fn>)
+    (deps.apiClient!.uploadFile as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({
         success: true,
         path: '/staging/ok.png',
@@ -140,7 +140,7 @@ describe('useImageDispatch', () => {
     await act(async () => {
       await result.current.dispatch([f1, f2, f3]);
     });
-    expect(deps.apiClient.uploadFile).toHaveBeenCalledTimes(2);
+    expect(deps.apiClient!.uploadFile).toHaveBeenCalledTimes(2);
     expect(deps.write).toHaveBeenCalledTimes(1);
     expect(deps.uploadProgress.fail).toHaveBeenCalledWith('413 too large');
     expect(deps.pushToast).toHaveBeenCalledWith({
@@ -151,7 +151,7 @@ describe('useImageDispatch', () => {
 
   it('on write returning false (WebSocket closed), shows notConnected toast and aborts remaining files', async () => {
     const deps = makeDeps({ write: vi.fn().mockReturnValue(false) });
-    (deps.apiClient.uploadFile as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (deps.apiClient!.uploadFile as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       path: '/staging/a.png',
       filename: 'a.png',
@@ -164,7 +164,7 @@ describe('useImageDispatch', () => {
     await act(async () => {
       await result.current.dispatch([f1, f2]);
     });
-    expect(deps.apiClient.uploadFile).toHaveBeenCalledTimes(1);
+    expect(deps.apiClient!.uploadFile).toHaveBeenCalledTimes(1);
     expect(deps.pushToast).toHaveBeenCalledWith({
       type: 'error',
       message: 'terminal.notConnected',
@@ -173,7 +173,7 @@ describe('useImageDispatch', () => {
 
   it('calls finish() after success with 1500ms delay', async () => {
     const deps = makeDeps();
-    (deps.apiClient.uploadFile as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (deps.apiClient!.uploadFile as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       path: '/staging/a.png',
       filename: 'a.png',
