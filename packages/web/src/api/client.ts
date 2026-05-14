@@ -164,8 +164,10 @@ export class ApiClient {
     return `${this.baseUrl}/api/files/raw?path=${encodeURIComponent(path)}`;
   }
 
-  async uploadFile(file: File, destPath: string): Promise<FileUploadResponse> {
-    const url = `${this.baseUrl}/api/upload?dest=${encodeURIComponent(destPath)}&preserveName=true`;
+  async uploadFile(file: File, destPath?: string): Promise<FileUploadResponse> {
+    const url = destPath === undefined
+      ? `${this.baseUrl}/api/upload`
+      : `${this.baseUrl}/api/upload?dest=${encodeURIComponent(destPath)}&preserveName=true`;
     const form = new FormData();
     form.append('file', file, file.name);
     const res = await fetch(url, {

@@ -108,4 +108,24 @@ describe('ApiClient files methods', () => {
     expect(init.method).toBe('POST');
     expect(init.body).toBeInstanceOf(FormData);
   });
+
+  it('uploadFile POST /api/upload (no query) when destPath is omitted', async () => {
+    fetchSpy.mockResolvedValue(makeRes({
+      success: true,
+      path: '/home/u/uploads/zenterm/2026-05-14_120000_abcd1234.png',
+      filename: '2026-05-14_120000_abcd1234.png',
+      size: 4,
+      mimetype: 'image/png',
+    }));
+    const c = new ApiClient('http://gw', 'tok');
+    const blob = new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'image/png' });
+    const f = new File([blob], 'shot.png', { type: 'image/png' });
+    const res = await c.uploadFile(f);
+    expect(fetchSpy.mock.calls[0][0]).toBe('http://gw/api/upload');
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBe('POST');
+    expect(init.body).toBeInstanceOf(FormData);
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+    expect(res.path).toBe('/home/u/uploads/zenterm/2026-05-14_120000_abcd1234.png');
+  });
 });
