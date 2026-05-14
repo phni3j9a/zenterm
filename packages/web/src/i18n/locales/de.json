@@ -96,11 +96,15 @@
       "findPrev": "Rückwärts suchen",
       "close": "Suche schließen"
     },
-    "dropHint": "Dateien ablegen, um sie in das aktuelle Verzeichnis der Sitzung hochzuladen",
+    "dropHint": "Dateien oder Bilder hier ablegen, um sie an Claude/Terminal zu senden",
     "uploadProgress": "Hochladen {{current}} ({{completed}}/{{total}})",
     "uploadDone": "{{count}} Datei(en) hochgeladen",
     "uploadError": "Hochladen fehlgeschlagen: {{message}}",
     "uploadBusy": "Ein anderer Upload ist in Bearbeitung",
+    "uploadSizeExceeded": "Die Dateigröße hat das Upload-Limit (10 MB) überschritten",
+    "clipboardPermission": "Bitte den Zwischenablage-Zugriff im Browser erlauben",
+    "clipboardUnsupported": "Dieser Browser unterstützt das Lesen von Bildern aus der Zwischenablage nicht",
+    "notConnected": "Das Terminal ist nicht verbunden; der Bildpfad wurde nicht gesendet",
     "newPaneLimit": "Maximale Anzahl an Bereichen erreicht"
   },
   "validation": {

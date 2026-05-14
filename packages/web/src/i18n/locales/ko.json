@@ -96,11 +96,15 @@
       "findPrev": "이전 찾기",
       "close": "검색 닫기"
     },
-    "dropHint": "파일을 놓아 세션 현재 디렉토리에 업로드",
+    "dropHint": "파일이나 이미지를 드롭하여 Claude/터미널에 보내기",
     "uploadProgress": "{{current}} 업로드 중 ({{completed}}/{{total}})",
     "uploadDone": "{{count}}개 파일 업로드됨",
     "uploadError": "업로드 실패: {{message}}",
     "uploadBusy": "다른 업로드가 진행 중입니다",
+    "uploadSizeExceeded": "파일 크기가 업로드 한도 (10 MB) 를 초과했습니다",
+    "clipboardPermission": "브라우저에서 클립보드 접근을 허용해주세요",
+    "clipboardUnsupported": "이 브라우저는 클립보드 이미지 읽기를 지원하지 않습니다",
+    "notConnected": "터미널이 연결되지 않아 이미지 경로를 전송하지 못했습니다",
     "newPaneLimit": "최대 패널 수에 도달했습니다"
   },
   "validation": {

@@ -95,11 +95,15 @@
       "findPrev": "Find previous",
       "close": "Close search"
     },
-    "dropHint": "Drop files to upload to session cwd",
+    "dropHint": "Drop files or images to send to Claude/terminal",
     "uploadProgress": "Uploading {{current}} ({{completed}}/{{total}})",
     "uploadDone": "Uploaded {{count}} file(s)",
     "uploadError": "Upload failed: {{message}}",
     "uploadBusy": "Another upload is in progress",
+    "uploadSizeExceeded": "File size exceeded the upload limit (10 MB)",
+    "clipboardPermission": "Allow clipboard access in your browser",
+    "clipboardUnsupported": "This browser does not support clipboard image reads",
+    "notConnected": "Terminal is not connected; image path was not sent",
     "newPaneLimit": "Maximum pane count reached"
   },
   "validation": {

@@ -96,11 +96,15 @@
       "findPrev": "查找上一个",
       "close": "关闭搜索"
     },
-    "dropHint": "拖放文件以上传至会话当前目录",
+    "dropHint": "拖放文件或图片以发送给 Claude/终端",
     "uploadProgress": "正在上传 {{current}}（{{completed}}/{{total}}）",
     "uploadDone": "已上传 {{count}} 个文件",
     "uploadError": "上传失败：{{message}}",
     "uploadBusy": "另一个上传正在进行中",
+    "uploadSizeExceeded": "文件大小超过了上传限制 (10 MB)",
+    "clipboardPermission": "请在浏览器中允许剪贴板访问",
+    "clipboardUnsupported": "此浏览器不支持剪贴板图片读取",
+    "notConnected": "终端未连接，未能发送图片路径",
     "newPaneLimit": "已达到面板数量上限"
   },
   "validation": {

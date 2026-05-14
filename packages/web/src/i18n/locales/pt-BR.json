@@ -96,11 +96,15 @@
       "findPrev": "Anterior",
       "close": "Fechar pesquisa"
     },
-    "dropHint": "Solte arquivos para enviar ao diretório atual da sessão",
+    "dropHint": "Solte arquivos ou imagens para enviar ao Claude/terminal",
     "uploadProgress": "Enviando {{current}} ({{completed}}/{{total}})",
     "uploadDone": "{{count}} arquivo(s) enviado(s)",
     "uploadError": "Falha no envio: {{message}}",
     "uploadBusy": "Outro envio está em andamento",
+    "uploadSizeExceeded": "O tamanho do arquivo excedeu o limite de upload (10 MB)",
+    "clipboardPermission": "Permita o acesso à área de transferência no navegador",
+    "clipboardUnsupported": "Este navegador não suporta leitura de imagens da área de transferência",
+    "notConnected": "O terminal não está conectado; o caminho da imagem não foi enviado",
     "newPaneLimit": "Número máximo de painéis atingido"
   },
   "validation": {

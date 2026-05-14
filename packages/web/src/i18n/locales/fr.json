@@ -96,11 +96,15 @@
       "findPrev": "Précédent",
       "close": "Fermer la recherche"
     },
-    "dropHint": "Déposez des fichiers pour les téléverser dans le répertoire courant de la session",
+    "dropHint": "Déposez des fichiers ou images pour les envoyer à Claude/terminal",
     "uploadProgress": "Téléversement de {{current}} ({{completed}}/{{total}})",
     "uploadDone": "{{count}} fichier(s) téléversé(s)",
     "uploadError": "Échec du téléversement : {{message}}",
     "uploadBusy": "Un autre téléversement est en cours",
+    "uploadSizeExceeded": "La taille du fichier dépasse la limite de téléversement (10 Mo)",
+    "clipboardPermission": "Autorisez l'accès au presse-papiers dans votre navigateur",
+    "clipboardUnsupported": "Ce navigateur ne prend pas en charge la lecture d'images du presse-papiers",
+    "notConnected": "Le terminal n'est pas connecté ; le chemin de l'image n'a pas été envoyé",
     "newPaneLimit": "Nombre maximum de volets atteint"
   },
   "validation": {

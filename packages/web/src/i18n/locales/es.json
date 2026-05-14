@@ -96,11 +96,15 @@
       "findPrev": "Buscar anterior",
       "close": "Cerrar búsqueda"
     },
-    "dropHint": "Suelte archivos para subirlos al directorio actual de la sesión",
+    "dropHint": "Suelta archivos o imágenes para enviarlos a Claude/terminal",
     "uploadProgress": "Subiendo {{current}} ({{completed}}/{{total}})",
     "uploadDone": "{{count}} archivo(s) subido(s)",
     "uploadError": "Error al subir: {{message}}",
     "uploadBusy": "Otra subida está en progreso",
+    "uploadSizeExceeded": "El tamaño del archivo superó el límite de carga (10 MB)",
+    "clipboardPermission": "Permite el acceso al portapapeles en tu navegador",
+    "clipboardUnsupported": "Este navegador no admite la lectura de imágenes del portapapeles",
+    "notConnected": "El terminal no está conectado; la ruta de la imagen no se envió",
     "newPaneLimit": "Se alcanzó el número máximo de paneles"
   },
   "validation": {
