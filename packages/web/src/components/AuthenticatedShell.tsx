@@ -20,7 +20,7 @@ import { useEventsSubscription } from '@/hooks/useEventsSubscription';
 import { useRateLimitsWarning } from '@/hooks/useRateLimitsWarning';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUploadProgress } from '@/hooks/useUploadProgress';
-import { SLOT_COUNT, upgradeLayout } from '@/lib/paneLayout';
+import { SLOT_COUNT, paneNeighbor, upgradeLayout, type PaneDirection } from '@/lib/paneLayout';
 import { decode as decodeFragment, encode as encodeFragment } from '@/lib/paneStateFragment';
 import { parseSessionRoute } from '@/lib/urlSync';
 import { CommandPalette } from './CommandPalette';
@@ -296,6 +296,13 @@ export function AuthenticatedShell() {
   const focusNextPane = () => cyclePane(1);
   const focusPrevPane = () => cyclePane(-1);
 
+  const focusPaneInDirection = (dir: PaneDirection) => {
+    const { layout, focusedIndex, panes, setFocusedIndex } = usePaneStore.getState();
+    const target = paneNeighbor(layout, focusedIndex, dir);
+    if (target === null || target < 0 || target >= panes.length) return;
+    setFocusedIndex(target);
+  };
+
   const jumpToWindow = (n: number) => {
     // n is 1-based ⌘1..⌘9; map to 0-based window index inside focused pane.
     const state = usePaneStore.getState();
@@ -341,6 +348,7 @@ export function AuthenticatedShell() {
     closeWindow,
     focusNextPane,
     focusPrevPane,
+    focusPaneInDirection,
     openLayoutMenu,
     openSearch,
   });

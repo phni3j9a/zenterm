@@ -3,6 +3,7 @@ import {
   LAYOUT_MODES,
   SLOT_COUNT,
   dropExtraPanes,
+  paneNeighbor,
   upgradeLayout,
 } from '../paneLayout';
 
@@ -78,6 +79,62 @@ describe('dropExtraPanes', () => {
     const result = dropExtraPanes(panes, 1, 0);
     expect(result.panes).toEqual([]);
     expect(result.focusedIndex).toBe(0);
+  });
+});
+
+describe('paneNeighbor', () => {
+  it('single レイアウトは隣接ペインなし', () => {
+    expect(paneNeighbor('single', 0, 'left')).toBeNull();
+    expect(paneNeighbor('single', 0, 'right')).toBeNull();
+    expect(paneNeighbor('single', 0, 'up')).toBeNull();
+    expect(paneNeighbor('single', 0, 'down')).toBeNull();
+  });
+
+  it('cols-2 は左右のみ移動可能', () => {
+    expect(paneNeighbor('cols-2', 0, 'right')).toBe(1);
+    expect(paneNeighbor('cols-2', 1, 'left')).toBe(0);
+    expect(paneNeighbor('cols-2', 0, 'left')).toBeNull();
+    expect(paneNeighbor('cols-2', 1, 'right')).toBeNull();
+    expect(paneNeighbor('cols-2', 0, 'up')).toBeNull();
+    expect(paneNeighbor('cols-2', 1, 'down')).toBeNull();
+  });
+
+  it('cols-3 は端で止まる', () => {
+    expect(paneNeighbor('cols-3', 0, 'right')).toBe(1);
+    expect(paneNeighbor('cols-3', 1, 'right')).toBe(2);
+    expect(paneNeighbor('cols-3', 2, 'right')).toBeNull();
+    expect(paneNeighbor('cols-3', 2, 'left')).toBe(1);
+    expect(paneNeighbor('cols-3', 0, 'left')).toBeNull();
+  });
+
+  it('grid-2x2 は [0 1] / [2 3] の topology に従う', () => {
+    // 0 1
+    // 2 3
+    expect(paneNeighbor('grid-2x2', 0, 'right')).toBe(1);
+    expect(paneNeighbor('grid-2x2', 0, 'down')).toBe(2);
+    expect(paneNeighbor('grid-2x2', 0, 'left')).toBeNull();
+    expect(paneNeighbor('grid-2x2', 0, 'up')).toBeNull();
+
+    expect(paneNeighbor('grid-2x2', 1, 'left')).toBe(0);
+    expect(paneNeighbor('grid-2x2', 1, 'down')).toBe(3);
+    expect(paneNeighbor('grid-2x2', 1, 'right')).toBeNull();
+    expect(paneNeighbor('grid-2x2', 1, 'up')).toBeNull();
+
+    expect(paneNeighbor('grid-2x2', 2, 'right')).toBe(3);
+    expect(paneNeighbor('grid-2x2', 2, 'up')).toBe(0);
+    expect(paneNeighbor('grid-2x2', 2, 'left')).toBeNull();
+    expect(paneNeighbor('grid-2x2', 2, 'down')).toBeNull();
+
+    expect(paneNeighbor('grid-2x2', 3, 'left')).toBe(2);
+    expect(paneNeighbor('grid-2x2', 3, 'up')).toBe(1);
+    expect(paneNeighbor('grid-2x2', 3, 'right')).toBeNull();
+    expect(paneNeighbor('grid-2x2', 3, 'down')).toBeNull();
+  });
+
+  it('範囲外の fromIndex は null', () => {
+    expect(paneNeighbor('grid-2x2', -1, 'right')).toBeNull();
+    expect(paneNeighbor('grid-2x2', 4, 'left')).toBeNull();
+    expect(paneNeighbor('cols-2', 5, 'left')).toBeNull();
   });
 });
 

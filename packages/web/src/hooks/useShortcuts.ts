@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { matchShortcut, type ShortcutSpec } from '@/lib/keymap';
+import type { PaneDirection } from '@/lib/paneLayout';
 
 export interface ShortcutHandlers {
   toggleSidebar: () => void;
@@ -11,6 +12,7 @@ export interface ShortcutHandlers {
   closeWindow: () => void;
   focusNextPane: () => void;
   focusPrevPane: () => void;
+  focusPaneInDirection: (dir: PaneDirection) => void;
   openLayoutMenu: () => void;
   openSearch: () => void;
 }
@@ -30,6 +32,10 @@ const BINDINGS: Binding[] = [
   { spec: { key: 'w', mod: true }, run: (_e, h) => h.closeWindow() },
   { spec: { key: '[', mod: true }, run: (_e, h) => h.focusPrevPane() },
   { spec: { key: ']', mod: true }, run: (_e, h) => h.focusNextPane() },
+  { spec: { key: 'arrowleft', mod: true, shift: true }, run: (_e, h) => h.focusPaneInDirection('left') },
+  { spec: { key: 'arrowright', mod: true, shift: true }, run: (_e, h) => h.focusPaneInDirection('right') },
+  { spec: { key: 'arrowup', mod: true, shift: true }, run: (_e, h) => h.focusPaneInDirection('up') },
+  { spec: { key: 'arrowdown', mod: true, shift: true }, run: (_e, h) => h.focusPaneInDirection('down') },
   ...['1', '2', '3', '4', '5', '6', '7', '8', '9'].map<Binding>((d) => ({
     spec: { key: d, mod: true },
     run: (_e, h) => h.jumpToWindow(Number(d)),

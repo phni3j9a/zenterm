@@ -26,6 +26,7 @@ describe('useShortcuts', () => {
       closeWindow: vi.fn(),
       focusNextPane: vi.fn(),
       focusPrevPane: vi.fn(),
+      focusPaneInDirection: vi.fn(),
       openLayoutMenu: vi.fn(),
       openSearch: vi.fn(),
     };
@@ -45,6 +46,7 @@ describe('useShortcuts', () => {
       closeWindow: vi.fn(),
       focusNextPane: vi.fn(),
       focusPrevPane: vi.fn(),
+      focusPaneInDirection: vi.fn(),
       openLayoutMenu: vi.fn(),
       openSearch: vi.fn(),
     };
@@ -63,12 +65,62 @@ describe('useShortcuts', () => {
       closeWindow: vi.fn(),
       focusNextPane: vi.fn(),
       focusPrevPane: vi.fn(),
+      focusPaneInDirection: vi.fn(),
       openLayoutMenu: vi.fn(),
       openSearch: vi.fn(),
     };
     renderHook(() => useShortcuts(handlers));
     dispatch({ key: 'b' });
     expect(handlers.toggleSidebar).not.toHaveBeenCalled();
+  });
+
+  it('fires focusPaneInDirection on ⌘+Shift+矢印 and prevents default', () => {
+    const handlers: ShortcutHandlers = {
+      toggleSidebar: vi.fn(),
+      openPalette: vi.fn(),
+      openSettings: vi.fn(),
+      jumpToWindow: vi.fn(),
+      newWindow: vi.fn(),
+      closeWindow: vi.fn(),
+      focusNextPane: vi.fn(),
+      focusPrevPane: vi.fn(),
+      focusPaneInDirection: vi.fn(),
+      openLayoutMenu: vi.fn(),
+      openSearch: vi.fn(),
+    };
+    renderHook(() => useShortcuts(handlers));
+
+    const left = dispatch({ key: 'ArrowLeft', metaKey: true, shiftKey: true });
+    expect(handlers.focusPaneInDirection).toHaveBeenNthCalledWith(1, 'left');
+    expect(left.defaultPrevented).toBe(true);
+
+    dispatch({ key: 'ArrowRight', metaKey: true, shiftKey: true });
+    expect(handlers.focusPaneInDirection).toHaveBeenNthCalledWith(2, 'right');
+
+    dispatch({ key: 'ArrowUp', metaKey: true, shiftKey: true });
+    expect(handlers.focusPaneInDirection).toHaveBeenNthCalledWith(3, 'up');
+
+    dispatch({ key: 'ArrowDown', metaKey: true, shiftKey: true });
+    expect(handlers.focusPaneInDirection).toHaveBeenNthCalledWith(4, 'down');
+  });
+
+  it('does not fire focusPaneInDirection without Shift', () => {
+    const handlers: ShortcutHandlers = {
+      toggleSidebar: vi.fn(),
+      openPalette: vi.fn(),
+      openSettings: vi.fn(),
+      jumpToWindow: vi.fn(),
+      newWindow: vi.fn(),
+      closeWindow: vi.fn(),
+      focusNextPane: vi.fn(),
+      focusPrevPane: vi.fn(),
+      focusPaneInDirection: vi.fn(),
+      openLayoutMenu: vi.fn(),
+      openSearch: vi.fn(),
+    };
+    renderHook(() => useShortcuts(handlers));
+    dispatch({ key: 'ArrowLeft', metaKey: true });
+    expect(handlers.focusPaneInDirection).not.toHaveBeenCalled();
   });
 
   it('does not re-register on identical handler refs across re-renders', () => {
@@ -81,6 +133,7 @@ describe('useShortcuts', () => {
       closeWindow: vi.fn(),
       focusNextPane: vi.fn(),
       focusPrevPane: vi.fn(),
+      focusPaneInDirection: vi.fn(),
       openLayoutMenu: vi.fn(),
       openSearch: vi.fn(),
     };

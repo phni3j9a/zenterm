@@ -2,6 +2,8 @@ import type { PaneTarget } from '@/stores/pane';
 
 export type LayoutMode = 'single' | 'cols-2' | 'cols-3' | 'grid-2x2';
 
+export type PaneDirection = 'up' | 'down' | 'left' | 'right';
+
 export const LAYOUT_MODES: readonly LayoutMode[] = [
   'single',
   'cols-2',
@@ -15,6 +17,31 @@ export const SLOT_COUNT: Record<LayoutMode, number> = {
   'cols-3': 3,
   'grid-2x2': 4,
 };
+
+// Returns the neighbor slot index in the given direction, or null if there's
+// no neighbor (edge of the layout). grid-2x2 indices are laid out as:
+//   [0 1]
+//   [2 3]
+export function paneNeighbor(
+  layout: LayoutMode,
+  fromIndex: number,
+  dir: PaneDirection,
+): number | null {
+  const slots = SLOT_COUNT[layout];
+  if (fromIndex < 0 || fromIndex >= slots) return null;
+  if (layout === 'single') return null;
+  if (layout === 'cols-2' || layout === 'cols-3') {
+    if (dir === 'left' && fromIndex > 0) return fromIndex - 1;
+    if (dir === 'right' && fromIndex < slots - 1) return fromIndex + 1;
+    return null;
+  }
+  // grid-2x2
+  if (dir === 'left' && fromIndex % 2 === 1) return fromIndex - 1;
+  if (dir === 'right' && fromIndex % 2 === 0) return fromIndex + 1;
+  if (dir === 'up' && fromIndex >= 2) return fromIndex - 2;
+  if (dir === 'down' && fromIndex < 2) return fromIndex + 2;
+  return null;
+}
 
 export interface DropExtraResult {
   panes: (PaneTarget | null)[];
