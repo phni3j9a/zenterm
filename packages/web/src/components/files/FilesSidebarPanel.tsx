@@ -129,7 +129,7 @@ export function FilesSidebarPanel({ client }: Props) {
       await refresh();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      pushToast({ type: 'error', message: `${t('files.mkdirFailed')}: ${msg}` });
+      pushToast({ type: 'error', message: `${t('files.newFileFailed')}: ${msg}` });
     }
   };
 

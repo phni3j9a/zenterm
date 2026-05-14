@@ -277,6 +277,7 @@
     "mkdirSuccess": "Pasta criada",
     "mkdirFailed": "Falha ao criar pasta",
     "mkdirFailedDesc": "Não foi possível criar a pasta.",
+    "newFileFailed": "Falha ao criar arquivo",
     "detailsSize": "Tamanho: {{size}}",
     "detailsModified": "Modificado: {{date}}",
     "detailsPermissions": "Permissões: {{permissions}}",

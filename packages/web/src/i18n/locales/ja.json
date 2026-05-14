@@ -276,6 +276,7 @@
     "mkdirSuccess": "フォルダを作成しました",
     "mkdirFailed": "フォルダ作成失敗",
     "mkdirFailedDesc": "フォルダを作成できませんでした。",
+    "newFileFailed": "ファイル作成に失敗しました",
     "detailsSize": "サイズ: {{size}}",
     "detailsModified": "更新日時: {{date}}",
     "detailsPermissions": "権限: {{permissions}}",

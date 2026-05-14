@@ -276,6 +276,7 @@
     "mkdirSuccess": "Folder created",
     "mkdirFailed": "Create folder failed",
     "mkdirFailedDesc": "Could not create folder.",
+    "newFileFailed": "Failed to create file",
     "detailsSize": "Size: {{size}}",
     "detailsModified": "Modified: {{date}}",
     "detailsPermissions": "Permissions: {{permissions}}",

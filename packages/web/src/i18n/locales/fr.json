@@ -277,6 +277,7 @@
     "mkdirSuccess": "Dossier créé",
     "mkdirFailed": "Échec de la création du dossier",
     "mkdirFailedDesc": "Impossible de créer le dossier.",
+    "newFileFailed": "Échec de la création du fichier",
     "detailsSize": "Taille : {{size}}",
     "detailsModified": "Modifié : {{date}}",
     "detailsPermissions": "Permissions : {{permissions}}",

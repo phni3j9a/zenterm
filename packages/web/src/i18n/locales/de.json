@@ -277,6 +277,7 @@
     "mkdirSuccess": "Ordner erstellt",
     "mkdirFailed": "Ordner erstellen fehlgeschlagen",
     "mkdirFailedDesc": "Ordner konnte nicht erstellt werden.",
+    "newFileFailed": "Datei konnte nicht erstellt werden",
     "detailsSize": "Größe: {{size}}",
     "detailsModified": "Geändert: {{date}}",
     "detailsPermissions": "Berechtigungen: {{permissions}}",

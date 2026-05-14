@@ -277,6 +277,7 @@
     "mkdirSuccess": "폴더가 생성되었습니다",
     "mkdirFailed": "폴더 생성 실패",
     "mkdirFailedDesc": "폴더를 생성할 수 없습니다.",
+    "newFileFailed": "파일 생성 실패",
     "detailsSize": "크기: {{size}}",
     "detailsModified": "수정됨: {{date}}",
     "detailsPermissions": "권한: {{permissions}}",

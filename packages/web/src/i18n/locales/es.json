@@ -277,6 +277,7 @@
     "mkdirSuccess": "Carpeta creada",
     "mkdirFailed": "Error al crear carpeta",
     "mkdirFailedDesc": "No se pudo crear la carpeta.",
+    "newFileFailed": "Error al crear el archivo",
     "detailsSize": "Tamaño: {{size}}",
     "detailsModified": "Modificado: {{date}}",
     "detailsPermissions": "Permisos: {{permissions}}",

@@ -277,6 +277,7 @@
     "mkdirSuccess": "文件夹已创建",
     "mkdirFailed": "创建文件夹失败",
     "mkdirFailedDesc": "无法创建文件夹。",
+    "newFileFailed": "文件创建失败",
     "detailsSize": "大小：{{size}}",
     "detailsModified": "修改时间：{{date}}",
     "detailsPermissions": "权限：{{permissions}}",
