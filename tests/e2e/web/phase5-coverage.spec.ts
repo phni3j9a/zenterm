@@ -168,64 +168,45 @@ test('sidebar keyboard resize changes sidebar width by 80 px', async ({ page }) 
 });
 
 // ---------------------------------------------------------------------------
-// Test 2: File drop on terminal pane triggers upload toast
+// Test 2: File drop on terminal pane uploads to staging and types the path
 //
-// Approach:
-//  1. Create a real session via REST, open it via sidebar click.
-//  2. Fire synthetic DragEvent with Files DataTransfer on the window to
-//     activate TerminalDropZone overlay, then drop on it.
-//  3. Verify the "Uploaded 1 file(s)" toast appears.
-//
-// The TerminalDropZone only renders when: isFocused && sessionCwd && onDropFiles.
-// After clicking the session from the sidebar, the focused pane will have the
-// session assigned and sessionCwd will be its cwd (visible in sidebar).
+// After the unification in 2026-05-14-web-image-dispatch-design.md, terminal
+// pane drops go to $HOME/uploads/zenterm/ (staging), and the absolute path is
+// shell-quoted and typed into the pty. The toast still says "Uploaded 1 file".
 // ---------------------------------------------------------------------------
-test('file drop on terminal pane shows upload-done toast', async ({ page }) => {
+test('file drop on terminal pane uploads to staging and shows upload-done toast', async ({ page }) => {
   const sessionId = await createSession();
   if (!sessionId) { test.skip(); return; }
 
   await navigateToSession(page, sessionId);
-
-  // Give React time to connect the WebSocket and retrieve sessionCwd
-  // (cwd is published via the terminal events subscription).
-  // The DropZone only renders when sessionCwd is truthy.
   await page.waitForTimeout(2000);
 
-  // Fire a synthetic dragenter event to trigger DropZone overlay
   const dropResult = await page.evaluate(async () => {
     function makeDragEvent(type: string, dt: DataTransfer): DragEvent {
       return new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: dt });
     }
     const dt = new DataTransfer();
     dt.items.add(new File(['hello world'], 'test-drop.txt', { type: 'text/plain' }));
-
     window.dispatchEvent(makeDragEvent('dragenter', dt));
     window.dispatchEvent(makeDragEvent('dragover', dt));
-
-    // Wait for React to re-render the DropZone
     await new Promise((r) => setTimeout(r, 300));
-
     const dropZone = Array.from(document.querySelectorAll<HTMLElement>('[role="region"]')).find(
       (el) => el.style.zIndex === '50',
     );
     if (!dropZone) return { found: false };
-
     dropZone.dispatchEvent(makeDragEvent('drop', dt));
     return { found: true };
   });
 
-  if (!dropResult.found) {
-    // DropZone didn't appear — sessionCwd not available yet (terminal not
-    // fully connected). This path is covered by unit tests; skip here.
-    test.skip();
-    return;
-  }
+  if (!dropResult.found) { test.skip(); return; }
 
-  // Toast: "Uploaded 1 file(s)" (template: uploadDone = "Uploaded {{count}} file(s)").
-  // The toast renders as an aria-live status element. Use first() since the toast
-  // system may create both a live region and a visible element with the same text.
+  // Toast: "Uploaded 1 file(s)".
   const toast = page.locator('[role="status"]').filter({ hasText: /Uploaded 1 file/i }).first();
   await expect(toast).toBeVisible({ timeout: 10000 });
+
+  // The terminal screen should contain a path under uploads/zenterm/ (echo from pty).
+  const screen = page.locator('.xterm-screen').first();
+  await expect(screen).toContainText(/uploads\/zenterm\//, { timeout: 10000 });
 });
 
 // ---------------------------------------------------------------------------
