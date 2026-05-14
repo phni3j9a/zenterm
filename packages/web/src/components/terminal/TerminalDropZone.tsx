@@ -3,11 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
 interface Props {
-  cwd: string;
-  onFiles: (files: File[], cwd: string) => void;
+  onFiles: (files: File[]) => void;
 }
 
-export function TerminalDropZone({ cwd, onFiles }: Props) {
+export function TerminalDropZone({ onFiles }: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const [active, setActive] = useState(false);
@@ -49,7 +48,7 @@ export function TerminalDropZone({ cwd, onFiles }: Props) {
         e.preventDefault();
         const files = Array.from(e.dataTransfer.files);
         setActive(false);
-        if (files.length > 0) onFiles(files, cwd);
+        if (files.length > 0) onFiles(files);
       }}
       style={{
         position: 'absolute',
@@ -65,7 +64,7 @@ export function TerminalDropZone({ cwd, onFiles }: Props) {
         border: `2px dashed ${tokens.colors.primary}`,
       }}
     >
-      {t('terminal.dropHint')} → {cwd}
+      {t('terminal.dropHint')}
     </div>
   );
 }
