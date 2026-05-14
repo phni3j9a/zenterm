@@ -41,7 +41,6 @@ beforeEach(() => {
     layout: 'single',
     panes: [null],
     focusedIndex: 0,
-    savedLayout: null,
   });
   vi.stubGlobal('ResizeObserver', class {
     observe() {}
@@ -58,7 +57,7 @@ function renderArea(isVisible = true) {
 
 describe('MultiPaneArea', () => {
   it('single layout で 1 pane を描画 (paneIndex=0, focused=true)', () => {
-    usePaneStore.getState().assignPane(0, { sessionId: 's1', windowIndex: 0 });
+    usePaneStore.getState().assignPane(0, { kind: 'terminal', sessionId: 's1', windowIndex: 0 });
     renderArea();
     const p0 = screen.getByTestId('pane-0');
     expect(p0.getAttribute('data-session')).toBe('s1');
@@ -67,8 +66,8 @@ describe('MultiPaneArea', () => {
 
   it('cols-2 layout で 2 pane を描画、focused のみ data-focused=true', () => {
     usePaneStore.getState().setLayout('cols-2');
-    usePaneStore.getState().assignPane(0, { sessionId: 'a', windowIndex: 0 });
-    usePaneStore.getState().assignPane(1, { sessionId: 'b', windowIndex: 0 });
+    usePaneStore.getState().assignPane(0, { kind: 'terminal', sessionId: 'a', windowIndex: 0 });
+    usePaneStore.getState().assignPane(1, { kind: 'terminal', sessionId: 'b', windowIndex: 0 });
     usePaneStore.getState().setFocusedIndex(1);
     renderArea();
     expect(screen.getByTestId('pane-0').getAttribute('data-focused')).toBe('false');
@@ -119,8 +118,8 @@ describe('MultiPaneArea', () => {
 
   it('同 layout 内で focus 変更しても TerminalPane は remount されない', () => {
     usePaneStore.getState().setLayout('cols-2');
-    usePaneStore.getState().assignPane(0, { sessionId: 'a', windowIndex: 0 });
-    usePaneStore.getState().assignPane(1, { sessionId: 'b', windowIndex: 0 });
+    usePaneStore.getState().assignPane(0, { kind: 'terminal', sessionId: 'a', windowIndex: 0 });
+    usePaneStore.getState().assignPane(1, { kind: 'terminal', sessionId: 'b', windowIndex: 0 });
     usePaneStore.getState().setFocusedIndex(0);
     const { rerender } = renderArea();
     const beforeP0 = screen.getByTestId('pane-0');

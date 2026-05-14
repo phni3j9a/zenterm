@@ -42,28 +42,41 @@ export function MultiPaneArea({
 
   const slot = (idx: number): ReactNode => {
     const pane = panes[idx];
-    return (
+    const wrap = (child: ReactNode): ReactNode => (
       <div
         key={`pane-${idx}`}
         onClick={() => setFocusedIndex(idx)}
         style={{ width: '100%', height: '100%', minWidth: 0, minHeight: 0, overflow: 'hidden' }}
       >
-        <TerminalPane
-          gatewayUrl={gatewayUrl}
-          token={token}
-          sessionId={pane?.sessionId ?? null}
-          windowIndex={pane?.windowIndex ?? null}
-          paneIndex={idx}
-          isFocused={idx === focusedIndex}
-          isVisible={isVisible}
-          onSearch={onSearch}
-          onNewPane={onNewPane}
-          canCreateNewPane={canCreateNewPane}
-          apiClient={apiClient}
-          uploadProgress={uploadProgress}
-          onAuthError={onAuthError}
-        />
+        {child}
       </div>
+    );
+
+    if (pane && pane.kind === 'file') {
+      // Task 6 で FilePaneViewer を実装し、Task 7 でここに接続する。
+      // それまでは暫定 placeholder を表示する。
+      return wrap(<div style={{ color: '#888', padding: 16 }}>file: {pane.path}</div>);
+    }
+
+    // terminal kind または null(空ペイン)は従来通り TerminalPane に流す。
+    const sessionId = pane && pane.kind === 'terminal' ? pane.sessionId : null;
+    const windowIndex = pane && pane.kind === 'terminal' ? pane.windowIndex : null;
+    return wrap(
+      <TerminalPane
+        gatewayUrl={gatewayUrl}
+        token={token}
+        sessionId={sessionId}
+        windowIndex={windowIndex}
+        paneIndex={idx}
+        isFocused={idx === focusedIndex}
+        isVisible={isVisible}
+        onSearch={onSearch}
+        onNewPane={onNewPane}
+        canCreateNewPane={canCreateNewPane}
+        apiClient={apiClient}
+        uploadProgress={uploadProgress}
+        onAuthError={onAuthError}
+      />,
     );
   };
 
