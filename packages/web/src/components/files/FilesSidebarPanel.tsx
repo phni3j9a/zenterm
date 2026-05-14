@@ -6,11 +6,9 @@ import type { FileEntry } from '@zenterm/shared';
 import { useTheme } from '@/theme';
 import { useFilesStore } from '@/stores/files';
 import type { FilesClipboard } from '@/stores/files';
-import { useFilesPreviewStore } from '@/stores/filesPreview';
 import { usePaneStore } from '@/stores/pane';
 import { useUiStore } from '@/stores/ui';
 import { buildEntryPath } from '@/lib/filesPath';
-import { getPreviewKind } from '@/lib/filesIcon';
 import { FilesToolbar } from './FilesToolbar';
 import { FilesBreadcrumbs } from './FilesBreadcrumbs';
 import { FilesList } from './FilesList';
@@ -74,9 +72,12 @@ export function FilesSidebarPanel({ client }: Props) {
         try {
           await client.deleteFile(targetPath);
           pushToast({ type: 'success', message: t('files.deleteSuccess') });
-          if (useFilesPreviewStore.getState().selectedPath === targetPath) {
-            useFilesPreviewStore.getState().clear();
-          }
+          const { panes } = usePaneStore.getState();
+          panes.forEach((p, i) => {
+            if (p && p.kind === 'file' && p.path === targetPath) {
+              usePaneStore.getState().assignPane(i, null);
+            }
+          });
           await refresh();
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
@@ -93,10 +94,12 @@ export function FilesSidebarPanel({ client }: Props) {
     try {
       await client.renameFile(oldPath, newName);
       pushToast({ type: 'success', message: t('files.renameSuccess') });
-      if (useFilesPreviewStore.getState().selectedPath === oldPath) {
-        const kind = useFilesPreviewStore.getState().selectedKind;
-        if (kind) useFilesPreviewStore.getState().selectFile(newPath, newName, kind);
-      }
+      const { panes } = usePaneStore.getState();
+      panes.forEach((p, i) => {
+        if (p && p.kind === 'file' && p.path === oldPath) {
+          usePaneStore.getState().assignPane(i, { kind: 'file', path: newPath });
+        }
+      });
       setRenameTarget(null);
       await refresh();
     } catch (err) {
@@ -117,13 +120,17 @@ export function FilesSidebarPanel({ client }: Props) {
     }
   };
 
-  const doNewFile = (name: string) => {
-    // Create empty buffer in editor; actual file is written on Save (Task 28)
+  const doNewFile = async (name: string) => {
     const path = buildEntryPath(useFilesStore.getState().currentPath, name);
-    useFilesPreviewStore.getState().selectFile(path, name, getPreviewKind(name));
-    useFilesPreviewStore.getState().setText('', 0, false);
-    useFilesPreviewStore.getState().startEditing();
-    setNewFileOpen(false);
+    try {
+      await client.writeFileContent(path, '');
+      usePaneStore.getState().openInFocusedPane({ kind: 'file', path });
+      setNewFileOpen(false);
+      await refresh();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      pushToast({ type: 'error', message: `${t('files.mkdirFailed')}: ${msg}` });
+    }
   };
 
   const handleLongPress = (entry: FileEntry) => {

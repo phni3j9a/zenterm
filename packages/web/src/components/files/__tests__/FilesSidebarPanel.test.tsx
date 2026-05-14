@@ -4,7 +4,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { initI18n } from '@/i18n';
 import { useSettingsStore } from '@/stores/settings';
 import { useFilesStore } from '@/stores/files';
-import { useFilesPreviewStore } from '@/stores/filesPreview';
 import { usePaneStore } from '@/stores/pane';
 import { FilesSidebarPanel } from '../FilesSidebarPanel';
 
@@ -29,7 +28,6 @@ const makeClient = () => ({
 describe('FilesSidebarPanel', () => {
   beforeEach(() => {
     useFilesStore.getState().reset();
-    useFilesPreviewStore.getState().clear();
     usePaneStore.setState({
       layout: 'single',
       panes: [null],
