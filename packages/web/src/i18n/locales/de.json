@@ -238,6 +238,7 @@
     "cannotOpenDesc": "{{name}} kann nicht in der Vorschau angezeigt werden.",
     "truncatedIndicator": "Abgeschnitten bei {{lines}} Zeilen",
     "download": "Herunterladen",
+    "closePane": "Schließen",
     "downloadFailed": "Download fehlgeschlagen",
     "downloadFailedDesc": "Datei konnte nicht heruntergeladen werden.",
     "rendered": "Gerendert",

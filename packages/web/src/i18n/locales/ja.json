@@ -237,6 +237,7 @@
     "cannotOpenDesc": "{{name}} はプレビューできません。",
     "truncatedIndicator": "{{lines}} 行で切り詰めました",
     "download": "ダウンロード",
+    "closePane": "閉じる",
     "downloadFailed": "ダウンロード失敗",
     "downloadFailedDesc": "ファイルをダウンロードできませんでした。",
     "rendered": "レンダリング",

@@ -238,6 +238,7 @@
     "cannotOpenDesc": "{{name}}을(를) 미리 볼 수 없습니다.",
     "truncatedIndicator": "{{lines}}줄에서 잘림",
     "download": "다운로드",
+    "closePane": "닫기",
     "downloadFailed": "다운로드 실패",
     "downloadFailedDesc": "파일을 다운로드할 수 없습니다.",
     "rendered": "렌더링됨",

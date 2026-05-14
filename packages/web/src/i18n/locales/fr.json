@@ -238,6 +238,7 @@
     "cannotOpenDesc": "{{name}} ne peut pas être prévisualisé.",
     "truncatedIndicator": "Tronqué à {{lines}} lignes",
     "download": "Télécharger",
+    "closePane": "Fermer",
     "downloadFailed": "Échec du téléchargement",
     "downloadFailedDesc": "Impossible de télécharger le fichier.",
     "rendered": "Rendu",

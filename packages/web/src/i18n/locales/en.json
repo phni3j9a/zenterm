@@ -237,6 +237,7 @@
     "cannotOpenDesc": "{{name}} cannot be previewed.",
     "truncatedIndicator": "Truncated at {{lines}} lines",
     "download": "Download",
+    "closePane": "Close",
     "downloadFailed": "Download failed",
     "downloadFailedDesc": "Could not download file.",
     "rendered": "Rendered",

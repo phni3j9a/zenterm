@@ -1,26 +1,38 @@
 import { useTranslation } from 'react-i18next';
-import { useFilesPreviewStore } from '@/stores/filesPreview';
 import { useTheme } from '@/theme';
+import type { PreviewKind } from '@/lib/filesIcon';
 
 interface Props {
+  name: string;
+  kind: PreviewKind;
+  isEditing: boolean;
+  isDirty: boolean;
+  saving: boolean;
+  showMarkdownRendered: boolean;
   onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
   onDownload: () => void;
   onToggleMarkdown: () => void;
+  onClose: () => void;
 }
 
-export function FilesViewerHeader({ onEdit, onSave, onCancel, onDownload, onToggleMarkdown }: Props) {
+export function FilesViewerHeader({
+  name,
+  kind,
+  isEditing,
+  isDirty,
+  saving,
+  showMarkdownRendered,
+  onEdit,
+  onSave,
+  onCancel,
+  onDownload,
+  onToggleMarkdown,
+  onClose,
+}: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
-  const selectedName = useFilesPreviewStore((s) => s.selectedName);
-  const selectedKind = useFilesPreviewStore((s) => s.selectedKind);
-  const isEditing = useFilesPreviewStore((s) => s.isEditing);
-  const showMarkdownRendered = useFilesPreviewStore((s) => s.showMarkdownRendered);
-  const isDirty = useFilesPreviewStore((s) => s.isDirty);
-  const saving = useFilesPreviewStore((s) => s.saving);
-
-  if (!selectedName) return null;
 
   const btn = {
     background: 'none' as const,
@@ -52,16 +64,16 @@ export function FilesViewerHeader({ onEdit, onSave, onCancel, onDownload, onTogg
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}
-        title={selectedName}
+        title={name}
       >
-        {selectedName}
+        {name}
       </span>
-      {selectedKind === 'markdown' && (
+      {kind === 'markdown' && (
         <button type="button" onClick={onToggleMarkdown} style={btn}>
           {showMarkdownRendered ? t('files.source') : t('files.rendered')}
         </button>
       )}
-      {(selectedKind === 'text' || selectedKind === 'markdown') && !isEditing && (
+      {(kind === 'text' || kind === 'markdown') && !isEditing && (
         <button type="button" onClick={onEdit} style={btn}>{t('files.edit')}</button>
       )}
       {isEditing && (
@@ -71,6 +83,14 @@ export function FilesViewerHeader({ onEdit, onSave, onCancel, onDownload, onTogg
         </>
       )}
       <button type="button" onClick={onDownload} style={btn}>{t('files.download')}</button>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label={t('files.closePane')}
+        style={btn}
+      >
+        ×
+      </button>
     </header>
   );
 }

@@ -48,6 +48,10 @@ export function FilesViewerPane({ client, token }: Props) {
   const { t } = useTranslation();
   const isEditing = useFilesPreviewStore((s) => s.isEditing);
   const editContent = useFilesPreviewStore((s) => s.editContent);
+  const isDirty = useFilesPreviewStore((s) => s.isDirty);
+  const saving = useFilesPreviewStore((s) => s.saving);
+  const textLines = useFilesPreviewStore((s) => s.textLines);
+  const textTruncated = useFilesPreviewStore((s) => s.textTruncated);
 
   const handleSave = async () => {
     const path = useFilesPreviewStore.getState().selectedPath;
@@ -104,11 +108,18 @@ export function FilesViewerPane({ client, token }: Props) {
   return (
     <div style={containerStyle}>
       <FilesViewerHeader
+        name={selectedName ?? ''}
+        kind={selectedKind}
+        isEditing={isEditing}
+        isDirty={isDirty}
+        saving={saving}
+        showMarkdownRendered={showMarkdownRendered}
         onEdit={() => useFilesPreviewStore.getState().startEditing()}
         onSave={handleSave}
         onCancel={() => useFilesPreviewStore.getState().cancelEditing()}
         onDownload={handleDownload}
         onToggleMarkdown={() => useFilesPreviewStore.getState().toggleMarkdownRendered()}
+        onClose={() => useFilesPreviewStore.getState().clear()}
       />
       {selectedKind === 'unsupported' && <FilesViewerEmpty mode="unsupported" name={selectedName ?? ''} />}
       {selectedKind === 'image' && (
@@ -122,11 +133,13 @@ export function FilesViewerPane({ client, token }: Props) {
           onSave={handleSave}
         />
       )}
-      {selectedKind === 'text' && !isEditing && <FilesTextViewer />}
+      {selectedKind === 'text' && !isEditing && (
+        <FilesTextViewer textContent={textContent} textLines={textLines} textTruncated={textTruncated} />
+      )}
       {selectedKind === 'markdown' && !isEditing && (
         showMarkdownRendered
           ? <FilesMarkdownViewer source={textContent ?? ''} />
-          : <FilesTextViewer />
+          : <FilesTextViewer textContent={textContent} textLines={textLines} textTruncated={textTruncated} />
       )}
     </div>
   );

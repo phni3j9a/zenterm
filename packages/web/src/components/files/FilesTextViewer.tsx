@@ -1,13 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import { useFilesPreviewStore } from '@/stores/filesPreview';
 import { useTheme } from '@/theme';
 
-export function FilesTextViewer() {
+interface Props {
+  textContent: string | null;
+  textLines: number;
+  textTruncated: boolean;
+}
+
+export function FilesTextViewer({ textContent, textLines, textTruncated }: Props) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
-  const textContent = useFilesPreviewStore((s) => s.textContent);
-  const textLines = useFilesPreviewStore((s) => s.textLines);
-  const textTruncated = useFilesPreviewStore((s) => s.textTruncated);
 
   if (textContent === null) return null;
 

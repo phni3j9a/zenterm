@@ -238,6 +238,7 @@
     "cannotOpenDesc": "{{name}} no se puede previsualizar.",
     "truncatedIndicator": "Truncado en {{lines}} líneas",
     "download": "Descargar",
+    "closePane": "Cerrar",
     "downloadFailed": "Error al descargar",
     "downloadFailedDesc": "No se pudo descargar el archivo.",
     "rendered": "Renderizado",
