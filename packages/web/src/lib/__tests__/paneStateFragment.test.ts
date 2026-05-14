@@ -134,4 +134,9 @@ describe('paneStateFragment v3 (kind aware)', () => {
     const out = decode('#' + encode(state));
     expect(out).toEqual(state);
   });
+
+  it('未知 prefix (x:) は invalid 扱いで decode 失敗', () => {
+    const out = decode('#l=single&p=x:foo.0');
+    expect(out).toBeNull();
+  });
 });

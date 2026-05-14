@@ -44,6 +44,11 @@ function decodePane(slot: string): PaneTarget | null | 'invalid' {
     return { kind: 'file', path };
   }
   // Legacy: <sid>.<idx>
+  // 新 prefix (`t:` / `f:` / 未知 `x:`) との混同を避けるため、
+  // raw `:` を含むものは invalid 扱いにする。
+  // legacy 形式の sid は encodeURIComponent 済みで `:` は `%3A` になるため、
+  // 生の `:` を含むのは新 prefix 形式のみ。
+  if (slot.includes(':')) return 'invalid';
   const dotIdx = slot.lastIndexOf('.');
   if (dotIdx < 0) return 'invalid';
   const sidPart = slot.slice(0, dotIdx);
