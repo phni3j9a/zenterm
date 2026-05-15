@@ -66,6 +66,7 @@ export function GatewaySection({ gatewayVersion, headingId }: Props) {
   const secondaryBtn = {
     ...primaryBtn,
     width: '100%',
+    boxSizing: 'border-box' as const,
     justifyContent: 'flex-start' as const,
     marginTop: tokens.spacing.sm,
     color: tokens.colors.textSecondary,

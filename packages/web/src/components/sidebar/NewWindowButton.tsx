@@ -45,6 +45,7 @@ export function NewWindowButton({ onCreate }: NewWindowButtonProps) {
         onClick={() => setEditing(true)}
         style={{
           width: '100%',
+          boxSizing: 'border-box',
           padding: tokens.spacing.xs,
           background: 'transparent',
           color: tokens.colors.textMuted,
@@ -90,6 +91,7 @@ export function NewWindowButton({ onCreate }: NewWindowButtonProps) {
         }}
         style={{
           width: '100%',
+          boxSizing: 'border-box',
           padding: `${tokens.spacing.xs}px ${tokens.spacing.sm}px`,
           background: tokens.colors.surface,
           color: tokens.colors.textPrimary,

@@ -76,6 +76,7 @@ export function ReauthDialog({ open, onClose }: ReauthDialogProps) {
           autoFocus
           style={{
             width: '100%',
+            boxSizing: 'border-box',
             padding: `8px 10px`,
             background: tokens.colors.surface,
             border: `1px solid ${tokens.colors.border}`,

@@ -134,6 +134,7 @@ export function ContextMenu({
             alignItems: 'center',
             justifyContent: 'space-between',
             width: '100%',
+            boxSizing: 'border-box',
             padding: `${tokens.spacing.xs}px ${tokens.spacing.md}px`,
             background: 'transparent',
             border: 'none',

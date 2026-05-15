@@ -52,6 +52,7 @@ export function FilesNewNameDialog({ open, title, placeholder, initialValue, onC
         onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
         style={{
           width: '100%',
+          boxSizing: 'border-box',
           padding: tokens.spacing.sm,
           background: tokens.colors.bg,
           color: tokens.colors.textPrimary,

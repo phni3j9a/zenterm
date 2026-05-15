@@ -103,7 +103,7 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
           type="submit"
           disabled={token.length !== 4 || submitting}
           style={{
-            width: '100%', padding: tokens.spacing.md,
+            width: '100%', boxSizing: 'border-box', padding: tokens.spacing.md,
             background: tokens.colors.primary, color: tokens.colors.textInverse,
             border: 'none', borderRadius: tokens.radii.md,
             fontSize: tokens.typography.bodyMedium.fontSize, fontWeight: 600,

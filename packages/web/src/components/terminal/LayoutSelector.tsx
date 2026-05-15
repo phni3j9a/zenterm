@@ -95,6 +95,7 @@ export function LayoutSelector() {
               style={{
                 display: 'block',
                 width: '100%',
+                boxSizing: 'border-box',
                 textAlign: 'left',
                 padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
                 background: mode === layout ? tokens.colors.primarySubtle : 'transparent',

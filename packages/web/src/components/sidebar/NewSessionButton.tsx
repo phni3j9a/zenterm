@@ -51,6 +51,7 @@ export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
           justifyContent: 'center',
           gap: tokens.spacing.xs,
           width: '100%',
+          boxSizing: 'border-box',
           padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
           background: tokens.colors.primary,
           color: tokens.colors.textInverse,
@@ -99,6 +100,7 @@ export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
         }}
         style={{
           width: '100%',
+          boxSizing: 'border-box',
           padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
           background: tokens.colors.surface,
           color: tokens.colors.textPrimary,

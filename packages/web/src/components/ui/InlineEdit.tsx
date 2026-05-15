@@ -72,6 +72,7 @@ export function InlineEdit({
         }}
         style={{
           width: '100%',
+          boxSizing: 'border-box',
           padding: `${tokens.spacing.xs}px ${tokens.spacing.sm}px`,
           background: tokens.colors.surface,
           color: tokens.colors.textPrimary,
