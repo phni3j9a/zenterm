@@ -21,6 +21,10 @@ done
 
 # Resolve "latest" via the redirect from /releases/latest/download/...
 if [[ -z "$VERSION" ]]; then
+  if [[ -n "${ZENTERM_BASE_URL:-}" ]]; then
+    echo "Error: --version required when ZENTERM_BASE_URL is set" >&2
+    exit 1
+  fi
   RESOLVED=$(curl -fsSI "https://github.com/${OWNER}/${REPO}/releases/latest/download/checksums.txt" \
     | grep -i '^location:' | sed -E 's@.*/download/(v[^/]+)/.*@\1@' | tr -d '\r\n')
   if [[ -z "$RESOLVED" ]]; then
@@ -32,7 +36,7 @@ fi
 
 VERSION_NO_V="${VERSION#v}"
 TARBALL="zenterm-gateway-${VERSION_NO_V}.tar.gz"
-BASE_URL="https://github.com/${OWNER}/${REPO}/releases/download/${VERSION}"
+BASE_URL="${ZENTERM_BASE_URL:-https://github.com/${OWNER}/${REPO}/releases/download/${VERSION}}"
 INSTALL_DIR="${DATA_DIR}/${VERSION_NO_V}"
 
 echo "==> Installing zenterm-gateway ${VERSION} to ${INSTALL_DIR}"
