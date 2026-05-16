@@ -125,35 +125,44 @@ packages/
 ### One-liner Install (recommended)
 
 ```bash
+curl -fsSL https://github.com/phni3j9a/zenterm/releases/latest/download/install.sh | bash
+```
+
+スクリプトは以下を自動実行します:
+
+1. tmux / Node.js (>= 20) の確認
+2. 最新 release の tarball を `~/.local/share/zenterm-gateway/<version>/` にダウンロード・SHA256 verify・展開
+3. `npm install --omit=dev` で依存を解決
+4. `AUTH_TOKEN` の対話的生成 (`~/.config/zenterm/.env`)
+5. `~/.local/share/zenterm-gateway/current` の symlink を新 version に張替え
+6. サービス登録 (Linux: systemd user / macOS: launchd)
+7. 接続情報の表示
+
+#### Pin a specific version
+
+```bash
+curl -fsSL https://github.com/phni3j9a/zenterm/releases/download/v0.7.0/install.sh \
+  | bash -s -- --version v0.7.0
+```
+
+#### Verify checksums manually
+
+```bash
+curl -fsSLO https://github.com/phni3j9a/zenterm/releases/download/v0.7.0/zenterm-gateway-0.7.0.tar.gz
+curl -fsSLO https://github.com/phni3j9a/zenterm/releases/download/v0.7.0/checksums.txt
+sha256sum -c checksums.txt
+```
+
+### Manual Setup (developers)
+
+リポジトリをクローンして手元でビルドする場合は次のコマンド。
+
+```bash
 git clone https://github.com/phni3j9a/zenterm.git
 cd zenterm && ./deploy/install.sh
 ```
 
-`install.sh` が以下を自動実行します:
-
-1. tmux / Node.js の確認
-2. Gateway ビルド
-3. `AUTH_TOKEN` の対話的生成
-4. サービス登録 (Linux: systemd / macOS: launchd)
-5. 起動確認 + QR コード表示
-
-### Manual Setup
-
-```bash
-# 依存インストール
-npm install
-
-# Gateway ビルド
-npm run build:gateway
-
-# 初回セットアップ (対話的に AUTH_TOKEN を設定)
-cd packages/gateway && node dist/cli.js setup
-
-# 起動
-npm run dev:gateway
-```
-
-起動するとコンソールに QR コードが表示されます。ZenTerm アプリでスキャンして接続してください。
+`deploy/install.sh` はリポジトリ内のソースを直接ビルドして launchd / systemd に登録します。
 
 ### Re-displaying connection info
 
