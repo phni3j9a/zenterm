@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# zenterm-gateway installer — fetches a release tarball from GitHub and installs
+# under ~/.local/share/zenterm-gateway/<version>/. Phase 1 minimal version:
+# only handles download/verify/extract; .env setup and service registration
+# are added in later tasks.
+
+OWNER="${ZENTERM_OWNER:-phni3j9a}"
+REPO="${ZENTERM_REPO:-zenterm}"
+VERSION="${ZENTERM_VERSION:-}"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zenterm-gateway"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --version) VERSION="$2"; shift 2 ;;
+    --version=*) VERSION="${1#*=}"; shift ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
+  esac
+done
+
+# Resolve "latest" via the redirect from /releases/latest/download/...
+if [[ -z "$VERSION" ]]; then
+  RESOLVED=$(curl -fsSI "https://github.com/${OWNER}/${REPO}/releases/latest/download/checksums.txt" \
+    | grep -i '^location:' | sed -E 's@.*/download/(v[^/]+)/.*@\1@' | tr -d '\r\n')
+  if [[ -z "$RESOLVED" ]]; then
+    echo "Error: failed to resolve latest version" >&2
+    exit 1
+  fi
+  VERSION="$RESOLVED"
+fi
+
+VERSION_NO_V="${VERSION#v}"
+TARBALL="zenterm-gateway-${VERSION_NO_V}.tar.gz"
+BASE_URL="https://github.com/${OWNER}/${REPO}/releases/download/${VERSION}"
+INSTALL_DIR="${DATA_DIR}/${VERSION_NO_V}"
+
+echo "==> Installing zenterm-gateway ${VERSION} to ${INSTALL_DIR}"
+
+# 1. environment checks
+command -v node >/dev/null || { echo "Error: node not found"; exit 1; }
+command -v tmux >/dev/null || { echo "Error: tmux not found"; exit 1; }
+command -v tar  >/dev/null || { echo "Error: tar not found"; exit 1; }
+NODE_MAJOR=$(node -v | sed -E 's/^v([0-9]+).*/\1/')
+if (( NODE_MAJOR < 20 )); then
+  echo "Error: Node.js >= 20 required (found $(node -v))" >&2
+  exit 1
+fi
+
+# 2. download tarball + checksums
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+echo "==> Downloading ${TARBALL}"
+curl -fsSL "${BASE_URL}/${TARBALL}" -o "${TMP}/${TARBALL}"
+curl -fsSL "${BASE_URL}/checksums.txt" -o "${TMP}/checksums.txt"
+
+# 3. verify SHA256
+echo "==> Verifying SHA256"
+( cd "$TMP" && grep " ${TARBALL}\$" checksums.txt | sha256sum -c - )
+
+# 4. extract to install dir
+mkdir -p "$INSTALL_DIR"
+echo "==> Extracting to ${INSTALL_DIR}"
+tar -xzf "${TMP}/${TARBALL}" -C "$INSTALL_DIR" --strip-components=1
+
+echo "==> Tarball extracted. (Next steps: npm install, .env setup, service registration)"
+echo "    INSTALL_DIR=${INSTALL_DIR}"
