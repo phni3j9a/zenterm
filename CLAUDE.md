@@ -30,7 +30,7 @@ scripts/dev-docker.sh                      # 開発用 Gateway を Docker 内で
 ## 配信アーキテクチャ
 - **モバイル**: Gateway が `/embed/terminal` を配信 → WebView で表示
 - **PC Web**: `packages/web` を Vite でビルドして `packages/gateway/public/web/` に出力、Gateway が `/web/*` で配信。Phase 1〜6 で再構築済 (web-pc-phase-6-done タグ)。Phase 7 で Docker 隔離 e2e 基盤を整備
-- **systemd**: `zenterm-gateway.service` は npm 公開版の `zenterm-gateway` パッケージを npx キャッシュ経由で起動する。ローカル変更を反映するには `npm publish` 後に再インストールが必要（このリポジトリを直接 systemd から起動しているわけではない）。設定ファイル実体は `~/.config/systemd/user/zenterm-gateway.service`、ユーザースコープで稼働
+- **systemd**: `zenterm-gateway.service` の `ExecStart` は `~/.local/share/zenterm-gateway/current/dist/cli.js` を node で実行する。`current` は `deploy/install-from-release.sh` が GitHub Releases から取得した version (`~/.local/share/zenterm-gateway/<version>/`) を指す symlink。アップデートは新 version 展開 → symlink 張替え → `systemctl --user restart zenterm-gateway` で完結する。ローカル変更を反映するには `./deploy/install.sh` (リポジトリクローン経路) を使う。設定ファイル実体は `~/.config/systemd/user/zenterm-gateway.service`、ユーザースコープで稼働
 - **tmux セッションと CGroup**: tmux サーバーは `fork+setsid` で自己デーモン化するため process tree 上は Gateway の子ではなく、PPID は `systemd --user`。さらに systemd unit は `KillMode=process` で起動しているので、`systemctl --user stop|restart zenterm-gateway` で死ぬのは Gateway 本体（と attach 中の PTY クライアント）だけで、tmux サーバーとセッションは保持される。WebSocket 接続中のユーザーは一瞬切断されるが再接続で同じセッションに戻れる
   - `KillMode=process` は `packages/gateway/src/setup.ts` の `buildSystemdUnit()` と `deploy/zenterm-gateway.service` テンプレートの両方で設定済み。`npx -y zenterm-gateway@latest setup` 由来の unit と install.sh 由来の unit のいずれでも tmux は保護される
   - cgroup 上は tmux も Gateway と同じ unit cgroup に属するため、`systemctl kill --kill-whom=all` 等を明示した場合は両方落ちる点に注意
