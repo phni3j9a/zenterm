@@ -106,3 +106,23 @@ EOF
 else
   echo "==> Using existing ${ENV_FILE}"
 fi
+
+# 7. update current symlink atomically
+CURRENT="${DATA_DIR}/current"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  rm -f "$CURRENT"
+  ln -s "$INSTALL_DIR" "$CURRENT"
+else
+  TMP_LINK="${CURRENT}.new"
+  ln -sfn "$INSTALL_DIR" "$TMP_LINK"
+  mv -Tf "$TMP_LINK" "$CURRENT"
+fi
+echo "==> Updated symlink ${CURRENT} -> ${INSTALL_DIR}"
+
+# 8. register systemd / launchd service
+echo "==> Registering service"
+node "${CURRENT}/dist/cli.js" setup --install-dir "$CURRENT"
+
+echo ""
+echo "==> Installation complete."
+echo "    Run: node ${CURRENT}/dist/cli.js info"
