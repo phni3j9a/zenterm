@@ -1,0 +1,100 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (without v prefix), e.g. 0.7.0-rc.1'
+        required: true
+        type: string
+      dry_run:
+        description: 'If true, build artifacts but do not create a release'
+        required: false
+        default: 'false'
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            V="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=v$V" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web
+        run: npm run build --workspace=@zenterm/web
+
+      - name: Build gateway
+        run: npm run build:gateway
+
+      - name: Pack tarball
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          # package-lock.json lives at workspace root in npm-workspaces repos;
+          # stage gateway files + root lock into a release directory and pack.
+          STAGE="release-stage/zenterm-gateway-${V}"
+          mkdir -p "$STAGE"
+          cp -r packages/gateway/dist packages/gateway/public packages/gateway/package.json "$STAGE/"
+          cp package-lock.json "$STAGE/"
+          tar -czf "zenterm-gateway-${V}.tar.gz" -C release-stage "zenterm-gateway-${V}"
+
+      - name: Generate checksums
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          sha256sum "zenterm-gateway-${V}.tar.gz" > checksums.txt
+          cat checksums.txt
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'zenterm-gateway-*.tar.gz'
+
+      - name: Stage install.sh
+        run: cp deploy/install-from-release.sh install.sh
+
+      - name: Create release
+        if: github.event_name == 'push' || github.event.inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          gh release create "v${V}" \
+            --title "v${V}" \
+            --generate-notes \
+            "zenterm-gateway-${V}.tar.gz" \
+            "checksums.txt" \
+            "install.sh"
+
+      - name: Upload artifacts (dry-run)
+        if: github.event.inputs.dry_run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.ver.outputs.version }}
+          path: |
+            zenterm-gateway-*.tar.gz
+            checksums.txt
+            install.sh
