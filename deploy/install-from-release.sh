@@ -63,5 +63,46 @@ mkdir -p "$INSTALL_DIR"
 echo "==> Extracting to ${INSTALL_DIR}"
 tar -xzf "${TMP}/${TARBALL}" -C "$INSTALL_DIR" --strip-components=1
 
-echo "==> Tarball extracted. (Next steps: npm install, .env setup, service registration)"
+# 5. install runtime dependencies
+echo "==> Installing dependencies (npm install --omit=dev)"
+( cd "$INSTALL_DIR" && npm install --omit=dev --ignore-scripts=false )
+
+echo "==> Dependencies installed."
 echo "    INSTALL_DIR=${INSTALL_DIR}"
+
+# 6. interactive .env setup (or accept AUTH_TOKEN env var)
+ENV_DIR="${HOME}/.config/zenterm"
+ENV_FILE="${ENV_DIR}/.env"
+mkdir -p "$ENV_DIR"
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  TOKEN="${AUTH_TOKEN:-}"
+  if [[ -z "$TOKEN" ]]; then
+    if [[ ! -t 0 ]] && [[ ! -r /dev/tty ]]; then
+      echo "Error: no tty available and AUTH_TOKEN env var not set" >&2
+      echo "  Re-run with: AUTH_TOKEN=1234 ${0}" >&2
+      exit 1
+    fi
+    echo ""
+    echo "zenterm-gateway 初回セットアップ"
+    echo "================================"
+    while true; do
+      read -r -p "認証トークン（数字4桁）を入力してください: " TOKEN < /dev/tty
+      if [[ "$TOKEN" =~ ^[0-9]{4}$ ]]; then
+        break
+      fi
+      echo "  → 数字4桁で入力してください（例: 1234）"
+    done
+  fi
+
+  cat > "$ENV_FILE" <<EOF
+AUTH_TOKEN=${TOKEN}
+PORT=18765
+HOST=0.0.0.0
+SESSION_PREFIX=zen_
+LOG_LEVEL=info
+EOF
+  echo "==> Generated ${ENV_FILE} (AUTH_TOKEN: ${TOKEN})"
+else
+  echo "==> Using existing ${ENV_FILE}"
+fi
