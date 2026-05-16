@@ -76,10 +76,15 @@ export function buildSystemdUnit(params: SystemdUnitParams): string {
   ].join('\n');
 }
 
-export function setupLinux(): void {
+export interface SetupOverrides {
+  cliPath?: string;
+  packageDir?: string;
+}
+
+export function setupLinux(overrides: SetupOverrides = {}): void {
   const nodePath = process.execPath;
-  const cliPath = join(__dirname, 'cli.js');
-  const packageDir = join(__dirname, '..');
+  const cliPath = overrides.cliPath ?? join(__dirname, 'cli.js');
+  const packageDir = overrides.packageDir ?? join(__dirname, '..');
   const currentPath = process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin';
 
   const serviceDir = join(getHome(), '.config', 'systemd', 'user');
@@ -186,10 +191,10 @@ export function buildLaunchdPlist(params: LaunchdPlistParams): string {
 `;
 }
 
-export function setupMacOS(): void {
+export function setupMacOS(overrides: SetupOverrides = {}): void {
   const nodePath = process.execPath;
-  const cliPath = join(__dirname, 'cli.js');
-  const packageDir = join(__dirname, '..');
+  const cliPath = overrides.cliPath ?? join(__dirname, 'cli.js');
+  const packageDir = overrides.packageDir ?? join(__dirname, '..');
   const user = process.env.USER ?? '';
   const currentPath = process.env.PATH ?? '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin';
   const homeDir = getHome();

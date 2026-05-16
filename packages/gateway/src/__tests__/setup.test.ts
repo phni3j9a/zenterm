@@ -154,6 +154,23 @@ describe('setupLinux', () => {
     const calls = execSyncMock.mock.calls.map((c) => c[0]);
     expect(calls).toEqual(['systemctl --user daemon-reload']);
   });
+
+  it('cliPath / packageDir を渡したらそれを ExecStart / WorkingDirectory に焼き込む', () => {
+    setupLinux({
+      cliPath: '/home/testuser/.local/share/zenterm-gateway/current/dist/cli.js',
+      packageDir: '/home/testuser/.local/share/zenterm-gateway/current',
+    });
+
+    const [, writeContent] = writeFileSyncMock.mock.calls[0];
+    const unit = writeContent as string;
+    expect(unit).toContain(
+      'ExecStart=' + process.execPath +
+        ' /home/testuser/.local/share/zenterm-gateway/current/dist/cli.js',
+    );
+    expect(unit).toContain(
+      'WorkingDirectory=/home/testuser/.local/share/zenterm-gateway/current',
+    );
+  });
 });
 
 describe('buildLaunchdPlist', () => {
@@ -271,6 +288,23 @@ describe('setupMacOS', () => {
     expect(writeFileSyncMock).toHaveBeenCalledTimes(1);
     expect(unloadOrder).toBeLessThan(writeOrder);
     expect(writeOrder).toBeLessThan(loadOrder);
+  });
+
+  it('cliPath / packageDir を渡したら plist の ProgramArguments / WorkingDirectory に焼き込む', () => {
+    setupMacOS({
+      cliPath: '/Users/testuser/.local/share/zenterm-gateway/current/dist/cli.js',
+      packageDir: '/Users/testuser/.local/share/zenterm-gateway/current',
+    });
+
+    const [, writeContent] = writeFileSyncMock.mock.calls[0];
+    const plist = writeContent as string;
+    expect(plist).toContain(
+      '<string>' + process.execPath + '</string>\n\t\t' +
+        '<string>/Users/testuser/.local/share/zenterm-gateway/current/dist/cli.js</string>',
+    );
+    expect(plist).toContain(
+      '<key>WorkingDirectory</key>\n\t<string>/Users/testuser/.local/share/zenterm-gateway/current</string>',
+    );
   });
 });
 
