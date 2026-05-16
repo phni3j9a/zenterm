@@ -30,10 +30,12 @@ Commands:
   qr           ペアリング QR コードを再表示
 
 Options:
-  --port <number>   ポート番号 (default: 18765)
-  --host <string>   バインドアドレス (default: 0.0.0.0)
-  -h, --help        ヘルプを表示
-  -v, --version     バージョンを表示
+  --port <number>        ポート番号 (default: 18765)
+  --host <string>        バインドアドレス (default: 0.0.0.0)
+  --install-dir <path>   setup 時に systemd/launchd unit が指す絶対パス
+                         (GitHub Releases 経由インストール時に install.sh が指定)
+  -h, --help             ヘルプを表示
+  -v, --version          バージョンを表示
 
 Environment:
   PORT              ポート番号
@@ -60,8 +62,9 @@ if (cliHost) process.env.HOST = cliHost;
 
 // --- setup subcommand ---
 if (process.argv[2] === 'setup') {
+  const installDir = parseFlag('install-dir');
   const { runSetup } = await import('./setup.js');
-  await runSetup();
+  await runSetup(installDir);
   process.exit(0);
 }
 

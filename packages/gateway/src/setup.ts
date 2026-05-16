@@ -9,7 +9,7 @@ function getHome(): string {
   return process.env.HOME ?? '';
 }
 
-export async function runSetup(): Promise<void> {
+export async function runSetup(installDir?: string): Promise<void> {
   const platform = process.platform;
   const configDir = join(getHome(), '.config', 'zenterm');
   const envPath = join(configDir, '.env');
@@ -30,10 +30,17 @@ export async function runSetup(): Promise<void> {
   console.log(`Node: ${process.execPath}`);
   console.log('');
 
+  const overrides: SetupOverrides = installDir
+    ? {
+        cliPath: join(installDir, 'dist', 'cli.js'),
+        packageDir: installDir,
+      }
+    : {};
+
   if (platform === 'darwin') {
-    setupMacOS();
+    setupMacOS(overrides);
   } else if (platform === 'linux') {
-    setupLinux();
+    setupLinux(overrides);
   } else {
     console.error(`未対応のプラットフォーム: ${platform}`);
     console.error('macOS または Linux でのみ実行できます。');
