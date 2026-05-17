@@ -24,7 +24,9 @@ export function OnboardingGuide({ tokenEntered, sessionsCount, onDismiss }: Onbo
           borderRadius: tokens.radii.sm,
           fontFamily: tokens.typography.mono.fontFamily,
           fontSize: tokens.typography.small.fontSize,
-        }}>npx zenterm-gateway</code>
+          wordBreak: 'break-all',
+          maxWidth: '100%',
+        }}>curl -fsSL https://github.com/phni3j9a/zenterm/releases/latest/download/install.sh | bash</code>
       ),
       status: 'done',
     },
