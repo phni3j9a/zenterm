@@ -4,6 +4,11 @@
 export const FONT_FAMILY_MONO =
   '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace';
 
+// xterm 領域専用。OS ネイティブの monospace に任せて ambiguous-width 文字 (例: ✻ Claude Code ロゴ) の
+// 描画ズレを回避する。CJK は per-character font fallback で fontconfig / OS が解決する。
+export const FONT_FAMILY_TERMINAL =
+  'ui-monospace, "Cascadia Code", Menlo, Consolas, "DejaVu Sans Mono", monospace';
+
 export interface ColorTokens {
   bg: string;
   bgElevated: string;

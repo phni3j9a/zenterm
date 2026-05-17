@@ -9,7 +9,7 @@ import '@xterm/xterm/css/xterm.css';
 import type { TerminalSearchApi } from './TerminalSearch';
 
 import { terminalColorsDark, terminalColorsLight } from '@/theme/terminalColors';
-import { FONT_FAMILY_MONO } from '@/theme/tokens';
+import { FONT_FAMILY_TERMINAL } from '@/theme/tokens';
 import { useTheme } from '@/theme';
 import {
   DEFAULT_FONT_SIZE,
@@ -161,7 +161,7 @@ export function XtermView({
     const palette = resolvedTheme === 'light' ? terminalColorsLight : terminalColorsDark;
     const term = new Terminal({
       allowProposedApi: true,
-      fontFamily: FONT_FAMILY_MONO,
+      fontFamily: FONT_FAMILY_TERMINAL,
       fontSize,
       cursorBlink: true,
       cursorStyle: 'block',

@@ -182,7 +182,9 @@
   "shell": {
     "leftRail": {
       "label": "Primary navigation",
-      "rateLimitsWarning": "Rate limits warning"
+      "rateLimitsWarning": "Rate limits warning",
+      "collapseSidebar": "Seitenleiste einklappen",
+      "expandSidebar": "Seitenleiste ausklappen"
     },
     "tabs": {
       "sessions": "Sessions",

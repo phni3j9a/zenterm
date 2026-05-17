@@ -182,7 +182,9 @@
   "shell": {
     "leftRail": {
       "label": "Primary navigation",
-      "rateLimitsWarning": "Rate limits warning"
+      "rateLimitsWarning": "Rate limits warning",
+      "collapseSidebar": "折叠侧边栏",
+      "expandSidebar": "展开侧边栏"
     },
     "tabs": {
       "sessions": "Sessions",

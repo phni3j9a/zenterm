@@ -41,7 +41,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -52,23 +51,22 @@ describe('SessionRow', () => {
     expect(screen.getByText('/home/me')).toBeInTheDocument();
   });
 
-  it('clicking row calls onSelect with displayName', async () => {
-    const onSelect = vi.fn();
+  it('clicking row toggles expand instead of selecting', async () => {
+    const onToggleExpand = vi.fn();
     render(
       <SessionRow
         session={session}
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={onSelect}
-        onToggleExpand={vi.fn()}
+        onToggleExpand={onToggleExpand}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
         onOpenInPane={vi.fn()}
       />,
     );
     await userEvent.click(screen.getByText('dev'));
-    expect(onSelect).toHaveBeenCalledWith('dev', undefined);
+    expect(onToggleExpand).toHaveBeenCalledWith('zen_dev');
   });
 
   it('expand toggle is visible when window count > 1', async () => {
@@ -79,7 +77,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={onToggleExpand}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -97,7 +94,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -117,7 +113,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={onRename}
         onRequestDelete={vi.fn()}
@@ -140,7 +135,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={onRequestDelete}
@@ -160,7 +154,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[1, 2]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -180,7 +173,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -198,7 +190,6 @@ describe('SessionRow', () => {
         isActive={true}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -215,7 +206,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -232,7 +222,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -249,7 +238,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -266,7 +254,6 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
-        onSelect={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}

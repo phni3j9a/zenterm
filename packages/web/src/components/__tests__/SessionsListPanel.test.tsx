@@ -42,7 +42,7 @@ describe('SessionsListPanel', () => {
     expect(screen.getByText('dev')).toBeInTheDocument();
   });
 
-  it('clicking a session calls onSelect', async () => {
+  it('clicking a session expands the window list (does not call onSelect)', async () => {
     const onSelect = vi.fn();
     render(
       <SessionsListPanel
@@ -56,7 +56,27 @@ describe('SessionsListPanel', () => {
       />,
     );
     await userEvent.click(screen.getByText('dev'));
-    expect(onSelect).toHaveBeenCalledWith('dev', undefined);
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(screen.getByText('main')).toBeInTheDocument();
+    expect(screen.getByText('test')).toBeInTheDocument();
+  });
+
+  it('clicking a window inside an expanded session calls onSelect', async () => {
+    const onSelect = vi.fn();
+    render(
+      <SessionsListPanel
+        sessions={sessions}
+        loading={false}
+        error={null}
+        activeSessionId={null}
+        activeWindowIndex={null}
+        {...noopActions}
+        onSelect={onSelect}
+      />,
+    );
+    await userEvent.click(screen.getByText('dev'));
+    await userEvent.click(screen.getByText('test'));
+    expect(onSelect).toHaveBeenCalledWith('dev', 1);
   });
 
   it('shows loading state', () => {

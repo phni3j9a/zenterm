@@ -32,6 +32,8 @@ export {
   Edit3 as IconEdit,
   MoreHorizontal as IconMore,
   PanelLeft as IconSidebar,
+  PanelLeftClose as IconSidebarClose,
+  PanelLeftOpen as IconSidebarOpen,
   Power as IconPower,
 } from 'lucide-react';
 

@@ -181,7 +181,9 @@
   "shell": {
     "leftRail": {
       "label": "プライマリナビゲーション",
-      "rateLimitsWarning": "レート制限の警告"
+      "rateLimitsWarning": "レート制限の警告",
+      "collapseSidebar": "サイドバーを閉じる",
+      "expandSidebar": "サイドバーを開く"
     },
     "tabs": {
       "sessions": "セッション",

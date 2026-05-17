@@ -12,7 +12,6 @@ export interface SessionRowProps {
   isActive: boolean;
   isExpanded: boolean;
   openInPaneOptions: number[];
-  onSelect: (sessionId: string, windowIndex?: number) => void;
   onToggleExpand: (sessionName: string) => void;
   onRename: (currentDisplayName: string, newName: string) => void | Promise<void>;
   onRequestDelete: (session: TmuxSession) => void;
@@ -26,7 +25,6 @@ export function SessionRow({
   isActive,
   isExpanded,
   openInPaneOptions,
-  onSelect,
   onToggleExpand,
   onRename,
   onRequestDelete,
@@ -67,7 +65,8 @@ export function SessionRow({
       <button
         type="button"
         aria-current={isActive ? 'true' : undefined}
-        onClick={() => onSelect(session.displayName, undefined)}
+        aria-expanded={hasWindows ? isExpanded : undefined}
+        onClick={() => onToggleExpand(session.name)}
         style={{
           display: 'flex',
           width: '100%',

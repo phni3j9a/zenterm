@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { MAX_FONT_SIZE, MIN_FONT_SIZE } from '@/stores/settings';
@@ -6,38 +5,32 @@ import type { TerminalStatus, ReconnectInfo } from './XtermView';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Badge } from '@/components/ui/Badge';
 import { IconButton } from '@/components/ui/IconButton';
-import { IconCopy, IconRefresh, IconWifi, IconWifiOff } from '@/components/ui/icons';
+import { IconRefresh, IconWifi, IconWifiOff } from '@/components/ui/icons';
 
 export interface TerminalHeaderProps {
   sessionId: string;
-  windowIndex: number;
   displayName: string;
   windowName: string;
   status: TerminalStatus;
   reconnectInfo: ReconnectInfo | null;
   fontSize: number;
   onReconnect: () => void;
-  onCopySessionId: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomReset: () => void;
-  layoutSlot?: ReactNode;
 }
 
 export function TerminalHeader({
   sessionId,
-  windowIndex,
   displayName,
   windowName,
   status,
   reconnectInfo,
   fontSize,
   onReconnect,
-  onCopySessionId,
   onZoomIn,
   onZoomOut,
   onZoomReset,
-  layoutSlot,
 }: TerminalHeaderProps) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -88,16 +81,6 @@ export function TerminalHeader({
           {windowName}
         </span>
       )}
-      <span style={{ color: tokens.colors.textMuted, fontSize: tokens.typography.smallMedium.fontSize }}>
-        w{windowIndex}
-      </span>
-      {layoutSlot}
-      <IconButton
-        icon={<IconCopy size={14} />}
-        label={t('terminal.copySessionId')}
-        size="sm"
-        onClick={onCopySessionId}
-      />
       <span style={{ flex: 1 }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.xs }}>

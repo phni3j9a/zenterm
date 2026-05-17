@@ -182,7 +182,9 @@
   "shell": {
     "leftRail": {
       "label": "Primary navigation",
-      "rateLimitsWarning": "Rate limits warning"
+      "rateLimitsWarning": "Rate limits warning",
+      "collapseSidebar": "사이드바 접기",
+      "expandSidebar": "사이드바 펼치기"
     },
     "tabs": {
       "sessions": "Sessions",

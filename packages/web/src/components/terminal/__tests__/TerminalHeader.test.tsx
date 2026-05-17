@@ -18,25 +18,22 @@ beforeEach(() => {
 
 const baseProps = {
   sessionId: 'zen_dev',
-  windowIndex: 1,
   displayName: 'dev',
   windowName: 'editor',
   status: 'connected' as TerminalStatus,
   reconnectInfo: null as ReconnectInfo | null,
   fontSize: 14,
   onReconnect: () => undefined,
-  onCopySessionId: () => undefined,
   onZoomIn: () => undefined,
   onZoomOut: () => undefined,
   onZoomReset: () => undefined,
 };
 
 describe('TerminalHeader', () => {
-  it('renders displayName and window name + index', () => {
+  it('renders displayName and window name', () => {
     render(<TerminalHeader {...baseProps} />);
     expect(screen.getByText('dev')).toBeInTheDocument();
     expect(screen.getByText(/editor/)).toBeInTheDocument();
-    expect(screen.getByText(/w1/)).toBeInTheDocument();
   });
 
   it('falls back to sessionId when displayName is empty', () => {
@@ -68,13 +65,6 @@ describe('TerminalHeader', () => {
     );
     expect(screen.getByTestId('terminal-reconnect-eta')).toHaveTextContent(/5/);
     expect(screen.getByTestId('terminal-reconnect-eta')).toHaveTextContent(/3/);
-  });
-
-  it('Copy ID button calls onCopySessionId', () => {
-    const onCopy = vi.fn();
-    render(<TerminalHeader {...baseProps} onCopySessionId={onCopy} />);
-    fireEvent.click(screen.getByRole('button', { name: /copy session id/i }));
-    expect(onCopy).toHaveBeenCalledTimes(1);
   });
 
   it('Zoom buttons call respective handlers', () => {

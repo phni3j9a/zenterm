@@ -121,7 +121,7 @@ describe('TerminalPane', () => {
     expect(screen.getByText(/Select a session/i)).toBeInTheDocument();
   });
 
-  it('shows session/window in toolbar when active', () => {
+  it('shows session in toolbar when active', () => {
     render(
       <TerminalPane
         gatewayUrl="http://gateway.test:18765"
@@ -136,7 +136,6 @@ describe('TerminalPane', () => {
       />,
     );
     expect(screen.getByText(/dev/)).toBeInTheDocument();
-    expect(screen.getByText(/w2/)).toBeInTheDocument();
   });
 
   it('keeps DOM mounted but hidden when isVisible=false', () => {

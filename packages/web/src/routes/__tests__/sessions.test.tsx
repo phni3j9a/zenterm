@@ -108,11 +108,19 @@ describe('SessionsRoute', () => {
     expect(screen.getByText(/Select a session/i)).toBeInTheDocument();
   });
 
-  it('clicking a session opens TerminalPane with session/window in header', async () => {
+  it('clicking a window opens TerminalPane with session/window in header', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
       new Response(
         JSON.stringify([
-          { name: 'zen_dev', displayName: 'dev', created: 1, cwd: '/h', windows: [] },
+          {
+            name: 'zen_dev',
+            displayName: 'dev',
+            created: 1,
+            cwd: '/h',
+            windows: [
+              { index: 0, name: 'main', active: true, zoomed: false, paneCount: 1, cwd: '/h' },
+            ],
+          },
         ]),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
@@ -122,7 +130,9 @@ describe('SessionsRoute', () => {
         <SessionsRoute />
       </MemoryRouter>,
     );
+    // Expand session, then click window to open terminal
     await userEvent.click(await screen.findByText('dev'));
+    await userEvent.click(screen.getByText('main'));
     // Toolbar shows the session name
     expect(screen.getAllByText(/dev/).length).toBeGreaterThan(1);
   });

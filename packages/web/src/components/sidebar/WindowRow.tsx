@@ -11,7 +11,6 @@ export interface WindowRowProps {
   sessionDisplayName: string;
   window: TmuxWindow;
   isActive: boolean;
-  isOccupiedElsewhere: boolean;
   openInPaneOptions: number[]; // 0-based pane indices
   onSelect: () => void;
   onRename: (
@@ -29,7 +28,6 @@ export function WindowRow({
   sessionDisplayName,
   window,
   isActive,
-  isOccupiedElsewhere,
   openInPaneOptions,
   onSelect,
   onRename,
@@ -67,8 +65,7 @@ export function WindowRow({
       <button
         type="button"
         aria-current={isActive ? 'true' : undefined}
-        disabled={isOccupiedElsewhere}
-        onClick={!isOccupiedElsewhere ? onSelect : undefined}
+        onClick={onSelect}
         style={{
           flex: 1,
           textAlign: 'left',
@@ -76,8 +73,7 @@ export function WindowRow({
           background: isActive ? tokens.colors.primarySubtle : 'transparent',
           border: 'none',
           color: tokens.colors.textSecondary,
-          cursor: isOccupiedElsewhere ? 'not-allowed' : 'pointer',
-          opacity: isOccupiedElsewhere ? 0.5 : 1,
+          cursor: 'pointer',
           fontSize: tokens.typography.smallMedium.fontSize,
         }}
       >
@@ -93,7 +89,7 @@ export function WindowRow({
             onCancel={() => setMode('idle')}
           />
         ) : (
-          `${isOccupiedElsewhere ? '⛔ ' : ''}${window.name}`
+          window.name
         )}
       </button>
       <button

@@ -85,33 +85,6 @@ describe('openInFocusedPane', () => {
   });
 });
 
-describe('isOccupied', () => {
-  it('別 idx で同 (s,w) があれば true', () => {
-    usePaneStore.getState().setLayout('cols-2');
-    usePaneStore.getState().assignPane(0, target('a'));
-    expect(usePaneStore.getState().isOccupied(target('a'))).toBe(true);
-  });
-
-  it('excludeIdx で除外指定すれば自分の slot は無視', () => {
-    usePaneStore.getState().setLayout('cols-2');
-    usePaneStore.getState().assignPane(0, target('a'));
-    expect(usePaneStore.getState().isOccupied(target('a'), 0)).toBe(false);
-  });
-
-  it('window index 違いは別物扱い', () => {
-    usePaneStore.getState().setLayout('cols-2');
-    usePaneStore.getState().assignPane(0, target('a', 0));
-    expect(usePaneStore.getState().isOccupied(target('a', 1))).toBe(false);
-  });
-
-  it('isOccupied は file kind に対しては常に false', () => {
-    const s = usePaneStore.getState();
-    s.setLayout('cols-2');
-    s.assignPane(0, { kind: 'file', path: '/a' });
-    expect(s.isOccupied({ kind: 'file', path: '/a' })).toBe(false);
-  });
-});
-
 describe('persist round-trip', () => {
   it('panes / layout が localStorage に書かれる', () => {
     usePaneStore.getState().setLayout('cols-2');

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, fireEvent, screen, act, waitFor } from '@testing-library/react';
+import { render, fireEvent, screen } from '@testing-library/react';
 import { useSessionsStore } from '@/stores/sessions';
 import { useSettingsStore } from '@/stores/settings';
 import { useUiStore } from '@/stores/ui';
@@ -73,35 +73,6 @@ describe('TerminalPane header integration', () => {
     );
     expect(screen.getByText('dev')).toBeInTheDocument();
     expect(screen.getByText('editor')).toBeInTheDocument();
-    expect(screen.getByText(/w0/)).toBeInTheDocument();
-  });
-
-  it('Copy ID button writes sessionId to navigator.clipboard and pushes a success toast', async () => {
-    const writeText = vi.fn(async () => undefined);
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true, writable: true, value: { writeText, readText: async () => '' },
-    });
-    render(
-      <TerminalPane
-        gatewayUrl="http://gateway.test:18765"
-        token="t"
-        sessionId="dev"
-        windowIndex={0}
-        paneIndex={0}
-        isFocused
-        isVisible
-        apiClient={null}
-        uploadProgress={makeProgress()}
-      />,
-    );
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /copy session id/i }));
-    });
-    expect(writeText).toHaveBeenCalledWith("dev");
-    await waitFor(() => {
-      const toasts = (useUiStore.getState() as any).toasts as Array<{ message: string; type: string }>;
-      expect(toasts.some((tt) => /copied/i.test(tt.message))).toBe(true);
-    });
   });
 
   it('Zoom + button increases font size in settings store', () => {
@@ -120,39 +91,5 @@ describe('TerminalPane header integration', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /increase font size/i }));
     expect(useSettingsStore.getState().fontSize).toBe(15);
-  });
-
-  it('focused=true のとき layout selector ボタンが表示される', () => {
-    render(
-      <TerminalPane
-        gatewayUrl="http://gateway.test:18765"
-        token="t"
-        sessionId="dev"
-        windowIndex={0}
-        paneIndex={0}
-        isFocused
-        isVisible
-        apiClient={null}
-        uploadProgress={makeProgress()}
-      />,
-    );
-    expect(screen.getByRole('button', { name: /change layout/i })).toBeInTheDocument();
-  });
-
-  it('focused=false のとき layout selector ボタンは出ない', () => {
-    render(
-      <TerminalPane
-        gatewayUrl="http://gateway.test:18765"
-        token="t"
-        sessionId="dev"
-        windowIndex={0}
-        paneIndex={0}
-        isFocused={false}
-        isVisible
-        apiClient={null}
-        uploadProgress={makeProgress()}
-      />,
-    );
-    expect(screen.queryByRole('button', { name: /change layout/i })).toBeNull();
   });
 });

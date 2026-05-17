@@ -5,6 +5,7 @@ import { SessionsListPanel } from './SessionsListPanel';
 import { SettingsPanel } from './settings/SettingsPanel';
 import { FilesSidebarPanel } from './files/FilesSidebarPanel';
 import type { FilesApiClient } from './files/filesApi';
+import { LayoutSelector } from './terminal/LayoutSelector';
 import { useTheme } from '@/theme';
 import { useEventsStore } from '@/stores/events';
 import { useLayoutStore } from '@/stores/layout';
@@ -40,6 +41,7 @@ function deriveActivePanel(pathname: string): ActivePanel {
 
 export function Sidebar(props: SidebarProps) {
   const { tokens } = useTheme();
+  const { t } = useTranslation();
   const location = useLocation();
   const activePanel = deriveActivePanel(location.pathname);
   const collapsed = useLayoutStore((s) => s.sidebarCollapsed);
@@ -62,7 +64,7 @@ export function Sidebar(props: SidebarProps) {
         background: tokens.colors.bgElevated,
         borderRight: collapsed ? 'none' : `1px solid ${tokens.colors.borderSubtle}`,
         display: 'grid',
-        gridTemplateRows: '1fr',
+        gridTemplateRows: 'auto 1fr',
         height: '100vh',
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -71,6 +73,28 @@ export function Sidebar(props: SidebarProps) {
     >
       {collapsed ? null : (
         <>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: tokens.spacing.sm,
+              padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
+              borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+            }}
+          >
+            <span
+              style={{
+                fontSize: tokens.typography.smallMedium.fontSize,
+                color: tokens.colors.textMuted,
+                textTransform: 'uppercase',
+                letterSpacing: 1.5,
+              }}
+            >
+              {t('terminal.layout.menuLabel')}
+            </span>
+            <LayoutSelector />
+          </div>
           <div
             id={`panel-${activePanel}`}
             role="tabpanel"

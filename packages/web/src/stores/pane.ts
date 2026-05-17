@@ -20,7 +20,6 @@ interface PaneState {
   setFocusedIndex: (idx: number) => void;
   assignPane: (idx: number, target: PaneTarget | null) => void;
   openInFocusedPane: (target: PaneTarget) => void;
-  isOccupied: (target: PaneTarget, excludeIdx?: number) => boolean;
 }
 
 interface PersistedV3 {
@@ -101,19 +100,6 @@ export const usePaneStore = create<PaneState>()(
       openInFocusedPane: (target) => {
         const { focusedIndex } = get();
         get().assignPane(focusedIndex, target);
-      },
-
-      isOccupied: (target, excludeIdx) => {
-        if (target.kind !== 'terminal') return false;
-        const { panes } = get();
-        return panes.some(
-          (p, i) =>
-            p !== null &&
-            i !== excludeIdx &&
-            p.kind === 'terminal' &&
-            p.sessionId === target.sessionId &&
-            p.windowIndex === target.windowIndex,
-        );
       },
     }),
     {

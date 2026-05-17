@@ -8,7 +8,6 @@ import {
 } from './terminal/XtermView';
 import { TerminalHeader } from './terminal/TerminalHeader';
 import { TerminalContextMenu } from './terminal/TerminalContextMenu';
-import { LayoutSelector } from './terminal/LayoutSelector';
 import { TerminalSearch, type TerminalSearchApi } from '@/components/terminal/TerminalSearch';
 import { TerminalDropZone } from './terminal/TerminalDropZone';
 import { useTheme } from '@/theme';
@@ -107,16 +106,6 @@ export function TerminalPane({
     setReconnectNonce((n) => n + 1);
   };
 
-  const handleCopySessionId = async (): Promise<void> => {
-    if (!sessionId) return;
-    try {
-      await navigator.clipboard.writeText(sessionId);
-      pushToast({ type: 'success', message: t('terminal.copySessionIdSuccess') });
-    } catch {
-      pushToast({ type: 'error', message: t('terminal.copyFailed') });
-    }
-  };
-
   const handleZoomIn = (): void => {
     if (fontSize < MAX_FONT_SIZE) setFontSize(fontSize + 1);
   };
@@ -165,24 +154,22 @@ export function TerminalPane({
         flex: 1,
         display: isVisible ? 'grid' : 'none',
         gridTemplateRows: '48px 1fr',
-        height: '100vh',
+        height: '100%',
+        minHeight: 0,
         background: tokens.colors.bg,
       }}
     >
       <TerminalHeader
         sessionId={sessionId}
-        windowIndex={windowIndex}
         displayName={displayName}
         windowName={windowName}
         status={status}
         reconnectInfo={reconnectInfo}
         fontSize={fontSize}
         onReconnect={handleReconnect}
-        onCopySessionId={handleCopySessionId}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onZoomReset={handleZoomReset}
-        layoutSlot={isFocused ? <LayoutSelector /> : null}
       />
       <div style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {searchOpen && isFocused && searchApi && (

@@ -82,7 +82,7 @@ export function SessionsListPanel({
           padding: `${tokens.spacing.xs}px ${tokens.spacing.sm}px`,
         }}
       >
-        Active · {sessions.length}
+        {t('sidebar.tabs.sessions')} · {sessions.length}
       </div>
 
       {loading && sessions.length === 0 && (
@@ -141,24 +141,16 @@ export function SessionsListPanel({
           sessionId: session.displayName,
           windowIndex: defaultWindowIndex,
         };
-        const sessionOccupyingIdx = panes.findIndex(
-          (p) =>
-            p !== null &&
-            p.kind === 'terminal' &&
-            p.sessionId === sessionTarget.sessionId &&
-            p.windowIndex === sessionTarget.windowIndex,
-        );
-        const sessionOpenInPaneOptions = panes
+        const openInPaneOptions = panes
           .map((_, i) => i)
-          .filter((i) => i !== focusedIndex && i !== sessionOccupyingIdx);
+          .filter((i) => i !== focusedIndex);
         return (
           <div key={session.name}>
             <SessionRow
               session={session}
               isActive={isActive}
               isExpanded={isExpanded}
-              openInPaneOptions={sessionOpenInPaneOptions}
-              onSelect={onSelect}
+              openInPaneOptions={openInPaneOptions}
               onToggleExpand={toggle}
               onRename={onRenameSession}
               onRequestDelete={onRequestDeleteSession}
@@ -178,18 +170,6 @@ export function SessionsListPanel({
                     sessionId: session.displayName,
                     windowIndex: w.index,
                   };
-                  const occupyingIdx = panes.findIndex(
-                    (p) =>
-                      p !== null &&
-                      p.kind === 'terminal' &&
-                      p.sessionId === target.sessionId &&
-                      p.windowIndex === target.windowIndex,
-                  );
-                  const isOccupiedElsewhere =
-                    occupyingIdx !== -1 && occupyingIdx !== focusedIndex;
-                  const openInPaneOptions = panes
-                    .map((_, i) => i)
-                    .filter((i) => i !== focusedIndex && i !== occupyingIdx);
                   const isWindowActive =
                     isActive && activeWindowIndex === w.index;
                   return (
@@ -198,7 +178,6 @@ export function SessionsListPanel({
                       sessionDisplayName={session.displayName}
                       window={w}
                       isActive={isWindowActive}
-                      isOccupiedElsewhere={isOccupiedElsewhere}
                       openInPaneOptions={openInPaneOptions}
                       onSelect={() => onSelect(session.displayName, w.index)}
                       onRename={onRenameWindow}

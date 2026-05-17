@@ -3,11 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { EventsStatusDot } from '@/components/Sidebar';
+import { useLayoutStore } from '@/stores/layout';
 import {
   IconTerminal,
   IconFolder,
   IconSettings,
   IconLogout,
+  IconSidebarClose,
+  IconSidebarOpen,
 } from '@/components/ui/icons';
 
 export type ShellTab = 'sessions' | 'files' | 'settings';
@@ -29,6 +32,11 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
   const { tokens } = useTheme();
   const { t } = useTranslation();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const sidebarCollapsed = useLayoutStore((s) => s.sidebarCollapsed);
+  const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
+  const sidebarToggleLabel = sidebarCollapsed
+    ? t('shell.leftRail.expandSidebar')
+    : t('shell.leftRail.collapseSidebar');
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     if (e.key === 'ArrowDown') {
@@ -62,6 +70,30 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
         paddingBottom: tokens.spacing.sm,
       }}
     >
+      <Tooltip label={sidebarToggleLabel} placement="bottom">
+        <button
+          type="button"
+          aria-label={sidebarToggleLabel}
+          aria-pressed={!sidebarCollapsed}
+          onClick={toggleSidebar}
+          style={{
+            width: 44,
+            height: 44,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: tokens.radii.md,
+            border: 'none',
+            cursor: 'pointer',
+            background: 'transparent',
+            color: tokens.colors.textMuted,
+            marginBottom: tokens.spacing.xs,
+          }}
+        >
+          {sidebarCollapsed ? <IconSidebarOpen size={20} /> : <IconSidebarClose size={20} />}
+        </button>
+      </Tooltip>
+
       <div role="tablist" aria-orientation="vertical" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {TABS.map(({ id, Icon, labelKey, fallback }, index) => {
         const isActive = activeTab === id;

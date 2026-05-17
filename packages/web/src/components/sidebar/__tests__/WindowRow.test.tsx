@@ -22,7 +22,6 @@ describe('WindowRow', () => {
         sessionDisplayName="dev"
         window={window}
         isActive={false}
-        isOccupiedElsewhere={false}
         openInPaneOptions={[]}
         onSelect={vi.fn()}
         onRename={vi.fn()}
@@ -40,7 +39,6 @@ describe('WindowRow', () => {
         sessionDisplayName="dev"
         window={window}
         isActive={false}
-        isOccupiedElsewhere={false}
         openInPaneOptions={[]}
         onSelect={onSelect}
         onRename={vi.fn()}
@@ -59,7 +57,6 @@ describe('WindowRow', () => {
         sessionDisplayName="dev"
         window={window}
         isActive={false}
-        isOccupiedElsewhere={false}
         openInPaneOptions={[]}
         onSelect={vi.fn()}
         onRename={onRename}
@@ -82,7 +79,6 @@ describe('WindowRow', () => {
         sessionDisplayName="dev"
         window={window}
         isActive={false}
-        isOccupiedElsewhere={false}
         openInPaneOptions={[]}
         onSelect={vi.fn()}
         onRename={vi.fn()}
@@ -110,46 +106,6 @@ const baseWindow = {
   cwd: '/',
 };
 
-describe('WindowRow duplicate guard', () => {
-  it('isOccupiedElsewhere=true で disabled + ⛔ プレフィックス', () => {
-    render(
-      <WindowRow
-        sessionDisplayName="dev"
-        window={baseWindow}
-        isActive={false}
-        isOccupiedElsewhere
-        openInPaneOptions={[]}
-        onSelect={vi.fn()}
-        onRename={vi.fn()}
-        onRequestDelete={vi.fn()}
-        onOpenInPane={vi.fn()}
-      />,
-    );
-    const btn = screen.getByRole('button', { name: /main/ }) as HTMLButtonElement;
-    expect(btn.disabled).toBe(true);
-    expect(btn.textContent).toMatch(/⛔/);
-  });
-
-  it('isOccupiedElsewhere=true のとき onSelect は呼ばれない', () => {
-    const onSelect = vi.fn();
-    render(
-      <WindowRow
-        sessionDisplayName="dev"
-        window={baseWindow}
-        isActive={false}
-        isOccupiedElsewhere
-        openInPaneOptions={[]}
-        onSelect={onSelect}
-        onRename={vi.fn()}
-        onRequestDelete={vi.fn()}
-        onOpenInPane={vi.fn()}
-      />,
-    );
-    fireEvent.click(screen.getByRole('button', { name: /main/ }));
-    expect(onSelect).not.toHaveBeenCalled();
-  });
-});
-
 describe('WindowRow openInPane menu', () => {
   it('openInPaneOptions が空でないときメニューに「Open in pane N」項目が出る', () => {
     render(
@@ -157,7 +113,6 @@ describe('WindowRow openInPane menu', () => {
         sessionDisplayName="dev"
         window={baseWindow}
         isActive={false}
-        isOccupiedElsewhere={false}
         openInPaneOptions={[1, 2]}
         onSelect={vi.fn()}
         onRename={vi.fn()}
@@ -177,7 +132,6 @@ describe('WindowRow openInPane menu', () => {
         sessionDisplayName="dev"
         window={baseWindow}
         isActive={false}
-        isOccupiedElsewhere={false}
         openInPaneOptions={[1, 2]}
         onSelect={vi.fn()}
         onRename={vi.fn()}
