@@ -41,4 +41,18 @@ describe('GET /web routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body).toContain('<div id="root">');
   });
+
+  it('GET /web/favicon.ico serves the icon file, not the SPA fallback', async () => {
+    const res = await app.inject({ method: 'GET', url: '/web/favicon.ico' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('image/');
+    expect(res.body).not.toContain('<div id="root">');
+  });
+
+  it('GET /web/apple-touch-icon.png serves the icon file, not the SPA fallback', async () => {
+    const res = await app.inject({ method: 'GET', url: '/web/apple-touch-icon.png' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('image/png');
+    expect(res.body).not.toContain('<div id="root">');
+  });
 });
