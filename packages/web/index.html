@@ -2,7 +2,11 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/web/favicon.ico" />
+    <!-- sizes="any" on the .ico makes Chrome/Firefox prefer the SVG below;
+         the SVG carries the light/dark (prefers-color-scheme) variants.
+         Safari <17 and legacy browsers fall back to the .ico. -->
+    <link rel="icon" href="/web/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/web/favicon.svg" />
     <link rel="apple-touch-icon" href="/web/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ZenTerm</title>

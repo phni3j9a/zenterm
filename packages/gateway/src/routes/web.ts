@@ -21,6 +21,10 @@ const webRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.sendFile('web/favicon.ico');
   });
 
+  fastify.get('/web/favicon.svg', async (_request, reply) => {
+    return reply.sendFile('web/favicon.svg');
+  });
+
   fastify.get('/web/apple-touch-icon.png', async (_request, reply) => {
     return reply.sendFile('web/apple-touch-icon.png');
   });

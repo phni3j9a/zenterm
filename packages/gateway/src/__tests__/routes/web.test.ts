@@ -55,4 +55,13 @@ describe('GET /web routes', () => {
     expect(res.headers['content-type']).toContain('image/png');
     expect(res.body).not.toContain('<div id="root">');
   });
+
+  it('GET /web/favicon.svg serves the dark-mode-aware SVG, not the SPA fallback', async () => {
+    const res = await app.inject({ method: 'GET', url: '/web/favicon.svg' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('image/svg+xml');
+    expect(res.body).toContain('<svg');
+    expect(res.body).toContain('prefers-color-scheme');
+    expect(res.body).not.toContain('<div id="root">');
+  });
 });
