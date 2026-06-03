@@ -93,4 +93,17 @@ describe('TerminalHeader', () => {
     rerender(<TerminalHeader {...baseProps} fontSize={20} />);
     expect(screen.getByRole('button', { name: /increase font size/i })).toBeDisabled();
   });
+
+  it('does not render a close button when onClose is not provided', () => {
+    render(<TerminalHeader {...baseProps} />);
+    expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
+  });
+
+  it('renders a close button when onClose is provided and fires it on click', () => {
+    const onClose = vi.fn();
+    render(<TerminalHeader {...baseProps} onClose={onClose} />);
+    const btn = screen.getByRole('button', { name: /^close$/i });
+    fireEvent.click(btn);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

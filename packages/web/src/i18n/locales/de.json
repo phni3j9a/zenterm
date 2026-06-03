@@ -66,6 +66,7 @@
     "zoomIn": "Schriftgröße vergrößern",
     "zoomOut": "Schriftgröße verkleinern",
     "zoomReset": "Schriftgröße zurücksetzen",
+    "closePane": "Schließen",
     "menu": {
       "copy": "Kopieren",
       "paste": "Einfügen",

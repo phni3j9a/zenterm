@@ -5,7 +5,7 @@ import type { TerminalStatus, ReconnectInfo } from './XtermView';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { Badge } from '@/components/ui/Badge';
 import { IconButton } from '@/components/ui/IconButton';
-import { IconRefresh, IconWifi, IconWifiOff } from '@/components/ui/icons';
+import { IconRefresh, IconWifi, IconWifiOff, IconX } from '@/components/ui/icons';
 
 export interface TerminalHeaderProps {
   sessionId: string;
@@ -18,6 +18,7 @@ export interface TerminalHeaderProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomReset: () => void;
+  onClose?: () => void;
 }
 
 export function TerminalHeader({
@@ -31,6 +32,7 @@ export function TerminalHeader({
   onZoomIn,
   onZoomOut,
   onZoomReset,
+  onClose,
 }: TerminalHeaderProps) {
   const { tokens } = useTheme();
   const { t } = useTranslation();
@@ -164,6 +166,17 @@ export function TerminalHeader({
           {t(`terminal.status.${status}` as 'terminal.status.connected')}
         </Badge>
       </span>
+
+      {onClose && (
+        <IconButton
+          icon={<IconX size={16} />}
+          label={t('terminal.closePane')}
+          size="sm"
+          variant="ghost"
+          onClick={onClose}
+          style={{ marginLeft: tokens.spacing.xs }}
+        />
+      )}
     </header>
   );
 }

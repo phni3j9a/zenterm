@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useFilesStore } from '@/stores/files';
 import { useTheme } from '@/theme';
 import { IconButton } from '@/components/ui/IconButton';
-import { IconSort, IconEye, IconEyeOff, IconUpload, IconPlus } from '@/components/ui/icons';
+import { IconSort, IconEye, IconEyeOff, IconUpload, IconPlus, IconFile, IconFolder } from '@/components/ui/icons';
 import { FilesSortMenu } from './FilesSortMenu';
 
 interface Props {
@@ -98,18 +98,20 @@ export function FilesToolbar({ onUploadClick, onNewFile, onNewFolder }: Props) {
               role="menuitem"
               aria-label={t('files.createNewFile')}
               onClick={() => { setNewOpen(false); onNewFile(); }}
-              style={{ ...btn, display: 'block', width: '100%', textAlign: 'left' as const }}
+              style={{ ...btn, display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, width: '100%', textAlign: 'left' as const }}
             >
-              📄 {t('files.createNewFile')}
+              <IconFile size={16} />
+              {t('files.createNewFile')}
             </button>
             <button
               type="button"
               role="menuitem"
               aria-label={t('files.newFolder')}
               onClick={() => { setNewOpen(false); onNewFolder(); }}
-              style={{ ...btn, display: 'block', width: '100%', textAlign: 'left' as const }}
+              style={{ ...btn, display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, width: '100%', textAlign: 'left' as const }}
             >
-              📁 {t('files.newFolder')}
+              <IconFolder size={16} />
+              {t('files.newFolder')}
             </button>
           </div>
         )}

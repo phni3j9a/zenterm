@@ -49,4 +49,16 @@ describe('FilesToolbar', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: /new file/i }));
     expect(onNewFile).toHaveBeenCalled();
   });
+
+  it('new menu items use icons, not emoji', () => {
+    render(<FilesToolbar onUploadClick={vi.fn()} onNewFile={vi.fn()} onNewFolder={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /^new/i }));
+    const fileItem = screen.getByRole('menuitem', { name: /new file/i });
+    const folderItem = screen.getByRole('menuitem', { name: /new folder/i });
+    expect(fileItem.textContent ?? '').not.toMatch(/📄/);
+    expect(folderItem.textContent ?? '').not.toMatch(/📁/);
+    // lucide icons render as <svg>
+    expect(fileItem.querySelector('svg')).toBeInTheDocument();
+    expect(folderItem.querySelector('svg')).toBeInTheDocument();
+  });
 });

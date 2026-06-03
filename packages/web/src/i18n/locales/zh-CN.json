@@ -66,6 +66,7 @@
     "zoomIn": "增大字体",
     "zoomOut": "减小字体",
     "zoomReset": "重置字体大小",
+    "closePane": "关闭",
     "menu": {
       "copy": "复制",
       "paste": "粘贴",

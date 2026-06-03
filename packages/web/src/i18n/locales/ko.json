@@ -66,6 +66,7 @@
     "zoomIn": "글꼴 크기 늘리기",
     "zoomOut": "글꼴 크기 줄이기",
     "zoomReset": "글꼴 크기 초기화",
+    "closePane": "닫기",
     "menu": {
       "copy": "복사",
       "paste": "붙여넣기",

@@ -66,6 +66,7 @@
     "zoomIn": "Aumentar tamanho da fonte",
     "zoomOut": "Diminuir tamanho da fonte",
     "zoomReset": "Redefinir tamanho da fonte",
+    "closePane": "Fechar",
     "menu": {
       "copy": "Copiar",
       "paste": "Colar",

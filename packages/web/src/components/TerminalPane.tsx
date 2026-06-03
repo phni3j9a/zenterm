@@ -37,6 +37,7 @@ export interface TerminalPaneProps {
   isVisible: boolean;
   onSearch?: () => void;
   onNewPane?: () => void;
+  onClose?: () => void;
   canCreateNewPane?: boolean;
   apiClient: ApiClient | null;
   uploadProgress: UploadProgressApi;
@@ -53,6 +54,7 @@ export function TerminalPane({
   isVisible,
   onSearch,
   onNewPane,
+  onClose,
   canCreateNewPane = false,
   apiClient,
   uploadProgress,
@@ -170,6 +172,7 @@ export function TerminalPane({
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onZoomReset={handleZoomReset}
+        onClose={onClose}
       />
       <div style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {searchOpen && isFocused && searchApi && (

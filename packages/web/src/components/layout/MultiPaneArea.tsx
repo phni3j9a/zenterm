@@ -80,6 +80,7 @@ export function MultiPaneArea({
         isVisible={true}
         onSearch={onSearch}
         onNewPane={onNewPane}
+        onClose={() => usePaneStore.getState().assignPane(idx, null)}
         canCreateNewPane={canCreateNewPane}
         apiClient={apiClient}
         uploadProgress={uploadProgress}

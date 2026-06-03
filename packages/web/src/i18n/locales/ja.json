@@ -65,6 +65,7 @@
     "zoomIn": "フォントサイズを大きく",
     "zoomOut": "フォントサイズを小さく",
     "zoomReset": "フォントサイズをリセット",
+    "closePane": "閉じる",
     "menu": {
       "copy": "コピー",
       "paste": "ペースト",

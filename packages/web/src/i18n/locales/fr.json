@@ -66,6 +66,7 @@
     "zoomIn": "Augmenter la taille de la police",
     "zoomOut": "Réduire la taille de la police",
     "zoomReset": "Réinitialiser la taille de la police",
+    "closePane": "Fermer",
     "menu": {
       "copy": "Copier",
       "paste": "Coller",
