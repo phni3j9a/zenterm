@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { WebSocket } from 'ws';
 import { z } from 'zod';
 import { config } from '../config.js';
+import { claudeStatusPoller } from '../services/claudeStatusPoller.js';
 import { tmuxControlService, type TmuxEvent } from '../services/tmuxControl.js';
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
@@ -36,6 +37,7 @@ const eventsRoutes: FastifyPluginAsync = async (fastify) => {
         unsubscribe();
         unsubscribe = null;
       }
+      claudeStatusPoller.release();
     };
 
     const fail = (message: string, closeCode = 1008): void => {
@@ -71,6 +73,7 @@ const eventsRoutes: FastifyPluginAsync = async (fastify) => {
     unsubscribe = tmuxControlService.subscribe((event) => {
       send(socket, event);
     });
+    claudeStatusPoller.acquire();
 
     socket.on('pong', () => {
       lastPongAt = Date.now();
