@@ -183,7 +183,69 @@ describe('SessionRow', () => {
     expect(screen.queryByRole('menuitem', { name: /open in pane|pane \d/i })).toBeNull();
   });
 
-  it('renders state dot with aria-label "Active" when isActive is true', () => {
+  it('shows working Claude badge when a window is working', () => {
+    const s: TmuxSession = {
+      ...session,
+      windows: [
+        { index: 0, name: 'main', active: true, zoomed: false, paneCount: 1, cwd: '/home/me', claudeStatus: { activity: 'working' } },
+        { index: 1, name: 'test', active: false, zoomed: false, paneCount: 1, cwd: '/home/me', claudeStatus: { activity: 'waiting' } },
+      ],
+    };
+    render(
+      <SessionRow
+        session={s}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'Working' })).toBeInTheDocument();
+  });
+
+  it('shows waiting Claude badge when only waiting windows', () => {
+    const s: TmuxSession = {
+      ...session,
+      windows: [
+        { index: 0, name: 'main', active: true, zoomed: false, paneCount: 1, cwd: '/home/me', claudeStatus: { activity: 'waiting' } },
+      ],
+    };
+    render(
+      <SessionRow
+        session={s}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'Waiting for input' })).toBeInTheDocument();
+  });
+
+  it('shows muted placeholder (no img) when no Claude activity', () => {
+    render(
+      <SessionRow
+        session={sessionNoWindows}
+        isActive={true}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.getByTestId('session-row-claude-none')).toBeInTheDocument();
+  });
+
+  it('active session button has aria-current="true"', () => {
     render(
       <SessionRow
         session={session}
@@ -196,23 +258,8 @@ describe('SessionRow', () => {
         onOpenInPane={vi.fn()}
       />,
     );
-    expect(screen.getByTestId('session-row-state-dot')).toHaveAttribute('aria-label', 'Active');
-  });
-
-  it('renders state dot with aria-label "Detached" when session has no windows and not active', () => {
-    render(
-      <SessionRow
-        session={sessionNoWindows}
-        isActive={false}
-        isExpanded={false}
-        openInPaneOptions={[]}
-        onToggleExpand={vi.fn()}
-        onRename={vi.fn()}
-        onRequestDelete={vi.fn()}
-        onOpenInPane={vi.fn()}
-      />,
-    );
-    expect(screen.getByTestId('session-row-state-dot')).toHaveAttribute('aria-label', 'Detached');
+    const rowButton = screen.getByText('dev').closest('button');
+    expect(rowButton).toHaveAttribute('aria-current', 'true');
   });
 
   it('renders chevron toggle with data-testid when session has multiple windows', () => {

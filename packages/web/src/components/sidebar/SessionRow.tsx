@@ -6,6 +6,8 @@ import { InlineEdit } from '@/components/ui/InlineEdit';
 import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
 import { IconChevronRight, IconChevronDown, IconMore } from '@/components/ui/icons';
 import { RowActionsMenu } from './RowActionsMenu';
+import { ClaudeStatusBadge } from './ClaudeStatusBadge';
+import { rollupClaudeActivity } from '@/lib/claudeRollup';
 
 export interface SessionRowProps {
   session: TmuxSession;
@@ -40,16 +42,7 @@ export function SessionRow({
   const hasWindows = (session.windows?.length ?? 0) > 0;
   const showKebab = hover || menuOpen;
 
-  const stateDotColor = isActive
-    ? tokens.colors.primary
-    : (session.windows?.length ?? 0) > 0
-      ? tokens.colors.warning
-      : tokens.colors.textMuted;
-  const stateDotLabel = isActive
-    ? t('sessions.state.active')
-    : (session.windows?.length ?? 0) > 0
-      ? t('sessions.state.idle')
-      : t('sessions.state.detached');
+  const rollupActivity = rollupClaudeActivity(session.windows ?? []);
 
   const rowBackground = isActive
     ? tokens.colors.primarySubtle
@@ -84,17 +77,21 @@ export function SessionRow({
           transition: 'background 100ms',
         }}
       >
-        <span
-          data-testid="session-row-state-dot"
-          aria-label={stateDotLabel}
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: stateDotColor,
-            flexShrink: 0,
-          }}
-        />
+        {rollupActivity ? (
+          <ClaudeStatusBadge status={{ activity: rollupActivity }} />
+        ) : (
+          <span
+            data-testid="session-row-claude-none"
+            aria-hidden
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: tokens.colors.textMuted,
+              flexShrink: 0,
+            }}
+          />
+        )}
         <span style={{ flex: 1, minWidth: 0 }}>
           {mode === 'editing-name' ? (
             <InlineEdit
