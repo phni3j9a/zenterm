@@ -1,3 +1,13 @@
+/** ウィンドウで動く Claude Code の活動状態 */
+export type ClaudeActivity = 'working' | 'waiting';
+
+/** ウィンドウ単位の Claude ステータス（不在のときは undefined） */
+export interface ClaudeWindowStatus {
+  activity: ClaudeActivity;
+  /** タイトルの作業概要（先頭グリフ除去後）。ツールチップ用、省略可 */
+  summary?: string;
+}
+
 /** tmux ウィンドウ情報 (session 内の表示単位) */
 export interface TmuxWindow {
   index: number;
@@ -6,6 +16,8 @@ export interface TmuxWindow {
   zoomed: boolean;
   paneCount: number;
   cwd: string;
+  /** Claude が動いている場合のみ設定（不在のときは undefined） */
+  claudeStatus?: ClaudeWindowStatus;
 }
 
 /** tmux セッション情報 (gateway ↔ mobile 共通) */
@@ -248,6 +260,7 @@ export type CodexLimitsResponse =
 export type TmuxEvent =
   | { type: 'sessions-changed' }
   | { type: 'windows-changed' }
-  | { type: 'monitor-restart' };
+  | { type: 'monitor-restart' }
+  | { type: 'claude-status-changed' };
 
 export * from './tokens';
