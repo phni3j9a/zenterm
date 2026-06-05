@@ -28,7 +28,7 @@ describe('ClaudeStatusPoller', () => {
     let i = 0;
     const publish = vi.fn();
     const runTmux = vi.fn(() => outputs[Math.min(i++, outputs.length - 1)]);
-    const poller = new ClaudeStatusPoller({ runTmux, publish, intervalMs: 1000 });
+    const poller = new ClaudeStatusPoller({ runTmux, publish, intervalMs: 1000, sessionPrefix: 'zen_' });
     return { poller, publish, runTmux };
   }
 
@@ -52,7 +52,7 @@ describe('ClaudeStatusPoller', () => {
       if (mode === 'throw') throw new Error('no server');
       return 'zen_a|0|m|1|0|1|/h|claude|⠂ x';
     });
-    const poller = new ClaudeStatusPoller({ runTmux, publish, intervalMs: 1000 });
+    const poller = new ClaudeStatusPoller({ runTmux, publish, intervalMs: 1000, sessionPrefix: 'zen_' });
     poller.tick(); // '' → working: publish 1
     mode = 'throw';
     poller.tick(); // working → '': publish 2

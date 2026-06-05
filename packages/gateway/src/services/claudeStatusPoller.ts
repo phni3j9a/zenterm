@@ -4,8 +4,8 @@ import { config } from '../config.js';
 import { tmuxControlService } from './tmuxControl.js';
 import { tmuxWindowListFormat, parseWindowLine } from './tmux.js';
 
-const POLL_INTERVAL_MS =
-  Number.parseInt(process.env.CLAUDE_STATUS_POLL_MS ?? '', 10) || 2000;
+const parsedPollMs = Number.parseInt(process.env.CLAUDE_STATUS_POLL_MS ?? '', 10);
+const POLL_INTERVAL_MS = Number.isFinite(parsedPollMs) && parsedPollMs > 0 ? parsedPollMs : 2000;
 
 /**
  * `tmux list-windows -a`（session_name 前置）の出力から派生状態の signature を作る。
@@ -27,7 +27,7 @@ export function computeStatusSignature(output: string, sessionPrefix: string): s
       return `${sessionName}/${win.index}:${activity}`;
     })
     .filter((v): v is string => v !== null)
-    .sort()
+    .sort() // 辞書順ソート: 順序自体に意味はなく「同一状態→同一文字列」を保証するだけ
     .join(',');
 }
 
@@ -35,6 +35,7 @@ interface PollerDeps {
   runTmux: () => string;
   publish: (event: TmuxEvent) => void;
   intervalMs: number;
+  sessionPrefix: string;
 }
 
 function defaultRunTmux(): string {
@@ -42,7 +43,7 @@ function defaultRunTmux(): string {
     'tmux',
     ['list-windows', '-a', '-F', `#{session_name}|${tmuxWindowListFormat}`],
     { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
-  ).toString();
+  );
 }
 
 export class ClaudeStatusPoller {
@@ -52,7 +53,10 @@ export class ClaudeStatusPoller {
 
   constructor(private readonly deps: PollerDeps) {}
 
-  /** WS クライアント接続時に呼ぶ。最初の 1 人でインターバル開始 + 即時 tick。 */
+  /**
+   * WS クライアント接続時に呼ぶ。最初の 1 人でインターバル開始 + 即時 tick。
+   * acquire/release はクライアント接続/切断で対に呼ぶこと（release 漏れは timer リーク）
+   */
   acquire(): void {
     this.refCount += 1;
     if (this.refCount === 1 && this.timer === null) {
@@ -61,13 +65,16 @@ export class ClaudeStatusPoller {
     }
   }
 
-  /** WS クライアント切断時に呼ぶ。最後の 1 人でインターバル停止。 */
+  /**
+   * WS クライアント切断時に呼ぶ。最後の 1 人でインターバル停止。
+   * acquire/release はクライアント接続/切断で対に呼ぶこと（release 漏れは timer リーク）
+   */
   release(): void {
     this.refCount = Math.max(0, this.refCount - 1);
     if (this.refCount === 0 && this.timer !== null) {
       clearInterval(this.timer);
       this.timer = null;
-      this.lastSignature = '';
+      this.lastSignature = ''; // 再接続時に直近状態を必ず 1 回 broadcast し直すためリセットする
     }
   }
 
@@ -75,7 +82,7 @@ export class ClaudeStatusPoller {
   tick(): void {
     let signature = '';
     try {
-      signature = computeStatusSignature(this.deps.runTmux(), config.SESSION_PREFIX);
+      signature = computeStatusSignature(this.deps.runTmux(), this.deps.sessionPrefix);
     } catch {
       signature = ''; // tmux 不在等は全 none 扱い
     }
@@ -90,4 +97,5 @@ export const claudeStatusPoller = new ClaudeStatusPoller({
   runTmux: defaultRunTmux,
   publish: (event) => tmuxControlService.publish(event),
   intervalMs: POLL_INTERVAL_MS,
+  sessionPrefix: config.SESSION_PREFIX,
 });
