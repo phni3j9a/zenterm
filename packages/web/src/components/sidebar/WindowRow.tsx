@@ -6,6 +6,7 @@ import { InlineEdit } from '@/components/ui/InlineEdit';
 import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateName';
 import { IconMore } from '@/components/ui/icons';
 import { RowActionsMenu } from './RowActionsMenu';
+import { ClaudeStatusBadge } from './ClaudeStatusBadge';
 
 export interface WindowRowProps {
   sessionDisplayName: string;
@@ -62,6 +63,19 @@ export function WindowRow({
       onMouseLeave={() => setHover(false)}
       style={{ position: 'relative', display: 'flex', alignItems: 'center' }}
     >
+      <span
+        aria-hidden={window.claudeStatus ? undefined : true}
+        style={{
+          width: 8,
+          marginRight: tokens.spacing.xs,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {window.claudeStatus ? <ClaudeStatusBadge status={window.claudeStatus} /> : null}
+      </span>
       <button
         type="button"
         aria-current={isActive ? 'true' : undefined}

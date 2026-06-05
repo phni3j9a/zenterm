@@ -106,6 +106,42 @@ const baseWindow = {
   cwd: '/',
 };
 
+const baseWindowForClaudeStatus: TmuxWindow = {
+  index: 0,
+  name: 'main',
+  active: false,
+  zoomed: false,
+  paneCount: 1,
+  cwd: '/home/server',
+};
+
+function renderRow(w: TmuxWindow) {
+  return render(
+    <WindowRow
+      sessionDisplayName="demo"
+      window={w}
+      isActive={false}
+      openInPaneOptions={[]}
+      onSelect={vi.fn()}
+      onRename={vi.fn()}
+      onRequestDelete={vi.fn()}
+      onOpenInPane={vi.fn()}
+    />,
+  );
+}
+
+describe('WindowRow claudeStatus', () => {
+  it('claudeStatus があるとバッジを描画する', () => {
+    renderRow({ ...baseWindowForClaudeStatus, claudeStatus: { activity: 'waiting' } });
+    expect(screen.getByRole('img', { name: 'Waiting for input' })).toBeInTheDocument();
+  });
+
+  it('claudeStatus が無ければバッジを描画しない', () => {
+    renderRow(baseWindowForClaudeStatus);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+});
+
 describe('WindowRow openInPane menu', () => {
   it('openInPaneOptions が空でないときメニューに「Open in pane N」項目が出る', () => {
     render(
