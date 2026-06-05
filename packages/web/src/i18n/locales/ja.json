@@ -53,6 +53,10 @@
       "active": "アクティブ",
       "idle": "アイドル",
       "detached": "未接続"
+    },
+    "claudeStatus": {
+      "working": "作業中",
+      "waiting": "入力待ち"
     }
   },
   "terminal": {

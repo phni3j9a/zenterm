@@ -54,6 +54,10 @@
       "active": "Active",
       "idle": "Idle",
       "detached": "Detached"
+    },
+    "claudeStatus": {
+      "working": "작업 중",
+      "waiting": "입력 대기 중"
     }
   },
   "terminal": {

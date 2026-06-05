@@ -54,6 +54,10 @@
       "active": "Active",
       "idle": "Idle",
       "detached": "Detached"
+    },
+    "claudeStatus": {
+      "working": "Arbeitet",
+      "waiting": "Wartet auf Eingabe"
     }
   },
   "terminal": {
