@@ -68,6 +68,7 @@ export function useEventsSubscription(): void {
         if (
           event.type === 'sessions-changed' ||
           event.type === 'windows-changed' ||
+          event.type === 'claude-status-changed' ||
           event.type === 'monitor-restart'
         ) {
           triggerRefetch();

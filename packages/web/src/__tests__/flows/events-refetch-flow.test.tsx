@@ -120,6 +120,53 @@ describe('events → refetch flow', () => {
     );
   });
 
+  it('refetches sessions after claude-status-changed event (debounced)', async () => {
+    let callCount = 0;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => {
+      callCount += 1;
+      const sessions =
+        callCount === 1
+          ? []
+          : [{ name: 'zen_x', displayName: 'x', created: 1, cwd: '/', windows: [] }];
+      return new Response(JSON.stringify(sessions), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }));
+
+    render(
+      <MemoryRouter initialEntries={['/web/sessions']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(lastClientOptions).not.toBeNull());
+
+    act(() => {
+      lastClientOptions!.onStatusChange('connected', 0);
+    });
+    expect(useEventsStore.getState().status).toBe('connected');
+
+    // Enable fake timers only for the debounce window, then restore real timers
+    vi.useFakeTimers();
+
+    act(() => {
+      lastClientOptions!.onEvent({ type: 'claude-status-changed' });
+      lastClientOptions!.onEvent({ type: 'claude-status-changed' });
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(60);
+    });
+
+    // Switch to real timers so waitFor's internal polling works
+    vi.useRealTimers();
+
+    await waitFor(() =>
+      expect(useSessionsStore.getState().sessions.map((s) => s.displayName)).toEqual(['x']),
+    );
+  });
+
   it('updates events status indicator on reconnecting', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } }),
