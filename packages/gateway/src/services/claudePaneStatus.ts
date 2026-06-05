@@ -4,7 +4,7 @@ import type { ClaudeActivity, ClaudeWindowStatus } from '@zenterm/shared';
 const BRAILLE_MIN = 0x2800;
 const BRAILLE_MAX = 0x28ff;
 // 入力待ちを示す静止グリフ。将来の仕様変更時はここに追記する。
-const WAITING_GLYPHS = new Set(['✳']); // ✳
+const WAITING_GLYPHS = new Set(['✳']); // U+2733 EIGHT SPOKED ASTERISK
 // claude 在席とみなすフォアグラウンドコマンド。
 // 'node' は既知グリフを持つ場合のみ在席扱い（無関係な node アプリの誤検出回避）。
 const CLAUDE_COMMANDS = new Set(['claude', 'node']);
@@ -19,13 +19,14 @@ function classifyGlyph(glyph: string): { known: boolean; working: boolean } {
 /**
  * tmux の pane_current_command / pane_title から Claude の活動状態を判定する。
  * 在席でなければ undefined（= Claude無）。
+ * @param command tmux の pane_current_command（basename）
  */
 export function deriveClaudeStatus(
   command: string,
   title: string,
 ): ClaudeWindowStatus | undefined {
   const trimmed = title.replace(/^\s+/, '');
-  const glyph = trimmed.charAt(0);
+  const glyph = [...trimmed][0] ?? '';
   const { known, working } = classifyGlyph(glyph);
 
   if (!CLAUDE_COMMANDS.has(command)) {
@@ -37,7 +38,6 @@ export function deriveClaudeStatus(
   }
 
   const activity: ClaudeActivity = working ? 'working' : 'waiting';
-  // 既知グリフはコードユニット 1 個（BMP）なので slice(1) で除去できる。
-  const summary = (known ? trimmed.slice(1) : trimmed).trim();
+  const summary = (known ? trimmed.slice(glyph.length) : trimmed).trim();
   return summary ? { activity, summary } : { activity };
 }

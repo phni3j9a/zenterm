@@ -24,7 +24,10 @@ describe('deriveClaudeStatus', () => {
   });
 
   it('node 直起動 + 既知グリフ → 在席', () => {
-    expect(deriveClaudeStatus('node', '⠂ task')?.activity).toBe('working');
+    expect(deriveClaudeStatus('node', '⠂ task')).toEqual({
+      activity: 'working',
+      summary: 'task',
+    });
   });
 
   it('node だが既知グリフ無し（無関係な node アプリ）→ undefined', () => {
@@ -41,5 +44,9 @@ describe('deriveClaudeStatus', () => {
   it('summary が空なら省略', () => {
     expect(deriveClaudeStatus('claude', '✳')).toEqual({ activity: 'waiting' });
     expect(deriveClaudeStatus('claude', '⠂   ')).toEqual({ activity: 'working' });
+  });
+
+  it('空タイトル + 非claude command → undefined', () => {
+    expect(deriveClaudeStatus('zsh', '')).toBeUndefined();
   });
 });
