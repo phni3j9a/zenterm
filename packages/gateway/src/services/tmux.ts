@@ -467,7 +467,7 @@ export function captureScrollback(input: string, lines = 1000): string {
 
 export function parseWindowLine(line: string): TmuxWindow | null {
   const parts = line.split('|');
-  if (parts.length < 6) {
+  if (parts.length < 8) {
     return null;
   }
   const [indexRaw, name, activeRaw, zoomedRaw, panesRaw, cwd, command] = parts;

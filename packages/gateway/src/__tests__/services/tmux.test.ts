@@ -91,9 +91,9 @@ describe('tmux service', () => {
           return '';
         case 'list-windows':
           if (args[2] === '=zen_1') {
-            return '0|term1|1|0|1|/home/user';
+            return '0|term1|1|0|1|/home/user|zsh|bash';
           }
-          return '0|term1|1|0|2|/srv/project\n1|term2|0|0|1|/srv/project';
+          return '0|term1|1|0|2|/srv/project|zsh|bash\n1|term2|0|0|1|/srv/project|zsh|bash';
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
       }
@@ -172,7 +172,7 @@ describe('tmux service', () => {
         case 'list-sessions':
           return 'zen_dev|1710000000|/home/testuser';
         case 'list-windows':
-          return '0|term1|1|0|1|/home/testuser';
+          return '0|term1|1|0|1|/home/testuser|zsh|bash';
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
       }
@@ -450,9 +450,9 @@ describe('tmux service', () => {
         case 'list-windows':
           listWindowsCalls += 1;
           if (listWindowsCalls < 2) {
-            return '0|term1|1|0|1|/home/testuser';
+            return '0|term1|1|0|1|/home/testuser|zsh|bash';
           }
-          return '0|term1|0|0|1|/home/testuser\n1|api|1|0|1|/home/testuser';
+          return '0|term1|0|0|1|/home/testuser|zsh|bash\n1|api|1|0|1|/home/testuser|zsh|bash';
         case 'new-window':
           return '';
         default:
@@ -486,12 +486,12 @@ describe('tmux service', () => {
         case 'list-windows':
           listWindowsCalls += 1;
           if (listWindowsCalls < 3) {
-            return ['0|term1|1|0|1|/home/testuser', '1|term2|0|0|1|/home/testuser'].join('\n');
+            return ['0|term1|1|0|1|/home/testuser|zsh|bash', '1|term2|0|0|1|/home/testuser|zsh|bash'].join('\n');
           }
           return [
-            '0|term1|0|0|1|/home/testuser',
-            '1|term2|0|0|1|/home/testuser',
-            '2|term3|1|0|1|/home/testuser',
+            '0|term1|0|0|1|/home/testuser|zsh|bash',
+            '1|term2|0|0|1|/home/testuser|zsh|bash',
+            '2|term3|1|0|1|/home/testuser|zsh|bash',
           ].join('\n');
         case 'new-window':
           return '';
@@ -517,7 +517,7 @@ describe('tmux service', () => {
         case 'has-session':
           return '';
         case 'list-windows':
-          return '0|term1|1|0|1|/home/testuser\n1|api|0|0|1|/home/testuser';
+          return '0|term1|1|0|1|/home/testuser|zsh|bash\n1|api|0|0|1|/home/testuser|zsh|bash';
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
       }
@@ -541,7 +541,7 @@ describe('tmux service', () => {
         case 'has-session':
           return '';
         case 'list-windows':
-          return '0|term1|1|0|1|/home/testuser\n1|term2|0|0|1|/home/testuser';
+          return '0|term1|1|0|1|/home/testuser|zsh|bash\n1|term2|0|0|1|/home/testuser|zsh|bash';
         case 'kill-window':
           return '';
         default:
@@ -565,7 +565,7 @@ describe('tmux service', () => {
         case 'has-session':
           return '';
         case 'list-windows':
-          return '0|term1|1|0|1|/home/testuser';
+          return '0|term1|1|0|1|/home/testuser|zsh|bash';
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
       }
@@ -589,7 +589,7 @@ describe('tmux service', () => {
         case 'has-session':
           return '';
         case 'list-windows':
-          return '0|term1|1|0|1|/home/testuser\n1|term2|0|0|1|/home/testuser';
+          return '0|term1|1|0|1|/home/testuser|zsh|bash\n1|term2|0|0|1|/home/testuser|zsh|bash';
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
       }
@@ -616,9 +616,9 @@ describe('tmux service', () => {
         case 'list-windows':
           listWindowsCalls += 1;
           if (listWindowsCalls < 3) {
-            return '0|term1|1|0|1|/home/testuser\n1|term2|0|0|1|/home/testuser';
+            return '0|term1|1|0|1|/home/testuser|zsh|bash\n1|term2|0|0|1|/home/testuser|zsh|bash';
           }
-          return '0|term1|1|0|1|/home/testuser\n1|api|0|0|1|/home/testuser';
+          return '0|term1|1|0|1|/home/testuser|zsh|bash\n1|api|0|0|1|/home/testuser|zsh|bash';
         case 'rename-window':
           return '';
         default:
@@ -652,8 +652,8 @@ describe('tmux service', () => {
         case 'list-windows':
           listWindowsCalls += 1;
           return listWindowsCalls === 1
-            ? '0|term1|1|0|2|/home/testuser'
-            : '0|term1|1|1|2|/home/testuser';
+            ? '0|term1|1|0|2|/home/testuser|zsh|bash'
+            : '0|term1|1|1|2|/home/testuser|zsh|bash';
         case 'resize-pane':
           return '';
         default:
