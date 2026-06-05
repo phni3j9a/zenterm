@@ -4,6 +4,7 @@ const VALID_TYPES = new Set<TmuxEvent['type']>([
   'sessions-changed',
   'windows-changed',
   'monitor-restart',
+  'claude-status-changed',
 ]);
 
 export function parseEvent(raw: string): TmuxEvent | null {

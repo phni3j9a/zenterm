@@ -14,6 +14,12 @@ describe('parseEvent', () => {
     expect(parseEvent('{"type":"monitor-restart"}')).toEqual({ type: 'monitor-restart' });
   });
 
+  it('parses claude-status-changed', () => {
+    expect(parseEvent('{"type":"claude-status-changed"}')).toEqual({
+      type: 'claude-status-changed',
+    });
+  });
+
   it('returns null for unknown type', () => {
     expect(parseEvent('{"type":"foo"}')).toBeNull();
   });
