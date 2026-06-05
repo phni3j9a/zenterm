@@ -4,6 +4,7 @@ import { spawn, type IPty } from 'node-pty';
 import { z } from 'zod';
 import { config } from '../config.js';
 import type { TmuxSession, TmuxWindow } from '../types/index.js';
+import { deriveClaudeStatus } from './claudePaneStatus.js';
 
 const VIEW_SESSION_PREFIX = '_zen_view_';
 
@@ -30,8 +31,8 @@ const windowNameSchema = z
   );
 
 const tmuxListFormat = '#{session_name}|#{session_created}|#{pane_current_path}';
-const tmuxWindowListFormat =
-  '#{window_index}|#{window_name}|#{?window_active,1,0}|#{?window_zoomed_flag,1,0}|#{window_panes}|#{pane_current_path}';
+export const tmuxWindowListFormat =
+  '#{window_index}|#{window_name}|#{?window_active,1,0}|#{?window_zoomed_flag,1,0}|#{window_panes}|#{pane_current_path}|#{pane_current_command}|#{pane_title}';
 const homeDir = process.env.HOME ?? process.cwd();
 const emptyServerMarkers = [
   'no server running',
@@ -464,25 +465,32 @@ export function captureScrollback(input: string, lines = 1000): string {
 
 // ─── Window 操作 ───
 
-function parseWindowLine(line: string): TmuxWindow | null {
+export function parseWindowLine(line: string): TmuxWindow | null {
   const parts = line.split('|');
   if (parts.length < 6) {
     return null;
   }
-  const [indexRaw, name, activeRaw, zoomedRaw, panesRaw, cwd] = parts;
+  const [indexRaw, name, activeRaw, zoomedRaw, panesRaw, cwd, command] = parts;
   const index = Number.parseInt(indexRaw, 10);
   const paneCount = Number.parseInt(panesRaw, 10);
   if (Number.isNaN(index) || Number.isNaN(paneCount)) {
     return null;
   }
-  return {
+  // pane_title は任意文字列（| を含み得る）。8 番目以降を再結合して復元する。
+  const title = parts.slice(7).join('|');
+  const window: TmuxWindow = {
     index,
     name,
     active: activeRaw === '1',
     zoomed: zoomedRaw === '1',
     paneCount,
-    cwd: cwd || homeDir
+    cwd: cwd || homeDir,
   };
+  const claudeStatus = deriveClaudeStatus(command ?? '', title);
+  if (claudeStatus) {
+    window.claudeStatus = claudeStatus;
+  }
+  return window;
 }
 
 export function listWindows(sessionInput: string): TmuxWindow[] {

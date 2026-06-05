@@ -402,11 +402,11 @@ describe('tmux service', () => {
           expect(args).toEqual([
             'list-windows',
             '-t', '=zen_dev',
-            '-F', '#{window_index}|#{window_name}|#{?window_active,1,0}|#{?window_zoomed_flag,1,0}|#{window_panes}|#{pane_current_path}',
+            '-F', '#{window_index}|#{window_name}|#{?window_active,1,0}|#{?window_zoomed_flag,1,0}|#{window_panes}|#{pane_current_path}|#{pane_current_command}|#{pane_title}',
           ]);
           return [
-            '0|term1|1|0|2|/home/user',
-            '1|term2|0|1|1|/srv/work',
+            '0|term1|1|0|2|/home/user|zsh|bash',
+            '1|term2|0|1|1|/srv/work|zsh|bash',
           ].join('\n');
         default:
           throw new Error(`Unexpected tmux args: ${args.join(' ')}`);
@@ -682,5 +682,36 @@ describe('tmux service', () => {
     expect(() => normalizeWindowName('bad name')).toThrowError(
       /ウィンドウ名は英数字、ハイフン、アンダースコア、ドットのみ使用できます/
     );
+  });
+});
+
+describe('listWindows claudeStatus', () => {
+  function installWindowsMock(windowsOutput: string): void {
+    installExecMock((args) => {
+      if (args[0] === 'has-session') return '';
+      if (args[0] === 'list-windows') return windowsOutput;
+      return '';
+    });
+  }
+
+  it('アクティブペインの command/title から claudeStatus を付与する', async () => {
+    // 書式: index|name|active|zoomed|panes|cwd|command|title
+    installWindowsMock(
+      '0|main|1|0|1|/home/server|claude|⠂ 作業概要\n' +
+        '1|build|0|0|1|/home/server|zsh|server-Macmini',
+    );
+    const tmux = await loadTmuxModule();
+    const windows = tmux.listWindows('zen_demo');
+    const main = windows.find((w) => w.index === 0);
+    const build = windows.find((w) => w.index === 1);
+    expect(main?.claudeStatus).toEqual({ activity: 'working', summary: '作業概要' });
+    expect(build?.claudeStatus).toBeUndefined();
+  });
+
+  it('title に | を含んでも末尾まで summary に取り込む', async () => {
+    installWindowsMock('0|w|1|0|1|/home/server|claude|✳ a|b|c');
+    const tmux = await loadTmuxModule();
+    const w = tmux.listWindows('zen_demo')[0];
+    expect(w.claudeStatus).toEqual({ activity: 'waiting', summary: 'a|b|c' });
   });
 });
