@@ -180,6 +180,12 @@ gateway は `tmuxControl.ts` で `@zenterm/shared` の `TmuxEvent` を re-export
 
 ### 6.3 `packages/web`
 
+**`lib/events/parseEvent.ts`（変更・重要）**
+- WS の生メッセージは `client.ts` 内で `parseEvent` を通り、`VALID_TYPES` 許可リストに
+  無い型は `null` に落とされて `onEvent` に届かない。`VALID_TYPES` に
+  `'claude-status-changed'` を**必ず追加する**（忘れると poller→publish→WS が正しくても
+  Web 側で握り潰され、リアルタイム更新が無言で死ぬ）。`parseEvent` の positive テストも追加。
+
 **`hooks/useEventsSubscription.ts`（変更）**
 - `onEvent` の refetch トリガ条件に `event.type === 'claude-status-changed'` を追加
   （既存 `sessions-changed`/`windows-changed`/`monitor-restart` と同じ debounce refetch 経路）。
