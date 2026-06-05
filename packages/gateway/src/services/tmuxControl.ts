@@ -107,6 +107,11 @@ class TmuxControlService {
     };
   }
 
+  /** poller など外部から /ws/events 購読者へイベントを配信する */
+  publish(event: TmuxEvent): void {
+    this.emit(event);
+  }
+
   /** テスト用: 現在のリスナー数を確認する */
   get listenerCount(): number {
     return this.listeners.size;

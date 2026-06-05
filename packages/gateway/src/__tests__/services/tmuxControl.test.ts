@@ -1,5 +1,19 @@
-import { describe, expect, it } from 'vitest';
-import { parseControlLine } from '../../services/tmuxControl.js';
+import { describe, expect, it, vi } from 'vitest';
+import { parseControlLine, tmuxControlService } from '../../services/tmuxControl.js';
+
+// node-pty と node:child_process をモックして、テスト環境で spawn や execFileSync が
+// 実際の tmux を呼ばないようにする。
+vi.mock('node-pty', () => ({
+  spawn: vi.fn(() => ({
+    onData: vi.fn(),
+    onExit: vi.fn(),
+    kill: vi.fn(),
+  })),
+}));
+
+vi.mock('node:child_process', () => ({
+  execFileSync: vi.fn(),
+}));
 
 describe('parseControlLine', () => {
   it.each([
@@ -36,5 +50,15 @@ describe('parseControlLine', () => {
 
   it('末尾の改行を許容する', () => {
     expect(parseControlLine('%window-add @5\r')).toEqual({ type: 'windows-changed' });
+  });
+});
+
+describe('publish', () => {
+  it('publish したイベントが購読者に届く', () => {
+    const received: unknown[] = [];
+    const unsubscribe = tmuxControlService.subscribe((e) => received.push(e));
+    tmuxControlService.publish({ type: 'claude-status-changed' });
+    unsubscribe();
+    expect(received).toContainEqual({ type: 'claude-status-changed' });
   });
 });
