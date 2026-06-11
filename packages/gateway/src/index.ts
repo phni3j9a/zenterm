@@ -1,9 +1,9 @@
 import { createRequire } from 'node:module';
-import os from 'node:os';
 import { config } from './config.js';
 import { buildApp } from './app.js';
 import { cleanupOrphanViewSessions } from './services/tmux.js';
 import { formatPairingInfo } from './pairing-info.js';
+import { getNetworkAddresses } from './services/network.js';
 
 const require = createRequire(import.meta.url);
 
@@ -34,33 +34,6 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     void shutdown(signal);
   });
-}
-
-interface NetworkAddresses {
-  lan: string | null;
-  tailscale: string | null;
-}
-
-function getNetworkAddresses(): NetworkAddresses {
-  const interfaces = os.networkInterfaces();
-  const result: NetworkAddresses = { lan: null, tailscale: null };
-
-  for (const [name, entries] of Object.entries(interfaces)) {
-    if (!entries) continue;
-
-    for (const entry of entries) {
-      if (entry.family !== 'IPv4' || entry.internal) continue;
-
-      // Tailscale uses 100.64.0.0/10 (CGNAT range)
-      if (name.startsWith('tailscale') || entry.address.startsWith('100.')) {
-        result.tailscale ??= entry.address;
-      } else {
-        result.lan ??= entry.address;
-      }
-    }
-  }
-
-  return result;
 }
 
 export { formatPairingInfo, type PairingInfoInput } from './pairing-info.js';
