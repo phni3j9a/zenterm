@@ -40,6 +40,12 @@ vi.mock('../../services/system.js', () => ({
   ...systemMocks,
 }));
 
+const networkMocks = vi.hoisted(() => ({
+  getNetworkAddresses: vi.fn(),
+}));
+
+vi.mock('../../services/network.js', () => networkMocks);
+
 async function buildTestApp(): Promise<FastifyInstance> {
   const { buildApp } = await import('../../app.js');
   const app = await buildApp();
@@ -62,6 +68,33 @@ afterEach(async () => {
     await app.close();
     app = undefined;
   }
+});
+
+describe('GET /api/system/network', () => {
+  it('認証付きでLAN/Tailscale/portを返す', async () => {
+    networkMocks.getNetworkAddresses.mockReturnValue({
+      lan: '192.168.1.10',
+      tailscale: '100.90.1.2',
+    });
+
+    const response = await app!.inject({
+      method: 'GET',
+      url: '/api/system/network',
+      headers: { authorization: 'Bearer test-token' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({
+      lan: '192.168.1.10',
+      tailscale: '100.90.1.2',
+      port: 18765,
+    });
+  });
+
+  it('トークンなしは401', async () => {
+    const response = await app!.inject({ method: 'GET', url: '/api/system/network' });
+    expect(response.statusCode).toBe(401);
+  });
 });
 
 describe('system routes', () => {
