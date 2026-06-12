@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useTheme } from '@/theme';
 import type { ToastEntry } from '@/stores/ui';
+import { IconCheck, IconAlertTriangle, IconInfo } from './icons';
 
 export interface ToastProps {
   toast: ToastEntry;
@@ -10,7 +11,8 @@ export interface ToastProps {
 const DEFAULT_DURATION_MS = 4000;
 
 export function Toast({ toast, onDismiss }: ToastProps) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const duration = toast.durationMs ?? DEFAULT_DURATION_MS;
 
   useEffect(() => {
@@ -18,19 +20,19 @@ export function Toast({ toast, onDismiss }: ToastProps) {
     return () => window.clearTimeout(timer);
   }, [toast.id, duration, onDismiss]);
 
-  const background = (() => {
+  // 白(bgElevated)のカードに、種別はアイコンチップの色だけで語らせる。
+  // ベタ塗りより文字が常に最大コントラストで読め、画面の調和も崩さない。
+  const accent = (() => {
     switch (toast.type) {
       case 'error':
-        return tokens.colors.error;
+        return { fg: tokens.colors.error, bg: tokens.colors.errorSubtle, Icon: IconAlertTriangle };
       case 'success':
-        return tokens.colors.success;
+        return { fg: tokens.colors.success, bg: tokens.colors.successSubtle, Icon: IconCheck };
       default:
-        return tokens.colors.bgElevated;
+        return { fg: tokens.colors.info, bg: tokens.colors.infoSubtle, Icon: IconInfo };
     }
   })();
-  const color = toast.type === 'error' || toast.type === 'success'
-    ? tokens.colors.textInverse
-    : tokens.colors.textPrimary;
+  const { Icon } = accent;
 
   return (
     <div
@@ -38,16 +40,32 @@ export function Toast({ toast, onDismiss }: ToastProps) {
       style={{
         padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
         borderRadius: tokens.radii.md,
-        background,
-        color,
-        border: `1px solid ${tokens.colors.border}`,
+        background: dark ? tokens.colors.surface : tokens.colors.bgElevated,
+        color: tokens.colors.textPrimary,
+        border: `1px solid ${tokens.colors.borderSubtle}`,
         display: 'flex',
         alignItems: 'center',
         gap: tokens.spacing.sm,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+        boxShadow: tokens.shadows.md,
         minWidth: 240,
       }}
     >
+      <span
+        aria-hidden
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: '50%',
+          background: accent.bg,
+          color: accent.fg,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={14} />
+      </span>
       <span style={{ flex: 1, fontSize: tokens.typography.smallMedium.fontSize }}>
         {toast.message}
       </span>
@@ -57,11 +75,12 @@ export function Toast({ toast, onDismiss }: ToastProps) {
         onClick={() => onDismiss(toast.id)}
         style={{
           background: 'transparent',
-          color,
+          color: tokens.colors.textMuted,
           border: 'none',
           cursor: 'pointer',
           padding: 0,
           fontSize: tokens.typography.bodyMedium.fontSize,
+          lineHeight: 1,
         }}
       >
         ×

@@ -85,10 +85,8 @@ export function Sidebar(props: SidebarProps) {
           >
             <span
               style={{
-                fontSize: tokens.typography.smallMedium.fontSize,
+                ...tokens.typography.overline,
                 color: tokens.colors.textMuted,
-                textTransform: 'uppercase',
-                letterSpacing: 1.5,
               }}
             >
               {t('terminal.layout.menuLabel')}

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useTheme } from '@/theme';
 
+// プログレストラックはカード面に直接乗るため、同色化しないよう
+// 一段ずらした面を使う (dark は明るく / light は沈む)。
+
 export interface LimitsRowWindow {
   shortLabel: string;
   percent: number;
@@ -18,7 +21,8 @@ const HIGH = 90;
 const MID = 50;
 
 export function LimitsRow({ accountLabel, windows, stale, staleText }: Props) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const trackColor = resolvedTheme === 'dark' ? tokens.colors.surfaceHover : tokens.colors.surface;
   const [expanded, setExpanded] = useState(false);
   const expandable = windows.length > 0;
   const maxPercent = windows.reduce((m, w) => Math.max(m, w.percent), 0);
@@ -87,7 +91,7 @@ export function LimitsRow({ accountLabel, windows, stale, staleText }: Props) {
                     <span>{w.resetsInText}</span>
                   </span>
                 </div>
-                <div style={{ height: 4, background: tokens.colors.surface, borderRadius: 2, marginTop: 2, overflow: 'hidden' }}>
+                <div style={{ height: 4, background: trackColor, borderRadius: 2, marginTop: 2, overflow: 'hidden' }}>
                   <div style={{ width: `${p}%`, height: '100%', background: barColor(p) }} />
                 </div>
               </div>

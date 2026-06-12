@@ -16,21 +16,20 @@ interface AppearanceSectionProps {
 }
 
 export function AppearanceSection({ headingId }: AppearanceSectionProps = {}) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
   const { t } = useTranslation();
   const themeMode = useSettingsStore((s) => s.themeMode);
   const setThemeMode = useSettingsStore((s) => s.setThemeMode);
   const language = useSettingsStore((s) => s.language);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
+  const dark = resolvedTheme === 'dark';
 
   return (
     <section>
       <h3
         id={headingId}
         style={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          fontSize: tokens.typography.caption.fontSize,
+          ...tokens.typography.overline,
           color: tokens.colors.textMuted,
           margin: `0 0 ${tokens.spacing.sm}px 0`,
         }}
@@ -42,7 +41,17 @@ export function AppearanceSection({ headingId }: AppearanceSectionProps = {}) {
         <span style={{ color: tokens.colors.textPrimary, fontSize: tokens.typography.smallMedium.fontSize }}>
           {t('settings.appearance.theme', 'Theme')}
         </span>
-        <div style={{ display: 'flex', gap: tokens.spacing.xs }}>
+        {/* iOS 設定と同じセグメントコントロール: 沈んだトラックの上で
+            選択中セグメントだけがカード面の色で浮かぶ */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 2,
+            padding: 2,
+            borderRadius: tokens.radii.sm,
+            background: dark ? tokens.colors.bg : tokens.colors.surface,
+          }}
+        >
           {THEME_OPTIONS.map((opt) => {
             const active = opt.value === themeMode;
             return (
@@ -53,12 +62,18 @@ export function AppearanceSection({ headingId }: AppearanceSectionProps = {}) {
                 onClick={() => setThemeMode(opt.value)}
                 style={{
                   padding: `4px 10px`,
-                  borderRadius: tokens.radii.sm,
-                  border: `1px solid ${active ? tokens.colors.primary : tokens.colors.border}`,
-                  background: active ? tokens.colors.primary : 'transparent',
-                  color: active ? tokens.colors.textInverse : tokens.colors.textSecondary,
+                  borderRadius: tokens.radii.sm - 2,
+                  border: 'none',
+                  background: active
+                    ? dark
+                      ? tokens.colors.surfaceHover
+                      : tokens.colors.bgElevated
+                    : 'transparent',
+                  color: active ? tokens.colors.textPrimary : tokens.colors.textSecondary,
+                  fontWeight: active ? 600 : 400,
                   fontSize: tokens.typography.caption.fontSize,
                   cursor: 'pointer',
+                  boxShadow: active ? tokens.shadows.sm : 'none',
                 }}
               >
                 {t(opt.key, opt.defaultLabel)}
@@ -81,7 +96,7 @@ export function AppearanceSection({ headingId }: AppearanceSectionProps = {}) {
           value={language}
           onChange={(e) => setLanguage(e.target.value as Language)}
           style={{
-            background: tokens.colors.surface,
+            background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
             color: tokens.colors.textPrimary,
             border: `1px solid ${tokens.colors.border}`,
             padding: `4px 6px`,

@@ -22,9 +22,7 @@ export function RateLimitsSection({ client, headingId }: Props) {
         <h3
           id={headingId}
           style={{
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            fontSize: tokens.typography.caption.fontSize,
+            ...tokens.typography.overline,
             color: tokens.colors.textMuted,
             margin: 0,
           }}

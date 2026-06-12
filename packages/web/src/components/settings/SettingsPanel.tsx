@@ -16,9 +16,7 @@ function SectionPlaceholder({ titleKey, ariaLabel }: { titleKey: string; ariaLab
       <h3
         id="settings-rate-limits"
         style={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          fontSize: tokens.typography.caption.fontSize,
+          ...tokens.typography.overline,
           color: tokens.colors.textMuted,
           margin: `0 0 ${tokens.spacing.sm}px 0`,
         }}

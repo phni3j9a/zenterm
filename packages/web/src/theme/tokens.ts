@@ -1,5 +1,13 @@
-// Ported from app/src/theme/tokens.ts (Zen palette).
+// Ported from app/src/theme/tokens.ts (Zen Garden palette).
 // Keep keys aligned with the mobile app so designers can port styles.
+//
+// Zen Garden — 和紙 × 墨 × 苔
+//   Light: 和紙 (#F2F1EC) の上に、ほぼ白のカード (#FCFBF8) が浮かぶ。
+//          チップや入力面はカードより一段「沈む」(surface < bg < bgElevated)。
+//   Dark:  墨 (#191815) の中に面が灯る。面は明るいほど手前
+//          (surfaceSunken < bg < bgElevated < surface < surfaceHover)。
+// 状態色は日本の伝統色: 苔=primary / 若竹=success / 山吹=warning / 朱=error / 藍=info。
+// success と primary は意図的に別系統 (選択状態と稼働状態を見分けるため)。
 
 export const FONT_FAMILY_MONO =
   '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace';
@@ -14,6 +22,7 @@ export interface ColorTokens {
   bgElevated: string;
   surface: string;
   surfaceHover: string;
+  surfaceActive: string;
   surfaceSunken: string;
   border: string;
   borderSubtle: string;
@@ -22,11 +31,17 @@ export interface ColorTokens {
   textMuted: string;
   textInverse: string;
   primary: string;
+  primaryHover: string;
   primaryMuted: string;
   primarySubtle: string;
   success: string;
+  successSubtle: string;
   warning: string;
+  warningSubtle: string;
   error: string;
+  errorSubtle: string;
+  info: string;
+  infoSubtle: string;
   overlay: string;
   focusRing: string;
 }
@@ -49,6 +64,9 @@ export interface ThemeTokens {
     smallMedium: { fontSize: number; lineHeight: number; fontWeight: 500 };
     small: { fontSize: number; lineHeight: number; fontWeight: 400 };
     caption: { fontSize: number; lineHeight: number; fontWeight: 400 };
+    // overline は style へ spread される前提なので lineHeight は倍率
+    // (素の number は CSS で multiplier 扱い。px のつもりで 14 と書くと 14 倍になる)
+    overline: { fontSize: number; lineHeight: number; fontWeight: 600; letterSpacing: string; textTransform: 'uppercase' };
     heading: { fontSize: number; lineHeight: number; fontWeight: 600 };
     mono: { fontFamily: string };
   };
@@ -57,71 +75,90 @@ export interface ThemeTokens {
 
 export const darkTokens: ThemeTokens = {
   colors: {
-    bg: '#1B1A17',
-    bgElevated: '#211F1B',
-    surface: '#26241F',
-    surfaceHover: '#302D27',
-    surfaceSunken: '#161512',
-    border: '#3B3832',
-    borderSubtle: '#2A2823',
-    textPrimary: '#DBD6C8',
-    textSecondary: '#B0AB9B',
-    textMuted: '#908A7E',
-    textInverse: '#1B1A17',
-    primary: '#94A687',
-    primaryMuted: '#7B8B6F',
-    primarySubtle: '#2C3328',
-    success: '#94A687',
-    warning: '#D4B86A',
-    error: '#CC7070',
-    overlay: 'rgba(11, 10, 8, 0.6)',
-    focusRing: '#B6C8A4',
+    bg: '#191815',
+    bgElevated: '#232220',
+    surface: '#2A2925',
+    surfaceHover: '#34322D',
+    surfaceActive: '#3B3933',
+    surfaceSunken: '#121110',
+    border: '#46443C',
+    borderSubtle: '#353330',
+    textPrimary: '#E4E0D4',
+    textSecondary: '#A8A293',
+    textMuted: '#958F81',
+    textInverse: '#191815',
+    primary: '#A6BA98',
+    primaryHover: '#B5C7A8',
+    primaryMuted: '#8FA681',
+    primarySubtle: '#2E3628',
+    success: '#7FB792',
+    successSubtle: '#24332A',
+    warning: '#D9B45F',
+    warningSubtle: '#383017',
+    // iOS (#D96C5C) より一段明るい朱。Web は 12px の朱テキストをカード面に
+    // 直接乗せる箇所があり、AA 4.5:1 にはこの明度が必要 (axe 検証済み)。
+    error: '#E28172',
+    errorSubtle: '#3E2620',
+    info: '#85AECE',
+    infoSubtle: '#1F2E3D',
+    overlay: 'rgba(9, 9, 7, 0.60)',
+    focusRing: '#A6BA98',
   },
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, '2xl': 24, '3xl': 32, '4xl': 48 },
-  radii: { sm: 6, md: 10, lg: 14 },
+  radii: { sm: 8, md: 12, lg: 16 },
   typography: {
     bodyMedium: { fontSize: 15, lineHeight: 22, fontWeight: 500 },
     smallMedium: { fontSize: 13, lineHeight: 18, fontWeight: 500 },
     small: { fontSize: 12, lineHeight: 16, fontWeight: 400 },
     caption: { fontSize: 11, lineHeight: 14, fontWeight: 400 },
+    overline: { fontSize: 11, lineHeight: 1.3, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' },
     heading: { fontSize: 18, lineHeight: 24, fontWeight: 600 },
     mono: { fontFamily: FONT_FAMILY_MONO },
   },
   shadows: {
-    sm: '0 1px 2px rgba(0, 0, 0, 0.18)',
-    md: '0 4px 12px rgba(0, 0, 0, 0.28)',
-    lg: '0 12px 32px rgba(0, 0, 0, 0.40)',
+    sm: '0 1px 2px rgba(0, 0, 0, 0.25)',
+    md: '0 4px 14px rgba(0, 0, 0, 0.35)',
+    lg: '0 16px 44px rgba(0, 0, 0, 0.50)',
   },
 };
 
 export const lightTokens: ThemeTokens = {
   colors: {
-    bg: '#F5F4F0',
-    bgElevated: '#FBFAF6',
-    surface: '#EFEDE7',
-    surfaceHover: '#E5E3DC',
-    surfaceSunken: '#D8D6CE',
-    border: '#CFCBC1',
-    borderSubtle: '#DEDBD2',
-    textPrimary: '#2A2721',
-    textSecondary: '#54504A',
-    textMuted: '#736D60',
-    textInverse: '#F5F4F0',
-    primary: '#7B8B6F',
-    primaryMuted: '#5C6E51',
-    primarySubtle: '#E3E8DD',
-    success: '#7B8B6F',
-    warning: '#B89F56',
-    error: '#B25A5A',
-    overlay: 'rgba(35, 33, 28, 0.40)',
-    focusRing: '#5C6E51',
+    bg: '#F2F1EC',
+    bgElevated: '#FCFBF8',
+    surface: '#ECEAE3',
+    surfaceHover: '#E6E4DC',
+    surfaceActive: '#DFDCD3',
+    surfaceSunken: '#D9D6CC',
+    border: '#D6D3C8',
+    borderSubtle: '#E5E3DA',
+    textPrimary: '#26231D',
+    textSecondary: '#5F5A4B',
+    textMuted: '#6E6857',
+    textInverse: '#F7F6F2',
+    primary: '#5C7150',
+    primaryHover: '#516447',
+    primaryMuted: '#7E9070',
+    primarySubtle: '#E6ECE0',
+    success: '#4E8A62',
+    successSubtle: '#E2EFE5',
+    // iOS (#A8842D) より深い山吹。レート制限の % など 12px の警告テキストが
+    // カード面に乗るため AA 4.5:1 を満たす濃度 (terminal ANSI yellow と同値)。
+    warning: '#8A6A14',
+    warningSubtle: '#F5EEDA',
+    error: '#BC4B3C',
+    errorSubtle: '#F7E6E2',
+    info: '#51789B',
+    infoSubtle: '#E4EDF4',
+    overlay: 'rgba(38, 35, 29, 0.45)',
+    focusRing: '#5C7150',
   },
   spacing: darkTokens.spacing,
   radii: darkTokens.radii,
   typography: darkTokens.typography,
   shadows: {
-    sm: '0 1px 2px rgba(35, 33, 28, 0.08)',
-    md: '0 4px 12px rgba(35, 33, 28, 0.12)',
-    lg: '0 12px 32px rgba(35, 33, 28, 0.20)',
+    sm: '0 1px 2px rgba(59, 53, 40, 0.10), 0 1px 3px rgba(59, 53, 40, 0.06)',
+    md: '0 4px 12px rgba(59, 53, 40, 0.12), 0 2px 4px rgba(59, 53, 40, 0.06)',
+    lg: '0 16px 40px rgba(59, 53, 40, 0.18), 0 4px 12px rgba(59, 53, 40, 0.08)',
   },
 };

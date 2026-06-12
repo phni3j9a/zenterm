@@ -10,7 +10,8 @@ interface ReauthDialogProps {
 }
 
 export function ReauthDialog({ open, onClose }: ReauthDialogProps) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const auth = useAuthStore();
@@ -49,7 +50,7 @@ export function ReauthDialog({ open, onClose }: ReauthDialogProps) {
       ref={dialogRef}
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       style={{
-        background: tokens.colors.bgElevated,
+        background: dark ? tokens.colors.surface : tokens.colors.bgElevated,
         color: tokens.colors.textPrimary,
         border: `1px solid ${tokens.colors.border}`,
         borderRadius: tokens.radii.md,
@@ -78,7 +79,7 @@ export function ReauthDialog({ open, onClose }: ReauthDialogProps) {
             width: '100%',
             boxSizing: 'border-box',
             padding: `8px 10px`,
-            background: tokens.colors.surface,
+            background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
             border: `1px solid ${tokens.colors.border}`,
             color: tokens.colors.textPrimary,
             borderRadius: tokens.radii.sm,

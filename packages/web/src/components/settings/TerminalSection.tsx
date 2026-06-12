@@ -7,7 +7,10 @@ interface TerminalSectionProps {
 }
 
 export function TerminalSection({ headingId }: TerminalSectionProps = {}) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
+  // カード面と同化しないよう一段ずらした面 (dark は明るく / light は沈む)
+  const insetSurface = dark ? tokens.colors.surfaceHover : tokens.colors.surface;
   const { t } = useTranslation();
   const fontSize = useSettingsStore((s) => s.fontSize);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
@@ -15,7 +18,7 @@ export function TerminalSection({ headingId }: TerminalSectionProps = {}) {
   const setAutoCopyOnSelect = useSettingsStore((s) => s.setAutoCopyOnSelect);
 
   const stepBtn = (disabled: boolean) => ({
-    background: tokens.colors.surface,
+    background: insetSurface,
     border: `1px solid ${tokens.colors.border}`,
     color: tokens.colors.textPrimary,
     width: 28,
@@ -30,9 +33,7 @@ export function TerminalSection({ headingId }: TerminalSectionProps = {}) {
       <h3
         id={headingId}
         style={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          fontSize: tokens.typography.caption.fontSize,
+          ...tokens.typography.overline,
           color: tokens.colors.textMuted,
           margin: `0 0 ${tokens.spacing.sm}px 0`,
         }}
@@ -89,7 +90,7 @@ export function TerminalSection({ headingId }: TerminalSectionProps = {}) {
             height: 20,
             borderRadius: 10,
             border: `1px solid ${tokens.colors.border}`,
-            background: autoCopyOnSelect ? tokens.colors.primary : tokens.colors.surface,
+            background: autoCopyOnSelect ? tokens.colors.primary : insetSurface,
             position: 'relative',
             cursor: 'pointer',
             flexShrink: 0,

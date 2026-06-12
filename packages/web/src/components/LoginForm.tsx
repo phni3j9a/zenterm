@@ -11,7 +11,8 @@ export interface LoginFormProps {
 }
 
 export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const { t } = useTranslation();
   const [token, setToken] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +39,21 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           gap: tokens.spacing.sm, marginBottom: tokens.spacing.lg,
         }}>
-          <div style={{ color: tokens.colors.primary }}>
-            <IconTerminal size={36} aria-hidden />
+          <div
+            aria-hidden
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              background: tokens.colors.primarySubtle,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: tokens.colors.primary,
+              marginBottom: tokens.spacing.xs,
+            }}
+          >
+            <IconTerminal size={32} />
           </div>
           <h2 style={{
             margin: 0,
@@ -65,7 +79,8 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
               color: tokens.colors.textSecondary,
               fontFamily: tokens.typography.mono.fontFamily,
               padding: `${tokens.spacing.xs}px ${tokens.spacing.sm}px`,
-              background: tokens.colors.surface,
+              // カード面と同化しないよう一段ずらす (dark は明るく / light は沈む)
+              background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
               borderRadius: tokens.radii.sm,
             }}>{gatewayUrl}</span>
           </div>
@@ -101,6 +116,7 @@ export function LoginForm({ onSubmit, gatewayUrl }: LoginFormProps) {
 
         <button
           type="submit"
+          className="zen-btn-primary"
           disabled={token.length !== 4 || submitting}
           style={{
             width: '100%', boxSizing: 'border-box', padding: tokens.spacing.md,

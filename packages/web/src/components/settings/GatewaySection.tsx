@@ -15,7 +15,8 @@ interface Props {
 }
 
 export function GatewaySection({ gatewayVersion, headingId }: Props) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const { t } = useTranslation();
   const auth = useAuthStore();
   const showConfirm = useUiStore((s) => s.showConfirm);
@@ -50,7 +51,8 @@ export function GatewaySection({ gatewayVersion, headingId }: Props) {
   };
 
   const primaryBtn = {
-    background: tokens.colors.surface,
+    // カード面と同化しないよう一段ずらす (dark は明るく / light は沈む)
+    background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
     border: `1px solid ${tokens.colors.border}`,
     color: tokens.colors.textPrimary,
     padding: `8px 12px`,
@@ -74,6 +76,8 @@ export function GatewaySection({ gatewayVersion, headingId }: Props) {
 
   const dangerBtn = {
     ...secondaryBtn,
+    // 朱テキストはインセット面上だと AA 4.5:1 を割るため、カード面に直接置く
+    background: 'transparent',
     border: `1px solid ${tokens.colors.error}`,
     color: tokens.colors.error,
     marginTop: tokens.spacing.sm,
@@ -84,9 +88,7 @@ export function GatewaySection({ gatewayVersion, headingId }: Props) {
       <h3
         id={headingId}
         style={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          fontSize: tokens.typography.caption.fontSize,
+          ...tokens.typography.overline,
           color: tokens.colors.textMuted,
           margin: `0 0 ${tokens.spacing.sm}px 0`,
         }}
@@ -119,18 +121,18 @@ export function GatewaySection({ gatewayVersion, headingId }: Props) {
 
       {/* Primary actions: 2-column grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm }}>
-        <button type="button" onClick={handleCopy} style={primaryBtn}>
+        <button type="button" className="zen-btn-quiet" onClick={handleCopy} style={primaryBtn}>
           <IconCopy size={14} />
           {t('settings.gateway.copyUrl', 'Copy Web URL')}
         </button>
-        <button type="button" onClick={() => setQrOpen(true)} style={primaryBtn}>
+        <button type="button" className="zen-btn-quiet" onClick={() => setQrOpen(true)} style={primaryBtn}>
           <IconQrCode size={14} />
           {t('settings.gateway.showQr', 'Show mobile QR')}
         </button>
       </div>
 
       {/* Secondary: Re-enter token */}
-      <button type="button" onClick={() => setReauthOpen(true)} style={secondaryBtn}>
+      <button type="button" className="zen-btn-quiet" onClick={() => setReauthOpen(true)} style={secondaryBtn}>
         <IconRefresh size={14} />
         {t('settings.gateway.reauth', 'Re-enter token')}
       </button>

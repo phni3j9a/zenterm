@@ -2,9 +2,22 @@ html, body, #root {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: #1B1A17;
+  background: #191815;
 }
 html { color-scheme: dark light; }
+
+/* Base typography — without this the whole app renders in the browser's
+   default (often serif). System sans stack with JP fallbacks. */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans CJK JP',
+    'Yu Gothic UI', Meiryo, Helvetica, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+/* Form controls don't inherit fonts by default (UA stylesheet) */
+button, input, select, textarea {
+  font-family: inherit;
+}
 
 @keyframes zen-spin {
   to { transform: rotate(360deg); }
@@ -38,7 +51,11 @@ html { color-scheme: dark light; }
 
 /* ===== Phase 6 H13 focus ring ===== */
 :root {
-  --zen-focus-ring: #B6C8A4;
+  --zen-focus-ring: #A6BA98;
+  --zen-primary-hover: #B5C7A8;
+  --zen-surface-hover: #34322D;
+  --zen-overlay: rgba(9, 9, 7, 0.6);
+  --zen-scrollbar-thumb: #46443C;
 }
 
 :focus-visible {
@@ -57,4 +74,53 @@ html { color-scheme: dark light; }
 @keyframes zen-status-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.78); }
+}
+
+/* ===== Zen Garden interaction layer =====
+   Inline styles carry the palette; pseudo-class states live here and read
+   the active theme through the --zen-* variables set by useTheme(). */
+
+button {
+  transition: background 120ms ease, border-color 120ms ease,
+    color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+/* Solid primary buttons (login submit, new session, confirm) */
+.zen-btn-primary:not(:disabled):hover {
+  background: var(--zen-primary-hover) !important;
+}
+
+/* Quiet icon / outline buttons: surface lifts one step on hover */
+.zen-btn-quiet:not(:disabled):hover {
+  background: var(--zen-surface-hover) !important;
+}
+
+/* Native <dialog> backdrop — sumi-smoke veil */
+dialog::backdrop {
+  background: var(--zen-overlay);
+}
+
+/* Unobtrusive scrollbars in panel chrome (Firefox + WebKit) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--zen-scrollbar-thumb) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--zen-scrollbar-thumb);
+  border-radius: 5px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
 }

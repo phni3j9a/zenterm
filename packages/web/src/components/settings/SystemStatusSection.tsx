@@ -30,7 +30,8 @@ function formatBytes(b: number): string {
 }
 
 export function SystemStatusSection({ client, onGatewayVersion, headingId }: Props) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const insetSurface = resolvedTheme === 'dark' ? tokens.colors.surfaceHover : tokens.colors.surface;
   const { t } = useTranslation();
   const [data, setData] = useState<SystemStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,9 +66,7 @@ export function SystemStatusSection({ client, onGatewayVersion, headingId }: Pro
       <h3
         id={headingId}
         style={{
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          fontSize: tokens.typography.caption.fontSize,
+          ...tokens.typography.overline,
           color: tokens.colors.textMuted,
           margin: `0 0 ${tokens.spacing.sm}px 0`,
         }}
@@ -108,7 +107,7 @@ export function SystemStatusSection({ client, onGatewayVersion, headingId }: Pro
             <div style={{
               height: 4,
               borderRadius: 2,
-              background: tokens.colors.surface,
+              background: insetSurface,
               marginTop: tokens.spacing.xs,
             }}>
               <div style={{

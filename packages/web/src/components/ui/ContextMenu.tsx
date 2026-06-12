@@ -30,7 +30,8 @@ export function ContextMenu({
   onClose,
   ariaLabel,
 }: ContextMenuProps) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   // Compute position
@@ -105,10 +106,10 @@ export function ContextMenu({
         position: 'fixed',
         left,
         top,
-        background: tokens.colors.bgElevated,
-        border: `1px solid ${tokens.colors.border}`,
+        background: dark ? tokens.colors.surface : tokens.colors.bgElevated,
+        border: `1px solid ${tokens.colors.borderSubtle}`,
         borderRadius: tokens.radii.md,
-        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+        boxShadow: tokens.shadows.lg,
         padding: tokens.spacing.xs,
         zIndex: 1000,
         minWidth: menuWidth,

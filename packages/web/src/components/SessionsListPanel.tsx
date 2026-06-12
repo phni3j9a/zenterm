@@ -74,15 +74,15 @@ export function SessionsListPanel({
         role="heading"
         aria-level={2}
         style={{
-          fontSize: tokens.typography.heading.fontSize,
-          fontWeight: tokens.typography.heading.fontWeight,
-          textTransform: 'uppercase',
-          letterSpacing: 1.5,
+          ...tokens.typography.overline,
           color: tokens.colors.textMuted,
           padding: `${tokens.spacing.xs}px ${tokens.spacing.sm}px`,
         }}
       >
-        {t('sidebar.tabs.sessions')} · {sessions.length}
+        {t('sidebar.tabs.sessions')}
+        <span style={{ color: tokens.colors.textMuted, opacity: 0.7, marginLeft: 6 }}>
+          {sessions.length}
+        </span>
       </div>
 
       {loading && sessions.length === 0 && (

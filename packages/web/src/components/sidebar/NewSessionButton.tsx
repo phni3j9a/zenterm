@@ -43,6 +43,7 @@ export function NewSessionButton({ onCreate }: NewSessionButtonProps) {
     return (
       <button
         type="button"
+        className="zen-btn-primary"
         aria-label={t('sessions.newSession')}
         onClick={() => setEditing(true)}
         style={{

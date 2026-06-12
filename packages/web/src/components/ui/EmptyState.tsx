@@ -26,7 +26,37 @@ export function EmptyState({ icon, title, description, action, size = 'md' }: Em
         color: tokens.colors.textMuted,
       }}
     >
-      {icon && <div style={{ color: tokens.colors.primaryMuted, fontSize: 32 }}>{icon}</div>}
+      {icon && (
+        <div
+          aria-hidden
+          style={{
+            width: size === 'sm' ? 64 : 84,
+            height: size === 'sm' ? 64 : 84,
+            borderRadius: '50%',
+            background: tokens.colors.primarySubtle,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              width: size === 'sm' ? 46 : 60,
+              height: size === 'sm' ? 46 : 60,
+              borderRadius: '50%',
+              background: tokens.colors.bgElevated,
+              border: `1px solid ${tokens.colors.borderSubtle}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: tokens.colors.primaryMuted,
+              fontSize: 32,
+            }}
+          >
+            {icon}
+          </div>
+        </div>
+      )}
       <div style={{ fontSize: tokens.typography.heading.fontSize, fontWeight: 600, color: tokens.colors.textSecondary }}>
         {title}
       </div>

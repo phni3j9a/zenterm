@@ -10,7 +10,8 @@ import { usePaneStore } from '@/stores/pane';
 import { buildCommandPaletteActions, type PaletteAction } from '@/lib/commandPaletteActions';
 
 export function CommandPalette() {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const { t } = useTranslation();
   const open = useLayoutStore((s) => s.paletteOpen);
   const closePalette = useLayoutStore((s) => s.closePalette);
@@ -112,7 +113,7 @@ export function CommandPalette() {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.45)',
+        background: tokens.colors.overlay,
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
@@ -123,10 +124,10 @@ export function CommandPalette() {
       <div
         style={{
           width: 'min(640px, 90vw)',
-          background: tokens.colors.bgElevated,
-          border: `1px solid ${tokens.colors.border}`,
+          background: dark ? tokens.colors.surface : tokens.colors.bgElevated,
+          border: `1px solid ${tokens.colors.borderSubtle}`,
           borderRadius: tokens.radii.md,
-          boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
+          boxShadow: tokens.shadows.lg,
           display: 'flex',
           flexDirection: 'column',
           maxHeight: '70vh',

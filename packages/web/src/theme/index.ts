@@ -29,7 +29,14 @@ export function useTheme(): {
   const tokens = resolvedTheme === 'light' ? lightTokens : darkTokens;
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--zen-focus-ring', tokens.colors.focusRing);
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--zen-focus-ring', tokens.colors.focusRing);
+    // CSS-only interaction states (hover etc.) — inline styles can't express
+    // pseudo-classes, so the active palette is mirrored into custom properties.
+    rootStyle.setProperty('--zen-primary-hover', tokens.colors.primaryHover);
+    rootStyle.setProperty('--zen-surface-hover', tokens.colors.surfaceHover);
+    rootStyle.setProperty('--zen-overlay', tokens.colors.overlay);
+    rootStyle.setProperty('--zen-scrollbar-thumb', tokens.colors.border);
     document.documentElement.style.background = tokens.colors.bg;
     document.body.style.background = tokens.colors.bg;
     document.documentElement.style.colorScheme = resolvedTheme;

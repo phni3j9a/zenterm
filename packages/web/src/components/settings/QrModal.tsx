@@ -10,7 +10,8 @@ interface QrModalProps {
 }
 
 export function QrModal({ open, url, onClose }: QrModalProps) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
@@ -33,7 +34,7 @@ export function QrModal({ open, url, onClose }: QrModalProps) {
       ref={dialogRef}
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       style={{
-        background: tokens.colors.bgElevated,
+        background: dark ? tokens.colors.surface : tokens.colors.bgElevated,
         color: tokens.colors.textPrimary,
         border: `1px solid ${tokens.colors.border}`,
         borderRadius: tokens.radii.md,
@@ -59,7 +60,7 @@ export function QrModal({ open, url, onClose }: QrModalProps) {
           autoFocus
           onClick={onClose}
           style={{
-            background: tokens.colors.surface,
+            background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
             border: `1px solid ${tokens.colors.border}`,
             color: tokens.colors.textPrimary,
             padding: `6px 16px`,

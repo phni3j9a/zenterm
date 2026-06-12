@@ -23,7 +23,8 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const { t } = useTranslation();
   const resolvedConfirmLabel = confirmLabel ?? t('common.delete');
   const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
@@ -59,7 +60,7 @@ export function ConfirmDialog({
         padding: 0,
         border: `1px solid ${tokens.colors.border}`,
         borderRadius: tokens.radii.lg,
-        background: tokens.colors.bgElevated,
+        background: dark ? tokens.colors.surface : tokens.colors.bgElevated,
         color: tokens.colors.textPrimary,
         maxWidth: 420,
       }}
@@ -89,6 +90,7 @@ export function ConfirmDialog({
           <button
             ref={cancelButtonRef}
             type="button"
+            className="zen-btn-quiet"
             onClick={onCancel}
             style={{
               padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
@@ -103,6 +105,7 @@ export function ConfirmDialog({
           </button>
           <button
             type="button"
+            className={destructive ? undefined : 'zen-btn-primary'}
             onClick={() => void onConfirm()}
             style={{
               padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,

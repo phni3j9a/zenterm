@@ -11,7 +11,8 @@ export interface OtpInputProps {
 }
 
 export function OtpInput({ length = 4, value, onChange, autoFocus, ...aria }: OtpInputProps) {
-  const { tokens } = useTheme();
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -83,11 +84,12 @@ export function OtpInput({ length = 4, value, onChange, autoFocus, ...aria }: Ot
             fontSize: 28,
             textAlign: 'center',
             fontFamily: tokens.typography.mono.fontFamily,
-            background: tokens.colors.bg,
+            // カード面と同化しないよう一段ずらした面に乗せ、枠で輪郭を取る
+            background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
             color: tokens.colors.textPrimary,
             border: `2px solid ${value[i] ? tokens.colors.primary : tokens.colors.border}`,
             borderRadius: tokens.radii.md,
-            transition: 'border-color 120ms',
+            transition: 'border-color 120ms, background 120ms',
           }}
         />
       ))}

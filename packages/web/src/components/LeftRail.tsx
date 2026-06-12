@@ -73,6 +73,7 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
       <Tooltip label={sidebarToggleLabel} placement="bottom">
         <button
           type="button"
+          className="zen-btn-quiet"
           aria-label={sidebarToggleLabel}
           aria-pressed={!sidebarCollapsed}
           onClick={toggleSidebar}
@@ -104,6 +105,7 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
             <button
               ref={(el) => { tabRefs.current[index] = el; }}
               type="button"
+              className={isActive ? undefined : 'zen-btn-quiet'}
               role="tab"
               aria-label={label}
               aria-selected={isActive}
@@ -160,6 +162,7 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
       <Tooltip label={t('shell.tabs.logout', 'Logout')} placement="bottom">
         <button
           type="button"
+          className="zen-btn-quiet"
           aria-label={t('shell.tabs.logout', 'Logout')}
           onClick={onLogout}
           style={{

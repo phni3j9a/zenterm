@@ -77,7 +77,8 @@ export function ClaudeLimits({ client, refreshKey }: Props) {
             alignItems: 'center',
             marginTop: tokens.spacing.xs,
             padding: `6px 12px`,
-            background: tokens.colors.surface,
+            // 苔色の 12px リンクはインセット面上で AA を割るためカード面に直接置く
+            background: 'transparent',
             border: `1px solid ${tokens.colors.border}`,
             borderRadius: tokens.radii.sm,
             color: tokens.colors.primary,
