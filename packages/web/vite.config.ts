@@ -27,8 +27,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:18765',
-      '/ws': { target: 'ws://localhost:18765', ws: true },
+      '/api': `http://localhost:${process.env.ZENTERM_GATEWAY_PORT ?? 18765}`,
+      '/ws': { target: `ws://localhost:${process.env.ZENTERM_GATEWAY_PORT ?? 18765}`, ws: true },
     },
   },
 });
