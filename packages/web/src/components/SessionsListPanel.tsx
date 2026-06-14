@@ -151,6 +151,10 @@ export function SessionsListPanel({
               isActive={isActive}
               isExpanded={isExpanded}
               openInPaneOptions={openInPaneOptions}
+              onOpen={() => {
+                onSelect(session.displayName, defaultWindowIndex);
+                if (!isExpanded) toggle(session.name);
+              }}
               onToggleExpand={toggle}
               onRename={onRenameSession}
               onRequestDelete={onRequestDeleteSession}

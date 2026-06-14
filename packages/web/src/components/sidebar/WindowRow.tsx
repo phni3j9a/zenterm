@@ -7,6 +7,7 @@ import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateNa
 import { IconMore } from '@/components/ui/icons';
 import { RowActionsMenu } from './RowActionsMenu';
 import { ClaudeStatusBadge } from './ClaudeStatusBadge';
+import { getWindowAgentStatus } from '@/lib/claudeRollup';
 
 export interface WindowRowProps {
   sessionDisplayName: string;
@@ -42,6 +43,7 @@ export function WindowRow({
   const [hover, setHover] = useState(false);
   const kebabRef = useRef<HTMLButtonElement | null>(null);
   const showKebab = hover || menuOpen;
+  const agentStatus = getWindowAgentStatus(window);
 
   const openInItems = openInPaneOptions.map((idx) => ({
     label: t('sessions.openInPane.label', { pane: idx + 1 }),
@@ -64,7 +66,7 @@ export function WindowRow({
       style={{ position: 'relative', display: 'flex', alignItems: 'center' }}
     >
       <span
-        aria-hidden={window.claudeStatus ? undefined : true}
+        aria-hidden={agentStatus ? undefined : true}
         style={{
           width: 8,
           marginRight: tokens.spacing.xs,
@@ -74,19 +76,21 @@ export function WindowRow({
           flexShrink: 0,
         }}
       >
-        {window.claudeStatus ? <ClaudeStatusBadge status={window.claudeStatus} /> : null}
+        {agentStatus ? <ClaudeStatusBadge status={agentStatus} /> : null}
       </span>
       <button
         type="button"
+        className="zen-row"
         aria-current={isActive ? 'true' : undefined}
         onClick={onSelect}
         style={{
           flex: 1,
           textAlign: 'left',
-          padding: tokens.spacing.xs,
-          background: isActive ? tokens.colors.primarySubtle : 'transparent',
+          padding: `${tokens.spacing.xs}px ${tokens.spacing.sm}px`,
+          background: isActive ? tokens.colors.primarySubtle : hover ? tokens.colors.surfaceHover : 'transparent',
           border: 'none',
-          color: tokens.colors.textSecondary,
+          borderRadius: tokens.radii.sm,
+          color: isActive ? tokens.colors.textPrimary : tokens.colors.textSecondary,
           cursor: 'pointer',
           fontSize: tokens.typography.smallMedium.fontSize,
         }}

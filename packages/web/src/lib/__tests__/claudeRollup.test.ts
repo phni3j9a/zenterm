@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { TmuxWindow } from '@zenterm/shared';
-import { rollupClaudeActivity } from '../claudeRollup';
+import { rollupAgentStatus, rollupClaudeActivity } from '../claudeRollup';
 
-function win(index: number, activity?: 'working' | 'waiting'): TmuxWindow {
+function win(
+  index: number,
+  activity?: 'working' | 'waiting',
+  agent: 'claude' | 'codex' = 'claude',
+): TmuxWindow {
   return {
     index,
     name: `w${index}`,
@@ -10,7 +14,7 @@ function win(index: number, activity?: 'working' | 'waiting'): TmuxWindow {
     zoomed: false,
     paneCount: 1,
     cwd: '/h',
-    ...(activity ? { claudeStatus: { activity } } : {}),
+    ...(activity ? { agentStatus: { agent, activity }, claudeStatus: { agent, activity } } : {}),
   };
 }
 
@@ -29,5 +33,27 @@ describe('rollupClaudeActivity', () => {
 
   it('空配列 → undefined', () => {
     expect(rollupClaudeActivity([])).toBeUndefined();
+  });
+});
+
+describe('rollupAgentStatus', () => {
+  it('working の Codex ステータスを agent 付きで返す', () => {
+    expect(rollupAgentStatus([win(0, 'waiting', 'claude'), win(1, 'working', 'codex')])).toEqual({
+      agent: 'codex',
+      activity: 'working',
+    });
+  });
+
+  it('agentStatus が無い旧レスポンスは claudeStatus を Claude として扱う', () => {
+    const legacy: TmuxWindow = {
+      index: 0,
+      name: 'legacy',
+      active: false,
+      zoomed: false,
+      paneCount: 1,
+      cwd: '/h',
+      claudeStatus: { activity: 'waiting' },
+    };
+    expect(rollupAgentStatus([legacy])).toEqual({ agent: 'claude', activity: 'waiting' });
   });
 });

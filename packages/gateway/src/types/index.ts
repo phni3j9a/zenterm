@@ -2,6 +2,11 @@
 export type {
   TmuxSession,
   TmuxWindow,
+  AgentKind,
+  AgentActivity,
+  AgentWindowStatus,
+  ClaudeActivity,
+  ClaudeWindowStatus,
   ClientMessage,
   ServerMessage,
   SystemStatus,

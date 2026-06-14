@@ -90,19 +90,28 @@ test('switching layout to cols-2 renders 2 panes and Sidebar duplicate guard wor
     body: JSON.stringify({ name: 'second' }),
   });
 
-  // Wait for events refetch to surface the second window so e2e-pane-a has 2 windows
-  // (Expand chevron only appears when a session has >1 window).
+  // Wait for events refetch to surface the second window so e2e-pane-a has 2 windows.
   await page.waitForTimeout(1500);
 
-  // Expand e2e-pane-a's windows. Use .first() since e2e-pane-a is listed first
-  // in the Active sessions panel.
-  await page.getByLabel(/Expand windows/i).first().click();
+  // Session rows auto-expand when clicked (row click = open + expand), so the
+  // window lists for both sessions are already visible at this point. If the
+  // list got collapsed, re-open it via the chevron.
+  const expandChevron = page.getByLabel(/Expand windows/i).first();
+  if (await expandChevron.isVisible().catch(() => false)) {
+    await expandChevron.click();
+  }
 
-  // Window 0 of e2e-pane-a is occupied in pane 0 (left); focused is pane 1.
-  // The row's label is prefixed with ⛔ and is disabled.
-  const occupiedRow = page.getByRole('button', { name: /^⛔ / }).first();
-  await expect(occupiedRow).toBeVisible({ timeout: 5000 });
-  await expect(occupiedRow).toBeDisabled();
+  // The duplicate guard (⛔ disabled rows) was removed in 2529329 — windows
+  // already open in another pane stay clickable and simply open in the
+  // focused pane too (tmux mirrors are allowed). Assert the new window row is
+  // present and enabled.
+  const secondRow = page.getByRole('button', { name: 'second', exact: true });
+  await expect(secondRow).toBeVisible({ timeout: 5000 });
+  await expect(secondRow).toBeEnabled();
+
+  // Opening it in the focused pane keeps the 2-pane layout intact.
+  await secondRow.click();
+  await expect(page.locator('section[data-terminal-root="true"]')).toHaveCount(2);
 });
 
 test('cols-2 → single drops the non-focused pane', async ({ page }) => {

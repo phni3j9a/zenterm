@@ -8,6 +8,11 @@ let baseUrl: string;
 const TOKEN = '4815';
 const PORT = 18815;
 
+// 入場アニメーション (opacity 0→1) の途中で axe が走ると、ブレンド色で
+// color-contrast が誤検知される。reduced-motion を立てるとアプリ側 CSS が
+// アニメーションを無効化するため、axe は常に最終状態を検査する。
+test.use({ contextOptions: { reducedMotion: 'reduce' } });
+
 test.beforeAll(async () => {
   const { env } = createGatewayEnv({ port: PORT, token: TOKEN, label: 'zenterm-a11y' });
   gateway = spawn('node', ['packages/gateway/dist/index.js'], {

@@ -1,8 +1,23 @@
-/** ウィンドウで動く Claude Code の活動状態 */
-export type ClaudeActivity = 'working' | 'waiting';
+/** ウィンドウで動く AI エージェントの種類 */
+export type AgentKind = 'claude' | 'codex';
 
-/** ウィンドウ単位の Claude ステータス（不在のときは undefined） */
+/** ウィンドウで動く AI エージェントの活動状態 */
+export type AgentActivity = 'working' | 'waiting';
+
+/** 旧称: Claude Code の活動状態。Codex 対応後も互換のため残す。 */
+export type ClaudeActivity = AgentActivity;
+
+/** ウィンドウ単位の AI エージェントステータス（不在のときは undefined） */
+export interface AgentWindowStatus {
+  agent: AgentKind;
+  activity: AgentActivity;
+  /** タイトルの作業概要（先頭グリフ除去後）。ツールチップ用、省略可 */
+  summary?: string;
+}
+
+/** 旧称: ウィンドウ単位の Claude ステータス。agent 省略時は Claude とみなす。 */
 export interface ClaudeWindowStatus {
+  agent?: AgentKind;
   activity: ClaudeActivity;
   /** タイトルの作業概要（先頭グリフ除去後）。ツールチップ用、省略可 */
   summary?: string;
@@ -16,7 +31,9 @@ export interface TmuxWindow {
   zoomed: boolean;
   paneCount: number;
   cwd: string;
-  /** Claude が動いている場合のみ設定（不在のときは undefined） */
+  /** AI エージェントが動いている場合のみ設定（不在のときは undefined） */
+  agentStatus?: AgentWindowStatus;
+  /** 旧フィールド。互換のため agentStatus と同じ値を返す。 */
   claudeStatus?: ClaudeWindowStatus;
 }
 

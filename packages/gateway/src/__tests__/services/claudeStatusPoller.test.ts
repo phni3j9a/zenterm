@@ -5,16 +5,17 @@ import {
 } from '../../services/claudeStatusPoller.js';
 
 describe('computeStatusSignature', () => {
-  // 行: session_name|index|name|active|zoomed|panes|cwd|command|title
+  // 行: session_name|index|name|active|zoomed|panes|cwd|panePid|command|title
   it('prefix 一致セッションのみ・activity を署名化（ソート安定）', () => {
     const out = [
-      'zen_a|0|main|1|0|1|/h|claude|⠂ x',
-      'zen_a|1|w|0|0|1|/h|zsh|server',
-      '_zen_view_1|0|main|1|0|1|/h|claude|⠂ x', // prefix 不一致 → 除外
-      'zen_b|0|m|1|0|1|/h|claude|✳ y',
+      'zen_a|0|main|1|0|1|/h|101|claude|⠂ x',
+      'zen_a|1|w|0|0|1|/h|102|zsh|server',
+      '_zen_view_1|0|main|1|0|1|/h|103|claude|⠂ x', // prefix 不一致 → 除外
+      'zen_b|0|m|1|0|1|/h|104|claude|✳ y',
+      'zen_c|0|m|1|0|1|/h|105|codex|⠋ z',
     ].join('\n');
     expect(computeStatusSignature(out, 'zen_')).toBe(
-      'zen_a/0:working,zen_a/1:none,zen_b/0:waiting',
+      'zen_a/0:claude:working,zen_a/1:none,zen_b/0:claude:waiting,zen_c/0:codex:working',
     );
   });
 
@@ -34,9 +35,9 @@ describe('ClaudeStatusPoller', () => {
 
   it('署名が変化した tick だけ publish する', () => {
     const { poller, publish } = make([
-      'zen_a|0|m|1|0|1|/h|claude|⠂ x', // working
-      'zen_a|0|m|1|0|1|/h|claude|⠂ x', // 同じ → publish しない
-      'zen_a|0|m|1|0|1|/h|claude|✳ x', // waiting → publish
+      'zen_a|0|m|1|0|1|/h|101|claude|⠂ x', // working
+      'zen_a|0|m|1|0|1|/h|101|claude|⠂ x', // 同じ → publish しない
+      'zen_a|0|m|1|0|1|/h|101|claude|✳ x', // waiting → publish
     ]);
     poller.tick();
     poller.tick();
@@ -50,7 +51,7 @@ describe('ClaudeStatusPoller', () => {
     let mode: 'ok' | 'throw' = 'ok';
     const runTmux = vi.fn(() => {
       if (mode === 'throw') throw new Error('no server');
-      return 'zen_a|0|m|1|0|1|/h|claude|⠂ x';
+      return 'zen_a|0|m|1|0|1|/h|101|claude|⠂ x';
     });
     const poller = new ClaudeStatusPoller({ runTmux, publish, intervalMs: 1000, sessionPrefix: 'zen_' });
     poller.tick(); // '' → working: publish 1
@@ -62,7 +63,7 @@ describe('ClaudeStatusPoller', () => {
 
   it('acquire でインターバル開始（即時 tick）、release で停止', () => {
     vi.useFakeTimers();
-    const { poller, runTmux } = make(['zen_a|0|m|1|0|1|/h|zsh|x']);
+    const { poller, runTmux } = make(['zen_a|0|m|1|0|1|/h|101|zsh|x']);
     poller.acquire();
     expect(runTmux).toHaveBeenCalledTimes(1); // 即時 tick
     vi.advanceTimersByTime(2000);

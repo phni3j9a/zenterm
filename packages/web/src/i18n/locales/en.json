@@ -28,7 +28,8 @@
     "tokenLabel": "Token",
     "tokenPlaceholder": "4-digit token",
     "submit": "Sign in",
-    "invalid": "Invalid token. Please try again."
+    "invalid": "Invalid token. Please try again.",
+    "footer": "tmux, anywhere — quietly."
   },
   "sessions": {
     "newSession": "New session",
@@ -57,6 +58,10 @@
     "claudeStatus": {
       "working": "Working",
       "waiting": "Waiting for input"
+    },
+    "codexStatus": {
+      "working": "Codex working",
+      "waiting": "Codex waiting for input"
     }
   },
   "terminal": {
@@ -210,13 +215,24 @@
   "palette": {
     "title": "Command Palette",
     "placeholder": "Type a command or session name…",
-    "noResults": "No matches"
+    "noResults": "No matches",
+    "hintNavigate": "Navigate",
+    "hintRun": "Run",
+    "hintClose": "Close"
   },
   "onboarding": {
     "title": "Get started",
-    "step1": { "title": "Start the Gateway" },
-    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
-    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "step1": {
+      "title": "Start the Gateway"
+    },
+    "step2": {
+      "title": "Enter your token",
+      "description": "Token shown by the gateway on first launch."
+    },
+    "step3": {
+      "title": "Create a session",
+      "description": "Click + New Session to spin up tmux."
+    },
     "dismiss": "Don't show again"
   },
   "files": {

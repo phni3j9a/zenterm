@@ -130,11 +130,12 @@ describe('SessionsRoute', () => {
         <SessionsRoute />
       </MemoryRouter>,
     );
-    // Expand session, then click window to open terminal
+    // Clicking the session opens its first window directly (and expands the list)
     await userEvent.click(await screen.findByText('dev'));
-    await userEvent.click(screen.getByText('main'));
     // Toolbar shows the session name
     expect(screen.getAllByText(/dev/).length).toBeGreaterThan(1);
+    // The window list is expanded alongside
+    expect(screen.getAllByText('main').length).toBeGreaterThan(0);
   });
 
   it('on 401 from listSessions, logs out and redirects to /web/login', async () => {

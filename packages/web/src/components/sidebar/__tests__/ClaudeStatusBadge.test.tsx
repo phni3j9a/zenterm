@@ -16,4 +16,11 @@ describe('ClaudeStatusBadge', () => {
     expect(el).toHaveAttribute('aria-label', 'Waiting for input');
     expect(el).toHaveAttribute('title', 'Waiting for input');
   });
+
+  it('codex: agent に応じた aria-label とツールチップを使う', () => {
+    render(<ClaudeStatusBadge status={{ agent: 'codex', activity: 'working', summary: 'zenterm' }} />);
+    const el = screen.getByRole('img');
+    expect(el).toHaveAttribute('aria-label', 'Codex working');
+    expect(el).toHaveAttribute('title', 'Codex working · zenterm');
+  });
 });

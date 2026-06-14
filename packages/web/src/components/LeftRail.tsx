@@ -70,6 +70,21 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
         paddingBottom: tokens.spacing.sm,
       }}
     >
+      {/* ブランドマーク — 苔色の「禅」一字 */}
+      <span
+        aria-hidden
+        className="zen-display"
+        style={{
+          fontSize: 20,
+          color: tokens.colors.primary,
+          lineHeight: 1,
+          padding: `${tokens.spacing.sm}px 0 ${tokens.spacing.md}px`,
+          userSelect: 'none',
+        }}
+      >
+        禅
+      </span>
+
       <Tooltip label={sidebarToggleLabel} placement="bottom">
         <button
           type="button"
@@ -105,7 +120,7 @@ export function LeftRail({ activeTab, onSelectTab, onLogout, rateLimitsWarning }
             <button
               ref={(el) => { tabRefs.current[index] = el; }}
               type="button"
-              className={isActive ? undefined : 'zen-btn-quiet'}
+              className="zen-rail-btn"
               role="tab"
               aria-label={label}
               aria-selected={isActive}

@@ -42,39 +42,60 @@ export function OnboardingGuide({ tokenEntered, sessionsCount, onDismiss }: Onbo
     },
   ];
   return (
-    <Card aria-labelledby="onboarding-title" padding="lg" style={{ maxWidth: 480, margin: '0 auto' }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: tokens.spacing.sm,
-        marginBottom: tokens.spacing.md,
-        color: tokens.colors.primary,
-      }}>
-        <IconRocket size={24} aria-hidden />
-        <h3 id="onboarding-title" style={{
-          margin: 0,
-          fontSize: tokens.typography.heading.fontSize,
-          color: tokens.colors.textPrimary,
-        }}>
-          {t('onboarding.title')}
-        </h3>
-      </div>
-      <Stepper steps={steps} />
-      <button
-        type="button"
-        onClick={onDismiss}
-        style={{
-          marginTop: tokens.spacing.lg,
-          background: 'transparent',
-          border: 'none',
-          color: tokens.colors.textMuted,
-          cursor: 'pointer',
-          fontSize: tokens.typography.small.fontSize,
-          textDecoration: 'underline',
-        }}
-      >
-        {t('onboarding.dismiss')}
-      </button>
-    </Card>
+    <div className="zen-ink-in" style={{ maxWidth: 480, margin: '0 auto' }}>
+      <Card aria-labelledby="onboarding-title" padding="lg">
+        <div className="zen-stagger" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: tokens.spacing.sm,
+            marginBottom: tokens.spacing.md,
+            color: tokens.colors.primary,
+          }}>
+            <span
+              aria-hidden
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                background: tokens.colors.primarySubtle,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <IconRocket size={20} />
+            </span>
+            <h3 id="onboarding-title" className="zen-display" style={{
+              margin: 0,
+              fontSize: tokens.typography.heading.fontSize,
+              color: tokens.colors.textPrimary,
+            }}>
+              {t('onboarding.title')}
+            </h3>
+          </div>
+          <Stepper steps={steps} />
+          <button
+            type="button"
+            onClick={onDismiss}
+            style={{
+              marginTop: tokens.spacing.lg,
+              alignSelf: 'flex-start',
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              color: tokens.colors.textMuted,
+              cursor: 'pointer',
+              fontSize: tokens.typography.small.fontSize,
+              textDecoration: 'underline',
+              textUnderlineOffset: 3,
+            }}
+          >
+            {t('onboarding.dismiss')}
+          </button>
+        </div>
+      </Card>
+    </div>
   );
 }

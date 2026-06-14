@@ -41,6 +41,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -51,14 +52,16 @@ describe('SessionRow', () => {
     expect(screen.getByText('/home/me')).toBeInTheDocument();
   });
 
-  it('clicking row toggles expand instead of selecting', async () => {
+  it('clicking row opens the session without collapsing (expand stays with chevron)', async () => {
     const onToggleExpand = vi.fn();
+    const onOpen = vi.fn();
     render(
       <SessionRow
         session={session}
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={onOpen}
         onToggleExpand={onToggleExpand}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -66,17 +69,20 @@ describe('SessionRow', () => {
       />,
     );
     await userEvent.click(screen.getByText('dev'));
-    expect(onToggleExpand).toHaveBeenCalledWith('zen_dev');
+    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(onToggleExpand).not.toHaveBeenCalled();
   });
 
   it('expand toggle is visible when window count > 1', async () => {
     const onToggleExpand = vi.fn();
+    const onOpen = vi.fn();
     render(
       <SessionRow
         session={session}
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={onOpen}
         onToggleExpand={onToggleExpand}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -94,6 +100,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -113,6 +120,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={onRename}
         onRequestDelete={vi.fn()}
@@ -135,6 +143,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={onRequestDelete}
@@ -154,6 +163,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[1, 2]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -173,6 +183,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -197,6 +208,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -219,6 +231,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -228,6 +241,30 @@ describe('SessionRow', () => {
     expect(screen.getByRole('img', { name: 'Waiting for input' })).toBeInTheDocument();
   });
 
+  it('shows Codex badge when rollup status comes from Codex window', () => {
+    const s: TmuxSession = {
+      ...session,
+      windows: [
+        { index: 0, name: 'main', active: true, zoomed: false, paneCount: 1, cwd: '/home/me', agentStatus: { agent: 'claude', activity: 'waiting' } },
+        { index: 1, name: 'codex', active: false, zoomed: false, paneCount: 1, cwd: '/home/me', agentStatus: { agent: 'codex', activity: 'working' } },
+      ],
+    };
+    render(
+      <SessionRow
+        session={s}
+        isActive={false}
+        isExpanded={false}
+        openInPaneOptions={[]}
+        onOpen={vi.fn()}
+        onToggleExpand={vi.fn()}
+        onRename={vi.fn()}
+        onRequestDelete={vi.fn()}
+        onOpenInPane={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'Codex working' })).toBeInTheDocument();
+  });
+
   it('shows muted placeholder (no img) when no Claude activity', () => {
     render(
       <SessionRow
@@ -235,6 +272,7 @@ describe('SessionRow', () => {
         isActive={true}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -252,6 +290,7 @@ describe('SessionRow', () => {
         isActive={true}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -269,6 +308,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -285,6 +325,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}
@@ -301,6 +342,7 @@ describe('SessionRow', () => {
         isActive={false}
         isExpanded={false}
         openInPaneOptions={[]}
+        onOpen={vi.fn()}
         onToggleExpand={vi.fn()}
         onRename={vi.fn()}
         onRequestDelete={vi.fn()}

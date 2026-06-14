@@ -136,6 +136,15 @@ describe('WindowRow claudeStatus', () => {
     expect(screen.getByRole('img', { name: 'Waiting for input' })).toBeInTheDocument();
   });
 
+  it('agentStatus があると Codex バッジを描画する', () => {
+    renderRow({
+      ...baseWindowForClaudeStatus,
+      agentStatus: { agent: 'codex', activity: 'waiting', summary: 'zenterm' },
+    });
+    const badge = screen.getByRole('img', { name: 'Codex waiting for input' });
+    expect(badge).toHaveAttribute('title', 'Codex waiting for input · zenterm');
+  });
+
   it('claudeStatus が無ければバッジを描画しない', () => {
     renderRow(baseWindowForClaudeStatus);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();

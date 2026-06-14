@@ -81,15 +81,21 @@ export function OtpInput({ length = 4, value, onChange, autoFocus, ...aria }: Ot
           aria-label={`Digit ${i + 1}`}
           style={{
             width: 56, height: 64,
+            boxSizing: 'border-box',
             fontSize: 28,
             textAlign: 'center',
             fontFamily: tokens.typography.mono.fontFamily,
-            // カード面と同化しないよう一段ずらした面に乗せ、枠で輪郭を取る
-            background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
+            // カード面と同化しないよう一段ずらした面に乗せ、枠で輪郭を取る。
+            // 入力済みの枡は苔色がうっすら満ちる。
+            background: value[i]
+              ? tokens.colors.primarySubtle
+              : dark ? tokens.colors.surfaceHover : tokens.colors.surface,
             color: tokens.colors.textPrimary,
+            caretColor: tokens.colors.primary,
             border: `2px solid ${value[i] ? tokens.colors.primary : tokens.colors.border}`,
             borderRadius: tokens.radii.md,
-            transition: 'border-color 120ms, background 120ms',
+            transition: 'border-color 140ms ease, background 140ms ease, transform 140ms ease',
+            transform: value[i] ? 'scale(1.0)' : 'scale(0.985)',
           }}
         />
       ))}

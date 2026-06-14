@@ -23,8 +23,11 @@ export function computeStatusSignature(output: string, sessionPrefix: string): s
       if (!sessionName.startsWith(sessionPrefix)) return null;
       const win = parseWindowLine(line.slice(sep + 1));
       if (!win) return null;
-      const activity = win.claudeStatus?.activity ?? 'none';
-      return `${sessionName}/${win.index}:${activity}`;
+      const status = win.agentStatus ?? win.claudeStatus;
+      const signature = status
+        ? `${status.agent ?? 'claude'}:${status.activity}`
+        : 'none';
+      return `${sessionName}/${win.index}:${signature}`;
     })
     .filter((v): v is string => v !== null)
     .sort() // 辞書順ソート: 順序自体に意味はなく「同一状態→同一文字列」を保証するだけ

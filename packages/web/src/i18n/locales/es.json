@@ -29,7 +29,8 @@
     "tokenLabel": "Token",
     "tokenPlaceholder": "Token de 4 dígitos",
     "submit": "Iniciar sesión",
-    "invalid": "Token no válido. Por favor, inténtelo de nuevo."
+    "invalid": "Token no válido. Por favor, inténtelo de nuevo.",
+    "footer": "tmux, anywhere — quietly."
   },
   "sessions": {
     "newSession": "Nueva sesión",
@@ -58,6 +59,10 @@
     "claudeStatus": {
       "working": "Trabajando",
       "waiting": "Esperando entrada"
+    },
+    "codexStatus": {
+      "working": "Codex trabajando",
+      "waiting": "Codex esperando entrada"
     }
   },
   "terminal": {
@@ -211,13 +216,24 @@
   "palette": {
     "title": "Paleta de comandos",
     "placeholder": "Escriba un comando o nombre de sesión…",
-    "noResults": "Sin resultados"
+    "noResults": "Sin resultados",
+    "hintNavigate": "Navegar",
+    "hintRun": "Ejecutar",
+    "hintClose": "Cerrar"
   },
   "onboarding": {
     "title": "Get started",
-    "step1": { "title": "Start the Gateway" },
-    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
-    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "step1": {
+      "title": "Start the Gateway"
+    },
+    "step2": {
+      "title": "Enter your token",
+      "description": "Token shown by the gateway on first launch."
+    },
+    "step3": {
+      "title": "Create a session",
+      "description": "Click + New Session to spin up tmux."
+    },
     "dismiss": "Don't show again"
   },
   "files": {

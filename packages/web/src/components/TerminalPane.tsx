@@ -125,6 +125,10 @@ export function TerminalPane({
       <main
         style={{
           flex: 1,
+          // 親は plain block (width/height 100%) なので flex:1 では伸びない。
+          // 高さを明示しないと空状態が上に張り付く。
+          height: '100%',
+          boxSizing: 'border-box',
           background: tokens.colors.bg,
           color: tokens.colors.textSecondary,
           display: isVisible ? 'flex' : 'none',

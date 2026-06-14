@@ -42,7 +42,7 @@ describe('SessionsListPanel', () => {
     expect(screen.getByText('dev')).toBeInTheDocument();
   });
 
-  it('clicking a session expands the window list (does not call onSelect)', async () => {
+  it('clicking a session opens its first window and expands the window list', async () => {
     const onSelect = vi.fn();
     render(
       <SessionsListPanel
@@ -56,7 +56,7 @@ describe('SessionsListPanel', () => {
       />,
     );
     await userEvent.click(screen.getByText('dev'));
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledWith('dev', 0);
     expect(screen.getByText('main')).toBeInTheDocument();
     expect(screen.getByText('test')).toBeInTheDocument();
   });

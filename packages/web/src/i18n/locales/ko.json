@@ -29,7 +29,8 @@
     "tokenLabel": "토큰",
     "tokenPlaceholder": "4자리 토큰",
     "submit": "로그인",
-    "invalid": "유효하지 않은 토큰입니다. 다시 시도해 주세요."
+    "invalid": "유효하지 않은 토큰입니다. 다시 시도해 주세요.",
+    "footer": "tmux, anywhere — quietly."
   },
   "sessions": {
     "newSession": "새 세션",
@@ -58,6 +59,10 @@
     "claudeStatus": {
       "working": "작업 중",
       "waiting": "입력 대기 중"
+    },
+    "codexStatus": {
+      "working": "Codex 작업 중",
+      "waiting": "Codex 입력 대기 중"
     }
   },
   "terminal": {
@@ -211,13 +216,24 @@
   "palette": {
     "title": "명령 팔레트",
     "placeholder": "명령 또는 세션 이름 입력…",
-    "noResults": "결과 없음"
+    "noResults": "결과 없음",
+    "hintNavigate": "이동",
+    "hintRun": "실행",
+    "hintClose": "닫기"
   },
   "onboarding": {
     "title": "Get started",
-    "step1": { "title": "Start the Gateway" },
-    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
-    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "step1": {
+      "title": "Start the Gateway"
+    },
+    "step2": {
+      "title": "Enter your token",
+      "description": "Token shown by the gateway on first launch."
+    },
+    "step3": {
+      "title": "Create a session",
+      "description": "Click + New Session to spin up tmux."
+    },
     "dismiss": "Don't show again"
   },
   "files": {

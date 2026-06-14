@@ -13,17 +13,87 @@ body {
     'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans CJK JP',
     'Yu Gothic UI', Meiryo, Helvetica, Arial, sans-serif;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 /* Form controls don't inherit fonts by default (UA stylesheet) */
 button, input, select, textarea {
   font-family: inherit;
 }
 
+/* ===== Zen Garden brand typography =====
+   Shippori Mincho carries the 和モダン identity: wordmark, section headings,
+   empty-state titles. Body text stays on the system sans for legibility. */
+.zen-display {
+  font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Noto Serif CJK JP',
+    'Yu Mincho', serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Text selection in brand sage */
+::selection {
+  background: var(--zen-selection, rgba(166, 186, 152, 0.35));
+}
+
+/* ===== 和紙 grain =====
+   A fixed, near-invisible paper-noise veil over the whole app. Opacity is
+   theme-tuned via --zen-grain-opacity (set from useTheme()). */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: var(--zen-grain-opacity, 0.05);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
 @keyframes zen-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Entrance: rise from the paper like ink settling */
+@keyframes zen-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes zen-ink-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* Slow meditative drift for the login enso */
+@keyframes zen-drift {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+/* Error shake — restrained, two beats */
+@keyframes zen-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+
+/* fill-mode は backwards 限定: both にすると終了後も最終キーフレームが
+   inline style (例: disabled ボタンの opacity) を上書きし続けてしまう */
+.zen-rise { animation: zen-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.zen-ink-in { animation: zen-ink-in 560ms cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.zen-shake { animation: zen-shake 280ms ease-out; }
+
+/* Staggered reveal for vertical groups (login form, onboarding steps) */
+.zen-stagger > * { animation: zen-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.zen-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.zen-stagger > *:nth-child(2) { animation-delay: 110ms; }
+.zen-stagger > *:nth-child(3) { animation-delay: 180ms; }
+.zen-stagger > *:nth-child(4) { animation-delay: 250ms; }
+.zen-stagger > *:nth-child(5) { animation-delay: 320ms; }
+.zen-stagger > *:nth-child(6) { animation-delay: 390ms; }
+
 @media (prefers-reduced-motion: reduce) {
   @keyframes zen-spin { from, to { transform: none; } }
+  .zen-rise, .zen-ink-in, .zen-shake,
+  .zen-stagger > * { animation: none; }
 }
 
 /* ===== Phase 6 H12 transitions ===== */
@@ -52,10 +122,14 @@ button, input, select, textarea {
 /* ===== Phase 6 H13 focus ring ===== */
 :root {
   --zen-focus-ring: #A6BA98;
+  --zen-primary: #A6BA98;
   --zen-primary-hover: #B5C7A8;
   --zen-surface-hover: #34322D;
   --zen-overlay: rgba(9, 9, 7, 0.6);
   --zen-scrollbar-thumb: #46443C;
+  --zen-selection: rgba(166, 186, 152, 0.35);
+  --zen-grain-opacity: 0.05;
+  --zen-shadow-pop: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
 :focus-visible {
@@ -82,17 +156,60 @@ button, input, select, textarea {
 
 button {
   transition: background 120ms ease, border-color 120ms ease,
-    color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+    color 120ms ease, box-shadow 120ms ease, opacity 120ms ease,
+    transform 120ms ease;
 }
 
 /* Solid primary buttons (login submit, new session, confirm) */
 .zen-btn-primary:not(:disabled):hover {
   background: var(--zen-primary-hover) !important;
+  box-shadow: var(--zen-shadow-pop) !important;
+  transform: translateY(-1px);
+}
+.zen-btn-primary:not(:disabled):active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: none !important;
 }
 
 /* Quiet icon / outline buttons: surface lifts one step on hover */
 .zen-btn-quiet:not(:disabled):hover {
   background: var(--zen-surface-hover) !important;
+}
+.zen-btn-quiet:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+/* Left rail tabs: icon nudges awake on hover, active tab carries an ink bar */
+.zen-rail-btn { position: relative; }
+.zen-rail-btn:not([aria-selected='true']):not(:disabled):hover {
+  background: var(--zen-surface-hover) !important;
+}
+.zen-rail-btn:not(:disabled):active { transform: scale(0.94); }
+.zen-rail-btn[aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--zen-primary);
+}
+
+/* Session / window rows: a quiet slide toward the content on hover */
+.zen-row {
+  transition: background 120ms ease, box-shadow 120ms ease, transform 140ms ease;
+}
+.zen-row:hover { transform: translateX(2px); }
+.zen-row:active { transform: translateX(2px) scale(0.995); }
+
+@media (prefers-reduced-motion: reduce) {
+  .zen-row, .zen-row:hover, .zen-row:active { transform: none; }
+  .zen-btn-primary:not(:disabled):hover,
+  .zen-btn-primary:not(:disabled):active,
+  .zen-btn-quiet:not(:disabled):active,
+  .zen-rail-btn:not(:disabled):active { transform: none; }
 }
 
 /* Native <dialog> backdrop — sumi-smoke veil */

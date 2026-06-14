@@ -8,6 +8,33 @@ import { useSessionsStore } from '@/stores/sessions';
 import { useSettingsStore } from '@/stores/settings';
 import { usePaneStore } from '@/stores/pane';
 import { buildCommandPaletteActions, type PaletteAction } from '@/lib/commandPaletteActions';
+import { IconSearch } from '@/components/ui/icons';
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  const { tokens, resolvedTheme } = useTheme();
+  const dark = resolvedTheme === 'dark';
+  return (
+    <kbd
+      style={{
+        display: 'inline-block',
+        minWidth: 18,
+        textAlign: 'center',
+        padding: '1px 5px',
+        marginRight: 4,
+        background: dark ? tokens.colors.surfaceHover : tokens.colors.surface,
+        // 親 (textMuted) のままだと AA 4.5:1 を割る — 一段濃い色を明示する
+        color: tokens.colors.textSecondary,
+        border: `1px solid ${tokens.colors.borderSubtle}`,
+        borderBottomWidth: 2,
+        borderRadius: 5,
+        fontFamily: 'inherit',
+        fontSize: 'inherit',
+      }}
+    >
+      {children}
+    </kbd>
+  );
+}
 
 export function CommandPalette() {
   const { tokens, resolvedTheme } = useTheme();
@@ -122,11 +149,12 @@ export function CommandPalette() {
       }}
     >
       <div
+        className="zen-ink-in"
         style={{
           width: 'min(640px, 90vw)',
           background: dark ? tokens.colors.surface : tokens.colors.bgElevated,
           border: `1px solid ${tokens.colors.borderSubtle}`,
-          borderRadius: tokens.radii.md,
+          borderRadius: tokens.radii.lg,
           boxShadow: tokens.shadows.lg,
           display: 'flex',
           flexDirection: 'column',
@@ -134,26 +162,42 @@ export function CommandPalette() {
           overflow: 'hidden',
         }}
       >
-        <input
-          ref={inputRef}
-          role="combobox"
-          aria-expanded="true"
-          aria-controls="palette-listbox"
-          aria-autocomplete="list"
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={t('palette.placeholder')}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
-            color: tokens.colors.textPrimary,
-            padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
-            fontSize: tokens.typography.bodyMedium.fontSize,
-          }}
-        />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: tokens.spacing.lg,
+              display: 'flex',
+              color: tokens.colors.textMuted,
+              pointerEvents: 'none',
+            }}
+          >
+            <IconSearch size={16} />
+          </span>
+          <input
+            ref={inputRef}
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="palette-listbox"
+            aria-autocomplete="list"
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder={t('palette.placeholder')}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+              color: tokens.colors.textPrimary,
+              padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.md}px ${tokens.spacing.lg + 26}px`,
+              fontSize: tokens.typography.bodyMedium.fontSize,
+            }}
+          />
+        </div>
         <ul
           id="palette-listbox"
           role="listbox"
@@ -179,10 +223,12 @@ export function CommandPalette() {
                 }}
                 style={{
                   padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
-                  background: active ? tokens.colors.surfaceHover : 'transparent',
+                  background: active ? tokens.colors.primarySubtle : 'transparent',
+                  boxShadow: active ? `inset 3px 0 0 ${tokens.colors.primary}` : 'none',
                   color: tokens.colors.textPrimary,
                   cursor: 'pointer',
                   fontSize: tokens.typography.smallMedium.fontSize,
+                  transition: 'background 80ms ease',
                 }}
               >
                 {a.label}
@@ -203,6 +249,21 @@ export function CommandPalette() {
             </li>
           )}
         </ul>
+        <div
+          aria-hidden
+          style={{
+            display: 'flex',
+            gap: tokens.spacing.lg,
+            padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
+            borderTop: `1px solid ${tokens.colors.borderSubtle}`,
+            color: tokens.colors.textMuted,
+            fontSize: tokens.typography.caption.fontSize,
+          }}
+        >
+          <span><Kbd>↑↓</Kbd> {t('palette.hintNavigate', '移動')}</span>
+          <span><Kbd>↵</Kbd> {t('palette.hintRun', '実行')}</span>
+          <span><Kbd>esc</Kbd> {t('palette.hintClose', '閉じる')}</span>
+        </div>
       </div>
     </div>
   );

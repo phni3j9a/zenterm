@@ -29,7 +29,8 @@
     "tokenLabel": "Jeton",
     "tokenPlaceholder": "Jeton à 4 chiffres",
     "submit": "Se connecter",
-    "invalid": "Jeton invalide. Veuillez réessayer."
+    "invalid": "Jeton invalide. Veuillez réessayer.",
+    "footer": "tmux, anywhere — quietly."
   },
   "sessions": {
     "newSession": "Nouvelle session",
@@ -58,6 +59,10 @@
     "claudeStatus": {
       "working": "En cours",
       "waiting": "En attente de saisie"
+    },
+    "codexStatus": {
+      "working": "Codex en cours",
+      "waiting": "Codex en attente de saisie"
     }
   },
   "terminal": {
@@ -211,13 +216,24 @@
   "palette": {
     "title": "Palette de commandes",
     "placeholder": "Saisissez une commande ou un nom de session…",
-    "noResults": "Aucun résultat"
+    "noResults": "Aucun résultat",
+    "hintNavigate": "Naviguer",
+    "hintRun": "Exécuter",
+    "hintClose": "Fermer"
   },
   "onboarding": {
     "title": "Get started",
-    "step1": { "title": "Start the Gateway" },
-    "step2": { "title": "Enter your token", "description": "Token shown by the gateway on first launch." },
-    "step3": { "title": "Create a session", "description": "Click + New Session to spin up tmux." },
+    "step1": {
+      "title": "Start the Gateway"
+    },
+    "step2": {
+      "title": "Enter your token",
+      "description": "Token shown by the gateway on first launch."
+    },
+    "step3": {
+      "title": "Create a session",
+      "description": "Click + New Session to spin up tmux."
+    },
     "dismiss": "Don't show again"
   },
   "files": {

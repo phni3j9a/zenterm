@@ -4,7 +4,7 @@ import { spawn, type IPty } from 'node-pty';
 import { z } from 'zod';
 import { config } from '../config.js';
 import type { TmuxSession, TmuxWindow } from '../types/index.js';
-import { deriveClaudeStatus } from './claudePaneStatus.js';
+import { deriveAgentStatus, resolveAgentForPanePid } from './claudePaneStatus.js';
 
 const VIEW_SESSION_PREFIX = '_zen_view_';
 
@@ -32,7 +32,7 @@ const windowNameSchema = z
 
 const tmuxListFormat = '#{session_name}|#{session_created}|#{pane_current_path}';
 export const tmuxWindowListFormat =
-  '#{window_index}|#{window_name}|#{?window_active,1,0}|#{?window_zoomed_flag,1,0}|#{window_panes}|#{pane_current_path}|#{pane_current_command}|#{pane_title}';
+  '#{window_index}|#{window_name}|#{?window_active,1,0}|#{?window_zoomed_flag,1,0}|#{window_panes}|#{pane_current_path}|#{pane_pid}|#{pane_current_command}|#{pane_title}';
 const homeDir = process.env.HOME ?? process.cwd();
 const emptyServerMarkers = [
   'no server running',
@@ -470,14 +470,17 @@ export function parseWindowLine(line: string): TmuxWindow | null {
   if (parts.length < 8) {
     return null;
   }
-  const [indexRaw, name, activeRaw, zoomedRaw, panesRaw, cwd, command] = parts;
+  const [indexRaw, name, activeRaw, zoomedRaw, panesRaw, cwd] = parts;
   const index = Number.parseInt(indexRaw, 10);
   const paneCount = Number.parseInt(panesRaw, 10);
   if (Number.isNaN(index) || Number.isNaN(paneCount)) {
     return null;
   }
-  // pane_title は任意文字列（| を含み得る）。8 番目以降を再結合して復元する。
-  const title = parts.slice(7).join('|');
+  const hasPanePid = /^\d+$/u.test(parts[6] ?? '') && parts.length >= 9;
+  const panePid = hasPanePid ? Number.parseInt(parts[6], 10) : undefined;
+  const command = hasPanePid ? parts[7] : parts[6];
+  // pane_title は任意文字列（| を含み得る）。末尾フィールド以降を再結合して復元する。
+  const title = parts.slice(hasPanePid ? 8 : 7).join('|');
   const window: TmuxWindow = {
     index,
     name,
@@ -486,9 +489,13 @@ export function parseWindowLine(line: string): TmuxWindow | null {
     paneCount,
     cwd: cwd || homeDir,
   };
-  const claudeStatus = deriveClaudeStatus(command ?? '', title);
-  if (claudeStatus) {
-    window.claudeStatus = claudeStatus;
+  const agentStatus = deriveAgentStatus(command ?? '', title, {
+    ...(typeof panePid === 'number' ? { panePid } : {}),
+    resolveAgentForPane: resolveAgentForPanePid,
+  });
+  if (agentStatus) {
+    window.agentStatus = agentStatus;
+    window.claudeStatus = agentStatus;
   }
   return window;
 }

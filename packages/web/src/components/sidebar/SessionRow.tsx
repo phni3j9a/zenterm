@@ -7,13 +7,16 @@ import { validateSessionOrWindowName, nameValidationKey } from '@/lib/validateNa
 import { IconChevronRight, IconChevronDown, IconMore } from '@/components/ui/icons';
 import { RowActionsMenu } from './RowActionsMenu';
 import { ClaudeStatusBadge } from './ClaudeStatusBadge';
-import { rollupClaudeActivity } from '@/lib/claudeRollup';
+import { rollupAgentStatus } from '@/lib/claudeRollup';
 
 export interface SessionRowProps {
   session: TmuxSession;
   isActive: boolean;
   isExpanded: boolean;
   openInPaneOptions: number[];
+  /** 行本体のクリック: セッションを開く (先頭ウィンドウをフォーカス中ペインへ) */
+  onOpen: () => void;
+  /** シェブロンのクリック: ウィンドウ一覧の展開/折りたたみのみ */
   onToggleExpand: (sessionName: string) => void;
   onRename: (currentDisplayName: string, newName: string) => void | Promise<void>;
   onRequestDelete: (session: TmuxSession) => void;
@@ -27,6 +30,7 @@ export function SessionRow({
   isActive,
   isExpanded,
   openInPaneOptions,
+  onOpen,
   onToggleExpand,
   onRename,
   onRequestDelete,
@@ -42,7 +46,7 @@ export function SessionRow({
   const hasWindows = (session.windows?.length ?? 0) > 0;
   const showKebab = hover || menuOpen;
 
-  const rollupActivity = rollupClaudeActivity(session.windows ?? []);
+  const rollupStatus = rollupAgentStatus(session.windows ?? []);
 
   const rowBackground = isActive
     ? tokens.colors.primarySubtle
@@ -57,9 +61,10 @@ export function SessionRow({
     >
       <button
         type="button"
+        className="zen-row"
         aria-current={isActive ? 'true' : undefined}
         aria-expanded={hasWindows ? isExpanded : undefined}
-        onClick={() => onToggleExpand(session.name)}
+        onClick={onOpen}
         style={{
           display: 'flex',
           width: '100%',
@@ -68,17 +73,19 @@ export function SessionRow({
           padding: tokens.spacing.sm,
           margin: 0,
           background: rowBackground,
-          boxShadow: isActive ? tokens.shadows.sm : 'none',
+          // アクティブ行は左に墨の縦線 (硯線) を引く
+          boxShadow: isActive
+            ? `inset 3px 0 0 ${tokens.colors.primary}, ${tokens.shadows.sm}`
+            : 'none',
           color: tokens.colors.textPrimary,
           border: 'none',
           borderRadius: tokens.radii.sm,
           cursor: 'pointer',
           textAlign: 'left',
-          transition: 'background 100ms',
         }}
       >
-        {rollupActivity ? (
-          <ClaudeStatusBadge status={{ activity: rollupActivity }} />
+        {rollupStatus ? (
+          <ClaudeStatusBadge status={rollupStatus} />
         ) : (
           <span
             data-testid="session-row-claude-none"
