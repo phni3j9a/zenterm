@@ -34,7 +34,7 @@ const sessionSingleWindow: TmuxSession = {
 };
 
 describe('SessionRow', () => {
-  it('renders displayName and cwd', () => {
+  it('renders displayName without cwd metadata', () => {
     render(
       <SessionRow
         session={session}
@@ -49,7 +49,7 @@ describe('SessionRow', () => {
       />,
     );
     expect(screen.getByText('dev')).toBeInTheDocument();
-    expect(screen.getByText('/home/me')).toBeInTheDocument();
+    expect(screen.queryByText('/home/me')).not.toBeInTheDocument();
   });
 
   it('clicking row opens the session without collapsing (expand stays with chevron)', async () => {

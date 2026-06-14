@@ -110,25 +110,9 @@ export function SessionRow({
               onCancel={() => setMode('idle')}
             />
           ) : (
-            <>
-              <span style={{ display: 'block', fontSize: tokens.typography.bodyMedium.fontSize, fontWeight: 600 }}>
-                {session.displayName}
-              </span>
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: tokens.typography.small.fontSize,
-                  color: tokens.colors.textMuted,
-                  fontFamily: tokens.typography.mono.fontFamily,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-                title={session.cwd}
-              >
-                {session.cwd}
-              </span>
-            </>
+            <span style={{ display: 'block', fontSize: tokens.typography.bodyMedium.fontSize, fontWeight: 600 }}>
+              {session.displayName}
+            </span>
           )}
         </span>
         {hasWindows && (
