@@ -20,6 +20,7 @@ function getPathname(url?: string): string {
 function isPublicPath(pathname: string): boolean {
   if (publicExactPaths.has(pathname)) return true;
   if (pathname.startsWith('/terminal/lib/')) return true;
+  if (pathname.startsWith('/terminal/fonts/')) return true;
   if (pathname.startsWith('/lp/')) return true;
   if (pathname.startsWith('/web/')) return true;
   return false;

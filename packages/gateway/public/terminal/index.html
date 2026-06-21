@@ -20,6 +20,14 @@
       --terminal-selection: rgba(166, 186, 152, 0.28);
     }
 
+    @font-face {
+      font-family: "ZenTerm Terminal CJK";
+      src: url("/terminal/fonts/NotoSansMonoCJKjp-Regular.otf") format("opentype");
+      font-style: normal;
+      font-weight: 400;
+      font-display: block;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -33,6 +41,8 @@
       overflow: hidden;
       background: var(--terminal-bg);
       color: var(--terminal-fg);
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     #terminal {
@@ -61,6 +71,7 @@
     var theme = params.get('theme') || 'dark';
     var parsedFontSize = Number.parseInt(params.get('fontSize') || '10', 10);
     var fontSize = Number.isFinite(parsedFontSize) ? parsedFontSize : 10;
+    var terminalFontFamily = '"ZenTerm Terminal CJK", "Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace';
     var reconnectAttempt = 0;
     var reconnectTimer = null;
     var reconnectDelay = 1000;
@@ -149,28 +160,51 @@
 
     syncThemeVariables(activeTheme);
 
-    var term = new Terminal({
-      allowProposedApi: true,
-      fontFamily: '"Noto Sans Mono CJK JP", "Noto Sans Mono", "DejaVu Sans Mono", monospace',
-      fontSize: fontSize,
-      cursorBlink: true,
-      cursorStyle: 'block',
-      scrollback: 5000,
-      theme: activeTheme
-    });
-
-    var fitAddon = new FitAddon.FitAddon();
-    term.loadAddon(fitAddon);
-
-    var unicode11 = new Unicode11Addon.Unicode11Addon();
-    term.loadAddon(unicode11);
-    term.unicode.activeVersion = '11';
-
-    term.open(document.getElementById('terminal'));
-    fitAddon.fit();
-
+    var term = null;
+    var fitAddon = null;
     var ws = null;
-    var lastKnownSize = { cols: term.cols, rows: term.rows };
+    var lastKnownSize = { cols: 80, rows: 24 };
+
+    function initializeTerminal() {
+      if (term) {
+        return;
+      }
+
+      term = new Terminal({
+        allowProposedApi: true,
+        fontFamily: terminalFontFamily,
+        fontSize: fontSize,
+        fontWeight: 400,
+        cursorBlink: true,
+        cursorStyle: 'block',
+        scrollback: 5000,
+        theme: activeTheme
+      });
+
+      fitAddon = new FitAddon.FitAddon();
+      term.loadAddon(fitAddon);
+
+      var unicode11 = new Unicode11Addon.Unicode11Addon();
+      term.loadAddon(unicode11);
+      term.unicode.activeVersion = '11';
+
+      term.open(document.getElementById('terminal'));
+      fitAddon.fit();
+      updateKnownSize();
+
+      term.onData(function(data) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          var now = Date.now();
+          if (data.length > 1 && data.charCodeAt(0) > 0x1f
+              && data === _imeLastData && (now - _imeLastTime) < _IME_DEDUP_MS) {
+            return;
+          }
+          _imeLastData = data;
+          _imeLastTime = now;
+          ws.send(JSON.stringify({ type: 'input', data: data }));
+        }
+      });
+    }
 
     function notifyRN(message) {
       if (window.ReactNativeWebView) {
@@ -186,6 +220,10 @@
     }
 
     function updateKnownSize() {
+      if (!term) {
+        return;
+      }
+
       lastKnownSize = { cols: term.cols, rows: term.rows };
     }
 
@@ -207,6 +245,10 @@
     }
 
     function fitTerminal() {
+      if (!term || !fitAddon) {
+        return;
+      }
+
       var container = document.getElementById('terminal');
       if (container) {
         container.style.paddingLeft = '';
@@ -226,6 +268,10 @@
     }
 
     function writeStatusLine(title, detail) {
+      if (!term) {
+        return;
+      }
+
       var lines = [''];
       lines.push('> ' + title);
       if (detail) {
@@ -279,6 +325,10 @@
 
     function connect() {
       clearReconnectTimer();
+
+      if (!term) {
+        return;
+      }
 
       if (!token) {
         notifyRN({ type: 'error', message: 'Missing token' });
@@ -349,19 +399,6 @@
     var _imeLastTime = 0;
     var _IME_DEDUP_MS = 100;
 
-    term.onData(function(data) {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        var now = Date.now();
-        if (data.length > 1 && data.charCodeAt(0) > 0x1f
-            && data === _imeLastData && (now - _imeLastTime) < _IME_DEDUP_MS) {
-          return;
-        }
-        _imeLastData = data;
-        _imeLastTime = now;
-        ws.send(JSON.stringify({ type: 'input', data: data }));
-      }
-    });
-
     window.addEventListener('resize', function() {
       fitTerminal();
       sendResize();
@@ -393,9 +430,11 @@
           return;
         }
         if (message.type === 'resize') {
-          term.resize(message.cols, message.rows);
-          updateKnownSize();
-          sendResize();
+          if (term) {
+            term.resize(message.cols, message.rows);
+            updateKnownSize();
+            sendResize();
+          }
           return;
         }
         if (message.type === 'focus') {
@@ -443,10 +482,27 @@
       connect();
     });
 
-    if (document.readyState === 'complete') {
+    function loadTerminalFont() {
+      if (!document.fonts || typeof document.fonts.load !== 'function') {
+        return Promise.resolve();
+      }
+
+      return document.fonts.load(fontSize + 'px "ZenTerm Terminal CJK"').catch(function() {});
+    }
+
+    function startTerminal() {
+      initializeTerminal();
       connect();
+    }
+
+    function bootTerminal() {
+      loadTerminalFont().then(startTerminal);
+    }
+
+    if (document.readyState === 'complete') {
+      bootTerminal();
     } else {
-      window.addEventListener('load', function() { connect(); });
+      window.addEventListener('load', bootTerminal);
     }
 
     // ---- Touch scroll for mobile WebView ----

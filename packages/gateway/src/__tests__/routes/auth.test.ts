@@ -133,6 +133,17 @@ describe('auth routes', () => {
     expect(response.headers['content-type']).toContain('application/javascript');
   });
 
+  it('GET /terminal/fonts/NotoSansMonoCJKjp-Regular.otf: モバイル WebView 用 font は認証なしで配信する', async () => {
+    const response = await app!.inject({
+      method: 'GET',
+      url: '/terminal/fonts/NotoSansMonoCJKjp-Regular.otf',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toContain('font/otf');
+    expect(response.body.length).toBeGreaterThan(10_000_000);
+  });
+
   it('GET /app/login: 旧 Web SPA パスは public 扱いしない', async () => {
     const response = await app!.inject({
       method: 'GET',
