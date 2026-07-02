@@ -25,7 +25,7 @@
       src: url("/terminal/fonts/NotoSansMonoCJKjp-Regular.otf") format("opentype");
       font-style: normal;
       font-weight: 400;
-      font-display: block;
+      font-display: swap;
     }
 
     * {
@@ -496,7 +496,9 @@
     }
 
     function bootTerminal() {
-      loadTerminalFont().then(startTerminal);
+      startTerminal();
+      // Warm the bundled CJK font without delaying the WebSocket attach path.
+      loadTerminalFont();
     }
 
     if (document.readyState === 'complete') {

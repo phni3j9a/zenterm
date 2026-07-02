@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { parseControlLine, tmuxControlService } from '../../services/tmuxControl.js';
 
@@ -60,5 +61,30 @@ describe('publish', () => {
     tmuxControlService.publish({ type: 'claude-status-changed' });
     unsubscribe();
     expect(received).toContainEqual({ type: 'claude-status-changed' });
+  });
+
+  it('最後の購読解除時に monitor session の残留 client を detach する', () => {
+    const execMock = vi.mocked(execFileSync);
+    execMock.mockImplementation((...rawArgs: unknown[]) => {
+      const args = (rawArgs[1] as string[] | undefined) ?? [];
+      if (args[0] === 'list-clients') {
+        return '/dev/pts/10\n/dev/pts/11\n' as never;
+      }
+      return '' as never;
+    });
+
+    const unsubscribe = tmuxControlService.subscribe(() => undefined);
+    unsubscribe();
+
+    expect(execMock).toHaveBeenCalledWith(
+      'tmux',
+      ['detach-client', '-t', '/dev/pts/10'],
+      { stdio: ['pipe', 'pipe', 'pipe'] },
+    );
+    expect(execMock).toHaveBeenCalledWith(
+      'tmux',
+      ['detach-client', '-t', '/dev/pts/11'],
+      { stdio: ['pipe', 'pipe', 'pipe'] },
+    );
   });
 });

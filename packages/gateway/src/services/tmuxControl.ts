@@ -52,6 +52,37 @@ function ensureMonitorSession(): void {
   });
 }
 
+function listMonitorClients(): string[] {
+  try {
+    const output = execFileSync(
+      'tmux',
+      ['list-clients', '-t', `=${MONITOR_SESSION}`, '-F', '#{client_tty}'],
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
+    );
+    return bufferToString(output)
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch (error) {
+    if (isMissingSession(error) || isNoServer(error)) {
+      return [];
+    }
+    return [];
+  }
+}
+
+function detachMonitorClients(): void {
+  for (const client of listMonitorClients()) {
+    try {
+      execFileSync('tmux', ['detach-client', '-t', client], {
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+    } catch {
+      // 既に切断済み、または tmux server 側で消えている場合は無視する。
+    }
+  }
+}
+
 /**
  * tmux 制御モード (`tmux -C`) の出力 1 行を ZenTerm 内部イベントに変換する。
  *
@@ -129,6 +160,7 @@ class TmuxControlService {
 
     try {
       ensureMonitorSession();
+      detachMonitorClients();
     } catch (error) {
       // 監視セッションを作れないなら諦めて再試行する。
       this.scheduleRestart(error);
@@ -156,8 +188,9 @@ class TmuxControlService {
     }
 
     this.buffer = '';
-    this.childProcess.onData((data) => this.handleData(data));
-    this.childProcess.onExit(() => this.handleExit());
+    const child = this.childProcess;
+    child.onData((data) => this.handleData(data));
+    child.onExit(() => this.handleExit(child));
   }
 
   private stop(): void {
@@ -167,9 +200,11 @@ class TmuxControlService {
       this.restartTimer = null;
     }
     if (!this.childProcess) {
+      detachMonitorClients();
       return;
     }
     try {
+      detachMonitorClients();
       this.childProcess.kill();
     } catch {
       // 既に死んでいるなら無視。
@@ -202,7 +237,10 @@ class TmuxControlService {
     }
   }
 
-  private handleExit(): void {
+  private handleExit(child: IPty): void {
+    if (this.childProcess !== child) {
+      return;
+    }
     this.childProcess = null;
     if (this.stopping || this.listeners.size === 0) {
       return;

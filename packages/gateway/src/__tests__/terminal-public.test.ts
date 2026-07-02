@@ -28,14 +28,15 @@ describe('terminal public page', () => {
     expect(terminalHtml).toContain('display: none;');
   });
 
-  it('loads the bundled Japanese monospace font before xterm starts', () => {
+  it('loads the bundled Japanese monospace font without blocking terminal startup', () => {
     expect(terminalHtml).toContain('font-family: "ZenTerm Terminal CJK";');
     expect(terminalHtml).toContain('url("/terminal/fonts/NotoSansMonoCJKjp-Regular.otf") format("opentype")');
-    expect(terminalHtml).toContain('font-display: block;');
+    expect(terminalHtml).toContain('font-display: swap;');
     expect(terminalHtml).toContain('var terminalFontFamily = \'"ZenTerm Terminal CJK"');
     expect(terminalHtml).toContain('function loadTerminalFont()');
     expect(terminalHtml).toContain('document.fonts.load(fontSize + \'px "ZenTerm Terminal CJK"\')');
-    expect(terminalHtml).toContain('loadTerminalFont().then(startTerminal);');
+    expect(terminalHtml).toContain('startTerminal();');
+    expect(terminalHtml).toContain('loadTerminalFont();');
   });
 
   it('ships the bundled terminal font and its OFL license', () => {
